@@ -581,9 +581,6 @@ open class Defaults @Inject constructor(
         return sharedPreferences.getBoolean(keepZoom, false)
     }
 
-    fun getLastHtmlEpubReaderCommitHash(): String {
-        return sharedPreferences.getString(lastHtmlEpubReaderCommitHash, "") ?: ""
-    }
 
     fun getLastReaderCommitHash(): String {
         return sharedPreferences.getString(lastReaderCommitHash, "") ?: ""
