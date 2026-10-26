@@ -12,7 +12,7 @@ SUBMODULE_DIR="$SCRIPT_DIR/../reader"
 DESTINATION_DIR="$SCRIPT_DIR/../app/src/main/assets/reader"
 HASH_FILE="$DESTINATION_DIR/reader_hash.txt"
 
-CURRENT_HASH=$RANDOM
+CURRENT_HASH=""
 
 READER_TO_ZIP_FOLDER="$SUBMODULE_DIR/build/android"
 
@@ -22,7 +22,9 @@ npm run build:android
 mkdir -p "$DESTINATION_DIR"
 
 cd "$READER_TO_ZIP_FOLDER"
+rm -f "$DESTINATION_DIR/reader.zip"
 zip -r "$DESTINATION_DIR/reader.zip" "."
+CURRENT_HASH=$(sha256sum "$DESTINATION_DIR/reader.zip" | cut -d ' ' -f 1)
 
 echo "$CURRENT_HASH" > "$HASH_FILE"
 echo "Build $BUILD_SOURCE_DIR installed at $DESTINATION_DIR from hash $CURRENT_HASH"
