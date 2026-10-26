@@ -328,6 +328,14 @@ class ReaderWebCallChainExecutor @Inject constructor(
         }
     }
 
+    suspend fun turnPage(next: Boolean, fraction: Double) {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("window.turnPageWithHardwareButton($next, $fraction);") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
     suspend fun navigateBack() {
         return suspendCancellableCoroutine { cont ->
             readerWebViewHandler.evaluateJavascript("javascript:navigateBack();") {

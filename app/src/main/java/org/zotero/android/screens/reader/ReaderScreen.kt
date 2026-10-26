@@ -81,6 +81,11 @@ internal fun ReaderScreen(
 
     val activity = LocalActivity.current ?: return
     val currentView = LocalView.current
+    org.zotero.android.uicomponents.ReaderHardwareButtons(
+        enabled = !viewState.isReaderLoading && !viewState.showPdfSearch &&
+            viewState.selectedAnnotationKey == null,
+        onTurnPage = viewModel::turnPage,
+    )
 
     ObserveLifecycleEvent { event ->
         when (event) {

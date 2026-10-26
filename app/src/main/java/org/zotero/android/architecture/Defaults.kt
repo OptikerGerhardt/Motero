@@ -81,6 +81,10 @@ open class Defaults @Inject constructor(
     private val webDavUrl = "webDavUrl"
     private val webDavScheme = "webDavScheme"
     private val webDavPassword = "webDavPassword"
+    private val buttonPageTurning = "buttonPageTurning"
+    private val keepZoom = "keepZoom"
+    private val pageTurningReversed = "pageTurningReversed"
+    private val hardwareScrollPercent = "hardwareScrollPercent"
 
     private val doNotShowAppUpdateBannerBeforeTime = "doNotShowAppUpdateBannerBeforeTime"
     private val pdfViewStatePrefix = "pdfViewState_"
@@ -552,6 +556,35 @@ open class Defaults @Inject constructor(
         sharedPreferences.edit { putString(this@Defaults.exportOutputMode, json) }
     }
 
+    fun setButtonPageTurning(newValue: Boolean) {
+        sharedPreferences.edit { putBoolean(buttonPageTurning, newValue) }
+    }
+
+    fun isButtonPageTurning(): Boolean {
+        return sharedPreferences.getBoolean(buttonPageTurning, false)
+    }
+
+    fun isPageTurningReversed(): Boolean = sharedPreferences.getBoolean(pageTurningReversed, false)
+    fun setPageTurningReversed(value: Boolean) {
+        sharedPreferences.edit { putBoolean(pageTurningReversed, value) }
+    }
+    fun getHardwareScrollPercent(): Int = sharedPreferences.getInt(hardwareScrollPercent, 67).coerceIn(0, 100)
+    fun setHardwareScrollPercent(value: Int) {
+        sharedPreferences.edit { putInt(hardwareScrollPercent, value.coerceIn(0, 100)) }
+    }
+
+    fun setKeepZoom(newValue: Boolean) {
+        sharedPreferences.edit { putBoolean(keepZoom, newValue) }
+    }
+
+    fun isKeepZoom(): Boolean {
+        return sharedPreferences.getBoolean(keepZoom, false)
+    }
+
+    fun getLastHtmlEpubReaderCommitHash(): String {
+        return sharedPreferences.getString(lastHtmlEpubReaderCommitHash, "") ?: ""
+    }
+
     fun getLastReaderCommitHash(): String {
         return sharedPreferences.getString(lastReaderCommitHash, "") ?: ""
     }
@@ -649,6 +682,10 @@ open class Defaults @Inject constructor(
         setExportOutputMethod(CitBibExportOutputMethod.copy)
         setExportOutputMode(CitBibExportOutputMode.bibliography)
         clearPdfViewStates()
+        setButtonPageTurning(false)
+        setKeepZoom(false)
+        setPageTurningReversed(false)
+        setHardwareScrollPercent(67)
     }
 
 }

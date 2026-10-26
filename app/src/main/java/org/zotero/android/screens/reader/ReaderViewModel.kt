@@ -475,6 +475,14 @@ class ReaderViewModel @Inject constructor(
         pdfReaderThemeDecider.setCurrentOsTheme(isOsThemeDark = isDark)
     }
 
+    fun turnPage(next: Boolean) {
+        if (viewState.isReaderLoading || viewState.showPdfSearch ||
+            viewState.selectedAnnotationKey != null) return
+        viewModelScope.launch {
+            readerWebCallChainExecutor.turnPage(next, defaults.getHardwareScrollPercent() / 100.0)
+        }
+    }
+
     fun onStop() {
         disableForceScreenOnTimer?.cancel()
     }

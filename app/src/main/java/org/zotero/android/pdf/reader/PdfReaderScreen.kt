@@ -50,6 +50,11 @@ internal fun PdfReaderScreen(
     val viewEffect by viewModel.viewEffects.observeAsState()
     val activity = LocalActivity.current ?: return
     val currentView = LocalView.current
+    org.zotero.android.uicomponents.ReaderHardwareButtons(
+        enabled = !viewState.showPdfSearch && viewState.selectedAnnotationKey == null &&
+            !viewState.showSharePopup && !viewState.showSingleCitationScreen,
+        onTurnPage = viewModel::turnPage,
+    )
     ObserveLifecycleEvent { event ->
         when (event) {
             Lifecycle.Event.ON_STOP -> {

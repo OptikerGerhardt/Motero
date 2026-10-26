@@ -44,6 +44,8 @@ import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
 
+import android.view.KeyEvent
+
 @AndroidEntryPoint
 internal class DashboardActivity : BaseActivity() {
 
@@ -189,6 +191,30 @@ internal class DashboardActivity : BaseActivity() {
             }
         }
 
+    }
+    var readerPageTurnHandler: ((Boolean) -> Unit)? = null
+    private val handledPageKeys = mutableSetOf<Int>()
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_UP && handledPageKeys.remove(event.keyCode)) return true
+        val next = when (event.keyCode) {
+            KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_PAGE_DOWN -> true
+            KeyEvent.KEYCODE_VOLUME_UP, KeyEvent.KEYCODE_PAGE_UP -> false
+            else -> return super.dispatchKeyEvent(event)
+        }
+        if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount > 0 &&
+            event.keyCode in handledPageKeys) return true
+        val handler = readerPageTurnHandler
+        val keyboardVisible = androidx.core.view.ViewCompat.getRootWindowInsets(window.decorView)
+            ?.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime()) == true
+        if (event.action != KeyEvent.ACTION_DOWN || event.repeatCount != 0 ||
+            !hasWindowFocus() || !defaults.isButtonPageTurning() || handler == null ||
+            keyboardVisible || currentFocus?.onCheckIsTextEditor() == true) {
+            return super.dispatchKeyEvent(event)
+        }
+        handledPageKeys.add(event.keyCode)
+        handler(if (defaults.isPageTurningReversed()) !next else next)
+        return true
     }
 
     private fun showAppChooserExcludingZoteroApp(intent: Intent) {
