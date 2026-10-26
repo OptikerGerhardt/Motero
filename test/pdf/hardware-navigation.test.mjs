@@ -104,3 +104,23 @@ test('invalid geometry and destroyed readers ignore press; EPUB uses own navigat
 	assert.equal(await move(view, true), 'ignored'); let called = 0;
 	assert.equal(await move({ navigateToNextPage() { called++; } }, true), 'page'); assert.equal(called, 1);
 });
+
+test('an unloaded previous page uses its resolved height for bottom entry', async () => {
+	let { view, viewer, list } = fixture();
+	viewer.currentPageNumber = 2;
+	list[0].pdfPage = null;
+	list[0].setPdfPage = data => { list[0].pdfPage = data; list[0].div.clientHeight = 2400; };
+	viewer.pdfDocument = { getPage: async () => ({ loaded: true }) };
+	assert.equal(await move(view, false), 'page');
+	assert.equal(viewer.currentPageNumber, 1);
+	assert.equal(viewer.container.scrollTop, 1800);
+});
+
+test('content margin is included in scroll limits and changing crop settings invalidates old bounds', () => {
+	let { view, viewer, list } = fixture({ height: 2000 });
+	view._contentFit = { margin: 0.01 };
+	view._appliedContentFit = { scale: 2, margin: 0.01, bounds: [0.1, 0.1, 0.9, 0.9] };
+	assert.deepEqual(getHardwareScrollLimits(view, viewer, list[0]), { min: 196, max: 1204, viewportHeight: 600 });
+	view._contentFit.margin = 0.04;
+	assert.deepEqual(getHardwareScrollLimits(view, viewer, list[0]), { min: 0, max: 1400, viewportHeight: 600 });
+});
