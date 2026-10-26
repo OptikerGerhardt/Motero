@@ -1,6 +1,8 @@
 package org.zotero.android.screens.settings.pageturning
 
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
@@ -43,10 +45,15 @@ internal fun SettingsPageTurningScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
             ) {
                 SettingsPageTurningSections(
                     buttonPageTurning = viewState.pageTurning,
                     onButtonPageTurningSwitchTapped = viewModel::onButtonPageTurningSwitchTapped,
+                    reversed = viewState.reversed,
+                    onReverseChanged = viewModel::onReverseChanged,
+                    scrollPercent = viewState.scrollPercent,
+                    onScrollPercentChanged = viewModel::onScrollPercentChanged,
                     buttonKeepZoom = viewState.keepZoom,
                     onButtonKeepZoomSwitchTapped = viewModel::onButtonKeepZoomSwitchTapped,
                 )

@@ -113,4 +113,7 @@
     <string name="pdf_settings_letter_spacing_title">Letter spacing</string>
     <string name="pdf_settings_page_width_title">Page width</string>
 
+    <string name="settings_reverse_page_buttons">Reverse page button direction</string>
+    <string name="settings_hardware_scroll_step">Scroll step (screen height)</string>
+    <string name="settings_hardware_page_only">Page</string>
 </resources>

@@ -41,7 +41,9 @@ internal class SettingsPageTurningViewModel @Inject constructor(
             updateState {
                 copy(
                     pageTurning = defaults.isButtonPageTurning(),
-                    keepZoom = defaults.isKeepZoom()
+                    keepZoom = defaults.isKeepZoom(),
+                    reversed = defaults.isPageTurningReversed(),
+                    scrollPercent = defaults.getHardwareScrollPercent()
                 )
             }
         }
@@ -58,6 +60,14 @@ internal class SettingsPageTurningViewModel @Inject constructor(
         defaults.setButtonPageTurning(bool)
     }
 
+    fun onReverseChanged(value: Boolean) {
+        defaults.setPageTurningReversed(value)
+        updateState { copy(reversed = value) }
+    }
+    fun onScrollPercentChanged(value: Int) {
+        defaults.setHardwareScrollPercent(value)
+        updateState { copy(scrollPercent = value) }
+    }
     fun onButtonKeepZoomSwitchTapped(bool: Boolean) {
         updateState {
             copy(keepZoom = bool)
@@ -71,6 +81,8 @@ internal data class SettingsPageTurningViewState(
     val styles: PersistentList<Style> = persistentListOf(),
     val pageTurning: Boolean = false,
     val keepZoom: Boolean = false,
+    val reversed: Boolean = false,
+    val scrollPercent: Int = 67,
 ) : ViewState
 
 internal sealed class SettingsPageTurningViewEffect : ViewEffect {

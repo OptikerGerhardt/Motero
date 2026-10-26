@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_reverse_page_buttons">Tastenrichtung umkehren</string>
+    <string name="settings_hardware_scroll_step">Scrollschritt (Bildschirmhöhe)</string>
+    <string name="settings_hardware_page_only">Seite</string>
+</resources>

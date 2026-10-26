@@ -479,7 +479,11 @@ class ReaderViewModel @Inject constructor(
         if (viewState.isReaderLoading || viewState.showPdfSearch ||
             viewState.selectedAnnotationKey != null) return
         viewModelScope.launch {
-            readerWebCallChainExecutor.turnPage(next, defaults.getHardwareScrollPercent() / 100.0)
+            readerWebCallChainExecutor.turnPage(next, when (val step = defaults.getHardwareScrollPercent()) {
+                33 -> 1.0 / 3.0
+                67 -> 2.0 / 3.0
+                else -> step / 100.0
+            })
         }
     }
 
