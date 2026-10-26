@@ -1,4 +1,5 @@
 import View from './common/view';
+import { navigateWithHardwareButton } from './pdf/hardware-navigation.mjs';
 import { createAnnotationSelectionHandler } from './common/annotation-selection-handler.mjs';
 
 var port;
@@ -198,6 +199,22 @@ window.navigate = (options) => {
 	const decodedLocation = JSON.parse(decodeBase64(options.location));
 	log("Show location: " + JSON.stringify(decodedLocation));
 	window._view.navigate(decodedLocation);
+};
+
+let hardwareNavigationQueue = Promise.resolve();
+window.turnPageWithHardwareButton = (next, fraction = 2 / 3) => {
+    let owner = window._view;
+    let active = owner?._activeView;
+    hardwareNavigationQueue = hardwareNavigationQueue.catch(() => {}).then(async () => {
+        if (!owner || owner !== window._view || active !== owner._activeView
+            || owner.getFocusedTextAnnotationID()) return 'ignored';
+        let element = active?._iframeWindow?.document?.activeElement;
+        if (element?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(element?.tagName)) return 'ignored';
+        let result = await navigateWithHardwareButton(active, next, fraction);
+        if (result === 'page' || result === 'scroll') postMessage('onEdgePageTurnTap');
+        return result;
+    });
+    return hardwareNavigationQueue;
 };
 
 window.navigateBack = () => {

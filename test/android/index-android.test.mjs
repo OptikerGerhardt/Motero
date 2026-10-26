@@ -242,3 +242,38 @@ test('Android PDF UI commands decode their inputs and delegate to the view', () 
 		['enterPassword', 'slaptažodis'],
 	]);
 });
+
+test('hardware presses are serialized rather than racing page navigation', async () => {
+	let owner = createView();
+	let calls = [], active = 0, maxActive = 0;
+	owner._activeView = {
+		async navigateToNextPage() {
+			active++; maxActive = Math.max(active, maxActive);
+			await Promise.resolve(); calls.push('next'); active--;
+		},
+		async navigateToPreviousPage() {
+			active++; maxActive = Math.max(active, maxActive);
+			await Promise.resolve(); calls.push('previous'); active--;
+		},
+	};
+	await Promise.all([window.turnPageWithHardwareButton(true),
+		window.turnPageWithHardwareButton(true), window.turnPageWithHardwareButton(false)]);
+	assert.deepEqual(calls, ['next', 'next', 'previous']);
+	assert.equal(maxActive, 1);
+});
+
+test('queued hardware presses ignore editing and a replaced document', async () => {
+	let owner = createView();
+	let calls = 0;
+	owner._activeView = { navigateToNextPage() { calls++; } };
+	owner.focusedTextAnnotationID = 'NOTE';
+	assert.equal(await window.turnPageWithHardwareButton(true), 'ignored');
+	owner.focusedTextAnnotationID = null;
+	owner._activeView._iframeWindow = { document: { activeElement: { tagName: 'INPUT' } } };
+	assert.equal(await window.turnPageWithHardwareButton(true), 'ignored');
+	owner._activeView._iframeWindow = null;
+	let pending = window.turnPageWithHardwareButton(true);
+	createView();
+	assert.equal(await pending, 'ignored');
+	assert.equal(calls, 0);
+});
