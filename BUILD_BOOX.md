@@ -6,7 +6,7 @@
 
 Schnelles Wischen scrollt weiter. Ein zweiter Finger, eine abgebrochene Berührung, ein Größenwechsel oder das Verlassen des Readers verwirft die laufende Markierung. Notizen, vorhandene Anmerkungen, Links und Texteingaben behalten ihre eigenen Gesten. Die Funktion benötigt eine auslesbare Textebene; sie führt kein OCR aus. Unter den Reader-Einstellungen > Text markieren / Text marking kann auf Android-Auswahl / Android selection zurückgeschaltet werden.
 
-**Fit to Width:** In den Reader-Einstellungen > Page Fitting / Seite passend stehen Off, Fit to Content und Fit to Width zur Auswahl. Fit to Width passt die vollständige PDF-Seite an die verfügbare Breite an. Der normale Abstand des PDF.js-Viewers bleibt bestehen. Beim erneuten Öffnen wird die Breite für das aktuelle Display neu berechnet. Die gespeicherte vertikale Leseposition bleibt erhalten. Fit to Content und seine einstellbaren Restabstände bleiben als eigene Alternative verfügbar.
+**Fit to Width / Seitenbreite:** In den Reader-Einstellungen > Page Fitting / Seite passend stehen Off, Fit to Content und Fit to Width (deutsch: Seitenbreite) zur Auswahl. Fit to Width passt die vollständige PDF-Seite an die verfügbare Breite an. Der normale Abstand des PDF.js-Viewers bleibt bestehen. Beim erneuten Öffnen wird die Breite für das aktuelle Display neu berechnet. Die gespeicherte vertikale Leseposition bleibt erhalten. Fit to Content und seine einstellbaren Restabstände bleiben als eigene Alternative verfügbar.
 
 ## Update auf dem Boox
 

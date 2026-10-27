@@ -1,0 +1,19 @@
+{
+  "package": "org.zotero.android.debug",
+  "version_code": 292,
+  "version_name": "1.0.0-292",
+  "certificate_sha256": "c4e70a6935d239246540532b6d3ea514eb2a428e1e8eaacbf94c8a9a01989299",
+  "sha256": "0257faefcfb33d459357f878e7ea8efc961ac02fb3955f9e93d4a892ba899d41",
+  "size_bytes": 197279527,
+  "reader_sha256": "1ac05f61c078b7f94875050436efe940d541a6dbcbb6b2a165b5c85efad77c1b",
+  "dex_count": 8,
+  "reader_sources_verified": [
+    "pdf/hold-to-highlight.mjs",
+    "pdf/direct-highlight.js",
+    "pdf/native-text-selection.js",
+    "pdf/pdf-view.js",
+    "common/view.js",
+    "index.android.js"
+  ],
+  "verified": true
+}
