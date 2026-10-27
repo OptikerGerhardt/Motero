@@ -9,6 +9,8 @@ data class CreateReaderViewOptions(
     var location: CreateReaderLocation? = null,
     var viewState: CreateReaderViewState = CreateReaderViewState(),
     var contentFit: CreateReaderContentFit? = null,
+    var pageWidthFit: Boolean = false,
+    var directHighlight: Boolean = false,
 
     var colorScheme: String = "light",
 )

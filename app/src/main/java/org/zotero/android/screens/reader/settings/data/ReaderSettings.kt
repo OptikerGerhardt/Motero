@@ -41,6 +41,9 @@ data class ReaderSettings(
     var pageWidth: Int,
     var fitToContent: Boolean = false,
     var contentMargin: PageContentMargin = PageContentMargin.SMALL,
+    var fitToWidth: Boolean = false,
+    // Missing in older saved settings: false keeps the new direct gesture enabled.
+    var nativeTextSelection: Boolean = false,
 ) {
     companion object {
         fun default(): ReaderSettings {

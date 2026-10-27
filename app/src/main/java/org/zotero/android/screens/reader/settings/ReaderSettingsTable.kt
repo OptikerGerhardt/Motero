@@ -36,7 +36,7 @@ internal fun ReaderSettingsTable(
         // Fitting applies to the PDF pages, not to Reading Mode's reflowed text
         if (viewState.fileType == ReaderFileType.PDF && !viewState.readingModeEnabled) {
             readerSettingsSettingRow(
-                titleResId = Strings.pdf_settings_fit_to_content_title,
+                titleResId = Strings.pdf_settings_page_fitting_title,
                 options = viewState.fitToContentOptions,
                 selectedOption = viewState.selectedFitToContentOption,
                 optionSelected = viewModel::onOptionSelected
@@ -49,6 +49,12 @@ internal fun ReaderSettingsTable(
                     optionSelected = viewModel::onOptionSelected
                 )
             }
+            readerSettingsSettingRow(
+                titleResId = Strings.pdf_settings_selection_title,
+                options = viewState.selectionOptions,
+                selectedOption = viewState.selectedSelectionOption,
+                optionSelected = viewModel::onOptionSelected
+            )
         }
         if ((viewState.fileType == ReaderFileType.PDF && !viewState.readingModeEnabled) || viewState.fileType == ReaderFileType.EPUB) {
             readerSettingsSettingRow(

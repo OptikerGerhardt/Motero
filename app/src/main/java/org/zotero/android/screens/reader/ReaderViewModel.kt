@@ -2625,10 +2625,15 @@ class ReaderViewModel @Inject constructor(
         val shouldFitToContent = readerSettings.fitToContent && (!previousSettings.fitToContent
                 || previousSettings.contentMargin != readerSettings.contentMargin
                 || previousSettings.scrollMode != readerSettings.scrollMode)
-        updateAppearanceAccordingToSettings(isSettingsUpdate = true, shouldFitToContent = shouldFitToContent)
+        val shouldFitToWidth = readerSettings.fitToWidth && (!previousSettings.fitToWidth
+                || previousSettings.spreadsMode != readerSettings.spreadsMode
+                || previousSettings.scrollMode != readerSettings.scrollMode)
+        updateAppearanceAccordingToSettings(isSettingsUpdate = true, shouldFitToContent = shouldFitToContent,
+            shouldFitToWidth = shouldFitToWidth)
     }
 
-    private fun updateAppearanceAccordingToSettings(isSettingsUpdate: Boolean, shouldFitToContent: Boolean = false) {
+    private fun updateAppearanceAccordingToSettings(isSettingsUpdate: Boolean, shouldFitToContent: Boolean = false,
+        shouldFitToWidth: Boolean = false) {
         viewModelScope.launch {
             val readerSettings = defaults.getReaderSettings()
             if (isSettingsUpdate) {
@@ -2641,11 +2646,14 @@ class ReaderViewModel @Inject constructor(
                 }
                 if (viewState.fileType == ReaderFileType.PDF) {
                     readerWebCallChainExecutor.setScrollMode(readerSettings.scrollMode)
+                    readerWebCallChainExecutor.setDirectHighlight(!readerSettings.nativeTextSelection)
                     readerWebCallChainExecutor.setContentFit(
                         readerSettings.contentMargin.fraction.takeIf { readerSettings.fitToContent }
                     )
                     if (shouldFitToContent) {
                         readerWebCallChainExecutor.fitToContent(readerSettings.contentMargin.fraction)
+                    } else if (shouldFitToWidth) {
+                        readerWebCallChainExecutor.fitToWidth()
                     }
                 }
                 if (viewState.fileType == ReaderFileType.EPUB || viewState.readingModeEnabled) {

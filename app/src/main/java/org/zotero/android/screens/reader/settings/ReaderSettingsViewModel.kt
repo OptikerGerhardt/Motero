@@ -78,7 +78,10 @@ internal class ReaderSettingsViewModel @Inject constructor(
                     wordSpacing = readerSettings.wordSpacing,
                     letterSpacing = readerSettings.letterSpacing,
                     pageWidth = readerSettings.pageWidth.toFloat(),
-                    selectedFitToContentOption = convertFitToContent(readerSettings.fitToContent),
+                    selectedFitToContentOption = if (readerSettings.fitToWidth) ReaderSettingsOptions.FitToWidth
+                        else convertFitToContent(readerSettings.fitToContent),
+                    selectedSelectionOption = if (readerSettings.nativeTextSelection) ReaderSettingsOptions.SelectionAndroid
+                        else ReaderSettingsOptions.SelectionDirect,
                     selectedContentMarginOption = convert(readerSettings.contentMargin),
                     fileType = loadedArgs.fileType,
                     readingModeEnabled = loadedArgs.readingModeEnabled,
@@ -191,10 +194,14 @@ internal class ReaderSettingsViewModel @Inject constructor(
                 }
             }
 
-            ReaderSettingsOptions.FitToContentOff, ReaderSettingsOptions.FitToContentOn -> {
+            ReaderSettingsOptions.FitToContentOff, ReaderSettingsOptions.FitToContentOn, ReaderSettingsOptions.FitToWidth -> {
                 updateState {
                     copy(selectedFitToContentOption = option)
                 }
+            }
+
+            ReaderSettingsOptions.SelectionDirect, ReaderSettingsOptions.SelectionAndroid -> {
+                updateState { copy(selectedSelectionOption = option) }
             }
 
             ReaderSettingsOptions.ContentMarginNone, ReaderSettingsOptions.ContentMarginSmall,
@@ -298,9 +305,23 @@ internal class ReaderSettingsViewModel @Inject constructor(
 
             ReaderSettingsOptions.FitToContentOff -> {
                 readerSettings.fitToContent = false
+                readerSettings.fitToWidth = false
             }
             ReaderSettingsOptions.FitToContentOn -> {
                 readerSettings.fitToContent = true
+                readerSettings.fitToWidth = false
+            }
+
+            ReaderSettingsOptions.FitToWidth -> {
+                readerSettings.fitToWidth = true
+                readerSettings.fitToContent = false
+            }
+
+            ReaderSettingsOptions.SelectionDirect -> {
+                readerSettings.nativeTextSelection = false
+            }
+            ReaderSettingsOptions.SelectionAndroid -> {
+                readerSettings.nativeTextSelection = true
             }
 
             ReaderSettingsOptions.ContentMarginNone -> {
@@ -339,6 +360,7 @@ internal data class ReaderSettingsViewState(
     val pageWidth: Float = 0f,
     val selectedFitToContentOption: ReaderSettingsOptions = ReaderSettingsOptions.FitToContentOff,
     val selectedContentMarginOption: ReaderSettingsOptions = ReaderSettingsOptions.ContentMarginSmall,
+    val selectedSelectionOption: ReaderSettingsOptions = ReaderSettingsOptions.SelectionDirect,
     val isDark: Boolean = false,
     val fileType: ReaderFileType = ReaderFileType.EPUB,
     val readingModeEnabled: Boolean = false,
@@ -366,6 +388,11 @@ internal data class ReaderSettingsViewState(
     val fitToContentOptions = listOf(
         ReaderSettingsOptions.FitToContentOff,
         ReaderSettingsOptions.FitToContentOn,
+        ReaderSettingsOptions.FitToWidth,
+    )
+    val selectionOptions = listOf(
+        ReaderSettingsOptions.SelectionDirect,
+        ReaderSettingsOptions.SelectionAndroid,
     )
     val contentMarginOptions = listOf(
         ReaderSettingsOptions.ContentMarginNone,

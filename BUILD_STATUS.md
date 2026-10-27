@@ -1,21 +1,15 @@
-# Geprüfter Stand
+# Build 292: Prüfstand
 
-Die Test-APK wurde erfolgreich gebaut: `assembleDevDebug`, Gradle 9.6.1, JDK 17, Android SDK 37.0. Der erfolgreiche zweite Build dauerte 2m 43s. Beim ersten Build wurde ein alter, unbenutzter Reader-Cache-Verweis aus dem ursprünglichen PR erkannt und anschließend entfernt.
+Reader und Quellcode für direktes Markieren und Fit to Width sind fertig. Der vollständige Android-Build ist noch in Arbeit; eine neue APK wurde zu diesem Zwischenstand nicht ausgeliefert.
 
-- Datei: `Zotero_Boox_SmartScroll_Test.apk`
-- Größe: 197287255 Bytes
-- SHA-256: `8bb116e4260a354f5c3ecb4635f0fc101e380f28e968df13b83913d5b32e2826`
-- App-ID: `org.zotero.android.debug`; Name: `Zotero Debug`
-- Version: `1.0.0-291`, Version-Code 291
-- Mindest-API: 23; Ziel-API: 36
-- ARM64 für den Boox sowie ARMv7/x86/x86_64 enthalten
-- APK-Signaturprüfung erfolgreich, v2-Signatur gültig
-- Derselbe öffentliche Debug-Signierschlüssel wie in der ersten Testversion
-- ZIP-Integrität und exakte Übereinstimmung des eingebundenen Readers mit dem lokalen Build geprüft
-- Der im APK-Source-Map enthaltene Smart-Scroll-Modultext entspricht exakt dem getesteten Quellcode
-- Neue Scroll-Einstellungen und native Lifecycle-Anbindung sind in DEX enthalten
-- Alle 196 Reader-Tests bestanden
+- 205 Reader-Tests bestanden.
+- Touch-Test mit echtem PDF-Rendering: langes Drücken und Weiterziehen speichert genau eine Hervorhebung ohne native Auswahlgriffe; schnelles Wischen scrollt; Stifteingabe funktioniert.
+- Fit to Width überschreibt beim Öffnen einen gespeicherten Zahlenzoom und passt sich an eine veränderte Bildschirmbreite an.
+- Umschalten auf die native Android-Textauswahl geprüft.
+- Multitouch verwirft die Markierung, bleibt anschließend bedienbar und wird an die bestehende PDF.js-Pinch-Verarbeitung weitergegeben. Eine tatsächliche Skalenänderung wurde in der Simulation auch ohne die neue Markiergeste nicht erreicht.
+- Source-Map des gebauten Readers entspricht exakt allen geänderten Reader-Quelldateien.
+- Reader-ZIP SHA-256: `1ac05f61c078b7f94875050436efe940d541a6dbcbb6b2a165b5c85efad77c1b`.
+- Vorgesehene App-ID `org.zotero.android.debug`, Version-Code 292.
+- Der gesicherte Debug-Schlüssel stimmt exakt mit dem Zertifikat der vorherigen SmartScroll-APK überein. Deren Zertifikat SHA-256: `c4e70a6935d239246540532b6d3ea514eb2a428e1e8eaacbf94c8a9a01989299`.
 
-Am realen Boox noch nicht getestet: Installation, Login/Synchronisation, physische Tasten, E-Ink-Reaktionszeit und Flackern. Kein Android-Gerät ist mit dieser Arbeitsumgebung verbunden.
-
-Bedienung: Settings > Page turning aktivieren; Scrollschritt ⅓, ½, ⅔ oder 1 wählen. Standard ist ⅔; "Seite" schaltet auf direktes Umblättern. Die Boox-Tasten auf Lautstärke oder Umblättern stellen. Siehe BUILD_BOOX.md für Details und Bauanleitung.
+Nicht auf einem echten Android-/Boox-Gerät getestet: Installation als Update, E-Ink-Verhalten, neue Markiergeste, tatsächlicher Pinch-Zoom.

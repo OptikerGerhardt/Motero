@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pdf_settings_page_fitting_title">Seitenanpassung</string>
+    <string name="pdf_settings_fit_to_width">Seitenbreite</string>
+    <string name="pdf_settings_selection_title">Text markieren</string>
+    <string name="pdf_settings_selection_direct">Halten und ziehen</string>
+    <string name="pdf_settings_selection_android">Android-Auswahl</string>
+</resources>

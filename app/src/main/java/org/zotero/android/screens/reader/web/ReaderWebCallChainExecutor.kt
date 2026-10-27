@@ -453,7 +453,9 @@ class ReaderWebCallChainExecutor @Inject constructor(
         val createReaderViewOptions = CreateReaderViewOptions(
             type = data.type,
             url = "https://appassets.androidplatform.net/local/${data.file.name}",
-            annotations = data.annotationsJson
+            annotations = data.annotationsJson,
+            pageWidthFit = data.type == "pdf" && defaults.getReaderSettings().fitToWidth,
+            directHighlight = !defaults.getReaderSettings().nativeTextSelection,
         )
 
         val flowModeString = when (defaults.getReaderSettings().pageLayoutFlowMode) {
@@ -598,6 +600,22 @@ class ReaderWebCallChainExecutor @Inject constructor(
     suspend fun fitToContent(margin: Double) {
         return suspendCancellableCoroutine { cont ->
             readerWebViewHandler.evaluateJavascript("javascript:window.fitToContent({ margin: $margin });") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun fitToWidth() {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("javascript:window.fitToWidth();") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun setDirectHighlight(enabled: Boolean) {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("javascript:window.setDirectHighlight($enabled);") {
                 cont.resume(Unit)
             }
         }

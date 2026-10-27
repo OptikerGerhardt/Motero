@@ -20,10 +20,13 @@ enum class ReaderSettingsOptions(@StringRes val optionStringId: Int) {
     PageLayoutFlowModeScrolled(Strings.pdf_settings_flow_mode_scrolled),
 
     FitToContentOff(Strings.pdf_settings_fit_to_content_off),
-    FitToContentOn(Strings.pdf_settings_fit_to_content_on),
+    FitToContentOn(Strings.pdf_settings_fit_to_content_title),
 
     ContentMarginNone(Strings.pdf_settings_content_margin_none),
     ContentMarginSmall(Strings.pdf_settings_content_margin_small),
     ContentMarginMedium(Strings.pdf_settings_content_margin_medium),
     ContentMarginLarge(Strings.pdf_settings_content_margin_large),
+    FitToWidth(Strings.pdf_settings_fit_to_width),
+    SelectionDirect(Strings.pdf_settings_selection_direct),
+    SelectionAndroid(Strings.pdf_settings_selection_android),
 }
