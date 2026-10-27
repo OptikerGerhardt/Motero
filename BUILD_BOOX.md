@@ -6,7 +6,7 @@
 
 Schnelles Wischen scrollt weiter. Ein zweiter Finger, eine abgebrochene Berührung, ein Größenwechsel oder das Verlassen des Readers verwirft die laufende Markierung. Notizen, vorhandene Anmerkungen, Links und Texteingaben behalten ihre eigenen Gesten. Die Funktion benötigt eine auslesbare Textebene; sie führt kein OCR aus. Unter den Reader-Einstellungen > Text markieren / Text marking kann auf Android-Auswahl / Android selection zurückgeschaltet werden.
 
-**Fit to Width:** In den Reader-Einstellungen > Page fit / Seitenanpassung stehen Off, Fit to Content und Fit to Width zur Auswahl. Fit to Width passt die vollständige PDF-Seite an die verfügbare Breite an. Der normale Abstand des PDF.js-Viewers bleibt bestehen. Beim erneuten Öffnen wird die Breite für das aktuelle Display neu berechnet. Die gespeicherte vertikale Leseposition bleibt erhalten. Fit to Content und seine einstellbaren Restabstände bleiben als eigene Alternative verfügbar.
+**Fit to Width:** In den Reader-Einstellungen > Page Fitting / Seite passend stehen Off, Fit to Content und Fit to Width zur Auswahl. Fit to Width passt die vollständige PDF-Seite an die verfügbare Breite an. Der normale Abstand des PDF.js-Viewers bleibt bestehen. Beim erneuten Öffnen wird die Breite für das aktuelle Display neu berechnet. Die gespeicherte vertikale Leseposition bleibt erhalten. Fit to Content und seine einstellbaren Restabstände bleiben als eigene Alternative verfügbar.
 
 ## Update auf dem Boox
 
@@ -48,6 +48,14 @@ Voraussetzungen: JDK 17, Node/npm, Python 3, zip/unzip, Android SDK mit Plattfor
 
 ```bash
 bash scripts/build_boox_debug.sh
+```
+
+Bei begrenztem Arbeitsspeicher kann der Android-Build seriell und mit vier sichtbaren Prozessoren ausgeführt werden:
+
+```bash
+bash scripts/build_boox_debug.sh --max-workers=1 --no-parallel \
+  -Pkotlin.compiler.execution.strategy=in-process \
+  '-Dorg.gradle.jvmargs=-Xmx4096m -Dfile.encoding=UTF-8 -XX:+UseG1GC -XX:ActiveProcessorCount=4'
 ```
 
 Der Reader muss lokal gebaut werden. Das normale `bundle_reader.sh` lädt einen vorgebauten Reader und würde die eigenen Änderungen verlieren. `bundle_reader_local.sh` erstellt stattdessen die Assets und ihren Hash aus dem lokalen Reader.

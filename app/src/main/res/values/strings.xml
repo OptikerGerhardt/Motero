@@ -97,7 +97,6 @@
     <string name="pdf_settings_scroll_mode_wrapped">Wrapped</string>
 
     <string name="pdf_settings_fit_to_content_title">Fit to Content</string>
-    <string name="pdf_settings_page_fitting_title">Page fit</string>
     <string name="pdf_settings_fit_to_width">Fit to Width</string>
     <string name="pdf_settings_selection_title">Text marking</string>
     <string name="pdf_settings_selection_direct">Hold and drag</string>
