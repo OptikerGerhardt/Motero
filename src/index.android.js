@@ -146,6 +146,9 @@ window.fitToContent = (options) => {
 	window._view.fitToContent(options);
 };
 
+window.fitToWidth = () => window._view.fitToWidth();
+window.setDirectHighlight = enabled => window._view.setDirectHighlight(enabled);
+
 window.setContentFit = (options) => {
 	log("Set content fit: " + JSON.stringify(options));
 	window._view.setContentFit(options);

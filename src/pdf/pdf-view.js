@@ -72,6 +72,7 @@ import { History } from '../common/lib/history';
 import { getPageBlockSpan } from '../../structured-document-text/src/pages';
 import { getBlockNodeByRef } from '../common/sdt/position-mapper';
 import { PDFNativeTextSelection } from './native-text-selection';
+import { PDFDirectHighlight } from './direct-highlight';
 import { PDFDocumentData } from './pdf-document-data.mjs';
 import { PDFSearchController } from './pdf-search-controller.mjs';
 import { getPageScrollTarget, getScrollTarget } from './scroll-target.mjs';
@@ -118,6 +119,7 @@ class PDFView {
 		this._options = options;
 		// Fit to Content settings, so double-tapping can return to the fit
 		this._contentFit = options.contentFit || null;
+		this._directHighlightEnabled = options.directHighlight === true;
 		this._primary = options.primary;
 		this._mobile = options.mobile;
 		this._readOnly = options.readOnly;
@@ -160,6 +162,9 @@ class PDFView {
 		this._onTabOut = options.onTabOut;
 
 		this._viewState = options.viewState || { pageIndex: 0, scale: "page-width", scrollMode: 0, spreadMode: 0 };
+		if (options.pageWidthFit) {
+			this._viewState = { ...this._viewState, scale: 'page-width', left: 0 };
+		}
 		this._location = options.location;
 
 		this._tool = options.tool;
@@ -358,6 +363,7 @@ class PDFView {
 						return;
 					}
 					this._scrolling = true;
+					this._directHighlight?.gesture.abort();
 					clearTimeout(this._scrollTimeout);
 					this._scrollTimeout = setTimeout(() => {
 						this._scrolling = false;
@@ -433,13 +439,24 @@ class PDFView {
 		this._iframeWindow.addEventListener('mousedown', this._handlePointerDown.bind(this), true);
 		// Touch events are passive by default
 		this._iframeWindow.addEventListener('touchmove', this._handleTouchMove.bind(this), { passive: false });
+		this._iframeWindow.addEventListener('touchstart', event => this._directHighlight?.touchStart(event), { passive: true });
+		this._iframeWindow.addEventListener('touchcancel', () => this._directHighlight?.reset());
+		this._iframeWindow.document.addEventListener('visibilitychange', () => {
+			if (this._iframeWindow.document.hidden) this._directHighlight?.reset();
+		});
 		this._iframeWindow.addEventListener('touchend', this._handleTouchEnd.bind(this), { passive: false });
 		this._iframeWindow.addEventListener('pointermove', this._handlePointerMove.bind(this), { passive: true });
+		// PDF.js consumes pointer endings during pinch gestures. Observe them before
+		// its container listeners so no finger remains registered in our gesture.
+		this._iframeWindow.addEventListener('pointerup', event => this._directHighlight?.up(event), true);
+		this._iframeWindow.addEventListener('pointercancel', event => this._directHighlight?.gesture.interrupted(event), true);
 		this._iframeWindow.addEventListener('pointerup', this._handlePointerUp.bind(this));
 		this._iframeWindow.addEventListener('pointercancel', this._handlePointerCancel.bind(this));
 		this._iframeWindow.addEventListener('lostpointercapture', this._handleTouchTransformInterrupted.bind(this));
 		this._iframeWindow.addEventListener('resize', this._handleTouchTransformInterrupted.bind(this));
 		this._iframeWindow.addEventListener('resize', this._handleContentFitResize.bind(this));
+		this._iframeWindow.addEventListener('resize', () => this._directHighlight?.reset());
+		this._iframeWindow.addEventListener('blur', () => this._directHighlight?.reset());
 		this._iframeWindow.addEventListener('dragstart', this._handleDragStart.bind(this), { capture: true });
 		this._iframeWindow.addEventListener('dragend', this._handleDragEnd.bind(this));
 		this._iframeWindow.addEventListener('dragover', this._handlePointerMove.bind(this), { passive: true });
@@ -468,6 +485,7 @@ class PDFView {
 			container: this._iframeWindow.document.getElementById('viewerContainer')
 		});
 		if (this._mobile) {
+			this._directHighlight = new PDFDirectHighlight(this);
 			this._nativeTextSelection = new PDFNativeTextSelection(this);
 		}
 
@@ -527,6 +545,9 @@ class PDFView {
 			return;
 		}
 
+		if (this._options?.pageWidthFit) {
+			this.zoomPageWidth();
+		}
 		if (this._location) {
 			this.navigate(this._location);
 		}
@@ -772,7 +793,7 @@ class PDFView {
 	}
 
 	_hasActiveInteraction() {
-		return !!(this.pointerDownPosition || this._dragging);
+		return !!(this.pointerDownPosition || this._dragging || this._directHighlight?.gesture.state);
 	}
 
 	_handleTextLayerRendered(event) {
@@ -1216,6 +1237,7 @@ class PDFView {
 		this._resolvePageLabels();
 		this._overlayPopupDelayer.destroy();
 		this._nativeTextSelection?.destroy();
+		this._directHighlight?.reset();
 		this._clearPendingBackdropTap();
 	}
 
@@ -1463,6 +1485,10 @@ class PDFView {
 	}
 
 	setTool(tool) {
+		this._directHighlight?.reset();
+		if (['highlight', 'underline'].includes(tool.type) && /^#[\da-f]{6}$/i.test(tool.color)) {
+			this._directHighlightColor = tool.color;
+		}
 		if (this._options.platform === 'android'
 			&& tool.type !== this._tool.type
 			&& this._textAnnotationFocused()) {
@@ -1481,6 +1507,7 @@ class PDFView {
 		this._iframeWindow.document.documentElement.toggleAttribute(
 			'data-android-annotation-tool',
 			this._options.platform === 'android' && !['pointer', 'hand'].includes(tool.type)
+				&& !(this._directHighlightEnabled && ['highlight', 'underline'].includes(tool.type))
 		);
 		this._tool = tool;
 		this._nativeTextSelection?.updateEnabledState();
@@ -1893,7 +1920,15 @@ class PDFView {
 	}
 
 	zoomPageWidth() {
+		this._contentFitRequest = null;
+		this._appliedContentFit = null;
 		this._iframeWindow.PDFViewerApplication.pdfViewer.currentScaleValue = 'page-width';
+	}
+
+	setDirectHighlight(enabled) {
+		this._directHighlight?.reset();
+		this._directHighlightEnabled = !!enabled;
+		this.setTool(this._tool);
 	}
 
 	zoomPageHeight() {
@@ -3460,6 +3495,9 @@ class PDFView {
 			event.preventDefault();
 			return;
 		}
+		if (this._directHighlight?.down(event)) {
+			return;
+		}
 		let doubleTap = this._isDoubleTapCandidate(event);
 		if (this._nativeTextSelection?.handlePointerDown(event)) {
 			return;
@@ -3703,12 +3741,15 @@ class PDFView {
 	}
 
 	_handleTouchMove(event) {
+		if (this._directHighlight?.touchMove(event)) {
+			return;
+		}
 		if (this._nativeTextSelection?.shouldDeferEvent(event)) {
 			return;
 		}
 		if (
 			// Prevent default touch action (which is scroll) if any tool is enabled
-			this._tool.type !== 'pointer' && event.target.id !== 'viewer'
+			this._tool.type !== 'pointer' && !this._directHighlight?.enabled && event.target.id !== 'viewer'
 			// Or a text selection action is triggered using a pen in the page (not the gray area)
 			|| this.action?.type === 'selectText'
 			// Or a selected annotation is being transformed by touch
@@ -3734,6 +3775,9 @@ class PDFView {
 	}
 
 	_handlePointerMove = throttle((event) => {
+		if (this._directHighlight?.move(event)) {
+			return;
+		}
 		if (this._nativeTextSelection?.shouldDeferEvent(event)) {
 			return;
 		}
@@ -4173,6 +4217,9 @@ class PDFView {
 	}
 
 	_handlePointerUp(event) {
+		if (this._directHighlight?.up(event)) {
+			return;
+		}
 		let doubleTap = !!this._pointerDownTap?.doubleTap;
 		this._nativeTextSelection?.handlePointerUp();
 		if (this._nativeTextSelection?.shouldDeferEvent(event)) {
@@ -4412,7 +4459,13 @@ class PDFView {
 		this._updateViewStats();
 	}
 
-	_handlePointerCancel() {
+	_handlePointerCancel(event) {
+		if (event) {
+			this._directHighlight?.gesture.interrupted(event);
+		}
+		else {
+			this._directHighlight?.reset();
+		}
 		this._nativeTextSelection?.handlePointerUp();
 		// Chrome cancels the pointer stream when a native drag operation
 		// starts, but the drag events keep driving the current action
@@ -4431,6 +4484,7 @@ class PDFView {
 	}
 
 	_handleTouchTransformInterrupted(event) {
+		if (event.pointerId !== undefined) this._directHighlight?.gesture.interrupted(event);
 		if (!this._touchTransform
 			|| event.pointerId !== undefined && event.pointerId !== this._touchTransform.pointerID) {
 			return;
@@ -4439,6 +4493,7 @@ class PDFView {
 	}
 
 	cancel() {
+		this._directHighlight?.reset();
 		this._releaseTouchTransform();
 		this.setSelection();
 		this._hover = null;
@@ -4512,6 +4567,9 @@ class PDFView {
 	}
 
 	_handleContextMenu(event) {
+		if (this._directHighlight?.contextMenu(event)) {
+			return;
+		}
 		if (this._options.platform === 'web') {
 			return;
 		}

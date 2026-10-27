@@ -120,6 +120,7 @@ class View {
 			primary: true,
 			platform: this._options.platform,
 			mobile: true,
+			readOnly: this._options.readOnly,
 			showAnnotations: true,
 			container: this._options.container,
 			data: this._options.data,
@@ -161,6 +162,8 @@ class View {
 			viewState: this._options.viewState || null,
 			location: this._options.location || null,
 			contentFit: this._options.contentFit || null,
+			pageWidthFit: this._options.pageWidthFit || false,
+			directHighlight: this._options.directHighlight || false,
 			onChangeViewState: debounce(this._options.onChangeViewState, DEBOUNCE_STATE_CHANGE),
 			onChangeViewStats: (stats) => {
 				this._baseViewStats = stats;
@@ -489,6 +492,15 @@ class View {
 
 	setContentFit(contentFit) {
 		this._view.setContentFit?.(contentFit);
+	}
+
+	fitToWidth() {
+		this._view.setContentFit?.(null);
+		this._view.zoomPageWidth?.();
+	}
+
+	setDirectHighlight(enabled) {
+		this._view.setDirectHighlight?.(enabled);
 	}
 
 	navigate(location) {

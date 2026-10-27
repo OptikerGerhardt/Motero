@@ -161,14 +161,15 @@ export class PDFNativeTextSelection {
 	}
 
 	updateEnabledState() {
-		let enabled = this._view._mobile && this._view._tool?.type === 'pointer';
+		let enabled = this._view._mobile && this._view._tool?.type === 'pointer'
+			&& !this._view._directHighlight?.enabled;
 		if (enabled === this._enabled) {
 			return;
 		}
 		this._enabled = enabled;
 		this._setRootState(enabled, false);
 		for (let textLayer of this._win.document.querySelectorAll('.textLayer')) {
-			textLayer.draggable = !enabled;
+			textLayer.draggable = !enabled && !this._view._directHighlight?.enabled;
 		}
 		if (!enabled) {
 			this.clear();
@@ -179,7 +180,7 @@ export class PDFNativeTextSelection {
 		if (!textLayer) {
 			return;
 		}
-		textLayer.draggable = !this._enabled;
+		textLayer.draggable = !this._enabled && !this._view._directHighlight?.enabled;
 		this._pageMaps.delete(textLayer);
 		let pageIndex = getPageIndex(textLayer);
 		if (pageIndex !== null && this.hasSelection()) {
