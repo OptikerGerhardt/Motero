@@ -1,0 +1,11 @@
+Verifies
+Verified using v2 scheme (APK Signature Scheme v2): true
+Signer #1 certificate SHA-256 digest: c4e70a6935d239246540532b6d3ea514eb2a428e1e8eaacbf94c8a9a01989299
+package: name='org.zotero.android.debug' versionCode='291' versionName='1.0.0-291' platformBuildVersionName='17' platformBuildVersionCode='37' compileSdkVersion='37' compileSdkVersionCodename='17'
+sdkVersion:'23'
+targetSdkVersion:'36'
+application-label:'Zotero Debug'
+native-code: 'arm64-v8a' 'armeabi-v7a' 'x86' 'x86_64'
+APK SHA-256: 8bb116e4260a354f5c3ecb4635f0fc101e380f28e968df13b83913d5b32e2826
+Reader SHA-256: 5872b738b65d3926b11976787f723a6813cebd2b0fe05168a96d83f4fc881ff0
+Exact tested smart-navigation module found in packaged source map; smart-step preferences found in DEX.
