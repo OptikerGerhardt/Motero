@@ -109,10 +109,12 @@ const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/ja
    await window.turnPageWithHardwareButton(true, 2 / 3);
    const line = view._booxReader.edgeElement;
    return { expected: oldBottom - (c.scrollTop - oldTop), actual: line?.getBoundingClientRect().top,
-    page: v.currentPageNumber, pointerEvents: line && getComputedStyle(line).pointerEvents };
+    page: v.currentPageNumber, pointerEvents: line && getComputedStyle(line).pointerEvents,
+    opacity: line && getComputedStyle(line).opacity };
   });
   assert.equal(edge.page, 1); assert.ok(Math.abs(edge.actual - edge.expected) < 4, JSON.stringify(edge));
   assert.equal(edge.pointerEvents, 'none');
+  assert.equal(edge.opacity, '0.5');
   console.log('PASS reading edge', edge);
   await page.setViewportSize({ width: 600, height: 856 });
   await page.waitForTimeout(200);
@@ -167,14 +169,26 @@ const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/ja
   assert.deepEqual(recolored, [{ id: first[0].id, color: '#2ea8e5' }]);
   assert.equal(await palette.count(), 0);
   console.log('PASS immediate palette, same annotation ID');
+  // Native Done now calls the same selection-clear bridge before re-opening.
+  await tap(points[0]);
+  await page.evaluate(() => window._view.selectAnnotations([]));
+  assert.deepEqual(await page.evaluate(() => window._view._view._selectedAnnotationIDs), []);
+  const beforeReopen = await page.evaluate(() => window.testMessages.filter(x => x.message?.event === 'onSelectAnnotations').length);
+  await tap(points[0]);
+  assert.deepEqual(await page.evaluate(() => window._view._view._selectedAnnotationIDs), [first[0].id]);
+  assert.ok(await page.evaluate(() => window.testMessages.filter(x => x.message?.event === 'onSelectAnnotations').length) > beforeReopen);
+  console.log('PASS annotation reopens after selection-clear bridge');
 
   await open();
-  await tap({ x: 450, y: 45 });
+  await tap({ x: 310, y: 65 });
   let notes = await page.evaluate(() => window._view._view._annotations);
   assert.equal(notes.length, 1); assert.equal(notes[0].type, 'note'); assert.equal(notes[0].color, '#aaaaaa');
   assert.match(notes[0].comment, /^(Bookmark|Lesezeichen) · /);
-  await tap({ x: 450, y: 45 });
+  const fixedPosition = notes[0].position;
+  await tap({ x: 590, y: 40 });
   assert.equal(await page.evaluate(() => window._view._view._annotations.length), 1);
+  assert.deepEqual(await page.evaluate(() => window._view._view._annotations[0].position), fixedPosition);
+  assert.ok(await page.evaluate(() => window._view._view._selectedAnnotationIDs.length === 1));
   assert.ok(await page.evaluate(() => window.testMessages.some(x => x.message?.event === 'onSaveAnnotations')));
   await page.evaluate(() => window._view.selectAnnotations([]));
   await page.evaluate(() => window.turnPageWithHardwareButton(true, 0));
@@ -187,6 +201,43 @@ const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/ja
   await page.evaluate(id => window._view._annotationManager.deleteAnnotations([id]), notes[0].id);
   assert.equal(await page.evaluate(() => window._view._view._annotations.length), 1);
   console.log('PASS dated bookmarks, repeated tap, multiple pages, restoration and standard deletion');
+  await open();
+  await page.evaluate(() => window._view._view._iframeWindow.PDFViewerApplication.pdfViewer.currentScale = 1.6);
+  await tap({ x: 580, y: 30 });
+  assert.deepEqual(await page.evaluate(() => window._view._view._annotations[0].position), fixedPosition);
+  console.log('PASS fixed bookmark PDF position independent of tap and zoom');
+  await open();
+  await page.evaluate(() => {
+   const v = window._view._view._iframeWindow.PDFViewerApplication.pdfViewer;
+   v.scrollMode = 1; v.currentScaleValue = 'page-width';
+  });
+  // Changing layout can enqueue a later scroll event, after the setter returns.
+  await page.waitForTimeout(250);
+  await page.waitForFunction(() => !window._view._view._scrolling);
+  await tap({ x: 590, y: 45 });
+  assert.equal((await state()).page, 1);
+  assert.equal(await page.evaluate(() => window._view._view._annotations.length), 1);
+  await tap({ x: 590, y: 150 });
+  assert.equal((await state()).page, 2);
+  assert.equal(await page.evaluate(() => window._view._view._annotations.length), 1);
+  console.log('PASS upper right edge bookmarks; lower right edge still turns pages');
+  await open();
+  await page.evaluate(() => {
+   const v = window._view._view._iframeWindow.PDFViewerApplication.pdfViewer;
+   v.pagesRotation = 90; v.currentScaleValue = 'page-width';
+  });
+  await page.waitForTimeout(250);
+  await page.waitForFunction(() => !window._view._view._scrolling);
+  await tap({ x: 580, y: 35 });
+  const rotated = await page.evaluate(() => {
+   const view = window._view._view, p = view._iframeWindow.PDFViewerApplication.pdfViewer.getPageView(0);
+   const viewport = p.pdfPage.getViewport({ scale: 1, rotation: p.viewport.rotation });
+   const rect = viewport.convertToViewportRectangle(view._annotations[0].position.rects[0]);
+   return { top: Math.min(rect[1], rect[3]), right: viewport.width - Math.max(rect[0], rect[2]) };
+  });
+  assert.ok(Math.abs(rotated.top - 4) < 0.1, JSON.stringify(rotated));
+  assert.ok(Math.abs(rotated.right - 72 / 2.54) < 0.1, JSON.stringify(rotated));
+  console.log('PASS rotated page bookmark remains at visual upper right', rotated);
 
   for (const restoreMode of ['manual', 'content', 'width', 'manual-with-content-setting']) {
    await open('/fixture.pdf', { pageWidthFit: restoreMode === 'width' });
