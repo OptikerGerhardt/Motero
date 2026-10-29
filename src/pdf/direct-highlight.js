@@ -109,6 +109,7 @@ export class PDFDirectHighlight {
 		let type = view._tool.type === 'underline' ? 'underline' : 'highlight';
 		let color = /^#[\da-f]{6}$/i.test(view._tool.color) ? view._tool.color
 			: view._directHighlightColor || view._tools?.highlight?.color || ANNOTATION_COLORS[0][1];
+		let created = [];
 		// The annotation format supports two adjacent pages per highlight.
 		while (ranges.length) {
 			let group = [ranges.shift()];
@@ -117,10 +118,12 @@ export class PDFDirectHighlight {
 			}
 			let annotation = view._getAnnotationFromSelectionRanges(group, type, color);
 			if (annotation?.text?.trim()) {
-				view._onAddAnnotation(annotation);
+				let saved = view._onAddAnnotation(annotation);
+				if (saved) created.push(saved);
 			}
 		}
 		this.clear();
+		view._booxReader?.showPalette(created);
 		this.suppressUntil = Date.now() + 800;
 	}
 

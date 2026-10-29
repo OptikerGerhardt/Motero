@@ -42,8 +42,10 @@ export async function navigateWithHardwareButton(view, next, fraction = 2 / 3) {
 			&& remaining > EDGE_TOLERANCE) {
 		view._onManualNavigation?.();
 		view._cancelPendingPageTurn?.();
+		let edge = view._booxReader?.captureEdge(next);
 		container.scrollTop = clamp(container.scrollTop + (next ? 1 : -1)
 			* limits.viewportHeight * fraction, limits.min, limits.max);
+		view._booxReader?.showEdge(edge);
 		return 'scroll';
 	}
 	let targetIndex = index + (next ? 1 : -1);

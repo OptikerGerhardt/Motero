@@ -1052,14 +1052,29 @@ test('Viewport changes and destruction cancel pending turns without applying geo
 	}
 });
 
-test('Desktop and non-horizontal page turns do not inspect page geometry', async () => {
-	for (let options of [{ platform: 'zotero' }, { platform: 'ios' }, { scrollMode: 0 }]) {
+test('Desktop and single-page mode turns do not inspect page geometry', async () => {
+	for (let options of [{ platform: 'zotero' }, { platform: 'ios' }, { scrollMode: 3 }]) {
 		let { calls, pdfViewer, view } = createEdgePageTurnView(options);
 		pdfViewer.getPageView = () => assert.fail('Unexpected geometry access');
 		await view._navigateToAdjacentPage(1);
 		await view._navigateToAdjacentPage(-1);
 		assert.equal(calls.next, 1);
 		assert.equal(calls.previous, 1);
+	}
+});
+
+test('Wrapped and vertical directional turns keep horizontal pan and native vertical entry', async () => {
+	for (let scrollMode of [0, 2]) {
+		let { pdfViewer, view } = createEdgePageTurnView({ scrollMode });
+		let originalScale = pdfViewer.currentScale;
+		await view._navigateToAdjacentPage(1);
+		let page = pdfViewer.getPageView(2);
+		assert.equal(pdfViewer.container.scrollLeft - page.div.offsetLeft, 800);
+		assert.equal(pdfViewer.container.scrollTop, page.div.offsetTop);
+		await view._navigateToAdjacentPage(-1);
+		page = pdfViewer.getPageView(1);
+		assert.equal(pdfViewer.container.scrollLeft - page.div.offsetLeft, 800);
+		assert.equal(pdfViewer.currentScale, originalScale);
 	}
 });
 

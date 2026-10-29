@@ -75,7 +75,8 @@ window.createView = (encodedOptions) => {
 			// Skip while a text annotation is being inline-edited — stealing the selection
 			// here would delete the still-empty annotation under the focused editor
 			let newNote = annotations.find(x => x.type === 'note' && x.dateCreated === x.dateModified);
-			if (newNote && !window._view.getFocusedTextAnnotationID()) {
+			if (newNote && !/^(Lesezeichen|Bookmark) · /.test(newNote.comment || '')
+					&& !window._view.getFocusedTextAnnotationID()) {
 				window._view.selectAnnotations([newNote.id]);
 			}
 		},

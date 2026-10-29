@@ -54,6 +54,7 @@ import {
 } from '../common/lib/utilities';
 import { debounce } from '../common/lib/debounce';
 import { AutoScroll } from './lib/auto-scroll';
+import { PDFBooxReader } from './boox-reader';
 import { PDFThumbnails } from './pdf-thumbnails';
 import {
 	A11Y_VIRT_CURSOR_DEBOUNCE_LENGTH,
@@ -345,6 +346,9 @@ class PDFView {
 				}
 				else {
 					this._init();
+					if (this._options.platform === 'android') {
+						this._booxReader = new PDFBooxReader(this);
+					}
 				}
 				if (options.data.buf) {
 					this._iframeWindow.PDFViewerApplication.open({ data: options.data.buf, password: this._password });
@@ -363,6 +367,7 @@ class PDFView {
 						return;
 					}
 					this._scrolling = true;
+					this._booxReader?.onScroll();
 					this._directHighlight?.gesture.abort();
 					clearTimeout(this._scrollTimeout);
 					this._scrollTimeout = setTimeout(() => {
@@ -1222,6 +1227,7 @@ class PDFView {
 	}
 
 	destroy() {
+		this._booxReader?.destroy();
 		if (this._destroyed) {
 			return;
 		}
@@ -2163,6 +2169,9 @@ class PDFView {
 	}
 
 	_resolveBackdropTap(event, pageTurnDirection) {
+		if (this._booxReader?.handleTap(event, this.pointerEventToPosition(event))) {
+			return;
+		}
 		if (pageTurnDirection === 'previous') {
 			this.navigateToPreviousPage();
 			this._onEdgePageTurnTap?.();
@@ -2528,6 +2537,7 @@ class PDFView {
 	}
 
 	async navigate(location, options = {}) {
+		this._booxReader?.clearNavigation(true);
 		this._cancelPendingPageTurn();
 		if (this._destroyed) {
 			return;
@@ -2646,13 +2656,14 @@ class PDFView {
 
 	async _navigateToPage({ pageIndex, direction, save }) {
 		if (this._destroyed) return false;
+		this._booxReader?.clearNavigation(true);
 		let viewer = this._iframeWindow.PDFViewerApplication.pdfViewer;
 		let mode = viewer.scrollMode;
 		let navigate = () => (direction
 			? viewer[direction > 0 ? 'nextPage' : 'previousPage']()
 			: viewer.scrollPageIntoView({ pageNumber: pageIndex + 1 }));
 		let supportsPan = mode === HORIZONTAL_SCROLL_MODE
-			|| (!direction && (mode === VERTICAL_SCROLL_MODE || mode === WRAPPED_SCROLL_MODE));
+			|| mode === VERTICAL_SCROLL_MODE || mode === WRAPPED_SCROLL_MODE;
 		if (this._options.platform !== 'android' || !supportsPan) {
 			this._cancelPendingPageTurn();
 			navigate();
@@ -2734,7 +2745,8 @@ class PDFView {
 					container.scrollLeft = div.offsetLeft + div.clientLeft
 						+ Math.max(0, Math.min(left, div.clientWidth - container.clientWidth));
 				}
-				if (div.clientHeight > container.clientHeight) {
+				if (div.clientHeight > container.clientHeight
+						&& (!direction || mode === HORIZONTAL_SCROLL_MODE)) {
 					container.scrollTop = div.offsetTop + div.clientTop
 						+ Math.max(0, Math.min(top, div.clientHeight - container.clientHeight));
 				}
@@ -4352,7 +4364,7 @@ class PDFView {
 					}
 				}
 				else if (position && !this.action.alreadySelectedAnnotations && this._tool.type !== 'eraser') {
-					let selectableAnnotations = this.getSelectableAnnotations(position);
+					let selectableAnnotations = this.getSelectableAnnotations(position) || [];
 					let lastSelectedAnnotationID = this._selectedAnnotationIDs.slice(-1)[0];
 					let annotation = selectableAnnotations.find(annotation => annotation.id === lastSelectedAnnotationID);
 					if (annotation?.type === 'text') {
