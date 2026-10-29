@@ -1,75 +1,48 @@
-# Zotero Boox: Build 292
+# Zotero BOOX: Build 293
 
-## Neue Funktionen
+## Installation als Update
 
-**Direkt markieren:** Im PDF-Reader etwa 450 ms auf ein Wort drücken, den Finger oder Stift auf dem Display lassen und weiterziehen. Die Auswahl rastet an Wortgrenzen ein. Beim Loslassen wird sie als Hervorhebung gespeichert. Im Unterstreichen-Werkzeug wird eine Unterstreichung gespeichert. Im normalen Zeiger-Werkzeug wird die zuletzt in dieser Reader-Sitzung benutzte Markierfarbe verwendet, sonst Gelb.
+Die neue APK über die installierte Testversion installieren. Vorher nicht deinstallieren.
+Paketkennung: `org.zotero.android.debug`. Version: `1.0.0-293`, Versionscode 293; zuvor 292.
+Derselbe im Projekt enthaltene Debug-Signierschlüssel wird weiterverwendet. Damit erfüllt die APK die Android-Voraussetzungen für ein Update mit Erhalt der vorhandenen App-Daten, Anmeldung und Einstellungen. Die offizielle Zotero-App wird dadurch nicht ersetzt.
 
-Schnelles Wischen scrollt weiter. Ein zweiter Finger, eine abgebrochene Berührung, ein Größenwechsel oder das Verlassen des Readers verwirft die laufende Markierung. Notizen, vorhandene Anmerkungen, Links und Texteingaben behalten ihre eigenen Gesten. Die Funktion benötigt eine auslesbare Textebene; sie führt kein OCR aus. Unter den Reader-Einstellungen > Text markieren / Text marking kann auf Android-Auswahl / Android selection zurückgeschaltet werden.
+## Enthaltene Änderungen
 
-**Fit to Width / Seitenbreite:** In den Reader-Einstellungen > Page Fitting / Seite passend stehen Off, Fit to Content und Fit to Width (deutsch: Seitenbreite) zur Auswahl. Fit to Width passt die vollständige PDF-Seite an die verfügbare Breite an. Der normale Abstand des PDF.js-Viewers bleibt bestehen. Beim erneuten Öffnen wird die Breite für das aktuelle Display neu berechnet. Die gespeicherte vertikale Leseposition bleibt erhalten. Fit to Content und seine einstellbaren Restabstände bleiben als eigene Alternative verfügbar.
+| Feature | Bedienung / Verhalten |
+|---|---|
+| F01 | Beim Vor-/Zurückblättern in Wrapped und vertikal bleiben Zoom und horizontaler Ausschnitt erhalten. |
+| F02 | In der herausgezoomten Wrapped-Übersicht eine Seite kurz antippen, um zum Lesezoom auf dieser Seite zurückzukehren. Wrapped bleibt aktiv. Manueller Zoom, Inhaltsanpassung und Seitenbreite werden berücksichtigt. |
+| F05 | Die Farbauswahl zum Filtern steht direkt unten in der Annotations-Seitenleiste. Mehrere Farben sind kombinierbar. Der Tags-Knopf öffnet die Tag-Filterung und erhält die Farbauswahl. Auf schmalen Seitenleisten ist die Farbreihe scrollbar. |
+| F06 | Obere Leiste, Zeichnen-Leiste und untere Seitennavigation verwenden denselben Sichtbarkeitszustand. Lange Markiergesten und Pinch lösen kein automatisches Verstecken durch die rohe Bewegungserkennung aus. |
+| F16 | Nach Halten, Ziehen und Loslassen erscheint eine kleine Farbbox unter bzw. über der Markierung. Farbtipp ändert dieselbe Annotation. |
+| F17 | Nach Tastenscrollen und Wischen zeigt eine graue gestrichelte Linie die vorherige Bildkante. Sie ist an der PDF-Stelle verankert und wird nicht in der PDF gespeichert. |
+| F18 | Oben rechts im Lesebereich, mit Abstand zum äußeren Blätterrand, kurz tippen: graue Haftnotiz mit Datum/Uhrzeit. Derselbe Bereich erneut erzeugt keine doppelte Notiz an derselben Stelle. Vorhandene Haftnotizen lassen sich normal öffnen und löschen. Mehrere Lesestände sind möglich. |
+| F20 | Im Highlight-Fenster stehen die konfigurierten farbigen Tags als farbige Hashtags direkt unter der Highlight-Farbauswahl. Tippen schaltet die Zuordnung um; längeres Drücken zeigt den Namen. Die vollständige Tag-Auswahl steht darunter. |
+| F21 | Das Highlight-Fenster zeigt den markierten Originaltext oben in einem eigenen, bei langen Zitaten scrollbar bleibenden Bereich. Der eigene Kommentar bleibt separat. |
 
-## Update auf dem Boox
+Die bisherigen Funktionen für direktes Markieren und SmartScroll bleiben enthalten. Andere Ideen der Featureliste, darunter F19 Tag-Autocomplete, sind nicht Bestandteil dieses Builds.
 
-Die APK über die installierte Zotero-Debug-App installieren, ohne diese vorher zu deinstallieren. App-ID: `org.zotero.android.debug`; Version-Code: 292. Es wird weiterhin der im Originalprojekt enthaltene Debug-Schlüssel benutzt. Sein Zertifikat stimmt mit der zuvor ausgelieferten SmartScroll-APK (Build 291) überein:
+## Prüfungen
 
-`C4:E7:0A:69:35:D2:39:24:65:40:53:2B:6D:3E:A5:14:EB:2A:42:8E:1E:8E:AA:CB:F9:4C:8A:9A:01:98:92:99`
+206 Reader-Tests und 6 Android-Logiktests bestanden. Browserprüfungen verwenden echtes PDF-Rendering und Touch-/Stift-Ereignisse. Geprüft wurden Pan-Erhalt in beiden Richtungen und beiden Layouts, Fit to Content an den Körperseiten der Mul-PDF, Lesekante vorwärts/rückwärts und nach Wischen, Farbbox ohne doppelte Annotation, datierte Notizen mit Wiederherstellung/Löschen sowie Wrapped-Rückkehr mit manuellem Zoom, Seitenbreite und Fit to Content. Der Ausgangsfehler mit 106 Pixeln horizontalem Ausschnitt endet nun wieder bei 106 statt 0 Pixeln.
 
-Die App verwendet dadurch weiterhin ihre vorhandenen Daten, Anmeldung und Einstellungen. Die offizielle Zotero-App hat eine andere App-ID/Signatur und wird nicht ersetzt. Ein Installationstest auf dem physischen Gerät ist noch erforderlich.
+Ein vollständiger Android-Neubau war erfolgreich. Beim nachfolgenden inkrementellen DEX-Schritt trat ein Konflikt in gecachten generierten Backport-Klassen auf. Die generierten Projekt-DEX-Dateien wurden entfernt und ohne Build-Cache neu erzeugt; der abschließende Build war erfolgreich. Es wurden keine Compiler-Prüfungen übersprungen. Sämtliche unveränderten Laufzeitpakete und nativen Bibliotheken sind bytegleich zur bisherigen APK. Der eingebettete Reader wurde anhand seiner Source-Map mit den geprüften Quelldateien verglichen.
 
-## Bereits enthalten
+Es ist kein physischer BOOX angeschlossen. Installation, Erhalt des konkreten Geräte-Logins, native Fensterdarstellung und E-Ink-Reaktion müssen deshalb am Gerät erprobt werden. Die Browser-Touchsimulation bestätigt weiterhin die Übergabe von Multitouch an PDF.js, beweist aber keine echte Pinch-Skalenänderung auf dem Zielgerät. Die Haftnotizen nutzen den vorhandenen Zotero-Annotations-Sync; ein echter Android-/Desktop-Sync mit dem Konto wurde hier nicht ausgeführt.
 
-- Android PR #298: Lautstärketasten und Einstellungen.
-- Android PR #353 einschließlich #352 sowie Reader PR #260: Randbeschnitt und gespeicherter PDF-Zoom.
-- Anbindung der Lautstärke- und Page-Up/Down-Tasten an den aktuellen Web-Reader.
-- Scrollen innerhalb einer Seite; erst ein weiterer Druck am Seitenrand blättert um.
+## Quellcode und Neubau
 
-Unter Settings > Page turning wird die Tastensteuerung aktiviert. Standard: 2/3 der sichtbaren Bildschirmhöhe. Alternativen: direktes Umblättern, 1/3, 1/2 oder 1 Bildschirmhöhe. Die Richtung ist umkehrbar. Auf dem Boox die App-Tasten auf Lautstärke oder Umblättern stellen.
+Das Archiv enthält einen lesbaren Snapshot und vollständige Git-Bundles für Android und Reader. Vorgebaute Laufzeitpakete liegen unter `app/src/main/assets`; sie stammen außer dem neu gebauten Reader unverändert aus Build 292. Die Original-Mul-PDF und Build-Caches sind nicht im Archiv enthalten.
 
-Leiser scrollt abwärts, bis zum unteren Seitenrand. Erst der folgende Tastendruck öffnet die nächste Seite oben. Lauter arbeitet umgekehrt und öffnet die vorige Seite unten. Randbeschnitt wird berücksichtigt; Zoom und horizontale Position bleiben erhalten. Gedrückthalten wiederholt nicht. Bei Suche und Texteingaben greift die Tastensteuerung nicht ein.
-
-Die Änderungen gelten für den aktuellen, WebView-basierten PDF-Reader. Die alte Nutrient-Implementierung ist im Quellcode erhalten, wird durch diese Version aber nicht wieder aktiviert. Eine Produktionslizenz für den alten Reader ist nicht enthalten.
-
-## Quellcode wiederherstellen
-
-Das Archiv enthält einen lesbaren Quellcode-Snapshot und vollständige Git-Bundles für Android und Reader. Die lokalen Änderungen sind nicht auf GitHub veröffentlicht.
+Voraussetzungen: JDK 17, Node/npm, Python 3 sowie Android SDK Platform 37.0 und Build Tools 36.0.0. SDK über Android Studio oder `local.properties` eintragen.
 
 ```bash
 git clone -b boox-smart-scroll zotero-android.bundle zotero-boox
 git clone -b boox-smart-scroll reader.bundle zotero-boox/reader
 cd zotero-boox
-git submodule update --init --recursive
+bash scripts/build_boox_debug.sh --max-workers=1 --no-parallel --no-build-cache
 ```
 
-Die unveränderten Submodule werden von ihren öffentlichen Ursprungs-Repositories geladen.
+Für reine Änderungen am Reader kann das unveränderte PDF.js aus dem bereits vorhandenen `app/src/main/assets/reader/reader.zip` nach `reader/build/mobile/pdf` übernommen und anschließend direkt `npx webpack --config-name android` ausgeführt werden. `python3 scripts/package_reader_assets.py` verpackt den fertigen Reader samt Hash. Danach `:app:assembleDevDebug` aufrufen. Die Android-App selbst muss bei Änderungen der nativen Oberfläche neu kompiliert werden.
 
-## APK bauen
-
-Voraussetzungen: JDK 17, Node/npm, Python 3, zip/unzip, Android SDK mit Plattform 37.0 und Build Tools 36.0.0. `ANDROID_HOME` oder `local.properties` müssen auf das SDK zeigen.
-
-```bash
-bash scripts/build_boox_debug.sh
-```
-
-Bei begrenztem Arbeitsspeicher kann der Android-Build seriell und mit vier sichtbaren Prozessoren ausgeführt werden:
-
-```bash
-bash scripts/build_boox_debug.sh --max-workers=1 --no-parallel \
-  -Pkotlin.compiler.execution.strategy=in-process \
-  '-Dorg.gradle.jvmargs=-Xmx4096m -Dfile.encoding=UTF-8 -XX:+UseG1GC -XX:ActiveProcessorCount=4'
-```
-
-Der Reader muss lokal gebaut werden. Das normale `bundle_reader.sh` lädt einen vorgebauten Reader und würde die eigenen Änderungen verlieren. `bundle_reader_local.sh` erstellt stattdessen die Assets und ihren Hash aus dem lokalen Reader.
-
-## Tests
-
-```bash
-cd reader
-npm ci --no-audit --no-fund
-npm test
-```
-
-205 Tests, darunter 9 neue Tests für langes Halten, Ziehen, schnelle Wischgesten, Stift und Finger, Multitouch, Abbrüche und verzögerte Textextraktion.
-
-Zusätzlich liegt `reader/scripts/test-boox-browser.cjs` mit einer selbst erzeugten Test-PDF bei. Nach dem Android-Reader-Build kann das Skript mit installiertem Playwright ausgeführt werden. Optional weist `BOOX_TEST_BROWSER` auf eine vorhandene Chromium-Binärdatei. Die Prüfung deckt echtes PDF-Rendering, gespeicherten Zoom gegenüber Fit to Width, Größenwechsel, Finger- und Stiftmarkieren, Scrollen, native Textauswahl als Alternative und die Übergabe von Multitouch an PDF.js ab. Die Zoom-Skalenänderung der Touch-Simulation war auch im Vergleichsmodus ohne die neue Markiergeste nicht nachweisbar; ein erfolgreicher Pinch-Zoom auf dem Zielgerät wird damit nicht behauptet.
-
-Ein physischer Boox ist nicht angeschlossen. Die praktische Bedienung, E-Ink-Reaktionszeit und die Installation als Update müssen am Gerät geprüft werden.
+Prüfskripte: `reader/scripts/test-boox-browser.cjs`, `reader/scripts/test-boox-features.cjs` und `scripts/verify_boox_update.py`. Das optionale `BOOX_PROBLEM_PDF` verweist für den Regressionstest auf die lokale Mul-PDF. `BOOX_TEST_BROWSER` kann auf eine vorhandene Chromium-Binärdatei zeigen. Playwright muss verfügbar sein.

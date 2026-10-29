@@ -1,19 +1,36 @@
 {
   "package": "org.zotero.android.debug",
-  "version_code": 292,
-  "version_name": "1.0.0-292",
+  "version_code": 293,
+  "version_name": "1.0.0-293",
   "certificate_sha256": "c4e70a6935d239246540532b6d3ea514eb2a428e1e8eaacbf94c8a9a01989299",
-  "sha256": "0257faefcfb33d459357f878e7ea8efc961ac02fb3955f9e93d4a892ba899d41",
-  "size_bytes": 197279527,
-  "reader_sha256": "1ac05f61c078b7f94875050436efe940d541a6dbcbb6b2a165b5c85efad77c1b",
+  "previous_version_code": 292,
+  "sha256": "c8904764e948fb850f99b995e6113866bd3a67960f2579de5c4bc225554d3f2e",
+  "size_bytes": 199618328,
+  "reader_sha256": "fb61b75d50488a7f5b2ecdaaa61e629c72ff16d34412230810eb74243fe23967",
   "dex_count": 8,
   "reader_sources_verified": [
-    "pdf/hold-to-highlight.mjs",
-    "pdf/direct-highlight.js",
-    "pdf/native-text-selection.js",
+    "pdf/boox-reader.js",
     "pdf/pdf-view.js",
-    "common/view.js",
+    "pdf/direct-highlight.js",
+    "pdf/hardware-navigation.mjs",
     "index.android.js"
   ],
-  "verified": true
+  "unchanged_runtime_files_verified": 88,
+  "selected_features": [
+    1,
+    2,
+    5,
+    6,
+    16,
+    17,
+    18,
+    20,
+    21
+  ],
+  "reader_tests": 206,
+  "native_logic_tests": 6,
+  "browser_features_passed": true,
+  "browser_gestures_passed": true,
+  "verified": true,
+  "physical_device_tested": false
 }
