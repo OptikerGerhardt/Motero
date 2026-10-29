@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="boox_filter_tags">Tags</string>
+    <string name="boox_highlight_text">Markierter Text</string>
+    <string name="boox_colored_tags">Schnellauswahl für Tags</string>
+</resources>

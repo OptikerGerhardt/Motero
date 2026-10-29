@@ -30,14 +30,15 @@ class ReaderCustomWebView(context: Context, attrs: AttributeSet? = null) : WebVi
             }
 
             MotionEvent.ACTION_POINTER_DOWN -> {
-                if (!gestureAlreadyReportedThisTouch) {
-                    gestureAlreadyReportedThisTouch = true
-                    onUserGestureDetected?.invoke()
-                }
+                // Resizing the WebView during a pinch interrupts PDF.js zoom.
+                gestureAlreadyReportedThisTouch = true
             }
 
             MotionEvent.ACTION_MOVE -> {
-                if (!gestureAlreadyReportedThisTouch &&
+                // The Reader starts hold-and-drag highlighting after 450 ms.
+                // Keep the layout stable for that gesture and native long-press selection.
+                if (!gestureAlreadyReportedThisTouch && ev.pointerCount == 1 &&
+                    ev.eventTime - ev.downTime < 300L &&
                     (abs(ev.x - gestureDownX) > touchSlop || abs(ev.y - gestureDownY) > touchSlop)
                 ) {
                     gestureAlreadyReportedThisTouch = true

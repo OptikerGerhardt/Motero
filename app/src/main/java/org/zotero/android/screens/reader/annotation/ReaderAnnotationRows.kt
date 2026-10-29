@@ -25,6 +25,7 @@ import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.screens.reader.annotation.sections.ReaderAnnotationCommentSection
 import org.zotero.android.screens.reader.annotation.sections.ReaderAnnotationTagsSection
 import org.zotero.android.screens.reader.data.ReaderAnnotation
+import org.zotero.android.screens.reader.ReaderColoredTagShortcuts
 import org.zotero.android.screens.settings.elements.NewSettingsDivider
 import org.zotero.android.sync.Tag
 import org.zotero.android.uicomponents.Drawables
@@ -95,6 +96,9 @@ internal fun ReaderAnnotationHeaderRow(
 
 @Composable
 internal fun ReaderAnnotationHighlightRow(
+    coloredTags: List<Tag>,
+    canEdit: Boolean,
+    onColoredTagClicked: (Tag) -> Unit,
     commentFocusText: String,
     onCommentTextChange: (String) -> Unit,
     colors: List<String>,
@@ -113,6 +117,7 @@ internal fun ReaderAnnotationHighlightRow(
         onColorSelected = onColorSelected,
         selectedColor = selectedColor,
     )
+    ReaderColoredTagShortcuts(coloredTags, tags, canEdit, onColoredTagClicked)
     NewSettingsDivider()
     ReaderAnnotationTagsSection(
         tags = tags,
@@ -151,6 +156,9 @@ internal fun ReaderAnnotationNoteRow(
 
 @Composable
 internal fun ReaderAnnotationUnderlineRow(
+    coloredTags: List<Tag>,
+    canEdit: Boolean,
+    onColoredTagClicked: (Tag) -> Unit,
     commentFocusText: String,
     onCommentTextChange: (String) -> Unit,
     colors: List<String>,
@@ -170,6 +178,7 @@ internal fun ReaderAnnotationUnderlineRow(
         onColorSelected = onColorSelected,
         selectedColor = selectedColor
     )
+    ReaderColoredTagShortcuts(coloredTags, tags, canEdit, onColoredTagClicked)
     NewSettingsDivider()
     ReaderAnnotationTagsSection(
         tags = tags,

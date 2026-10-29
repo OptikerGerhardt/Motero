@@ -13,5 +13,6 @@ data class TagPickerResult(val tags: List<Tag>, val callPoint: CallPoint) {
         ReaderScreen,
         ReaderAnnotationScreen,
         ReaderFilter,
+        ReaderSidebarFilter,
     }
 }

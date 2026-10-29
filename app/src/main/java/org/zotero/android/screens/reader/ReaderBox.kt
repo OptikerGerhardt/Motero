@@ -101,7 +101,7 @@ internal fun ReaderBox(
                 }
         ) {
             ReaderWebView(viewModel = viewModel)
-            if (viewState.showCreationToolbar) {
+            if (viewState.showCreationToolbar && viewState.isTopBarVisible) {
                 ReaderAnnotationCreationToolbar(
                     viewState = viewState,
                     viewModel = viewModel,

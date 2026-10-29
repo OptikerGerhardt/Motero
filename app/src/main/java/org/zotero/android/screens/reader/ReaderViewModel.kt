@@ -291,6 +291,10 @@ class ReaderViewModel @Inject constructor(
             val key = this.annotationEditReaderKey ?: return
             setTags(tags = tagPickerResult.tags, key = key)
         }
+        if (tagPickerResult.callPoint == TagPickerResult.CallPoint.ReaderSidebarFilter) {
+            val tags = tagPickerResult.tags.map { it.name }.toSet()
+            set(ReaderQuickControlActions.setFilterTags(viewState.annotationFilter, tags))
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -1718,7 +1722,7 @@ class ReaderViewModel @Inject constructor(
                 }
                 if (successValue.enabled && !viewState.isTopBarVisible) {
                     updateState {
-                        copy(isTopBarVisible = true, isScrubberSuppressedByScroll = false)
+                        copy(isTopBarVisible = true)
                     }
                 }
             }
@@ -2091,6 +2095,24 @@ class ReaderViewModel @Inject constructor(
 
     }
 
+    fun annotationFilterColors(): List<String> = AnnotationsConfig.allColors
+
+    fun toggleAnnotationFilterColor(color: String) {
+        set(ReaderQuickControlActions.toggleColor(viewState.annotationFilter, color))
+    }
+
+    fun showAnnotationTagFilter() {
+        val tags = annotations.values.filterNotNull().flatMap { it.tags }.distinctBy { it.name }
+            .sortedBy { it.name.lowercase() }
+        ScreenArguments.tagPickerArgs = TagPickerArgs(
+            libraryId = library.identifier,
+            selectedTags = viewState.annotationFilter?.tags ?: emptySet(),
+            tags = tags,
+            callPoint = TagPickerResult.CallPoint.ReaderSidebarFilter,
+        )
+        triggerEffect(ReaderViewEffect.NavigateToTagPickerScreen)
+    }
+
     fun onOutlineSearch(search: String) {
         if (search == viewState.outlineSearchTerm) {
             return
@@ -2437,7 +2459,8 @@ class ReaderViewModel @Inject constructor(
             val selectedAnnotation = annotationEditReaderKey?.let { this.annotations[it] }
             val readerAnnotationArgs = ReaderAnnotationArgs(
                 selectedAnnotation = selectedAnnotation,
-                library = this.library
+                library = this.library,
+                canEdit = selectedAnnotation?.editability(userId, library) == org.zotero.android.pdf.data.AnnotationEditability.editable,
             )
             ScreenArguments.readerAnnotationArgs = readerAnnotationArgs
             if (!isTablet) {
@@ -2491,19 +2514,15 @@ class ReaderViewModel @Inject constructor(
 
     private var previousSidebarVisibilityState = false
 
-    private fun decideTopBarAndBottomBarVisibility() = viewModelScope.launch {
-        val isFullyVisible = viewState.isTopBarVisible && !viewState.isScrubberSuppressedByScroll
-        val topBarNewVisibilityState = !isFullyVisible
-        if (topBarNewVisibilityState) {
-            updateState { copy(isScrubberSuppressedByScroll = false) }
-        }
-        setTopBarVisibility(topBarNewVisibilityState)
-        delay(300)//First hide topbar and then with a delay sidebar, creates much nicer visual effect
-        if (!topBarNewVisibilityState) {
-            this@ReaderViewModel.previousSidebarVisibilityState = viewState.showSideBar
-            updateState { copy(showSideBar = false) }
-        } else {
-            updateState { copy(showSideBar = this@ReaderViewModel.previousSidebarVisibilityState) }
+    private fun decideTopBarAndBottomBarVisibility() {
+        setReaderChromeVisible(!viewState.isTopBarVisible)
+    }
+
+    private fun setReaderChromeVisible(visible: Boolean) {
+        if (visible == viewState.isTopBarVisible) return
+        if (!visible) previousSidebarVisibilityState = viewState.showSideBar
+        updateState {
+            copy(isTopBarVisible = visible, showSideBar = visible && previousSidebarVisibilityState)
         }
     }
 
@@ -2514,9 +2533,7 @@ class ReaderViewModel @Inject constructor(
         if (viewState.activeTool != null) {
             return
         }
-        if (viewState.isTopBarVisible && !viewState.isScrubberSuppressedByScroll) {
-            updateState { copy(isScrubberSuppressedByScroll = true) }
-        }
+        setReaderChromeVisible(false)
     }
 
     fun navigateToReaderSettings() {
@@ -2825,7 +2842,6 @@ data class ReaderViewState(
     val annotationPopoverRect: RectF? = null,
     var outlineSearch: String = "",
     val isTopBarVisible: Boolean = true,
-    val isScrubberSuppressedByScroll: Boolean = false,
     val showPdfSearch: Boolean = false,
     val showSideBar: Boolean = false,
     val showCreationToolbar: Boolean = false,
@@ -2866,7 +2882,7 @@ data class ReaderViewState(
     }
 
     fun isScrubberVisible(): Boolean {
-        return fileType == ReaderFileType.PDF && !readingModeEnabled && isTopBarVisible && !isScrubberSuppressedByScroll
+        return fileType == ReaderFileType.PDF && !readingModeEnabled && isTopBarVisible
     }
 
 

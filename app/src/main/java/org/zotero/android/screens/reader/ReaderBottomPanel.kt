@@ -1,77 +1,40 @@
 package org.zotero.android.screens.reader
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
-import androidx.compose.material3.TooltipAnchorPosition
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults.rememberTooltipPositionProvider
-import androidx.compose.material3.rememberTooltipState
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import org.zotero.android.R
 import org.zotero.android.pdf.reader.sidebar.PdfReaderSidebarDivider
-import org.zotero.android.uicomponents.Drawables
-import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.foundation.safeStringResource
-import org.zotero.android.uicomponents.icon.IconWithPadding
 
 @Composable
-internal fun BoxScope.ReaderBottomPanel(
-    viewModel: ReaderViewModel,
-    viewState: ReaderViewState
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(48.dp)
-            .align(Alignment.BottomStart)
-            .background(color = MaterialTheme.colorScheme.surfaceContainer)
-
-    ) {
-        PdfReaderSidebarDivider(modifier = Modifier.align(Alignment.TopStart))
-        val filterDrawable =
-            if (viewState.annotationFilter == null) {
-                Drawables.filter_list_off_24px
-            } else {
-                Drawables.filter_list_24px
+internal fun BoxScope.ReaderBottomPanel(viewModel: ReaderViewModel, viewState: ReaderViewState) {
+    Column(Modifier.fillMaxWidth().height(48.dp).align(Alignment.BottomStart)
+        .background(MaterialTheme.colorScheme.surfaceContainer)) {
+        PdfReaderSidebarDivider()
+        Row(Modifier.fillMaxWidth().weight(1f), verticalAlignment = Alignment.CenterVertically) {
+            TextButton(onClick = viewModel::showAnnotationTagFilter,
+                contentPadding = PaddingValues(horizontal = 8.dp)) {
+                val count = viewState.annotationFilter?.tags?.size ?: 0
+                Text(stringResource(R.string.boox_filter_tags) + if (count > 0) " ($count)" else "")
             }
-
-        TooltipBox(
-            modifier = Modifier
-                .padding(start = 24.dp)
-                .padding(top = 4.dp),
-            positionProvider = rememberTooltipPositionProvider(
-                TooltipAnchorPosition.Above,
-                0.dp
-            ),
-            tooltip = {
-                PlainTooltip(
-                    modifier = Modifier
-                        .padding(start = 12.dp),
-                ) {
-                    Text(
-                        safeStringResource(
-                            Strings.all_items_bottom_panel_filters
-                        )
-                    )
+            LazyRow(Modifier.weight(1f), contentPadding = PaddingValues(end = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically) {
+                items(viewModel.annotationFilterColors(), key = { it }) { color ->
+                    ReaderFilterColorButton(color, viewState.annotationFilter?.colors?.contains(color) == true) {
+                        viewModel.toggleAnnotationFilterColor(color)
+                    }
                 }
-            },
-            state = rememberTooltipState()
-        ) {
-            IconWithPadding(
-                drawableRes = filterDrawable,
-                onClick = viewModel::showFilterPopup
-            )
-
+            }
         }
-
     }
 }

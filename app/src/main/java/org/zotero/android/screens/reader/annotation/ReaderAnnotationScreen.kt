@@ -29,6 +29,7 @@ import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.screens.reader.annotation.data.ReaderAnnotationArgs
 import org.zotero.android.screens.reader.data.ReaderAnnotation
+import org.zotero.android.screens.reader.ReaderHighlightQuote
 import org.zotero.android.screens.settings.elements.NewSettingsDivider
 import org.zotero.android.sync.Tag
 import org.zotero.android.uicomponents.Strings
@@ -75,6 +76,9 @@ internal fun ReaderAnnotationScreen(
             colors = viewState.colors,
             selectedColor = selectedColor,
             tags = viewState.tags,
+            coloredTags = viewState.coloredTags,
+            canEdit = viewState.canEdit,
+            onColoredTagClicked = viewModel::toggleColoredTag,
             onTagsClicked = viewModel::onTagsClicked,
             commentFocusText = viewState.commentFocusText,
             onCommentTextChange = viewModel::onCommentTextChange,
@@ -97,6 +101,9 @@ internal fun ReaderAnnotationPart(
     colors: List<String>,
     selectedColor: String,
     tags: List<Tag>,
+    coloredTags: List<Tag>,
+    canEdit: Boolean,
+    onColoredTagClicked: (Tag) -> Unit,
     onTagsClicked: () -> Unit,
     commentFocusText: String,
     onCommentTextChange: (String) -> Unit,
@@ -125,6 +132,11 @@ internal fun ReaderAnnotationPart(
         }
 
         item {
+            if (annotation.type == AnnotationType.highlight || annotation.type == AnnotationType.underline) {
+                ReaderHighlightQuote(annotation.text.orEmpty())
+            }
+        }
+        item {
             when (annotation.type) {
                 AnnotationType.note -> ReaderAnnotationNoteRow(
                     onColorSelected = onColorSelected,
@@ -137,6 +149,9 @@ internal fun ReaderAnnotationPart(
                 )
 
                 AnnotationType.highlight -> ReaderAnnotationHighlightRow(
+                    coloredTags = coloredTags,
+                    canEdit = canEdit,
+                    onColoredTagClicked = onColoredTagClicked,
                     onColorSelected = onColorSelected,
                     onCommentTextChange = onCommentTextChange,
                     selectedColor = selectedColor,
@@ -147,6 +162,9 @@ internal fun ReaderAnnotationPart(
                 )
 
                 AnnotationType.underline -> ReaderAnnotationUnderlineRow(
+                    coloredTags = coloredTags,
+                    canEdit = canEdit,
+                    onColoredTagClicked = onColoredTagClicked,
                     onColorSelected = onColorSelected,
                     onCommentTextChange = onCommentTextChange,
                     selectedColor = selectedColor,

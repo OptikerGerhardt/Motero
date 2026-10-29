@@ -16,6 +16,8 @@ import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.database.objects.AnnotationsConfig
+import org.zotero.android.database.DbWrapperMain
+import org.zotero.android.database.requests.ReadColoredTagsDbRequest
 import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.pdf.data.PdfReaderThemeDecider
 import org.zotero.android.screens.reader.annotation.data.ReaderAnnotationArgs
@@ -26,15 +28,18 @@ import org.zotero.android.screens.reader.annotation.data.ReaderAnnotationFontSiz
 import org.zotero.android.screens.reader.annotation.data.ReaderAnnotationScreenClosed
 import org.zotero.android.screens.reader.annotation.data.ReaderAnnotationSizeResult
 import org.zotero.android.screens.reader.data.ReaderAnnotation
+import org.zotero.android.screens.reader.ReaderQuickControlActions
 import org.zotero.android.screens.tagpicker.data.TagPickerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerResult
 import org.zotero.android.sync.Tag
 import javax.inject.Inject
+import timber.log.Timber
 
 @HiltViewModel
 internal class ReaderAnnotationViewModel @Inject constructor(
     private val pdfReaderCurrentThemeEventStream: PdfReaderCurrentThemeEventStream,
     private val pdfReaderThemeDecider: PdfReaderThemeDecider,
+    private val dbWrapperMain: DbWrapperMain,
 ) : BaseViewModel2<ReaderAnnotationViewState, ReaderAnnotationViewEffect>(ReaderAnnotationViewState()) {
 
     private var isDeletingAnnotation = false
@@ -77,6 +82,14 @@ internal class ReaderAnnotationViewModel @Inject constructor(
                 fontSize = annotation.fontSize ?: 12.0f
             )
         }
+        try {
+            val colored = dbWrapperMain.realmDbStorage.perform(ReadColoredTagsDbRequest(args.library.identifier))
+                .sortedBy { it.order }.take(9).map { Tag(it) }.toImmutableList()
+            updateState { copy(coloredTags = colored, canEdit = args.canEdit) }
+        } catch (error: Exception) {
+            Timber.e(error, "Reader: cannot load colored tag shortcuts")
+            updateState { copy(canEdit = args.canEdit) }
+        }
     }
 
     fun setOsTheme(isDark: Boolean) {
@@ -104,6 +117,12 @@ internal class ReaderAnnotationViewModel @Inject constructor(
         )
 
         triggerEffect(ReaderAnnotationViewEffect.NavigateToTagPickerScreen)
+    }
+
+    fun toggleColoredTag(tag: Tag) {
+        if (!viewState.canEdit) return
+        val tags = ReaderQuickControlActions.toggleTag(viewState.tags, tag)
+        onEvent(TagPickerResult(tags, TagPickerResult.CallPoint.ReaderAnnotationScreen))
     }
 
     override fun onCleared() {
@@ -203,6 +222,8 @@ internal data class ReaderAnnotationViewState(
     val isDark: Boolean = false,
     val annotation: ReaderAnnotation? = null,
     val tags: ImmutableList<Tag> = persistentListOf(),
+    val coloredTags: ImmutableList<Tag> = persistentListOf(),
+    val canEdit: Boolean = true,
     val commentFocusText: String = "",
     val color: String = "",
     val colors: ImmutableList<String> = persistentListOf(),
