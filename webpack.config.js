@@ -162,7 +162,8 @@ function generateViewConfig(build) {
 		entry: {
 			view: [
 				'./src/index.' + build + '.js',
-				'./src/common/stylesheets/view.scss'
+				'./src/common/stylesheets/view.scss',
+				...(build === 'android' ? ['./src/common/stylesheets/android-theme.scss'] : [])
 			],
 		},
 		output: {

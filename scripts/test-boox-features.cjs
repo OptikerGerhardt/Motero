@@ -205,6 +205,7 @@ const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/ja
 
   await open();
   await tap({ x: 310, y: 65 });
+  await page.waitForFunction(() => window._view._view._annotations.length === 1);
   let notes = await page.evaluate(() => window._view._view._annotations);
   assert.equal(notes.length, 1); assert.equal(notes[0].type, 'note'); assert.equal(notes[0].color, '#aaaaaa');
   assert.match(notes[0].comment, /^(Bookmark|Lesezeichen) · /);
@@ -218,6 +219,7 @@ const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/ja
   await page.evaluate(() => window.turnPageWithHardwareButton(true, 0));
   await page.waitForTimeout(150);
   await tap({ x: 450, y: 45 });
+  await page.waitForFunction(() => window._view._view._annotations.length === 2);
   notes = await page.evaluate(() => window._view._view._annotations);
   assert.equal(notes.length, 2); assert.notEqual(notes[0].position.pageIndex, notes[1].position.pageIndex);
   await open('/fixture.pdf', { annotations: notes });
@@ -228,6 +230,7 @@ const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/ja
   await open();
   await page.evaluate(() => window._view._view._iframeWindow.PDFViewerApplication.pdfViewer.currentScale = 1.6);
   await tap({ x: 580, y: 30 });
+  await page.waitForFunction(() => window._view._view._annotations.length === 1);
   assert.deepEqual(await page.evaluate(() => window._view._view._annotations[0].position), fixedPosition);
   console.log('PASS fixed bookmark PDF position independent of tap and zoom');
   await open();
@@ -239,6 +242,7 @@ const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/ja
   await page.waitForTimeout(250);
   await page.waitForFunction(() => !window._view._view._scrolling);
   await tap({ x: 590, y: 45 });
+  await page.waitForFunction(() => window._view._view._annotations.length === 1);
   assert.equal((await state()).page, 1);
   assert.equal(await page.evaluate(() => window._view._view._annotations.length), 1);
   await tap({ x: 590, y: 150 });
@@ -253,14 +257,16 @@ const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/ja
   await page.waitForTimeout(250);
   await page.waitForFunction(() => !window._view._view._scrolling);
   await tap({ x: 580, y: 35 });
-  const rotated = await page.evaluate(() => {
+  await page.waitForFunction(() => window._view._view._annotations.length === 1);
+  const rotated = await page.evaluate(async () => {
    const view = window._view._view, p = view._iframeWindow.PDFViewerApplication.pdfViewer.getPageView(0);
    const viewport = p.pdfPage.getViewport({ scale: 1, rotation: p.viewport.rotation });
    const rect = viewport.convertToViewportRectangle(view._annotations[0].position.rects[0]);
-   return { top: Math.min(rect[1], rect[3]), right: viewport.width - Math.max(rect[0], rect[2]) };
+   let b = await view._pageFitting.boundsFor(0);
+   return { top: Math.min(rect[1], rect[3]) - b[1] * viewport.height, right: b[2] * viewport.width - Math.max(rect[0], rect[2]) };
   });
   assert.ok(Math.abs(rotated.top - 4) < 0.1, JSON.stringify(rotated));
-  assert.ok(Math.abs(rotated.right - 72 / 2.54) < 0.1, JSON.stringify(rotated));
+  assert.ok(Math.abs(rotated.right - 8) < 0.1, JSON.stringify(rotated));
   console.log('PASS rotated page bookmark remains at visual upper right', rotated);
 
   for (const restoreMode of ['manual', 'content', 'width', 'manual-with-content-setting']) {

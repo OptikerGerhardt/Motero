@@ -147,3 +147,18 @@ test('PDF text positions respect the actual viewport transform and font ascent',
 	assert.equal(lines.length, 1); assert.ok(Math.abs(lines[0].rect[0] - .2) < 1e-9);
 	assert.ok(Math.abs(lines[0].rect[1] - 190.4 / 800) < 1e-9);
 });
+
+test('image-only gray paper crops text bands and retains the footnote', () => {
+ let rects=Array.from({length:20},(_,i)=>[.2,.15+i*.03,.8,.16+i*.03]);rects.push([.2,.91,.55,.925]);
+ let scan=image(rects);for(let i=0;i<scan.data.length;i+=4)if(scan.data[i]===255)scan.data[i]=scan.data[i+1]=scan.data[i+2]=215;
+ let b=getReadingBounds(scan,[],buildReadingModel([]));
+ assert.ok(b[0]>.18&&b[2]<.82&&b[1]>.13&&b[3]>.92&&b[3]<.94,JSON.stringify(b));
+});
+test('gray photograph with no separate text bands keeps its outer frame', () => {
+ let scan=image([[.25,.2,.75,.8]]);for(let i=0;i<scan.data.length;i+=4)if(scan.data[i]===255)scan.data[i]=scan.data[i+1]=scan.data[i+2]=215;
+ assert.deepEqual(getReadingBounds(scan,[],buildReadingModel([])),[0,0,1,1]);
+});
+test('full color image is not treated as gray scan paper', () => {
+ let scan=image([]);for(let i=0;i<scan.data.length;i+=4){scan.data[i]=180;scan.data[i+1]=210;scan.data[i+2]=170;}
+ assert.deepEqual(getReadingBounds(scan,[],buildReadingModel([])),[0,0,1,1]);
+});

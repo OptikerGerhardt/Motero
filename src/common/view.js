@@ -53,6 +53,10 @@ class View {
 			? DEFAULT_THEMES.find(x => x.id === options.darkTheme) ?? null
 			: DEFAULT_THEMES.find(x => x.id === 'dark');
 		this._colorScheme = options.colorScheme;
+		if (this._options.platform === 'android') {
+			if (['light', 'dark'].includes(this._colorScheme)) document.documentElement.dataset.colorScheme = this._colorScheme;
+			else delete document.documentElement.dataset.colorScheme;
+		}
 		this._tool = options.tool || { type: 'pointer' };
 
 		// Reading Mode overlay, shown on top of the (hidden) base view
@@ -77,6 +81,11 @@ class View {
 			adjustTextAnnotationPosition: (annotation, adjustOptions) => this._view.adjustTextAnnotationPosition(annotation, adjustOptions),
 			onRender: (annotations) => {
 				this._view.setAnnotations(annotations);
+				if (this._options.platform === 'android') {
+					let ids = (this._options.selectedAnnotationIDs || []).filter(id => annotations.some(a => a.id === id));
+					this._options.selectedAnnotationIDs = ids;
+					this._view.setSelectedAnnotationIDs(ids);
+				}
 				this._sdtView?.setAnnotations(this._getSDTAnnotations(annotations));
 			},
 			onChangeFilter: nop
@@ -135,6 +144,12 @@ class View {
 			fontFamily: this._options.fontFamily,
 			onAddAnnotation,
 			onUpdateAnnotations,
+			onConvertAnnotations: (ids, type) => {
+				let before = new Set(this._annotationManager._annotations.map(a => a.id));
+				this._annotationManager.convertAnnotations(ids, type);
+				return this._annotationManager._annotations.filter(a => a.type === type
+					&& (!before.has(a.id) || ids.includes(a.id)));
+			},
 			onOpenLink: this._options.onOpenLink,
 			onSetSelectionPopup: this._options.onSetSelectionPopup,
 			onSetAnnotationPopup: this._options.onSetAnnotationPopup,
@@ -634,6 +649,10 @@ class View {
 	 */
 	setColorScheme(scheme) {
 		this._colorScheme = scheme;
+		if (this._options.platform === 'android') {
+			if (['light', 'dark'].includes(this._colorScheme)) document.documentElement.dataset.colorScheme = this._colorScheme;
+			else delete document.documentElement.dataset.colorScheme;
+		}
 		this._view.setColorScheme(scheme);
 		this._sdtView?.setColorScheme(scheme);
 	}

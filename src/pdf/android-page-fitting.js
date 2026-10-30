@@ -11,12 +11,14 @@ export class AndroidPageFitting {
 		this.options = { mode: 'none', reference: 'page', margin: 0.01 };
 		this.active = false;
 		this.token = 0;
+		this.inputEpoch = 0;
 		this.pointers = new Set();
 		this.cache = new Map();
 		this.clipped = new Map();
 		this.onDown = event => {
 			if (event.target?.closest?.('.boox-highlight-palette')) return;
 			this.pointers.add(event.pointerId);
+			this.inputEpoch++;
 			this.token++;
 		};
 		this.onUp = event => {
@@ -156,32 +158,36 @@ export class AndroidPageFitting {
 		return rotateReadingBounds(bounds, this.viewer.pagesRotation);
 	}
 
-	async apply({ alignTop = false } = {}) {
+
+	key(options = this.options) { return JSON.stringify(options); }
+
+	async prepare(index, options = this.options) {
 		let v = this.viewer, c = v.container;
-		if (!this.active || !v.pdfDocument || this.view._destroyed) return false;
-		this.pendingPage = false;
-		this.win.clearTimeout(this.timer);
-		// A pair of pages needs a different geometry. Give an honest full-spread
-		// page-width view until single-page mode is selected again.
-		if (v.spreadMode !== 0) {
-			this.suspend();
-			return false;
-		}
-		let index = v.currentPageNumber - 1, token = ++this.token;
-		let scaleBefore = v.currentScale, rotation = v.pagesRotation;
-		let page = v.getPageView(index);
-		let topFraction = (c.scrollTop - page.div.offsetTop - page.div.clientTop) / page.div.clientHeight;
-		let bounds = this.options.mode === 'content' || this.options.reference === 'content'
+		if (!v.pdfDocument || this.view._destroyed || v.spreadMode !== 0) return null;
+		let rotation = v.pagesRotation, inputEpoch = this.inputEpoch;
+		let width = c.clientWidth, height = c.clientHeight;
+		let bounds = options.mode === 'content' || options.reference === 'content'
 			? await this.boundsFor(index) : [0, 0, 1, 1];
-		if (token !== this.token || !this.active || this.view._destroyed || v.pagesRotation !== rotation
-				|| v.currentPageNumber !== index + 1 || v.currentScale !== scaleBefore) return false;
-		if (!page.pdfPage) page.setPdfPage(await v.pdfDocument.getPage(index + 1));
-		if (token !== this.token || !this.active || this.view._destroyed || v.currentPageNumber !== index + 1) return false;
-		let base = page.pdfPage.getViewport({ scale: 96 / 72, rotation: page.viewport.rotation });
-		let fit = getReadingFit({ ...this.options, bounds, width: c.clientWidth, height: c.clientHeight,
-			pageWidth: base.width, pageHeight: base.height });
+		let pdfPage = await v.pdfDocument.getPage(index + 1);
+		let base = pdfPage.getViewport({ scale: 96 / 72, rotation: pdfPage.rotate + rotation });
+		let fit = getReadingFit({ ...options, bounds, width, height, pageWidth: base.width, pageHeight: base.height });
+		return { index, key: this.key(options), bounds, pdfPage, fit, rotation, inputEpoch, width, height };
+	}
+
+	commit(prepared, { alignTop = false, topFraction = 0, navigate } = {}) {
+		let v = this.viewer, c = v.container;
+		if (!prepared || !this.active || this.view._destroyed || v.spreadMode !== 0
+				|| prepared.key !== this.key() || prepared.rotation !== v.pagesRotation
+				|| prepared.inputEpoch !== this.inputEpoch || this.pointers.size
+				|| prepared.width !== c.clientWidth || prepared.height !== c.clientHeight) return false;
+		let { index, bounds, pdfPage, fit } = prepared;
+		let page = v.getPageView(index);
+		if (!page) return false;
+		this.token++; this.pendingPage = false; this.win.clearTimeout(this.timer);
 		this.applying = true;
 		try {
+			navigate?.();
+			if (!page.pdfPage) page.setPdfPage(pdfPage);
 			v.currentScale = fit.scale;
 			// Wrapped scale changes can put a different page at the old scroll
 			// offset. Resolve the requested page again after the new row layout.
@@ -206,7 +212,31 @@ export class AndroidPageFitting {
 		}
 		finally { this.applying = false; }
 		this.view._updateViewStats();
+		this.win.clearTimeout(this.prefetchTimer);
+		this.prefetchTimer = this.win.setTimeout(() => {
+			if (!this.active || this.view._destroyed) return;
+			for (let neighbor of [index - 1, index + 1]) {
+				if (neighbor >= 0 && neighbor < v.pdfDocument.numPages) this.boundsFor(neighbor).catch(console.error);
+			}
+		}, 180);
 		return true;
+	}
+
+	async apply({ alignTop = false } = {}) {
+		let v = this.viewer, c = v.container;
+		if (!this.active || !v.pdfDocument || this.view._destroyed) return false;
+		if (v.spreadMode !== 0) { this.suspend(); return false; }
+		let index = v.currentPageNumber - 1, token = ++this.token, scale = v.currentScale;
+		let page = v.getPageView(index);
+		let topFraction = (c.scrollTop - page.div.offsetTop - page.div.clientTop) / page.div.clientHeight;
+		let prepared = await this.prepare(index);
+		if (token !== this.token || v.currentPageNumber !== index + 1 || v.currentScale !== scale) return false;
+		return this.commit(prepared, { alignTop, topFraction });
+	}
+
+	resetInput() {
+		this.inputEpoch++; this.token++; this.pointers.clear(); this.pendingPage = false;
+		this.win.clearTimeout(this.timer);
 	}
 
 	clearClips() {
@@ -215,7 +245,7 @@ export class AndroidPageFitting {
 	}
 
 	destroy() {
-		this.suspend(); this.cache.clear();
+		this.suspend(); this.cache.clear(); this.win.clearTimeout(this.prefetchTimer);
 		this.win.removeEventListener('pointerdown', this.onDown, true);
 		this.win.removeEventListener('pointerup', this.onUp, true);
 		this.win.removeEventListener('pointercancel', this.onUp, true);

@@ -146,6 +146,7 @@ class PDFView {
 		this._onSetDataTransferAnnotations = options.onSetDataTransferAnnotations;
 		this._onAddAnnotation = options.onAddAnnotation;
 		this._onUpdateAnnotations = options.onUpdateAnnotations;
+		this._onConvertAnnotations = options.onConvertAnnotations;
 		this._onDeleteAnnotations = options.onDeleteAnnotations;
 		this._onOpenLink = options.onOpenLink;
 		this._onSelectAnnotations = options.onSelectAnnotations;
@@ -1526,10 +1527,24 @@ class PDFView {
 		this.updateCursor();
 	}
 
+	resetAndroidInput() {
+		if (this._options.platform !== 'android') return;
+		this._dragging = false;
+		this._handlePointerCancel();
+		this._clearPendingBackdropTap();
+		this._pageFitting?.resetInput();
+		this._booxReader?.clearNavigation(true);
+	}
+
 	setAnnotations(annotations) {
 		let affected = getAffectedAnnotations(this._annotations, annotations, true);
 		let { created, updated, deleted } = affected;
 		this._annotations = annotations;
+		if (this._options.platform === 'android' && deleted.some(a => this._selectedAnnotationIDs.includes(a.id)
+				|| this.action?.annotation?.id === a.id)) {
+			this.resetAndroidInput();
+			this.setSelectedAnnotationIDs(this._selectedAnnotationIDs.filter(id => !deleted.some(a => a.id === id)));
+		}
 		if (this._focusedObject?.type === 'annotation') {
 			if (updated.find(x => x.id === this._focusedObject.object.id)) {
 				this._focusedObject.object = updated.find(x => x.id === this._focusedObject.object.id);
@@ -2745,15 +2760,18 @@ class PDFView {
 						page.setPdfPage(pdfPage);
 					}
 				}
+				if (this._pageFitting?.active) {
+					let cancelled = new Promise(resolve => request.cancel = resolve);
+					let prepared = await Promise.race([this._pageFitting.prepare(pageIndex), cancelled]);
+					if (!request.isCurrent()) return false;
+					if (!this._pageFitting.commit(prepared, { alignTop: true, navigate })) return false;
+					continue;
+				}
 				// Failed loads still advance, without applying pan to placeholder geometry.
 				navigate();
 				if (!preservePan || !page.pdfPage || viewer.currentPageNumber !== page.id) {
 					continue;
 				}
-                if (this._pageFitting?.active) {
-                    await this._pageFitting.apply({ alignTop: true });
-                    continue;
-                }
 				// Keep PDF.js positioning on fitted axes; constrain pan to the page
 				// on overflowing axes, not to the entire scrollable document.
 				let { div } = page;

@@ -100,7 +100,7 @@ globalThis.window = {
 		},
 	}),
 };
-globalThis.document = { body: {} };
+globalThis.document = { body: {}, documentElement: { dataset: {} } };
 
 const { default: View } = await import('../../src/common/view.js');
 

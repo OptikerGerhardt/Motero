@@ -106,7 +106,7 @@ export class PDFDirectHighlight {
 		}
 		let ranges = view._selectionRanges.filter(range => !range.collapsed)
 			.sort((a, b) => a.pageIndex - b.pageIndex);
-		let type = view._tool.type === 'underline' ? 'underline' : 'highlight';
+		let type = ['highlight', 'underline'].includes(view._tool.type) ? view._tool.type : view._directHighlightType || 'highlight';
 		let color = /^#[\da-f]{6}$/i.test(view._tool.color) ? view._tool.color
 			: view._directHighlightColor || view._tools?.highlight?.color || ANNOTATION_COLORS[0][1];
 		let created = [];

@@ -145,6 +145,36 @@ export function getReadingBounds(image, lines, model) {
 	let ignored = getReadingExclusions(lines, model);
 	let { width, height } = image;
 	let data = new Uint8ClampedArray(image.data);
+	// Neutral gray scan paper is not ink. Only normalize it when many distinct
+	// text-like horizontal bands support that interpretation; keep photos intact.
+	if (lines.length < 3) {
+		let histogram = new Uint32Array(256), samples = 0;
+		for (let i = 0; i < data.length; i += 64) {
+			let r = data[i], g = data[i + 1], b = data[i + 2]; samples++;
+			if (Math.max(r, g, b) - Math.min(r, g, b) < 8) histogram[Math.round((r + g + b) / 3)]++;
+		}
+		let paper = 160;
+		for (let value = 161; value <= 246; value++) if (histogram[value] > histogram[paper]) paper = value;
+		let near = histogram.slice(Math.max(0, paper - 3), paper + 4).reduce((sum, n) => sum + n, 0);
+		if (near > samples * 0.5) {
+			let threshold = Math.max(145, paper - 12), bands = 0, inBand = false;
+			for (let y = 0; y < height; y++) {
+				let ink = 0;
+				for (let x = 0; x < width; x++) {
+					let i = (y * width + x) * 4;
+					if (Math.min(data[i], data[i + 1], data[i + 2]) < threshold) ink++;
+				}
+				let textRow = ink > width * 0.015 && ink < width * 0.85;
+				if (textRow && !inBand) bands++;
+				inBand = textRow;
+			}
+			if (bands >= 8) {
+				for (let i = 0; i < data.length; i += 4) {
+					if (Math.min(data[i], data[i + 1], data[i + 2]) >= threshold) data[i] = data[i + 1] = data[i + 2] = 255;
+				}
+			}
+		}
+	}
 	for (let rect of ignored) {
 		let x0 = Math.max(0, Math.floor(rect[0] * width) - 2), y0 = Math.max(0, Math.floor(rect[1] * height) - 2);
 		let x1 = Math.min(width, Math.ceil(rect[2] * width) + 2), y1 = Math.min(height, Math.ceil(rect[3] * height) + 2);
