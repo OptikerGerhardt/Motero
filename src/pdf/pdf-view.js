@@ -54,6 +54,7 @@ import {
 } from '../common/lib/utilities';
 import { debounce } from '../common/lib/debounce';
 import { AutoScroll } from './lib/auto-scroll';
+import { AndroidPageFitting } from './android-page-fitting';
 import { PDFBooxReader } from './boox-reader';
 import { PDFThumbnails } from './pdf-thumbnails';
 import {
@@ -348,6 +349,7 @@ class PDFView {
 					this._init();
 					if (this._options.platform === 'android') {
 						this._booxReader = new PDFBooxReader(this);
+                        this._pageFitting = new AndroidPageFitting(this);
 					}
 				}
 				if (options.data.buf) {
@@ -550,6 +552,9 @@ class PDFView {
 			return;
 		}
 
+        if (this._options?.pageFitting) {
+            this._pageFitting?.configure(this._options.pageFitting).catch(error => console.error(error));
+        }
 		if (this._options?.pageWidthFit) {
 			this.zoomPageWidth();
 		}
@@ -1228,6 +1233,7 @@ class PDFView {
 
 	destroy() {
 		this._booxReader?.destroy();
+        this._pageFitting?.destroy();
 		if (this._destroyed) {
 			return;
 		}
@@ -2242,7 +2248,13 @@ class PDFView {
 
 		// With Fit to Content, zooming out returns to the fit instead of the page width,
 		// and a fitted view zooms in like a page-width one
-		if (this._contentFit && pdfViewer.spreadMode === 0) {
+		if (this._pageFitting?.configured && this._pageFitting.options.mode !== 'none' && pdfViewer.spreadMode === 0) {
+			if (!this._pageFitting.active) {
+				this._pageFitting.configure(this._pageFitting.options).catch(error => console.error(error));
+				return true;
+			}
+		}
+		else if (this._contentFit && pdfViewer.spreadMode === 0) {
 			if (!this._isAtContentFit()) {
 				this.fitToContent({ margin: this._contentFit.margin });
 				return true;
@@ -2738,6 +2750,10 @@ class PDFView {
 				if (!preservePan || !page.pdfPage || viewer.currentPageNumber !== page.id) {
 					continue;
 				}
+                if (this._pageFitting?.active) {
+                    await this._pageFitting.apply({ alignTop: true });
+                    continue;
+                }
 				// Keep PDF.js positioning on fitted axes; constrain pan to the page
 				// on overflowing axes, not to the entire scrollable document.
 				let { div } = page;
@@ -4528,6 +4544,7 @@ class PDFView {
 		let pageIndex = event.location.pageNumber - 1;
 		let viewer = this._iframeWindow.PDFViewerApplication.pdfViewer;
 		this._onChangeViewState({
+			...this._pageFitting?.state(),
 			pageIndex,
 			scale,
 			top,

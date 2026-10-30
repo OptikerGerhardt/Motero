@@ -16,7 +16,7 @@ export class PDFBooxReader {
 			if (!event.isPrimary || !event.target.closest?.('.page')) return;
 			if (!this.isOverview()) {
 				this.zoomOrigin = { scale: this.viewer.currentScale,
-					mode: this.readingModeForScale(this.viewer.currentScale) };
+					mode: this.readingModeForScale(this.viewer.currentScale), fit: this.view._pageFitting?.snapshot() };
 			}
 			this.gestureScroll = {
 				top: this.viewer.container.scrollTop, scale: this.viewer.currentScale,
@@ -34,10 +34,10 @@ export class PDFBooxReader {
 			let scale = this.viewer.currentScale;
 			if (this.isOverview()) {
 				let origin = this.zoomOrigin || { scale: this.readingScale,
-					mode: this.readingModeForScale(this.readingScale) };
-				if (origin.scale) { this.readingScale = origin.scale; this.readingMode = origin.mode; }
+					mode: this.readingModeForScale(this.readingScale), fit: this.readingFit };
+				if (origin.scale) { this.readingScale = origin.scale; this.readingMode = origin.mode; this.readingFit = origin.fit; }
 			}
-			else { this.readingScale = scale; this.readingMode = this.readingModeForScale(scale); }
+			else { this.readingScale = scale; this.readingMode = this.readingModeForScale(scale); this.readingFit = this.view._pageFitting?.snapshot(); }
 		};
 		this.onPage = () => {
 			this.closePalette();
@@ -70,6 +70,7 @@ export class PDFBooxReader {
 	get viewer() { return this.win.PDFViewerApplication.pdfViewer; }
 
 	readingModeForScale(scale) {
+		if (this.view._pageFitting?.active && Math.abs((this.view._pageFitting.applied?.scale || 0) - scale) < 0.002) return 'pageFit';
 		if (scale && Math.abs((this.view._appliedContentFit?.scale || 0) - scale) < 0.002) return 'content';
 		return this.viewer.currentScaleValue === 'page-width' ? 'width' : 'manual';
 	}
@@ -132,6 +133,7 @@ export class PDFBooxReader {
 
 	async enterPage(pageIndex) {
 		let v = this.viewer, view = this.view;
+		let restoreFit = this.readingMode === 'pageFit' && this.readingFit;
 		let restoreContent = this.readingMode === 'content' && view._contentFit && v.spreadMode === 0;
 		let request = this.entering = {};
 		this.clearNavigation();
@@ -140,7 +142,10 @@ export class PDFBooxReader {
 		view._history?.save(view._getHistoryLocation(), true);
 		try {
 			v.scrollPageIntoView({ pageNumber: pageIndex + 1 });
-			if (restoreContent) {
+			if (restoreFit) {
+                await view._pageFitting.configure(restoreFit);
+            }
+            else if (restoreContent) {
 				await view.fitToContent({ margin: view._contentFit.margin });
 			}
 			else v.currentScaleValue = this.readingMode === 'width' ? 'page-width'
@@ -150,7 +155,10 @@ export class PDFBooxReader {
 			let page = v.getPageView(pageIndex), c = v.container;
 			// Changing the scale reflows Wrapped rows. Resolve the same target again.
 			v.scrollPageIntoView({ pageNumber: pageIndex + 1 });
-			if (!restoreContent) {
+			if (restoreFit) {
+                await view._pageFitting.apply({ alignTop: true });
+            }
+            else if (!restoreContent) {
 				c.scrollLeft = page.div.offsetLeft + page.div.clientLeft
 					+ Math.max(0, (page.div.clientWidth - c.clientWidth) / 2);
 			}

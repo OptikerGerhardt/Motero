@@ -162,6 +162,7 @@ class View {
 			viewState: this._options.viewState || null,
 			location: this._options.location || null,
 			contentFit: this._options.contentFit || null,
+			pageFitting: this._options.pageFitting || null,
 			pageWidthFit: this._options.pageWidthFit || false,
 			directHighlight: this._options.directHighlight || false,
 			onChangeViewState: debounce(this._options.onChangeViewState, DEBOUNCE_STATE_CHANGE),
@@ -492,6 +493,12 @@ class View {
 
 	setContentFit(contentFit) {
 		this._view.setContentFit?.(contentFit);
+	}
+
+	setPageFitting(options, apply = true) {
+		this._options.pageFitting = options;
+		if (this._view?._options) this._view._options.pageFitting = options;
+		return this._view._pageFitting?.configure(options, apply);
 	}
 
 	fitToWidth() {

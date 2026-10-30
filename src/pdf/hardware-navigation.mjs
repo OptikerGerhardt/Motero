@@ -11,6 +11,14 @@ export function getHardwareScrollLimits(view, viewer, page) {
 	let top = container.scrollTop + div.getBoundingClientRect().top + div.clientTop
 		- container.getBoundingClientRect().top - container.clientTop;
 	let fullMax = Math.max(0, div.clientHeight - height);
+	let pageFit = view._pageFitting;
+	if (pageFit?.active && pageFit.options.mode !== 'width'
+			&& pageFit.applied?.pageIndex === viewer.currentPageNumber - 1
+			&& pageFit.applied.scale === viewer.currentScale) {
+		// The entire fitted height is already visible. Do not scroll through
+		// hidden paper margins before accepting the next page button press.
+		return { min: pageFit.applied.top, max: pageFit.applied.top, viewportHeight: height };
+	}
 	let start = 0, end = fullMax;
 	let fit = view._appliedContentFit;
 	if (fit && fit.scale === viewer.currentScale && view._contentFit

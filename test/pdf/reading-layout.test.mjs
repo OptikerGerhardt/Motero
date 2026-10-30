@@ -1,0 +1,149 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { getReadingSamples, buildReadingModel, getReadingExclusions, getReadingBounds,
+	buildReadingProfiles, resolveReadingBounds, getReadingFit, getReadingTextLines, rotateReadingBounds } from '../../src/pdf/reading-layout.mjs';
+
+const line = (text, rect) => ({ text, rect });
+const body = [line('This is a complete line of ordinary text.', [.2, .2, .8, .22]),
+	line('The next full line belongs to the page body.', [.2, .3, .8, .32]),
+	line('Another ordinary line, with more content.', [.2, .5, .8, .52])];
+function image(rectangles) {
+	let width = 500, height = 700, data = new Uint8ClampedArray(width * height * 4).fill(255);
+	for (let [x0, y0, x1, y1] of rectangles) {
+		for (let y = Math.round(y0 * height); y < Math.round(y1 * height); y++) {
+			for (let x = Math.round(x0 * width); x < Math.round(x1 * width); x++) {
+				let i = (y * width + x) * 4; data[i] = data[i + 1] = data[i + 2] = 0;
+			}
+		}
+	}
+	return { width, height, data };
+}
+test('middle samples contain four adjacent odd/even pairs, excluding covers', () => {
+	let indexes = getReadingSamples(499);
+	assert.equal(indexes.length, 8);
+	assert.ok(indexes.every(i => i >= 220 && i <= 278));
+	for (let i = 0; i < indexes.length; i += 2) {
+		assert.equal(indexes[i] % 2, 0); assert.equal(indexes[i + 1], indexes[i] + 1);
+	}
+	assert.deepEqual(getReadingSamples(3), [0, 1, 2]);
+});
+test('all sample indexes are valid and include both parities in short documents', () => {
+	for (let n = 1; n < 80; n++) {
+		let a = getReadingSamples(n); assert.ok(a.length <= 8);
+		assert.ok(a.every(i => i >= 0 && i < n));
+		if (n > 1) { assert.ok(a.some(i => i % 2)); assert.ok(a.some(i => i % 2 === 0)); }
+	}
+});
+test('short, repeated and small footnotes remain content, including the rule', () => {
+	let footnote = line('1 Ibid.', [.2, .91, .29, .92]);
+	let lines = [...body, footnote];
+	let model = buildReadingModel(Array.from({ length: 8 }, (_, index) => ({ index, lines })));
+	assert.ok(!getReadingExclusions(lines, model).includes(footnote.rect));
+	let bounds = getReadingBounds(image([...body.map(l => l.rect), [.2, .89, .38, .893], footnote.rect]), lines, model);
+	assert.ok(bounds[3] >= .918, bounds);
+});
+test('download stamp, link and page number are removed below a real footnote', () => {
+	let note = line('1 This footnote must stay, including its complete reference.', [.2, .86, .78, .88]);
+	let stamp = line('Downloaded from JSTOR at 2026-10-30', [.1, .95, .9, .96]);
+	let link = line('https://www.jstor.org/stable/12345', [.2, .97, .8, .98]);
+	let number = line('27', [.49, .985, .51, .995]);
+	let lines = [...body, note, stamp, link, number];
+	let bounds = getReadingBounds(image(lines.map(l => l.rect)), lines, buildReadingModel([]));
+	assert.ok(bounds[3] >= .878 && bounds[3] < .9, bounds);
+	assert.equal(getReadingExclusions(lines).length, 3);
+});
+test('repeated long footnotes and JSTOR citations at the extreme bottom remain content', () => {
+	let note = line('1 A repeated footnote with a JSTOR reference.', [.2,.96,.8,.975]);
+	let url = line('https://www.jstor.org/stable/12345', [.2,.98,.7,.995]);
+	let lines = [...body,note,url];
+	let model = buildReadingModel(Array.from({length:8},(_,index)=>({index,lines})));
+	assert.equal(getReadingExclusions(lines,model).length,0);
+	assert.ok(getReadingBounds(image(lines.map(l=>l.rect)),lines,model)[3]>.99);
+});
+test('running headers are detected across pages; first body lines remain', () => {
+	let pages = Array.from({ length: 8 }, (_, index) => ({ index,
+		lines: [line('Author: A philosophical essay', [.2, .04, .8, .055]), ...body] }));
+	let model = buildReadingModel(pages);
+	assert.equal(getReadingExclusions(pages[0].lines, model).length, 1);
+	let bounds = getReadingBounds(image(pages[0].lines.map(l => l.rect)), pages[0].lines, model);
+	assert.ok(bounds[1] >= .19, bounds);
+});
+test('an unrepeated heading is retained when its role is ambiguous', () => {
+	let title = line('Chapter I', [.2, .11, .8, .14]);
+	assert.equal(getReadingExclusions([title, ...body]).length, 0);
+});
+test('changing running titles at a stable header position are excluded', () => {
+	let pages = Array.from({ length: 8 }, (_, index) => ({ index,
+		lines: [line('A different author or chapter '+index, [.2, .045, .65, .057]), ...body] }));
+	let model = buildReadingModel(pages);
+	assert.equal(getReadingExclusions(pages[0].lines, model).length, 1);
+});
+test('a rule underneath an excluded header is excluded without trimming footnote rules', () => {
+	let header = line('A repeated author', [.2, .04, .8, .055]);
+	let lines = [header, ...body, line('1 Short note', [.2, .9, .35, .915])];
+	let model = buildReadingModel(Array.from({ length: 8 }, (_, index) => ({index,lines})));
+	let bounds = getReadingBounds(image([...lines.map(l=>l.rect), [.2,.075,.8,.078], [.2,.88,.4,.883]]),lines,model);
+	assert.ok(bounds[1] >= .19 && bounds[3] >= .91, bounds);
+});
+test('natural reading bounds transform exactly with display rotation', () => {
+	let b = [.2,.1,.8,.9];
+	for(let angle of [0,90,180,270]) {
+		let back = rotateReadingBounds(rotateReadingBounds(b,angle),-angle);
+		assert.ok(back.every((v,i)=>Math.abs(v-b[i])<1e-9));
+	}
+});
+test('isolated line-number column is excluded without excluding body numbers', () => {
+	let nums = [line('5', [.11, .2, .125, .22]), line('10', [.11, .3, .125, .32]), line('15', [.11, .5, .125, .52])];
+	assert.equal(getReadingExclusions([...nums, ...body]).length, 3);
+	assert.equal(getReadingExclusions([...body, line('2026', [.4, .6, .45, .62])]).length, 0);
+});
+test('edition references in a separate outer column are excluded', () => {
+	let ref = line('AA 5:123', [.85, .3, .94, .32]);
+	assert.deepEqual(getReadingExclusions([...body, ref]), [ref.rect]);
+	let citation = line('AA 5:123', [.3, .87, .4, .89]);
+	assert.equal(getReadingExclusions([...body, citation]).length, 0);
+});
+test('odd/even profiles retain different centers and a common reading width', () => {
+	let pages = Array.from({ length: 8 }, (_, index) => ({ index,
+		bounds: index % 2 ? [.12, .13, .76, .9] : [.24, .12, .88, .91] }));
+	let model = buildReadingProfiles(pages);
+	let a = resolveReadingBounds(pages[0].bounds, 20, model), b = resolveReadingBounds(pages[1].bounds, 21, model);
+	assert.ok(Math.abs((a[2] - a[0]) - (b[2] - b[0])) < 1e-9);
+	assert.ok(a[0] - b[0] > .11);
+});
+test('a wider table and deeper footnote expand the sampled frame', () => {
+	let model = buildReadingProfiles([{ index: 0, bounds: [.2, .15, .8, .85] }]);
+	let actual = [.08, .1, .92, .97];
+	assert.deepEqual(resolveReadingBounds(actual, 2, model), actual);
+});
+test('blank pages have no invented text bounds', () => {
+	assert.equal(getReadingBounds(image([]), [], buildReadingModel([])), null);
+});
+const options = { mode: 'width', reference: 'content', margin: .01, bounds: [.2, .15, .8, .9],
+	width: 600, height: 800, pageWidth: 800, pageHeight: 1000 };
+test('width fitting is independent of page height', () => {
+	assert.equal(getReadingFit(options).scale, getReadingFit({ ...options, pageHeight: 9000 }).scale);
+});
+test('height fitting is independent of page width', () => {
+	let a = { ...options, mode: 'height' };
+	assert.equal(getReadingFit(a).scale, getReadingFit({ ...a, pageWidth: 9000 }).scale);
+});
+test('content fitting fits the complete content in both dimensions', () => {
+	let fit = getReadingFit({ ...options, mode: 'content' });
+	assert.ok(fit.scale * .6 * 800 + fit.pad * 2 <= 600 + 1e-9);
+	assert.ok(fit.scale * .75 * 1000 + fit.pad * 2 <= 800 + 1e-9);
+});
+test('page reference includes the physical paper and ignores content margins', () => {
+	let fit = getReadingFit({ ...options, reference: 'page' });
+	assert.equal(fit.scale, .75); assert.equal(fit.pad, 0);
+	assert.deepEqual(fit.bounds, [0, 0, 1, 1]);
+});
+test('larger margins lower the zoom without changing detected bounds', () => {
+	assert.ok(getReadingFit({ ...options, margin: .08 }).scale < getReadingFit(options).scale);
+});
+test('PDF text positions respect the actual viewport transform and font ascent', () => {
+	let lines = getReadingTextLines({ items: [{ str: 'Body text', width: 100, fontName: 'f', transform: [12, 0, 0, 12, 120, 600] }],
+		styles: { f: { ascent: .8, descent: -.2 } } }, { width: 600, height: 800, scale: 1, transform: [1, 0, 0, -1, 0, 800] });
+	assert.equal(lines.length, 1); assert.ok(Math.abs(lines[0].rect[0] - .2) < 1e-9);
+	assert.ok(Math.abs(lines[0].rect[1] - 190.4 / 800) < 1e-9);
+});

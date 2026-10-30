@@ -1,0 +1,227 @@
+import { getReadingSamples, getReadingTextLines, buildReadingModel, getReadingBounds,
+	buildReadingProfiles, resolveReadingBounds, getReadingFit, rotateReadingBounds } from './reading-layout.mjs';
+
+// View-only fitting. PDF coordinates, annotations and the PDF file are untouched.
+export class AndroidPageFitting {
+	constructor(view) {
+		this.view = view;
+		this.win = view._iframeWindow;
+		this.viewer = this.win.PDFViewerApplication.pdfViewer;
+		this.bus = this.win.PDFViewerApplication.eventBus;
+		this.options = { mode: 'none', reference: 'page', margin: 0.01 };
+		this.active = false;
+		this.token = 0;
+		this.pointers = new Set();
+		this.cache = new Map();
+		this.clipped = new Map();
+		this.onDown = event => {
+			if (event.target?.closest?.('.boox-highlight-palette')) return;
+			this.pointers.add(event.pointerId);
+			this.token++;
+		};
+		this.onUp = event => {
+			this.pointers.delete(event.pointerId);
+			if (this.view._booxReader?.palette) {
+				this.pendingPage = false;
+				this.win.clearTimeout(this.timer);
+				return;
+			}
+			if (!this.pointers.size && this.pendingPage) this.schedule();
+		};
+		this.onPage = () => { if (this.active && !this.applying) this.schedule(); };
+		this.onScale = () => {
+			if (this.active && !this.applying && (!this.applied
+					|| Math.abs(this.viewer.currentScale - this.applied.scale) > 0.002)) this.suspend();
+		};
+		this.onRotation = () => {
+			this.token++; this.clearClips();
+			if (this.active) this.schedule();
+		};
+		this.onResize = () => { if (this.active) this.schedule(); };
+		this.onScroll = () => {
+			let c = this.viewer.container;
+			if (this.applied && Math.abs(c.scrollLeft - this.applied.left) < 1
+					&& Math.abs(c.scrollTop - this.applied.top) < 1) return;
+			if (this.active && !this.applying && this.options.mode === 'content') this.schedule(180);
+		};
+		this.win.addEventListener('pointerdown', this.onDown, true);
+		this.win.addEventListener('pointerup', this.onUp, true);
+		this.win.addEventListener('pointercancel', this.onUp, true);
+		this.win.addEventListener('resize', this.onResize);
+		this.viewer.container.addEventListener('scroll', this.onScroll);
+		this.bus.on('pagechanging', this.onPage);
+		this.bus.on('scalechanging', this.onScale);
+		this.bus.on('rotationchanging', this.onRotation);
+	}
+
+	configure(options, apply = true) {
+		this.options = {
+			mode: ['none', 'content', 'width', 'height'].includes(options?.mode) ? options.mode : 'none',
+			reference: options?.reference === 'content' ? 'content' : 'page',
+			margin: Math.max(0, Math.min(0.2, Number(options?.margin) || 0)),
+			revision: options?.revision || 0,
+		};
+		this.configured = true;
+		if (!apply) return Promise.resolve(false);
+		this.token++;
+		this.win.clearTimeout(this.timer);
+		this.pendingPage = false;
+		this.clearClips();
+		this.active = this.options.mode !== 'none';
+		this.applied = null;
+		return this.active ? this.apply({ alignTop: true }) : Promise.resolve(true);
+	}
+
+	snapshot() { return this.active && this.applied ? { ...this.options } : null; }
+
+	state() {
+		return this.configured && !this.applying && (this.applied || !this.active)
+			? { pageFitMode: this.active ? this.options.mode : 'none', pageFitRevision: this.options.revision } : {};
+	}
+
+	suspend() {
+		this.token++; this.active = false; this.applied = null;
+		this.win.clearTimeout(this.timer); this.pendingPage = false; this.clearClips();
+	}
+
+	schedule(delay = 70) {
+		this.pendingPage = true;
+		this.win.clearTimeout(this.timer);
+		this.timer = this.win.setTimeout(() => {
+			if (this.pointers.size || this.applying || !this.active || this.view._destroyed) return;
+			this.pendingPage = false;
+			this.apply().catch(error => console.error(error));
+		}, delay);
+	}
+
+	async readPage(index) {
+		let page = await this.viewer.pdfDocument.getPage(index + 1);
+		// Analyze in the PDF's natural reading orientation. Rotation of the view
+		// transforms the result, rather than turning headers into side columns.
+		let angle = page.rotate;
+		let base = page.getViewport({ scale: 1, rotation: angle });
+		let viewport = page.getViewport({ scale: 600 / base.width, rotation: angle });
+		let canvas = this.win.document.createElement('canvas');
+		canvas.width = Math.ceil(viewport.width); canvas.height = Math.ceil(viewport.height);
+		let ctx = canvas.getContext('2d', { alpha: false, willReadFrequently: true });
+		try {
+			ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+			let [, text] = await Promise.all([
+				page.render({ canvasContext: ctx, viewport, annotationMode: 0 }).promise,
+				page.getTextContent().catch(() => ({ items: [] })),
+			]);
+			return { index, aspect: base.width / base.height,
+				image: ctx.getImageData(0, 0, canvas.width, canvas.height), lines: getReadingTextLines(text, viewport) };
+		}
+		finally { canvas.width = canvas.height = 0; }
+	}
+
+	async ensureModel() {
+		if (!this.modelPromise) {
+			let rotation = this.viewer.pagesRotation;
+			this.modelPromise = (async () => {
+				let pages = [];
+				for (let index of getReadingSamples(this.viewer.pdfDocument.numPages)) {
+					if (this.view._destroyed) return null;
+					try { pages.push(await this.readPage(index, rotation)); }
+					catch (error) { console.error(error); }
+				}
+				let model = buildReadingModel(pages);
+				for (let page of pages) {
+					page.bounds = getReadingBounds(page.image, page.lines, model);
+					delete page.image; delete page.lines;
+					if (rotation === this.viewer.pagesRotation) this.cache.set(page.index, Promise.resolve(page));
+				}
+				let aspects = pages.map(p => p.aspect).sort((a, b) => a - b);
+				return { ...model, ...buildReadingProfiles(pages), aspect: aspects[Math.floor(aspects.length / 2)] };
+			})();
+		}
+		return this.modelPromise;
+	}
+
+	async boundsFor(index) {
+		let model = await this.ensureModel();
+		if (!model) return [0, 0, 1, 1];
+		if (!this.cache.has(index)) {
+			let rotation = this.viewer.pagesRotation;
+			this.cache.set(index, this.readPage(index, rotation).then(page => ({
+				index, aspect: page.aspect, bounds: getReadingBounds(page.image, page.lines, model),
+			})).catch(error => { console.error(error); return { bounds: null }; }));
+			if (this.cache.size > 32) this.cache.delete(this.cache.keys().next().value);
+		}
+		let page = await this.cache.get(index);
+		if (!page.bounds) return [0, 0, 1, 1];
+		let bounds = Math.abs(page.aspect / model.aspect - 1) > 0.05 ? page.bounds
+			: resolveReadingBounds(page.bounds, index, model);
+		return rotateReadingBounds(bounds, this.viewer.pagesRotation);
+	}
+
+	async apply({ alignTop = false } = {}) {
+		let v = this.viewer, c = v.container;
+		if (!this.active || !v.pdfDocument || this.view._destroyed) return false;
+		this.pendingPage = false;
+		this.win.clearTimeout(this.timer);
+		// A pair of pages needs a different geometry. Give an honest full-spread
+		// page-width view until single-page mode is selected again.
+		if (v.spreadMode !== 0) {
+			this.suspend();
+			return false;
+		}
+		let index = v.currentPageNumber - 1, token = ++this.token;
+		let scaleBefore = v.currentScale, rotation = v.pagesRotation;
+		let page = v.getPageView(index);
+		let topFraction = (c.scrollTop - page.div.offsetTop - page.div.clientTop) / page.div.clientHeight;
+		let bounds = this.options.mode === 'content' || this.options.reference === 'content'
+			? await this.boundsFor(index) : [0, 0, 1, 1];
+		if (token !== this.token || !this.active || this.view._destroyed || v.pagesRotation !== rotation
+				|| v.currentPageNumber !== index + 1 || v.currentScale !== scaleBefore) return false;
+		if (!page.pdfPage) page.setPdfPage(await v.pdfDocument.getPage(index + 1));
+		if (token !== this.token || !this.active || this.view._destroyed || v.currentPageNumber !== index + 1) return false;
+		let base = page.pdfPage.getViewport({ scale: 96 / 72, rotation: page.viewport.rotation });
+		let fit = getReadingFit({ ...this.options, bounds, width: c.clientWidth, height: c.clientHeight,
+			pageWidth: base.width, pageHeight: base.height });
+		this.applying = true;
+		try {
+			v.currentScale = fit.scale;
+			// Wrapped scale changes can put a different page at the old scroll
+			// offset. Resolve the requested page again after the new row layout.
+			v.scrollPageIntoView({ pageNumber: index + 1 });
+			let d = page.div, b = fit.bounds;
+			c.scrollLeft = Math.max(0, d.offsetLeft + d.clientLeft
+				+ (b[0] + b[2]) / 2 * d.clientWidth - c.clientWidth / 2);
+			if (this.options.mode !== 'width') {
+				c.scrollTop = Math.max(0, d.offsetTop + d.clientTop
+					+ (b[1] + b[3]) / 2 * d.clientHeight - c.clientHeight / 2);
+			}
+			else {
+				c.scrollTop = Math.max(0, d.offsetTop + d.clientTop + (alignTop
+					? Math.max(0, b[1] * d.clientHeight - fit.pad) : topFraction * d.clientHeight));
+			}
+			this.clearClips();
+			if (this.options.mode === 'content') {
+				this.clipped.set(d, d.style.clipPath);
+				d.style.clipPath = `inset(${Math.max(0, b[1] * d.clientHeight - fit.pad)}px ${Math.max(0, (1 - b[2]) * d.clientWidth - fit.pad)}px ${Math.max(0, (1 - b[3]) * d.clientHeight - fit.pad)}px ${Math.max(0, b[0] * d.clientWidth - fit.pad)}px)`;
+			}
+			this.applied = { scale: v.currentScale, bounds, pageIndex: index, left: c.scrollLeft, top: c.scrollTop };
+		}
+		finally { this.applying = false; }
+		this.view._updateViewStats();
+		return true;
+	}
+
+	clearClips() {
+		for (let [element, before] of this.clipped) element.style.clipPath = before;
+		this.clipped.clear();
+	}
+
+	destroy() {
+		this.suspend(); this.cache.clear();
+		this.win.removeEventListener('pointerdown', this.onDown, true);
+		this.win.removeEventListener('pointerup', this.onUp, true);
+		this.win.removeEventListener('pointercancel', this.onUp, true);
+		this.win.removeEventListener('resize', this.onResize);
+		this.viewer.container.removeEventListener('scroll', this.onScroll);
+		this.bus.off('pagechanging', this.onPage); this.bus.off('scalechanging', this.onScale);
+		this.bus.off('rotationchanging', this.onRotation);
+	}
+}

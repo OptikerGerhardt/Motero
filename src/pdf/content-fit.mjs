@@ -84,7 +84,7 @@ function trimOuterBands(bands, size, maxBandSize, minGap, {
  * @param {{ data: Uint8ClampedArray, width: number, height: number }} imageData RGBA pixels on white
  * @returns {number[] | null} [x0, y0, x1, y1] as fractions of the page size, or null for blank pages
  */
-export function getInkBounds({ data, width, height }) {
+export function getInkBounds({ data, width, height }, { trimVertical = true } = {}) {
 	if (!(width > 0) || !(height > 0)) {
 		return null;
 	}
@@ -134,8 +134,9 @@ export function getInkBounds({ data, width, height }) {
 		}
 		return max - min + 1;
 	};
-	let yBands = trimOuterBands(
-		getBands(rows, Math.max(1, Math.round(height * Y_MERGE_GAP))),
+	let allYBands = getBands(rows, Math.max(1, Math.round(height * Y_MERGE_GAP)));
+	let yBands = trimVertical ? trimOuterBands(
+		allYBands,
 		height,
 		HEADER_FOOTER_MAX_HEIGHT,
 		HEADER_FOOTER_MIN_GAP,
@@ -146,7 +147,7 @@ export function getInkBounds({ data, width, height }) {
 				y => y >= band.start && rows[y] >= RULE_MIN_FILL * (x1 - x0)
 			),
 		}
-	);
+	) : allYBands;
 	if (!yBands.length) {
 		return null;
 	}

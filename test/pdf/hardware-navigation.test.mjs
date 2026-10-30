@@ -49,6 +49,14 @@ test('fitted whole pages, including centered pages, turn immediately', async () 
 	assert.equal(await move(view, true), 'page'); assert.equal(viewer.currentPageNumber, 2);
 });
 
+test('Android content fitting skips hidden paper margins on the first button press', async () => {
+	let {view,viewer,container,list} = fixture({height:1000});
+	container.scrollTop = 120;
+	view._pageFitting = {active:true, options:{mode:'content'}, applied:{pageIndex:0,scale:2,top:120}};
+	assert.deepEqual(getHardwareScrollLimits(view,viewer,list[0]),{min:120,max:120,viewportHeight:600});
+	assert.equal(await move(view,true),'page'); assert.equal(viewer.currentPageNumber,2);
+});
+
 test('first and last pages cannot move outside document', async () => {
 	let { view, viewer, container } = fixture();
 	assert.equal(await move(view, false), 'none');
