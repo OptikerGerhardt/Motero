@@ -48,6 +48,7 @@ internal class ReaderSettingsViewModel @Inject constructor(
     private var pdfReaderThemeCancellable: Job? = null
 
     private var debounceApplyJob: Job? = null
+    private var reapplyFitting = false
     private val DEBOUNCE_APPLY_DELAY_MS = 500L
 
     private fun startObservingTheme() {
@@ -78,8 +79,13 @@ internal class ReaderSettingsViewModel @Inject constructor(
                     wordSpacing = readerSettings.wordSpacing,
                     letterSpacing = readerSettings.letterSpacing,
                     pageWidth = readerSettings.pageWidth.toFloat(),
-                    selectedFitToContentOption = if (readerSettings.fitToWidth) ReaderSettingsOptions.FitToWidth
-                        else convertFitToContent(readerSettings.fitToContent),
+                    selectedFitToContentOption = when (readerSettings.pageFitMode()) {
+                        "width" -> ReaderSettingsOptions.FitToWidth
+                        "height" -> ReaderSettingsOptions.FitToHeight
+                        else -> convertFitToContent(readerSettings.fitToContent)
+                    },
+                    selectedFitReferenceOption = if (readerSettings.fitTextReference) ReaderSettingsOptions.FitReferenceText
+                        else ReaderSettingsOptions.FitReferencePage,
                     selectedSelectionOption = if (readerSettings.nativeTextSelection) ReaderSettingsOptions.SelectionAndroid
                         else ReaderSettingsOptions.SelectionDirect,
                     selectedContentMarginOption = convert(readerSettings.contentMargin),
@@ -194,10 +200,17 @@ internal class ReaderSettingsViewModel @Inject constructor(
                 }
             }
 
-            ReaderSettingsOptions.FitToContentOff, ReaderSettingsOptions.FitToContentOn, ReaderSettingsOptions.FitToWidth -> {
+            ReaderSettingsOptions.FitToContentOff, ReaderSettingsOptions.FitToContentOn,
+            ReaderSettingsOptions.FitToWidth, ReaderSettingsOptions.FitToHeight -> {
+                reapplyFitting = true
                 updateState {
                     copy(selectedFitToContentOption = option)
                 }
+            }
+
+            ReaderSettingsOptions.FitReferencePage, ReaderSettingsOptions.FitReferenceText -> {
+                reapplyFitting = true
+                updateState { copy(selectedFitReferenceOption = option) }
             }
 
             ReaderSettingsOptions.SelectionDirect, ReaderSettingsOptions.SelectionAndroid -> {
@@ -206,12 +219,21 @@ internal class ReaderSettingsViewModel @Inject constructor(
 
             ReaderSettingsOptions.ContentMarginNone, ReaderSettingsOptions.ContentMarginSmall,
             ReaderSettingsOptions.ContentMarginMedium, ReaderSettingsOptions.ContentMarginLarge -> {
+                reapplyFitting = true
                 updateState {
                     copy(selectedContentMarginOption = option)
                 }
             }
         }
         updatePdfSettings(option)
+        if (option in viewState.fitToContentOptions && option != ReaderSettingsOptions.FitToContentOff) {
+            readerSettings.spreadsMode = PageSpreadsMode.NONE
+            updateState { copy(selectedSpreadsOption = ReaderSettingsOptions.PageSpreadsNone) }
+        } else if (option in viewState.spreadsOptions && option != ReaderSettingsOptions.PageSpreadsNone) {
+            readerSettings.setPageFitMode("none")
+            reapplyFitting = true
+            updateState { copy(selectedFitToContentOption = ReaderSettingsOptions.FitToContentOff) }
+        }
         scheduleDebouncedApply()
     }
 
@@ -303,19 +325,12 @@ internal class ReaderSettingsViewModel @Inject constructor(
                 readerSettings.pageLayoutFlowMode = PageLayoutFlowMode.SCROLLED
             }
 
-            ReaderSettingsOptions.FitToContentOff -> {
-                readerSettings.fitToContent = false
-                readerSettings.fitToWidth = false
-            }
-            ReaderSettingsOptions.FitToContentOn -> {
-                readerSettings.fitToContent = true
-                readerSettings.fitToWidth = false
-            }
-
-            ReaderSettingsOptions.FitToWidth -> {
-                readerSettings.fitToWidth = true
-                readerSettings.fitToContent = false
-            }
+            ReaderSettingsOptions.FitToContentOff -> readerSettings.setPageFitMode("none")
+            ReaderSettingsOptions.FitToContentOn -> readerSettings.setPageFitMode("content")
+            ReaderSettingsOptions.FitToWidth -> readerSettings.setPageFitMode("width")
+            ReaderSettingsOptions.FitToHeight -> readerSettings.setPageFitMode("height")
+            ReaderSettingsOptions.FitReferencePage -> readerSettings.fitTextReference = false
+            ReaderSettingsOptions.FitReferenceText -> readerSettings.fitTextReference = true
 
             ReaderSettingsOptions.SelectionDirect -> {
                 readerSettings.nativeTextSelection = false
@@ -344,7 +359,8 @@ internal class ReaderSettingsViewModel @Inject constructor(
     }
 
     private fun sendSettingsParams() {
-        EventBus.getDefault().post(ReaderSettingsChangeResult(readerSettings))
+        EventBus.getDefault().post(ReaderSettingsChangeResult(readerSettings.copy(), reapplyFitting))
+        reapplyFitting = false
     }
 
 }
@@ -359,6 +375,7 @@ internal data class ReaderSettingsViewState(
     val letterSpacing: Float = 0f,
     val pageWidth: Float = 0f,
     val selectedFitToContentOption: ReaderSettingsOptions = ReaderSettingsOptions.FitToContentOff,
+    val selectedFitReferenceOption: ReaderSettingsOptions = ReaderSettingsOptions.FitReferencePage,
     val selectedContentMarginOption: ReaderSettingsOptions = ReaderSettingsOptions.ContentMarginSmall,
     val selectedSelectionOption: ReaderSettingsOptions = ReaderSettingsOptions.SelectionDirect,
     val isDark: Boolean = false,
@@ -389,7 +406,9 @@ internal data class ReaderSettingsViewState(
         ReaderSettingsOptions.FitToContentOff,
         ReaderSettingsOptions.FitToContentOn,
         ReaderSettingsOptions.FitToWidth,
+        ReaderSettingsOptions.FitToHeight,
     )
+    val fitReferenceOptions = listOf(ReaderSettingsOptions.FitReferencePage, ReaderSettingsOptions.FitReferenceText)
     val selectionOptions = listOf(
         ReaderSettingsOptions.SelectionDirect,
         ReaderSettingsOptions.SelectionAndroid,

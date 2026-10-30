@@ -1,32 +1,33 @@
-# Motero Build 295: Prüfstand
+# Motero Build 296: geprüfter Stand
 
-Die Quick-Tag-Grenzen reichen jeweils einen halben Mittelpunktabstand über die äußerste Highlight-Farbe hinaus. Der erste folgende Tipp auf ein Highlight öffnet nach der Farbwahl wieder das Annotationsfenster. Der sichtbare Android-App-Name ist Motero.
+Alle folgenden Ergebnisse beziehen sich auf die ausgelieferte APK.
 
-| Prüfung | Ergebnis |
+| Eigenschaft | Ergebnis |
 |---|---|
-| App-Name | `Motero` |
-| Paketkennung | `org.zotero.android.debug` |
-| Version | `1.0.0-295` / 295 |
-| Bisherige Version | 294 |
-| Zertifikat SHA-256 | `c4e70a6935d239246540532b6d3ea514eb2a428e1e8eaacbf94c8a9a01989299`; identisch zur bisherigen APK |
-| APK SHA-256 | `eaa898b53f71780d808f706c9a50495cb016e9224d0294df5dd967e35dc6cbaf` |
-| Größe | 197,327,041 Bytes |
-| Reader SHA-256 | `cb537a5f12f78269d8bebe51026e86dcfbd57751e3f9b360f985007b6df7e4d2` |
-| Reader-Tests | 207 bestanden |
-| Android-Tests | 70 bestanden, 0 übersprungen; darin 6 Reader-Logiktests |
-| Erster Tipp nach Farbwahl | Popup nach Mausklick-/Kompatibilitätsereignissen und echter Touch-Eingabe geprüft |
-| Weitere Browserprüfungen | Finger/Stift, Wischen, Palette, Auswahl-Abwahl, Wrapped-Rückkehr, Bookmarks, Lesekante und Viewport bestanden |
-| Laufzeitdateien/Bibliotheken | 88 bytegleich zur Basis |
-| APK-Dateieinträge | keine entfernt oder hinzugefügt |
-| Anpassungsfunktionen und PDF.js | unverändert zur Basis geprüft |
-| DEX-Dateien | 8 |
-| Signatur und ZIP-Ausrichtung | geprüft, einschließlich 16-KiB-Ausrichtung nativer Bibliotheken |
-| Physischer BOOX / native Fensterdarstellung | hier nicht geprüft |
+| Name | Motero |
+| Paket | org.zotero.android.debug |
+| Version | 1.0.0-296 / Code 296 |
+| Vorgänger | Build 295 |
+| APK-Größe | 203708948 Bytes |
+| APK SHA-256 | 91f63c37dd267537084cdc6b894fa8cba4f28b7b506ec82e86be6e553cef2bfe |
+| Zertifikat SHA-256 | c4e70a6935d239246540532b6d3ea514eb2a428e1e8eaacbf94c8a9a01989299 |
+| Reader SHA-256 | 6bbfa312891bd93eba3784a879e45bd0fd112ae8c72ef6c122c191819182a7d3 |
+| Reader-Tests | 229 bestanden, 0 Fehler/Abbrüche/übersprungen |
+| Native Tests | 73 bestanden, 0 übersprungen |
+| Browser | Fit-Prüfung einschließlich Original-Mul, Gesten und bisherige Funktionen bestanden |
+| Eingebettete Quellen | 9 direkt gegen die getesteten Quellen geprüft |
+| Weitere Laufzeitdateien | 88 bytegleich zur bisherigen APK |
+| PDF.js | Vollständig bytegleich zur bisherigen APK |
+| APK-Dateinamen | Identisch zur bisherigen APK; 8 DEX-Dateien |
+| Update | Gleiche Paketkennung und gleicher Signierer, Versionscode erhöht, v2-Signatur geprüft |
+| Ausrichtung | ZIP-Ausrichtung einschließlich 16-KiB-Nativbibliotheken geprüft |
 
-Die APK über die bisherige Testversion installieren, vorher nicht deinstallieren. Paketkennung, Signatur und höherer Versionscode wurden an beiden APKs geprüft. Datenbank, Anmeldung und Speicherpfade wurden nicht verändert. Das Android-App-Label ist direkt aus der fertigen APK geprüft, nicht nur aus dem Quellcode.
+Vier Fit-Modi, Papier-/Inhaltsbezug und Ränder sind umgesetzt. Gerade/ungerade Seiten werden getrennt ausgerichtet. Fußnoten bleiben Inhalt; eindeutig erkannte Metadaten werden bei der Inhaltsbestimmung ausgeschlossen. Die dokumentierte heuristische Erkennung kann mehrdeutige Randtexte erhalten. Die Mul-Prüfung weist auf PDF-Seite 250 und 251 den Textbeginn bei 10,44 % der Seitenhöhe nach, statt den Kopf bei etwa 6,7 % einzubeziehen. Die horizontale Ausrichtung passt sich getrennt an beide Seiten an.
 
-Der Zusatz-Tipp wurde im Reader von Build 294 nachgestellt: Nach dem Klick auf eine Palettenfarbe blieb der globale PDF-Zeigerzustand offen. Der globale Capture-Listener ignoriert jetzt Android-Paletteneingaben, bevor er eine PDF-Aktion startet. Der neue Unit-Test prüft Touch, Stift und mousedown; Browserprüfungen prüfen das tatsächliche Popup beim ersten folgenden Tipp. Der native Schließhandler aus Build 294 bleibt erhalten.
+Browserprüfungen decken alle drei Scrollmodi, alle vier Rotationen, echtes Touch-Markieren mit aktiven drei Fits, Farbpalette, ersten Annotationstipp und Wrapped-Rückkehr ab. Neu besuchte Seiten mit breiter Tabelle, tiefer Fußnote, anderem Format und leere Seiten werden geprüft. Ausstehende Fit-Anfragen geben neuen Benutzereingaben Vorrang.
 
-Fit-to-Content-Algorithmen, Fit-to-Width-Berechnung und gerade/ungerade Ausrichtung wurden nicht geändert. Der PDFView enthält ausschließlich die kleine zusätzliche Eingabeprüfung vor Pointerdown. Der Verifikationslauf vergleicht die Anpassungsfunktionen, das Inhaltsanpassungsmodul und alle PDF.js-Dateien gegen die bisherige APK.
+Kein physischer BOOX ist angeschlossen. Native Darstellung, tatsächliche Installation/Login am Zielgerät, E-Ink-Wirkung, echte Pinch-Skalenänderung auf dem Gerät und Kontosynchronisation sind hier nicht geprüft. Bookmarks relativ zum Inhaltsausschnitt, manueller Zuschnitt und Randtippen in allen Modi bleiben offen.
 
-Die native Oberfläche ist kompiliert. Eine Installation auf dem tatsächlichen BOOX, dortiger Geräte-Login und realer Desktop-Sync wurden hier nicht durchgeführt. Für den vollständigen Android-Testlauf wurde der vorhandene MockK-/ByteBuddy-Agent beim Start der Test-JVM geladen; kein Test wurde dafür übersprungen und die APK enthält diesen Teststartparameter nicht.
+Die ByteBuddy-Vorabladung betrifft ausschließlich die native Test-JVM. Ein Fehler im inkrementellen DEX-Zwischenspeicher wurde durch Entfernen der erzeugten Projekt-DEX-Ausgaben behoben; der anschließende APK-Bau und die Signatur-/Inhaltsprüfung bestanden. Quellcode oder Bibliotheken wurden dafür nicht abgeschwächt.
+
+Details: BUILD_BOOX.md, BUILD_VERIFICATION.json und qa/.

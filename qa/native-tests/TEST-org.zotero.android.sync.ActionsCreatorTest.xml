@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.zotero.android.sync.ActionsCreatorTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-10-30T08:33:59.873Z" hostname="d1c546e81902" time="0.099">
+<testsuite name="org.zotero.android.sync.ActionsCreatorTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-10-30T13:46:31.103Z" hostname="5c12a4f273cf" time="0.068">
   <properties/>
   <testcase name="createInitialActions for Libraries_all should return Action_loadKeyPermissions and Action_syncGroupVersions" classname="org.zotero.android.sync.ActionsCreatorTest" time="0.002"/>
   <testcase name="createBatchedObjectActions for empty keys and shouldStoreVersion true should return list of storeVersions" classname="org.zotero.android.sync.ActionsCreatorTest" time="0.004"/>
-  <testcase name="createBatchedObjectActions for 20 keys and shouldStoreVersion false should return two batches of actions" classname="org.zotero.android.sync.ActionsCreatorTest" time="0.002"/>
-  <testcase name="createInitialActions for SyncType_normal and list of Libraries_specific libraries should return Action_loadKeyPermissions and list of automatic createLibraryActions" classname="org.zotero.android.sync.ActionsCreatorTest" time="0.078"/>
-  <testcase name="createInitialActions for SyncType_full and list of Libraries_specific libraries should return Action_loadKeyPermissions and list of onlyDownloads createLibraryActions" classname="org.zotero.android.sync.ActionsCreatorTest" time="0.004"/>
+  <testcase name="createBatchedObjectActions for 20 keys and shouldStoreVersion false should return two batches of actions" classname="org.zotero.android.sync.ActionsCreatorTest" time="0.003"/>
+  <testcase name="createInitialActions for SyncType_normal and list of Libraries_specific libraries should return Action_loadKeyPermissions and list of automatic createLibraryActions" classname="org.zotero.android.sync.ActionsCreatorTest" time="0.047"/>
+  <testcase name="createInitialActions for SyncType_full and list of Libraries_specific libraries should return Action_loadKeyPermissions and list of onlyDownloads createLibraryActions" classname="org.zotero.android.sync.ActionsCreatorTest" time="0.003"/>
   <testcase name="createGroupActions for full SynkKind normal and Libraries all should return these actions in order resolveDeletedGroup, syncGroupToDb and createLibraryAction with automatic" classname="org.zotero.android.sync.ActionsCreatorTest" time="0.001"/>
   <testcase name="createInitialActions for Libraries_specific with at least one group library should return Action_loadKeyPermissions and Action_syncGroupVersions" classname="org.zotero.android.sync.ActionsCreatorTest" time="0.001"/>
-  <testcase name="createGroupActions for full SynkKind full and Libraries all should return these actions in order resolveDeletedGroup, syncGroupToDb and createLibraryAction with onlyDownloads" classname="org.zotero.android.sync.ActionsCreatorTest" time="0.002"/>
-  <testcase name="createGroupActions for full SynkKind prioritizeDownloads and Libraries all should return these actions in order resolveDeletedGroup, syncGroupToDb and createLibraryAction with onlyDownloads, onlyWrites" classname="org.zotero.android.sync.ActionsCreatorTest" time="0.0"/>
+  <testcase name="createGroupActions for full SynkKind full and Libraries all should return these actions in order resolveDeletedGroup, syncGroupToDb and createLibraryAction with onlyDownloads" classname="org.zotero.android.sync.ActionsCreatorTest" time="0.001"/>
+  <testcase name="createGroupActions for full SynkKind prioritizeDownloads and Libraries all should return these actions in order resolveDeletedGroup, syncGroupToDb and createLibraryAction with onlyDownloads, onlyWrites" classname="org.zotero.android.sync.ActionsCreatorTest" time="0.001"/>
   <testcase name="createBatchedObjectActions for two keys and shouldStoreVersion true should return 1 batch of actions with storeVersion action" classname="org.zotero.android.sync.ActionsCreatorTest" time="0.002"/>
   <testcase name="createBatchedObjectActions for empty keys and shouldStoreVersion false should return list of emptyList" classname="org.zotero.android.sync.ActionsCreatorTest" time="0.001"/>
   <system-out><![CDATA[]]></system-out>

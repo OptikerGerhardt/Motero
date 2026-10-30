@@ -29,4 +29,7 @@ enum class ReaderSettingsOptions(@StringRes val optionStringId: Int) {
     FitToWidth(Strings.pdf_settings_fit_to_width),
     SelectionDirect(Strings.pdf_settings_selection_direct),
     SelectionAndroid(Strings.pdf_settings_selection_android),
+    FitToHeight(Strings.pdf_settings_fit_to_height),
+    FitReferencePage(Strings.pdf_settings_fit_reference_page),
+    FitReferenceText(Strings.pdf_settings_fit_reference_text),
 }

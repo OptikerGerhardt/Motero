@@ -98,6 +98,10 @@
 
     <string name="pdf_settings_fit_to_content_title">Fit to Content</string>
     <string name="pdf_settings_fit_to_width">Fit to Width</string>
+    <string name="pdf_settings_fit_to_height">Fit to Height</string>
+    <string name="pdf_settings_fit_reference_title">Fit relative to</string>
+    <string name="pdf_settings_fit_reference_page">PDF page</string>
+    <string name="pdf_settings_fit_reference_text">Content</string>
     <string name="pdf_settings_selection_title">Text marking</string>
     <string name="pdf_settings_selection_direct">Hold and drag</string>
     <string name="pdf_settings_selection_android">Android selection</string>

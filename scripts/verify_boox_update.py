@@ -18,6 +18,7 @@ parser.add_argument('--build-tools', type=Path, required=True)
 parser.add_argument('--qa-directory', type=Path)
 parser.add_argument('--preserve-fitting', action='store_true', help='Require the existing PDF fitting implementation and PDF.js to be unchanged')
 parser.add_argument('--label', help='Expected visible Android application name')
+parser.add_argument('--fitting-update', action='store_true', help='Require the four-mode Android fitting checks')
 args = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
 
@@ -55,6 +56,7 @@ with zipfile.ZipFile(args.apk) as apk:
     with zipfile.ZipFile(args.base) as base:
         previous_reader = base.read('assets/reader/reader.zip')
         entry_names_unchanged = set(base.namelist()) == set(apk.namelist())
+        assert entry_names_unchanged, 'Unexpected APK entry additions/removals'
         unchanged_runtime_files = [n for n in base.namelist() if n.startswith(('assets/', 'lib/'))
                                    and not n.endswith('/')
                                    and n not in ('assets/reader/reader.zip', 'assets/reader/reader_hash.txt')]
@@ -75,9 +77,14 @@ with zipfile.ZipFile(args.apk) as apk:
         mapping = json.loads(bundle.read('view.js.map'))
         verified = []
         for name in ['pdf/boox-reader.js', 'pdf/pdf-view.js', 'pdf/content-fit.mjs', 'pdf/direct-highlight.js',
-                     'pdf/hardware-navigation.mjs', 'index.android.js']:
+                     'pdf/hardware-navigation.mjs', 'index.android.js', 'common/view.js',
+                     'pdf/reading-layout.mjs', 'pdf/android-page-fitting.js']:
             assert source(mapping, name) == (root / 'reader/src' / name).read_text(), name
             verified.append(name)
+        with zipfile.ZipFile(io.BytesIO(previous_reader)) as previous:
+            for name in previous.namelist():
+                if name.startswith('pdf/') and not name.endswith('/'):
+                    assert bundle.read(name) == previous.read(name), name
         if args.preserve_fitting:
             with zipfile.ZipFile(io.BytesIO(previous_reader)) as previous:
                 previous_mapping = json.loads(previous.read('view.js.map'))
@@ -106,6 +113,15 @@ if args.qa_directory:
         assert check in features, check
     gestures = (args.qa_directory / 'reader-final-gestures.log').read_text()
     assert 'PASS: width and resize' in gestures and 'PAGE ERROR' not in gestures
+    if args.fitting_update:
+        fitting = (args.qa_directory / 'reader-fitting.log').read_text()
+        for check in ['PASS: all Android fitting checks',
+                      'PASS content fit and first hardware press across Vertical, Horizontal and Wrapped',
+                      'PASS all display rotations preserve content and cached recognition',
+                      'PASS touch highlighting, palette and first annotation tap with active fitting',
+                      'PASS original Mul PDF odd/even and complete content fit']:
+            assert check in fitting, check
+        assert 'Error' not in fitting and 'AssertionError' not in fitting
     native_xml = root / 'app/build/test-results/testDevDebugUnitTest/TEST-org.zotero.android.screens.reader.ReaderQuickControlActionsTest.xml'
     native = ET.parse(native_xml).getroot()
     assert native.get('failures') == native.get('errors') == native.get('skipped') == '0'
@@ -116,6 +132,8 @@ if args.qa_directory:
               native_tests_total=sum(int(s.get('tests', 0)) for s in native_suites),
               native_tests_skipped=sum(int(s.get('skipped', 0)) for s in native_suites),
               browser_features_passed=True, browser_gestures_passed=True)
+    if args.fitting_update:
+        qa['browser_fitting_passed'] = True
 
 report = dict(new, previous_version_code=old['version_code'], sha256=sha(args.apk.read_bytes()),
               size_bytes=args.apk.stat().st_size, reader_sha256=reader_hash, dex_count=len(dex),
@@ -123,6 +141,7 @@ report = dict(new, previous_version_code=old['version_code'], sha256=sha(args.ap
               unchanged_runtime_files_verified=len(unchanged_runtime_files),
               selected_features=[1, 2, 5, 6, 16, 17, 18, 20, 21],
               fitting_unchanged=args.preserve_fitting,
+              pdfjs_unchanged=True,
               zip_alignment_verified=True,
               apk_entry_names_unchanged=entry_names_unchanged,
               **qa, verified=True,

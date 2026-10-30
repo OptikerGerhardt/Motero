@@ -39,9 +39,21 @@ internal fun ReaderSettingsTable(
                 titleResId = Strings.pdf_settings_page_fitting_title,
                 options = viewState.fitToContentOptions,
                 selectedOption = viewState.selectedFitToContentOption,
+                columns = 2,
                 optionSelected = viewModel::onOptionSelected
             )
-            if (viewState.selectedFitToContentOption == ReaderSettingsOptions.FitToContentOn) {
+            val axisFit = viewState.selectedFitToContentOption == ReaderSettingsOptions.FitToWidth
+                || viewState.selectedFitToContentOption == ReaderSettingsOptions.FitToHeight
+            if (axisFit) {
+                readerSettingsSettingRow(
+                    titleResId = Strings.pdf_settings_fit_reference_title,
+                    options = viewState.fitReferenceOptions,
+                    selectedOption = viewState.selectedFitReferenceOption,
+                    optionSelected = viewModel::onOptionSelected
+                )
+            }
+            if (viewState.selectedFitToContentOption == ReaderSettingsOptions.FitToContentOn
+                || (axisFit && viewState.selectedFitReferenceOption == ReaderSettingsOptions.FitReferenceText)) {
                 readerSettingsSettingRow(
                     titleResId = Strings.pdf_settings_content_margin_title,
                     options = viewState.contentMarginOptions,

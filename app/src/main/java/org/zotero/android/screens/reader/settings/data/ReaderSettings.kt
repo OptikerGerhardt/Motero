@@ -42,9 +42,26 @@ data class ReaderSettings(
     var fitToContent: Boolean = false,
     var contentMargin: PageContentMargin = PageContentMargin.SMALL,
     var fitToWidth: Boolean = false,
+    var fitToHeight: Boolean = false,
+    var fittingRevision: Long = 0,
+    // Primitive defaults also migrate settings written before these fields existed.
+    var fitTextReference: Boolean = false,
     // Missing in older saved settings: false keeps the new direct gesture enabled.
     var nativeTextSelection: Boolean = false,
 ) {
+    fun pageFitMode(): String = when {
+        fitToContent -> "content"
+        fitToWidth -> "width"
+        fitToHeight -> "height"
+        else -> "none"
+    }
+
+    fun setPageFitMode(mode: String) {
+        fitToContent = mode == "content"
+        fitToWidth = mode == "width"
+        fitToHeight = mode == "height"
+    }
+
     companion object {
         fun default(): ReaderSettings {
             return ReaderSettings(

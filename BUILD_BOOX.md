@@ -1,18 +1,36 @@
-# Motero auf BOOX: Build 295
+# Motero auf BOOX: Build 296
 
 ## Installation als Update
 
-Die APK über die installierte Testversion installieren. Vorher nicht deinstallieren.
-Paketkennung: `org.zotero.android.debug`. Version: `1.0.0-295`, Versionscode 295; zuvor 294.
-Derselbe Debug-Signierschlüssel wird weiterverwendet. Paketkennung, Zertifikat und höherer Versionscode werden direkt gegen die bisherige APK geprüft. Datenbank, gespeicherte Konten und Reader-Einstellungen verwenden ihre bisherigen Speicherpfade. Die offizielle Zotero-App wird durch diese Testversion nicht ersetzt.
+Über die vorhandene Motero-/Zotero-Testversion installieren, vorher nicht deinstallieren.
+Paketkennung `org.zotero.android.debug`, Versionscode 296, Version `1.0.0-296`, sichtbarer Name **Motero**. Der bisherige Debug-Schlüssel, Speicherpfade und normale Zotero-Anmerkungen bleiben erhalten. Paket, Signatur, Versionsanstieg, ZIP-Ausrichtung und die Laufzeitpakete werden direkt gegen Build 295 geprüft. Ein tatsächlicher Login nach Installation am physischen BOOX ist hier nicht geprüft.
 
-## Änderungen in Build 295
+## Die vier Ansichtsmodi
 
-Der sichtbare Android-App-Name lautet jetzt **Motero**. Paketkennung und Signierschlüssel bleiben gleich.
+| Modus | Berechnung | Zugänglicher Ausschnitt |
+|---|---|---|
+| Off | Keine automatische Anpassung; vorhandenen Zoom erhalten | Vollständige PDF |
+| Fit to Content | Gesamten erkannten Inhalt gleichzeitig in Breite und Höhe einpassen | Der aktuelle Inhaltsrahmen mit Rand; äußere Seitenbereiche werden nur in der Ansicht abgeschnitten. Nach manuellem Verschieben wird die Inhaltsansicht wieder zentriert. |
+| Fit to Width | Ausschließlich Breite: PDF-Seite oder Inhalt plus Rand | Ganze PDF-Höhe bleibt scrollbar |
+| Fit to Height | Ausschließlich Höhe: PDF-Seite oder Inhalt plus Rand | Ganze PDF-Breite bleibt horizontal verschiebbar |
 
-Die Quick-Tag-Reihe reicht jetzt links und rechts jeweils einen halben Mittelpunktabstand über die äußerste Highlight-Farbe hinaus. Bei den vorhandenen gleichmäßig verteilten Farbkreisen entspricht dies einem halben äußeren Zwischenraum zum Fensterrand. Die Grenze orientiert sich damit an den Farbplätzen, nicht an der Kreisaußenkante. Alle bis zu neun Tags bleiben sichtbar und mittig verteilt.
+Für große Schrift mit vertikalem Scrollen: **Fit to Width → Content → Small**. Fit to Content zeigt dagegen den gesamten Inhalt einer Seite, einschließlich Fußnoten, auf einmal. Bei einem anderen Seitenverhältnis bleibt dabei Platz übrig; der Inhalt wird nicht verzerrt.
 
-Nach einer Farbwahl in der kleinen Palette öffnet bereits der erste folgende Tipp auf das Highlight das Annotationsfenster. Ursache war der globale Pointer-Capture-Handler: Er registrierte den Tastendruck auf der Palette als begonnenen PDF-Vorgang, während das Loslassen von der Palette abgefangen wurde. Die nächste Berührung wurde deshalb nur zum Aufräumen dieses Zustands verbraucht. Android-Paletteneingaben werden jetzt vor dem Beginn einer PDF-Aktion erkannt. Browserprüfungen decken sowohl Mausklick-/Kompatibilitätsereignisse als auch echte Touch-Eingaben ab. Zusätzlich prüft ein Reader-Unit-Test Touch, Stift und mousedown auf der Palette.
+Bei Breite und Höhe erscheint eine Referenzauswahl PDF page / Content. Beim Inhaltsbezug sind None / Small / Medium / Large als Rand verfügbar: 0 / 1 / 4 / 8 Prozent der kürzeren Seite des Lesefensters je Kante. Eine bereits ausgewählte Fit-Option kann erneut angetippt werden und passt die Ansicht ausdrücklich neu an. Manueller Zoom hebt den aktiven Fit auf und meldet Off an die nativen Einstellungen. Eine monotone Revision verhindert, dass verspätete WebView-Zustände eine neuere Auswahl überschreiben. Die Wrapped-Übersicht merkt sich den aktiven Fit und stellt ihn auf der angetippten Seite wieder her.
+
+Die Fit-Modi arbeiten mit einzelnen PDF-Seiten, auch in Wrapped. Auswahl eines Fits schaltet eine Doppelseitenanzeige auf einzelne Seiten. Eine explizite Doppelseitenwahl schaltet den automatischen Fit aus. Gerade/ungerade Inhaltserkennung ist davon unabhängig.
+
+## Inhaltserkennung
+
+Bis zu vier benachbarte Seitenpaare aus dem mittleren Bereich werden analysiert: bei langen PDFs über ungefähr die mittleren zehn Prozent, bei kurzen PDFs über mindestens acht verfügbare Seiten um die Mitte; bei höchstens acht Seiten werden alle analysiert. Maßgeblich sind PDF-Seitenindizes, nicht gedruckte Folios. Gerade und ungerade Seiten bekommen getrennte horizontale Profile. Gleichartige Buchseiten verwenden eine gemeinsame typische Lesebreite, statt abwechselnd stark zu zoomen.
+
+Die Seiten werden mit 600 Pixeln Breite gerendert. Textpositionen und Schriftmetriken dienen zur Erkennung von laufenden Köpfen, getrennten Zeilenzahl-/Editionenspalten und eindeutigen Downloadblöcken wie JSTOR-Vermerken. Wechselnde Kapitelüberschriften können über die stabile Position, Schriftgröße und den Abstand zum Textkörper erkannt werden. Ein dünner Trennstrich des ausgeschlossenen Kopfes wird mit ausgeschlossen.
+
+**Fußnoten und ihre Trennlinien gehören zum Inhalt.** Kleine, kurze, wiederholte oder ganz unten stehende Fußnoten werden nicht allein deshalb entfernt. Ein JSTOR-Link kann selbst eine Fußnote sein und wird nur als Teil eines erkannten Downloadblocks ausgeschlossen. Uneindeutige Texte bleiben erhalten. Auf Scans ohne brauchbare Textschicht kann die Bildauswertung Außenraum bestimmen, aber Metadaten nicht so sicher semantisch unterscheiden; solche Ränder können erhalten bleiben. Es gibt keine Garantie fehlerfreier Klassifikation beliebiger PDFs und keine OCR-Neuberechnung.
+
+Jede erstmals besuchte Seite wird zusätzlich einmal analysiert: breitere Tabellen und tiefere Fußnoten erweitern den Rahmen, statt durch die Stichprobe abgeschnitten zu werden. Ergebnisse werden bis zu 32 Seiten im Arbeitsspeicher gehalten; das Dokumentmodell bleibt während des geöffneten Readers erhalten. Unbekannte Formate, leere Seiten und Lesefehler fallen konservativ auf die tatsächliche Seite zurück. Die natürliche Leseorientierung wird analysiert; Ansichtsrotation dreht nur den erkannten Rahmen. Die PDF-Datei und Annotationskoordinaten werden nicht geändert.
+
+Hardwaretasten blättern bei bereits vollständig sichtbarem Inhalts-/Höhenfit sofort zur nächsten Seite, anstatt durch ausgeblendete Papierränder zu scrollen. Breitenfit behält SmartScroll über die vollständige Papierhöhe. Ausstehende Anpassungen werden bei neuen Eingaben verworfen; eine Highlight-Palette löst keine verspätete Neuausrichtung aus.
 
 ## Weiterhin enthaltene Nachbesserungen aus Build 294
 
@@ -28,33 +46,26 @@ Die feste Bookmark-Position liegt etwa 1 cm vom rechten Papierrand und 4 PDF-Pun
 
 Alle neun Funktionen aus Build 293 bleiben enthalten: F01/F02 Navigation und Wrapped-Seitenauswahl, F05 Farb-/Tagfilter, F06 gekoppelte Leisten, F16 unmittelbare Farbpalette, F17 Lesekante, F18 Notiz-Lesezeichen und F20/F21 Tag-Schnellwahl und Originaltext im Annotationsfenster.
 
-## Bewusst zurückgestellt
+## Weiter enthalten aus Build 295
 
-Fit to Content, Fit to Width, Randgrößen und eine gesonderte Ausrichtung gerader/ungerader Seiten sind unverändert. Die bisherige Stichprobe über bis zu acht Seiten des ganzen Dokuments bleibt bestehen. Die mittlere Stichprobe und getrennte horizontale Ausrichtungen wurden noch nicht eingebaut. Der Verifikationslauf mit `--preserve-fitting` vergleicht die unveränderten Anpassungsfunktionen und alle PDF.js-Dateien direkt mit der bisherigen APK.
+Motero als sichtbarer App-Name; Quick Tags zwischen halben Farb-Mittelpunktabständen; erster Tipp auf eine Annotation nach Maus- und Touch-Farbwahl öffnet das Fenster. Direkte Markierung, Tag-/Farbfilter, gekoppelte Leisten und normale Annotationsspeicherung sind erhalten.
 
-F19 Tag-Autocomplete und andere nicht beauftragte Backlog-Punkte wurden nicht ergänzt.
+## Zurückgestellt
+
+Manueller rechteckiger Zuschnitt für All / Odd / Even und eigenes Auswahlfenster. Bookmark-Marker relativ zum Inhaltsrahmen statt zur Papierecke. Erweiterung des Randtippens auf alle Scrollmodi. F19 Tag-Autocomplete und übriger Backlog. Bookmarks behalten in diesem Update ihre bisherige PDF-Position und können bei engem Fit außerhalb des Ausschnitts liegen. Die neue Methode `AndroidPageFitting.boundsFor(index)` liefert den passenden Rahmen als Grundlage für die spätere Positionierung.
 
 ## Prüfungen und Grenzen
 
-Die aktuellen Ergebnisse und APK-Metadaten stehen in `BUILD_STATUS.md` und `BUILD_VERIFICATION.json`; die Protokolle liegen unter `qa/`.
+Aktuelle Zahlen und APK-Metadaten stehen in `BUILD_STATUS.md` und `BUILD_VERIFICATION.json`, Protokolle in `qa/`. Die neue Browserprüfung `test-boox-fitting.cjs` verwendet eine reproduzierbare PDF mit versetztem Buchsatz, laufenden Köpfen, JSTOR-Footer, kurzen Fußnoten, Nummernspalten, breiter Tabelle sowie Querformat- und Leerseiten. Außerdem wird die originale 499-seitige Mul-PDF geprüft. Prüfungen umfassen alle drei Scrollmodi, alle vier Rotationen, Inhalts-/Papierbezug, Randgrößen, manuelles Zoomen, erneutes Anwenden, ausstehende Anfragen und Wrapped-Rückkehr. Echte Browser-Touchereignisse prüfen Markieren, Palette und ersten Annotationstipp bei aktivem Breiten-, Inhalts- und Höhenfit.
 
-Die Reader-Prüfungen verwenden echtes PDF-Rendering mit Finger-/Stift-Ereignissen. Zusätzlich zu den bisherigen Gesten prüfen sie 50 % Deckkraft, Auswahl löschen und erneut öffnen, wiederholtes Bookmark-Tippen, feste Position bei geändertem Tipppunkt/Zoom, den rechten Blätterrand, gedrehte PDF-Seiten sowie Wiederherstellen und normales Löschen. Wrapped-Rückkehr bleibt für manuellen Zoom, Inhaltsanpassung, Seitenbreite und manuelles Zoomen bei gespeicherter Inhaltsanpassung geprüft. Die aktuelle Runde verwendet eigene Fixture-PDFs; die frühere Mul-PDF-Diagnose wird nicht als neuer Test behauptet.
+Die bisherigen Browser-Gestenprüfungen und Reader-/Android-Tests laufen ebenfalls. Kein physischer BOOX ist angeschlossen: native Fensterdarstellung, Installation mit konkretem Nutzerkonto, echte Pinch-Skalenänderungen am Gerät, E-Ink-Reaktion und Kontosynchronisation sind hier nicht getestet.
 
-Es ist kein physischer BOOX angeschlossen. Native Fensterdarstellung, konkreter Geräte-Login nach Installation und E-Ink-Wirkung sind hier nicht am Zielgerät geprüft. Die native Oberfläche wird kompiliert; die Android-Logiktests werden ausgeführt. Die Browserprüfung bestätigt die Übergabe von Multitouch an PDF.js, beweist aber keine echte Pinch-Skalenänderung auf dem Zielgerät. Ein echter Android-/Desktop-Sync mit dem Konto wurde hier nicht ausgeführt.
+## Neubau
 
-## Quellcode und Neubau
+Das Archiv enthält Quelltext, vollständige Git-Bundles und alle Laufzeitpakete unter `app/src/main/assets`. Original-Mul-PDF, SDK/JDK, Build-Caches, APK und private Release-Schlüssel sind ausgeschlossen. Der bekannte Debug-Schlüssel ist für künftige Updates enthalten.
 
-Das Archiv enthält einen lesbaren Snapshot und vollständige Git-Bundles für Android und Reader. Die vollständigen Laufzeitpakete liegen unter `app/src/main/assets`; alle Dateien außer Reader-ZIP und Reader-Hash müssen bytegleich zur bisherigen APK bleiben. Original-Mul-PDF, Build-Caches, SDK und JDK sind nicht im Archiv enthalten.
+JDK 17, Node/npm, Android SDK Platform 37.0 / Build Tools 36.0.0 und Gradle 9.6.1 verwenden. Reader-Submodule auf den im Git-Bundle angegebenen Ständen initialisieren. Das vorhandene PDF.js unter `app/src/main/assets/reader/reader.zip` nach `reader/build/mobile/pdf` übernehmen. Im Reader `npm ci` und `./node_modules/.bin/webpack --config-name android`; im Android-Projekt `python3 scripts/package_reader_assets.py` und Gradle `:app:testDevDebugUnitTest :app:assembleDevDebug --no-build-cache`.
 
-Voraussetzungen: JDK 17, Node/npm, Python 3, Android SDK Platform 37.0 und Build Tools 36.0.0. SDK über Android Studio oder `local.properties` eintragen.
+Im Reader `npm test` sowie `scripts/test-boox-features.cjs`, `scripts/test-boox-browser.cjs`, `scripts/test-boox-fitting.cjs` mit Playwright und optional `BOOX_TEST_BROWSER` ausführen. `BOOX_PROBLEM_PDF` verweist für den letzten Test auf die originale Mul-PDF. `scripts/make-fitting-fixture.cjs` erstellt die enthaltene Test-PDF erneut.
 
-```bash
-git clone -b boox-smart-scroll zotero-android.bundle zotero-boox
-git clone -b boox-smart-scroll reader.bundle zotero-boox/reader
-cd zotero-boox
-bash scripts/build_boox_debug.sh --max-workers=2 --no-parallel --no-build-cache
-```
-
-Für reine Reader-Änderungen das unveränderte PDF.js aus `app/src/main/assets/reader/reader.zip` nach `reader/build/mobile/pdf` übernehmen. Im Reader `npm ci` und `./node_modules/.bin/webpack --config-name android` ausführen. `python3 scripts/package_reader_assets.py` verpackt den Reader samt Hash; danach `:app:assembleDevDebug` aufrufen. Native Änderungen erfordern deren Kompilierung.
-
-Prüfskripte: `reader/scripts/test-boox-browser.cjs`, `reader/scripts/test-boox-features.cjs` und `scripts/verify_boox_update.py`. `BOOX_TEST_BROWSER` kann auf eine vorhandene Chromium-Binärdatei zeigen. Playwright muss verfügbar sein. Der APK-Vergleich benötigt `--base`, `--apk`, `--build-tools`, optional `--qa-directory` und für dieses Update `--preserve-fitting`.
+Zum APK-Vergleich `scripts/verify_boox_update.py --base <295.apk> --apk <296.apk> --build-tools <SDK/build-tools/36.0.0> --qa-directory qa --label Motero --fitting-update` verwenden. PDF.js selbst muss bytegleich bleiben; die neun eingebetteten Reader-Quellen werden gegen den getesteten Source Map-Inhalt geprüft. In Umgebungen ohne dynamisches Java-Attach muss der vorhandene ByteBuddy-Agent nur für die Test-JVM über einen Gradle-Init-Script vorab geladen werden; die APK enthält keine solche Startoption.

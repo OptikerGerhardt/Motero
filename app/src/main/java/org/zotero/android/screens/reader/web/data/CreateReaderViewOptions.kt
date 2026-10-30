@@ -9,6 +9,7 @@ data class CreateReaderViewOptions(
     var location: CreateReaderLocation? = null,
     var viewState: CreateReaderViewState = CreateReaderViewState(),
     var contentFit: CreateReaderContentFit? = null,
+    var pageFitting: CreateReaderPageFitting? = null,
     var pageWidthFit: Boolean = false,
     var directHighlight: Boolean = false,
 
@@ -41,3 +42,6 @@ data class CreateReaderViewState(
     var scrollMode: Int? = null,
 
 )
+
+// Four Android fitting modes share the same detected content geometry.
+data class CreateReaderPageFitting(val mode: String, val reference: String, val margin: Double, val revision: Long = 0)

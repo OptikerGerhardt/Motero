@@ -1786,6 +1786,14 @@ class ReaderViewModel @Inject constructor(
     private fun storePdfViewState(pageIndex: Int, state: JsonObject) {
         fun JsonObject.doubleOrNull(key: String): Double? =
             this[key]?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isNumber }?.asDouble
+        state["pageFitMode"]?.takeIf { it.isJsonPrimitive }?.asString?.let { mode ->
+            if (mode in listOf("none", "content", "width", "height")
+                && state["pageFitRevision"]?.asLong == defaults.getReaderSettings().fittingRevision) {
+                val settings = defaults.getReaderSettings()
+                settings.setPageFitMode(mode)
+                defaults.setReaderSettings(settings)
+            }
+        }
         // A named scale such as "page-width" means the user hasn't zoomed,
         // so let the document open with the default or fitted zoom instead
         val scale = state.doubleOrNull("scale")
@@ -2634,26 +2642,24 @@ class ReaderViewModel @Inject constructor(
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(result: ReaderSettingsChangeResult) {
         viewModelScope.launch {
-            update(result.readerSettings)
+            update(result.readerSettings, result.reapplyFitting)
         }
     }
 
-    private fun update(readerSettings: ReaderSettings) {
+    private fun update(readerSettings: ReaderSettings, reapplyFitting: Boolean = false) {
         val previousSettings = defaults.getReaderSettings()
-        defaults.setReaderSettings(readerSettings)
         updatePdfPageAppearanceMode(readerSettings)
-        val shouldFitToContent = readerSettings.fitToContent && (!previousSettings.fitToContent
-                || previousSettings.contentMargin != readerSettings.contentMargin
-                || previousSettings.scrollMode != readerSettings.scrollMode)
-        val shouldFitToWidth = readerSettings.fitToWidth && (!previousSettings.fitToWidth
-                || previousSettings.spreadsMode != readerSettings.spreadsMode
-                || previousSettings.scrollMode != readerSettings.scrollMode)
-        updateAppearanceAccordingToSettings(isSettingsUpdate = true, shouldFitToContent = shouldFitToContent,
-            shouldFitToWidth = shouldFitToWidth)
+        val applyFit = reapplyFitting || previousSettings.pageFitMode() != readerSettings.pageFitMode()
+            || previousSettings.fitTextReference != readerSettings.fitTextReference
+            || previousSettings.contentMargin != readerSettings.contentMargin
+            || previousSettings.scrollMode != readerSettings.scrollMode
+            || previousSettings.spreadsMode != readerSettings.spreadsMode
+        readerSettings.fittingRevision = previousSettings.fittingRevision + if (applyFit) 1 else 0
+        defaults.setReaderSettings(readerSettings)
+        updateAppearanceAccordingToSettings(isSettingsUpdate = true, applyFit = applyFit)
     }
 
-    private fun updateAppearanceAccordingToSettings(isSettingsUpdate: Boolean, shouldFitToContent: Boolean = false,
-        shouldFitToWidth: Boolean = false) {
+    private fun updateAppearanceAccordingToSettings(isSettingsUpdate: Boolean, applyFit: Boolean = false) {
         viewModelScope.launch {
             val readerSettings = defaults.getReaderSettings()
             if (isSettingsUpdate) {
@@ -2667,14 +2673,7 @@ class ReaderViewModel @Inject constructor(
                 if (viewState.fileType == ReaderFileType.PDF) {
                     readerWebCallChainExecutor.setScrollMode(readerSettings.scrollMode)
                     readerWebCallChainExecutor.setDirectHighlight(!readerSettings.nativeTextSelection)
-                    readerWebCallChainExecutor.setContentFit(
-                        readerSettings.contentMargin.fraction.takeIf { readerSettings.fitToContent }
-                    )
-                    if (shouldFitToContent) {
-                        readerWebCallChainExecutor.fitToContent(readerSettings.contentMargin.fraction)
-                    } else if (shouldFitToWidth) {
-                        readerWebCallChainExecutor.fitToWidth()
-                    }
+                    readerWebCallChainExecutor.setPageFitting(readerSettings, applyFit)
                 }
                 if (viewState.fileType == ReaderFileType.EPUB || viewState.readingModeEnabled) {
                     readerWebCallChainExecutor.setAppearance(

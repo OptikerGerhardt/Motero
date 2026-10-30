@@ -1,13 +1,13 @@
 {
   "package": "org.zotero.android.debug",
-  "version_code": 295,
-  "version_name": "1.0.0-295",
+  "version_code": 296,
+  "version_name": "1.0.0-296",
   "certificate_sha256": "c4e70a6935d239246540532b6d3ea514eb2a428e1e8eaacbf94c8a9a01989299",
   "application_label": "Motero",
-  "previous_version_code": 294,
-  "sha256": "eaa898b53f71780d808f706c9a50495cb016e9224d0294df5dd967e35dc6cbaf",
-  "size_bytes": 197327041,
-  "reader_sha256": "cb537a5f12f78269d8bebe51026e86dcfbd57751e3f9b360f985007b6df7e4d2",
+  "previous_version_code": 295,
+  "sha256": "91f63c37dd267537084cdc6b894fa8cba4f28b7b506ec82e86be6e553cef2bfe",
+  "size_bytes": 203708948,
+  "reader_sha256": "6bbfa312891bd93eba3784a879e45bd0fd112ae8c72ef6c122c191819182a7d3",
   "dex_count": 8,
   "reader_sources_verified": [
     "pdf/boox-reader.js",
@@ -15,7 +15,10 @@
     "pdf/content-fit.mjs",
     "pdf/direct-highlight.js",
     "pdf/hardware-navigation.mjs",
-    "index.android.js"
+    "index.android.js",
+    "common/view.js",
+    "pdf/reading-layout.mjs",
+    "pdf/android-page-fitting.js"
   ],
   "unchanged_runtime_files_verified": 88,
   "selected_features": [
@@ -29,15 +32,17 @@
     20,
     21
   ],
-  "fitting_unchanged": true,
+  "fitting_unchanged": false,
+  "pdfjs_unchanged": true,
   "zip_alignment_verified": true,
   "apk_entry_names_unchanged": true,
-  "reader_tests": 207,
+  "reader_tests": 229,
   "native_logic_tests": 6,
-  "native_tests_total": 70,
+  "native_tests_total": 73,
   "native_tests_skipped": 0,
   "browser_features_passed": true,
   "browser_gestures_passed": true,
+  "browser_fitting_passed": true,
   "verified": true,
   "physical_device_tested": false
 }

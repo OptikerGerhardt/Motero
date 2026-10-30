@@ -1,0 +1,37 @@
+package org.zotero.android.screens.reader
+
+import com.google.gson.Gson
+import org.junit.Assert.*
+import org.junit.Test
+import org.zotero.android.screens.reader.settings.data.ReaderSettings
+
+class ReaderPageFittingSettingsTest {
+    @Test fun `older settings keep their fitting mode and default to paper reference`() {
+        val old = Gson().fromJson("""{"fitToWidth":true,"fitToContent":false}""", ReaderSettings::class.java)
+        assertEquals("width", old.pageFitMode())
+        assertFalse(old.fitToHeight)
+        assertFalse(old.fitTextReference)
+        assertEquals(0L, old.fittingRevision)
+    }
+
+    @Test fun `every fitting choice clears the other modes`() {
+        val settings = ReaderSettings.default()
+        for (mode in listOf("content", "width", "height", "none", "width", "content")) {
+            settings.setPageFitMode(mode)
+            assertEquals(mode, settings.pageFitMode())
+            assertEquals(if (mode == "none") 0 else 1,
+                listOf(settings.fitToContent, settings.fitToWidth, settings.fitToHeight).count { it })
+        }
+    }
+
+    @Test fun `new fitting settings survive persistence including revision and text reference`() {
+        val settings = ReaderSettings.default().apply {
+            setPageFitMode("height")
+            fitTextReference = true
+            fittingRevision = 17
+        }
+        val restored = Gson().fromJson(Gson().toJson(settings), ReaderSettings::class.java)
+        assertEquals(settings, restored)
+        assertEquals("height", restored.pageFitMode())
+    }
+}

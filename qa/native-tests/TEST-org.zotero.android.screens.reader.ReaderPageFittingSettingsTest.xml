@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.zotero.android.screens.reader.ReaderPageFittingSettingsTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-30T13:46:31.078Z" hostname="5c12a4f273cf" time="0.015">
+  <properties/>
+  <testcase name="new fitting settings survive persistence including revision and text reference" classname="org.zotero.android.screens.reader.ReaderPageFittingSettingsTest" time="0.014"/>
+  <testcase name="older settings keep their fitting mode and default to paper reference" classname="org.zotero.android.screens.reader.ReaderPageFittingSettingsTest" time="0.0"/>
+  <testcase name="every fitting choice clears the other modes" classname="org.zotero.android.screens.reader.ReaderPageFittingSettingsTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

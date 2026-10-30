@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -37,6 +38,7 @@ internal fun LazyListScope.readerSettingsSettingRow(
     options: List<ReaderSettingsOptions>,
     selectedOption: ReaderSettingsOptions,
     optionSelected: (Int) -> Unit,
+    columns: Int = Int.MAX_VALUE,
 ) {
     item {
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -54,42 +56,46 @@ internal fun LazyListScope.readerSettingsSettingRow(
                     optionString = safeStringResource(id = opt.optionStringId)
                 )
             }
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-            ) {
-                optionsList.forEachIndexed { index, opt ->
-                    val isSelected = opt.ordinal == selectedOption.ordinal
-                    ToggleButton(
-                        checked = isSelected,
-                        onCheckedChange = { optionSelected(opt.ordinal) },
-                        modifier = Modifier
-                            .weight(1f)
-                            .semantics { role = Role.RadioButton },
-                        shapes = when (index) {
-                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                            options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                        },
-                        colors = ToggleButtonDefaults.toggleButtonColors(
-                            checkedContainerColor = MaterialTheme.colorScheme.secondary,
-                            checkedContentColor = MaterialTheme.colorScheme.onSecondary,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
-                        ),
-                    ) {
-                        if (isSelected) {
-                            Icon(
-                                painter = painterResource(id = Drawables.check_24px),
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSecondary
+            optionsList.chunked(columns).forEachIndexed { rowIndex, rowOptions ->
+                if (rowIndex > 0) Spacer(Modifier.height(6.dp))
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+                ) {
+                    rowOptions.forEachIndexed { index, opt ->
+                        val isSelected = opt.ordinal == selectedOption.ordinal
+                        ToggleButton(
+                            checked = isSelected,
+                            onCheckedChange = { optionSelected(opt.ordinal) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = 48.dp)
+                                .semantics { role = Role.RadioButton },
+                            shapes = when (index) {
+                                0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                                rowOptions.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                                else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                            },
+                            colors = ToggleButtonDefaults.toggleButtonColors(
+                                checkedContainerColor = MaterialTheme.colorScheme.secondary,
+                                checkedContentColor = MaterialTheme.colorScheme.onSecondary,
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                            ),
+                        ) {
+                            if (isSelected) {
+                                Icon(
+                                    painter = painterResource(id = Drawables.check_24px),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSecondary
+                                )
+                                Spacer(Modifier.size(6.dp))
+                            }
+                            Text(
+                                text = opt.optionString,
+                                style = MaterialTheme.typography.labelLarge,
+                                maxLines = if (columns == 2) 2 else 1
                             )
-                            Spacer(Modifier.size(6.dp))
                         }
-                        Text(
-                            text = opt.optionString,
-                            style = MaterialTheme.typography.labelLarge,
-                            maxLines = 1
-                        )
                     }
                 }
             }

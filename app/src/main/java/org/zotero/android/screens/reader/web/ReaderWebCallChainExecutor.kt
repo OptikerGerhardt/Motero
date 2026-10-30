@@ -454,7 +454,11 @@ class ReaderWebCallChainExecutor @Inject constructor(
             type = data.type,
             url = "https://appassets.androidplatform.net/local/${data.file.name}",
             annotations = data.annotationsJson,
-            pageWidthFit = data.type == "pdf" && defaults.getReaderSettings().fitToWidth,
+            pageFitting = if (data.type == "pdf") defaults.getReaderSettings().let {
+                org.zotero.android.screens.reader.web.data.CreateReaderPageFitting(
+                    it.pageFitMode(), if (it.fitTextReference) "content" else "page", it.contentMargin.fraction, it.fittingRevision
+                )
+            } else null,
             directHighlight = !defaults.getReaderSettings().nativeTextSelection,
         )
 
@@ -517,12 +521,6 @@ class ReaderWebCallChainExecutor @Inject constructor(
                     }
                 }
             }
-        }
-        data.contentFitMargin?.let {
-            createReaderViewOptions.contentFit = CreateReaderContentFit(
-                margin = it,
-                fitOnOpen = data.fitToContentOnOpen,
-            )
         }
 
         val appearanceString = if (isDark) {
@@ -592,6 +590,18 @@ class ReaderWebCallChainExecutor @Inject constructor(
         return suspendCancellableCoroutine { cont ->
             val javascript = "window._view.setSpreadMode(${spreadsModeString.toInt()});"
             readerWebViewHandler.evaluateJavascript(javascript) {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun setPageFitting(settings: org.zotero.android.screens.reader.settings.data.ReaderSettings, apply: Boolean) {
+        val options = org.zotero.android.screens.reader.web.data.CreateReaderPageFitting(
+            settings.pageFitMode(), if (settings.fitTextReference) "content" else "page", settings.contentMargin.fraction, settings.fittingRevision
+        )
+        val json = gson.toJson(options)
+        suspendCancellableCoroutine<Unit> { cont ->
+            readerWebViewHandler.evaluateJavascript("javascript:window.setPageFitting($json, $apply);") {
                 cont.resume(Unit)
             }
         }

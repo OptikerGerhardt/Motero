@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.zotero.android.sync.NotePreviewGeneratorTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-30T08:34:00.675Z" hostname="d1c546e81902" time="0.009">
+<testsuite name="org.zotero.android.sync.NotePreviewGeneratorTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-30T13:46:31.491Z" hostname="5c12a4f273cf" time="0.006">
   <properties/>
   <testcase name="returns only first sentence from a paragraph with new lines" classname="org.zotero.android.sync.NotePreviewGeneratorTest" time="0.002"/>
   <testcase name="returns null for an empty note" classname="org.zotero.android.sync.NotePreviewGeneratorTest" time="0.001"/>
-  <testcase name="returns only first 200 chars from a note" classname="org.zotero.android.sync.NotePreviewGeneratorTest" time="0.002"/>
-  <testcase name="returns string with last character dropped if note ends with incomplete surrogate" classname="org.zotero.android.sync.NotePreviewGeneratorTest" time="0.002"/>
-  <testcase name="returns string with sanitized tabs" classname="org.zotero.android.sync.NotePreviewGeneratorTest" time="0.001"/>
+  <testcase name="returns only first 200 chars from a note" classname="org.zotero.android.sync.NotePreviewGeneratorTest" time="0.0"/>
+  <testcase name="returns string with last character dropped if note ends with incomplete surrogate" classname="org.zotero.android.sync.NotePreviewGeneratorTest" time="0.0"/>
+  <testcase name="returns string with sanitized tabs" classname="org.zotero.android.sync.NotePreviewGeneratorTest" time="0.0"/>
   <testcase name="returns note unchanged if it ends with complete surrogate" classname="org.zotero.android.sync.NotePreviewGeneratorTest" time="0.001"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>

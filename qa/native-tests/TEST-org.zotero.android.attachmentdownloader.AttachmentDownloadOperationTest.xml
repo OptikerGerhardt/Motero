@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.zotero.android.attachmentdownloader.AttachmentDownloadOperationTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-30T08:33:56.824Z" hostname="d1c546e81902" time="2.542">
+<testsuite name="org.zotero.android.attachmentdownloader.AttachmentDownloadOperationTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-30T13:46:29.338Z" hostname="5c12a4f273cf" time="1.381">
   <properties/>
-  <testcase name="interrupted download keeps the existing local file and removes partial download" classname="org.zotero.android.attachmentdownloader.AttachmentDownloadOperationTest" time="2.455"/>
-  <testcase name="successful download replaces the existing local file" classname="org.zotero.android.attachmentdownloader.AttachmentDownloadOperationTest" time="0.015"/>
-  <testcase name="failed request keeps the existing local file" classname="org.zotero.android.attachmentdownloader.AttachmentDownloadOperationTest" time="0.021"/>
-  <testcase name="cancelled download keeps the existing local file and removes partial download" classname="org.zotero.android.attachmentdownloader.AttachmentDownloadOperationTest" time="0.04"/>
-  <testcase name="failed request does not leave anything behind for a file that was never downloaded" classname="org.zotero.android.attachmentdownloader.AttachmentDownloadOperationTest" time="0.01"/>
+  <testcase name="interrupted download keeps the existing local file and removes partial download" classname="org.zotero.android.attachmentdownloader.AttachmentDownloadOperationTest" time="1.316"/>
+  <testcase name="successful download replaces the existing local file" classname="org.zotero.android.attachmentdownloader.AttachmentDownloadOperationTest" time="0.012"/>
+  <testcase name="failed request keeps the existing local file" classname="org.zotero.android.attachmentdownloader.AttachmentDownloadOperationTest" time="0.014"/>
+  <testcase name="cancelled download keeps the existing local file and removes partial download" classname="org.zotero.android.attachmentdownloader.AttachmentDownloadOperationTest" time="0.029"/>
+  <testcase name="failed request does not leave anything behind for a file that was never downloaded" classname="org.zotero.android.attachmentdownloader.AttachmentDownloadOperationTest" time="0.009"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>
