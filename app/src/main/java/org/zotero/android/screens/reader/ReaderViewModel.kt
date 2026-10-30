@@ -227,7 +227,10 @@ class ReaderViewModel @Inject constructor(
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(result: ReaderAnnotationScreenClosed) {
         viewModelScope.launch {
-//            _select(null, false)
+            // A closing/animating editor must not deselect a newer annotation.
+            if (viewState.selectedAnnotationKey == result.annotationKey) {
+                _select(null, false)
+            }
         }
     }
 

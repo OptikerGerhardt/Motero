@@ -1,23 +1,28 @@
-# Build 293: Prüfstand
+# Build 294: Prüfstand
 
-Die neun ausgewählten Features F01, F02, F05, F06, F16, F17, F18, F20 und F21 sind implementiert. Die APK wurde vollständig gebaut und auf Update-Kompatibilität zu Build 292 geprüft.
+Die beauftragten Layoutkorrekturen, die direkte Abwahl nach Done, feste Bookmark-Position mit erweiterter Touchfläche und die Lesekante mit 50 % Deckkraft sind umgesetzt. Fit to Content, Fit to Width und gerade/ungerade Ausrichtung bleiben unverändert.
 
 | Prüfung | Ergebnis |
 |---|---|
 | Paketkennung | `org.zotero.android.debug` |
-| Version | `1.0.0-293` / 293 |
-| Bisherige Version | 292 |
+| Version | `1.0.0-294` / 294 |
+| Bisherige Version | 293 |
 | Zertifikat SHA-256 | `c4e70a6935d239246540532b6d3ea514eb2a428e1e8eaacbf94c8a9a01989299`; identisch zur bisherigen APK |
-| APK SHA-256 | `c8904764e948fb850f99b995e6113866bd3a67960f2579de5c4bc225554d3f2e` |
-| Größe | 199,618,328 Bytes |
-| Reader SHA-256 | `fb61b75d50488a7f5b2ecdaaa61e629c72ff16d34412230810eb74243fe23967` |
+| APK SHA-256 | `9d3e5a05e47a9a85fdcf976a534adaa06c3eac859249b2c6411bd3fe681f298c` |
+| Größe | 197,326,767 Bytes |
+| Reader SHA-256 | `f110fb9463d033cf202feb16ca8907732287dd279f228f5645f1b8ddbb66ca75` |
 | Reader-Tests | 206 bestanden |
-| Android-Logiktests | 6 bestanden |
-| Browser-Funktionsprüfungen | bestanden, einschließlich Mul-PDF und Touch/Stift |
-| Unveränderte Laufzeitdateien/Bibliotheken | 88 bytegleich zur Basis |
+| Android-Tests | 70 bestanden, 0 übersprungen; darin 6 Reader-Logiktests |
+| Browserprüfungen | bestanden: Gesten, erneutes Öffnen nach Auswahl-Abwahl, 50 % Deckkraft, feste Bookmark-Position, Randtipp, Drehung, Wiederherstellen/Löschen und Wrapped-Rückkehr |
+| Laufzeitdateien/Bibliotheken | 88 bytegleich zur Basis |
+| Dateieinträge der APK | keine entfernt oder hinzugefügt |
+| Anpassungsfunktionen und PDF.js | byte- bzw. quelltextgleich zur Basis geprüft |
 | DEX-Dateien | 8 |
-| Installation am physischen BOOX | hier nicht möglich |
+| APK-Signatur und ZIP-Ausrichtung | geprüft, inklusive 16-KiB-Ausrichtung nativer Bibliotheken |
+| Installation und native Darstellung auf physischem BOOX | hier nicht geprüft |
 
-Die APK als Update installieren und die bestehende App vorher nicht deinstallieren. Gleiche Paketkennung und Signatur sowie der höhere Versionscode wurden direkt an beiden APKs kontrolliert. Das Datenbankschema und die Anmeldedaten-Verwaltung wurden nicht verändert.
+Die APK als Update installieren und vorher nicht deinstallieren. Paketkennung, Signatur und höherer Versionscode wurden direkt an beiden APKs kontrolliert. Datenbankschema und Anmeldedaten-Verwaltung wurden nicht geändert.
 
-Die native Oberfläche wurde kompiliert und ihre Tag-/Filter-/Sichtbarkeitslogik geprüft; eine echte native Fensterdarstellung auf dem BOOX wurde nicht visuell geprüft. Details und praktische Bedienung stehen in BUILD_BOOX.md.
+Die native Oberfläche ist kompiliert. Echte Fensterdarstellung, Geräte-Login nach Installation und Android-/Desktop-Sync sind nicht am Gerät geprüft. Der Browser prüft die Auswahl-Abwahl über denselben Reader-Aufruf, der vom nativen Schließhandler verwendet wird; dies ersetzt keinen vollständigen Gerätetest des Dialogs.
+
+Für den vollständigen Android-Testlauf wurde der bereits vorhandene MockK-/ByteBuddy-Testagent beim JVM-Start geladen, weil dynamisches Self-Attach in dieser Ausführungsumgebung scheitert. Danach bestanden alle 70 Tests ohne Überspringen; dafür wurde kein Anwendungscode geändert. Dies betrifft ausschließlich den Testprozess, nicht die ausgelieferte APK.

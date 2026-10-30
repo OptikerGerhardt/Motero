@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.zotero.android.sync.CreatorSummaryFormatterTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-30T00:01:49.588Z" hostname="b856de3c7f05" time="0.201">
+  <properties/>
+  <testcase name="if creators list contains no primary creator but contains editor return summary of it's name" classname="org.zotero.android.sync.CreatorSummaryFormatterTest" time="0.198"/>
+  <testcase name="if creators list contains primary creator returns summary of it's name" classname="org.zotero.android.sync.CreatorSummaryFormatterTest" time="0.001"/>
+  <testcase name="if creators list contains no primary creator but contains contributor return summary of it's name" classname="org.zotero.android.sync.CreatorSummaryFormatterTest" time="0.001"/>
+  <testcase name="returns null if creators list is empty" classname="org.zotero.android.sync.CreatorSummaryFormatterTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

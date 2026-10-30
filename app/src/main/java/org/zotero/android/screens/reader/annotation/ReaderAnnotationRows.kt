@@ -117,7 +117,7 @@ internal fun ReaderAnnotationHighlightRow(
         onColorSelected = onColorSelected,
         selectedColor = selectedColor,
     )
-    ReaderColoredTagShortcuts(coloredTags, tags, canEdit, onColoredTagClicked)
+    ReaderColoredTagShortcuts(coloredTags, tags, canEdit, onColoredTagClicked, colorCount = colors.size)
     NewSettingsDivider()
     ReaderAnnotationTagsSection(
         tags = tags,
@@ -178,7 +178,7 @@ internal fun ReaderAnnotationUnderlineRow(
         onColorSelected = onColorSelected,
         selectedColor = selectedColor
     )
-    ReaderColoredTagShortcuts(coloredTags, tags, canEdit, onColoredTagClicked)
+    ReaderColoredTagShortcuts(coloredTags, tags, canEdit, onColoredTagClicked, colorCount = colors.size)
     NewSettingsDivider()
     ReaderAnnotationTagsSection(
         tags = tags,

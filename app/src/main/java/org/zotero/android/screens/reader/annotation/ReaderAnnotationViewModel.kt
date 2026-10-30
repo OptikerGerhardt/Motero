@@ -43,6 +43,7 @@ internal class ReaderAnnotationViewModel @Inject constructor(
 ) : BaseViewModel2<ReaderAnnotationViewState, ReaderAnnotationViewEffect>(ReaderAnnotationViewState()) {
 
     private var isDeletingAnnotation = false
+    private var didReportClosed = false
     private lateinit var args: ReaderAnnotationArgs
     private var pdfReaderThemeCancellable: Job? = null
     private var isTablet: Boolean = false
@@ -129,7 +130,7 @@ internal class ReaderAnnotationViewModel @Inject constructor(
         if (!isDeletingAnnotation) {
             postAnnotationCommentResult()
         }
-        EventBus.getDefault().post(ReaderAnnotationScreenClosed)
+        reportScreenClosed()
         EventBus.getDefault().unregister(this)
         super.onCleared()
     }
@@ -175,10 +176,18 @@ internal class ReaderAnnotationViewModel @Inject constructor(
     }
 
     fun onDone() {
-        if (!isTablet) {
-            postAnnotationCommentResult()
-        }
+        postAnnotationCommentResult()
+        // Done clears selection immediately, without waiting for the navigation
+        // animation or the editor's ViewModel store to be destroyed.
+        reportScreenClosed()
         triggerEffect(ReaderAnnotationViewEffect.Back)
+    }
+
+    private fun reportScreenClosed() {
+        val key = viewState.annotation?.key ?: return
+        if (didReportClosed) return
+        didReportClosed = true
+        EventBus.getDefault().post(ReaderAnnotationScreenClosed(key))
     }
 
     fun onFontSizeDecrease() {

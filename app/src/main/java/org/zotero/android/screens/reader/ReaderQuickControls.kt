@@ -6,8 +6,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -17,17 +15,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
-import org.zotero.android.R
+import org.zotero.android.screens.settings.elements.NewSettingsDivider
 import org.zotero.android.sync.Tag
 
 private fun tagColor(hex: String): Color = runCatching {
@@ -51,18 +50,23 @@ internal fun ReaderFilterColorButton(hex: String, isSelected: Boolean, onClick: 
 @Composable
 internal fun ReaderColoredTagShortcuts(
     tags: List<Tag>, selectedTags: List<Tag>, enabled: Boolean, onToggle: (Tag) -> Unit,
+    colorCount: Int = 8,
 ) {
     if (tags.isEmpty()) return
     val context = LocalContext.current
-    Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-        Text(stringResource(R.string.boox_colored_tags), Modifier.padding(horizontal = 16.dp),
-            style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
-        LazyRow(Modifier.fillMaxWidth(), contentPadding = PaddingValues(horizontal = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-            items(tags, key = { it.name }) { tag ->
+    NewSettingsDivider()
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        // The color row uses 28dp circles with SpaceEvenly. Match the outer
+        // edges of its first and last circle, even with nine tags/eight colors.
+        val count = colorCount.coerceAtLeast(1)
+        val inset = ((maxWidth - 28.dp * count) / (count + 1)).coerceAtLeast(0.dp)
+        Row(Modifier.fillMaxWidth().padding(horizontal = inset),
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
+            verticalAlignment = Alignment.CenterVertically) {
+            tags.forEach { tag ->
                 val checked = selectedTags.any { it.name == tag.name }
                 Box(
-                    Modifier.size(44.dp)
+                    Modifier.weight(1f).height(48.dp)
                         .border(if (checked) 3.dp else 1.dp, MaterialTheme.colorScheme.onSurface,
                             RoundedCornerShape(6.dp))
                         .semantics { selected = checked; contentDescription = tag.name }
@@ -83,14 +87,18 @@ internal fun ReaderColoredTagShortcuts(
 internal fun ReaderHighlightQuote(text: String) {
     if (text.isBlank()) return
     val maxHeight = (LocalConfiguration.current.screenHeightDp * 0.20f).coerceIn(64f, 220f).dp
-    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-        Text(stringResource(R.string.boox_highlight_text), style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurface)
-        SelectionContainer {
+    val quoteLineColor = MaterialTheme.colorScheme.outline
+    Column(Modifier.fillMaxWidth()) {
+        NewSettingsDivider()
+        SelectionContainer(Modifier.padding(horizontal = 16.dp)) {
             Text(text, Modifier.fillMaxWidth().heightIn(max = maxHeight)
-                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(6.dp))
-                .verticalScroll(rememberScrollState()).padding(10.dp),
+                .verticalScroll(rememberScrollState())
+                .drawBehind {
+                    drawLine(quoteLineColor, Offset.Zero, Offset(0f, size.height), strokeWidth = 2.dp.toPx())
+                }
+                .padding(start = 12.dp, top = 8.dp, bottom = 8.dp),
                 style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
         }
+        NewSettingsDivider()
     }
 }

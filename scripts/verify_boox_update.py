@@ -16,10 +16,16 @@ parser.add_argument('--base', type=Path, required=True)
 parser.add_argument('--apk', type=Path, required=True)
 parser.add_argument('--build-tools', type=Path, required=True)
 parser.add_argument('--qa-directory', type=Path)
+parser.add_argument('--preserve-fitting', action='store_true', help='Require the existing PDF fitting implementation and PDF.js to be unchanged')
 args = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
 
 def sha(data): return hashlib.sha256(data).hexdigest()
+
+def source(mapping, name):
+    candidates = [i for i, path in enumerate(mapping['sources']) if path.endswith('/src/' + name)]
+    assert len(candidates) == 1, (name, candidates)
+    return mapping['sourcesContent'][candidates[0]]
 
 def info(apk):
     signature = subprocess.run([str(args.build_tools / 'apksigner'), 'verify', '--verbose', '--print-certs', str(apk)],
@@ -37,10 +43,14 @@ assert new['certificate_sha256'] == old['certificate_sha256']
 assert new['version_code'] > old['version_code']
 expected_code = int(re.search(r'versionCode = (\d+)', (root / 'buildSrc/src/main/kotlin/BuildConfig.kt').read_text()).group(1))
 assert new['version_code'] == expected_code
+subprocess.run([str(args.build_tools / 'zipalign'), '-c', '-P', '16', '4', str(args.apk)],
+               capture_output=True, text=True, check=True)
 
 with zipfile.ZipFile(args.apk) as apk:
     assert apk.testzip() is None
     with zipfile.ZipFile(args.base) as base:
+        previous_reader = base.read('assets/reader/reader.zip')
+        entry_names_unchanged = set(base.namelist()) == set(apk.namelist())
         unchanged_runtime_files = [n for n in base.namelist() if n.startswith(('assets/', 'lib/'))
                                    and not n.endswith('/')
                                    and n not in ('assets/reader/reader.zip', 'assets/reader/reader_hash.txt')]
@@ -52,19 +62,26 @@ with zipfile.ZipFile(args.apk) as apk:
     assert reader_hash == apk.read('assets/reader/reader_hash.txt').decode().strip()
     assert reader == (root / 'app/src/main/assets/reader/reader.zip').read_bytes()
     dex = [apk.read(n) for n in apk.namelist() if re.fullmatch(r'classes\d*\.dex', n)]
-    for name in [b'ReaderQuickControlActions', b'ReaderColoredTagShortcuts', b'ReaderHighlightQuote', b'ReaderSidebarFilter']:
+    for name in [b'ReaderQuickControlActions', b'ReaderColoredTagShortcuts', b'ReaderHighlightQuote', b'ReaderSidebarFilter',
+                 b'ReaderAnnotationScreenClosed', b'reportScreenClosed', b'didReportClosed']:
         assert any(name in d for d in dex), name
     assert not any(b'isScrubberSuppressedByScroll' in d for d in dex)
     with zipfile.ZipFile(io.BytesIO(reader)) as bundle:
         assert bundle.testzip() is None
         mapping = json.loads(bundle.read('view.js.map'))
         verified = []
-        for name in ['pdf/boox-reader.js', 'pdf/pdf-view.js', 'pdf/direct-highlight.js',
+        for name in ['pdf/boox-reader.js', 'pdf/pdf-view.js', 'pdf/content-fit.mjs', 'pdf/direct-highlight.js',
                      'pdf/hardware-navigation.mjs', 'index.android.js']:
-            candidates = [i for i, source in enumerate(mapping['sources']) if source.endswith('/src/' + name)]
-            assert len(candidates) == 1, (name, candidates)
-            assert mapping['sourcesContent'][candidates[0]] == (root / 'reader/src' / name).read_text(), name
+            assert source(mapping, name) == (root / 'reader/src' / name).read_text(), name
             verified.append(name)
+        if args.preserve_fitting:
+            with zipfile.ZipFile(io.BytesIO(previous_reader)) as previous:
+                previous_mapping = json.loads(previous.read('view.js.map'))
+                for name in ['pdf/pdf-view.js', 'pdf/content-fit.mjs']:
+                    assert source(mapping, name) == source(previous_mapping, name), name
+                for name in previous.namelist():
+                    if name.startswith('pdf/') and not name.endswith('/'):
+                        assert bundle.read(name) == previous.read(name), name
 
 qa = {}
 if args.qa_directory:
@@ -74,12 +91,21 @@ if args.qa_directory:
     reader_tests = int(re.search(r'ℹ tests (\d+)', unit_log).group(1))
     features = (args.qa_directory / 'reader-features.log').read_text()
     assert 'PASS: all new Reader features' in features and 'PAGE ERROR' not in features
+    for check in ['opacity: \'0.5\'', 'PASS fixed bookmark PDF position independent of tap and zoom',
+                  'PASS upper right edge bookmarks', 'PASS rotated page bookmark',
+                  'PASS annotation reopens after selection-clear bridge']:
+        assert check in features, check
     gestures = (args.qa_directory / 'reader-final-gestures.log').read_text()
     assert 'PASS: width and resize' in gestures and 'PAGE ERROR' not in gestures
     native_xml = root / 'app/build/test-results/testDevDebugUnitTest/TEST-org.zotero.android.screens.reader.ReaderQuickControlActionsTest.xml'
     native = ET.parse(native_xml).getroot()
     assert native.get('failures') == native.get('errors') == native.get('skipped') == '0'
+    native_suites = [ET.parse(p).getroot() for p in native_xml.parent.glob('TEST-*.xml')]
+    assert native_suites
+    assert all(int(s.get('failures', 0)) == int(s.get('errors', 0)) == 0 for s in native_suites)
     qa = dict(reader_tests=reader_tests, native_logic_tests=int(native.get('tests')),
+              native_tests_total=sum(int(s.get('tests', 0)) for s in native_suites),
+              native_tests_skipped=sum(int(s.get('skipped', 0)) for s in native_suites),
               browser_features_passed=True, browser_gestures_passed=True)
 
 report = dict(new, previous_version_code=old['version_code'], sha256=sha(args.apk.read_bytes()),
@@ -87,6 +113,9 @@ report = dict(new, previous_version_code=old['version_code'], sha256=sha(args.ap
               reader_sources_verified=verified,
               unchanged_runtime_files_verified=len(unchanged_runtime_files),
               selected_features=[1, 2, 5, 6, 16, 17, 18, 20, 21],
+              fitting_unchanged=args.preserve_fitting,
+              zip_alignment_verified=True,
+              apk_entry_names_unchanged=entry_names_unchanged,
               **qa, verified=True,
               physical_device_tested=False)
 (root / 'BUILD_VERIFICATION.json').write_text(json.dumps(report, indent=2) + '\n')

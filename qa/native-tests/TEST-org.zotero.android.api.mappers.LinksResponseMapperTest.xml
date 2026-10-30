@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.zotero.android.api.mappers.LinksResponseMapperTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-30T00:01:49.855Z" hostname="b856de3c7f05" time="0.001">
+  <properties/>
+  <testcase name="testMapperParsesSuccessfully" classname="org.zotero.android.api.mappers.LinksResponseMapperTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
