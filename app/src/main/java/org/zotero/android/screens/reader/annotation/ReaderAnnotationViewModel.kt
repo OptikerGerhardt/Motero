@@ -167,6 +167,7 @@ internal class ReaderAnnotationViewModel @Inject constructor(
 
     fun onDeleteAnnotation() {
         isDeletingAnnotation = true
+        reportScreenClosed()
         EventBus.getDefault().post(
             ReaderAnnotationDeleteResult(
                 key = viewState.annotation!!.key,

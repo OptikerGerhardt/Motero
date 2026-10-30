@@ -187,7 +187,7 @@ internal fun ReaderScreen(
         )
 
         CustomScaffoldM3(
-            shouldIncludeTopBarAndNavBarPaddings = viewState.isPdfOrHtml(),
+            shouldIncludeTopBarAndNavBarPaddings = false,
             topBar = {
                 AnimatedContent(
                     targetState = viewState.isTopBarVisible,
@@ -202,6 +202,7 @@ internal fun ReaderScreen(
                             )
                         } else {
                             ReaderTopBar(
+                                floating = viewState.isPdfOrHtml(),
                                 onBack = onBack,
                                 onShowHideSideBar = viewModel::toggleSideBar,
                                 toPdfSettings = viewModel::navigateToReaderSettings,

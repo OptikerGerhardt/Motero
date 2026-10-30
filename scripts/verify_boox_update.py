@@ -19,6 +19,7 @@ parser.add_argument('--qa-directory', type=Path)
 parser.add_argument('--preserve-fitting', action='store_true', help='Require the existing PDF fitting implementation and PDF.js to be unchanged')
 parser.add_argument('--label', help='Expected visible Android application name')
 parser.add_argument('--fitting-update', action='store_true', help='Require the four-mode Android fitting checks')
+parser.add_argument('--reader-polish', action='store_true', help='Require page-turn, deletion, palette, bookmark and scan regressions')
 args = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
 
@@ -72,9 +73,13 @@ with zipfile.ZipFile(args.apk) as apk:
                  b'ReaderAnnotationScreenClosed', b'reportScreenClosed', b'didReportClosed']:
         assert any(name in d for d in dex), name
     assert not any(b'isScrubberSuppressedByScroll' in d for d in dex)
+    if args.reader_polish:
+        for name in [b'resetAndroidReaderInput', b'deleteAnnotations']:
+            assert any(name in d for d in dex), name
     with zipfile.ZipFile(io.BytesIO(reader)) as bundle:
         assert bundle.testzip() is None
         mapping = json.loads(bundle.read('view.js.map'))
+        assert bundle.read('view.css') == (root / 'reader/build/android/view.css').read_bytes()
         verified = []
         for name in ['pdf/boox-reader.js', 'pdf/pdf-view.js', 'pdf/content-fit.mjs', 'pdf/direct-highlight.js',
                      'pdf/hardware-navigation.mjs', 'index.android.js', 'common/view.js',
@@ -122,6 +127,19 @@ if args.qa_directory:
                       'PASS original Mul PDF odd/even and complete content fit']:
             assert check in fitting, check
         assert 'Error' not in fitting and 'AssertionError' not in fitting
+    if args.reader_polish:
+        stability = (args.qa_directory / 'reader-stability.log').read_text()
+        for check in ['PASS page turn paints only prepared target geometry',
+                      'PASS input during preparation cancels pending page fitting',
+                      'PASS deleting selected annotation clears pointer and first backdrop tap works',
+                      'PASS stale editor close preserves newer selection',
+                      'PASS exact Zotero colors, borderless buttons, pointer and dark theme',
+                      'PASS canonical underline conversion preserves comments tags text and sends deletion',
+                      'PASS bookmark uses raw content frame independent of selected fit and margins',
+                      'PASS image-only gray paper and footnote bounds without OCR',
+                      'PASS: all Android reader stability checks']:
+            assert check in stability, check
+        assert 'Error' not in stability and 'AssertionError' not in stability
     native_xml = root / 'app/build/test-results/testDevDebugUnitTest/TEST-org.zotero.android.screens.reader.ReaderQuickControlActionsTest.xml'
     native = ET.parse(native_xml).getroot()
     assert native.get('failures') == native.get('errors') == native.get('skipped') == '0'
@@ -134,6 +152,8 @@ if args.qa_directory:
               browser_features_passed=True, browser_gestures_passed=True)
     if args.fitting_update:
         qa['browser_fitting_passed'] = True
+    if args.reader_polish:
+        qa['browser_stability_passed'] = True
 
 report = dict(new, previous_version_code=old['version_code'], sha256=sha(args.apk.read_bytes()),
               size_bytes=args.apk.stat().st_size, reader_sha256=reader_hash, dex_count=len(dex),

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.zotero.android.sync.NotePreviewGeneratorTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-30T13:46:31.491Z" hostname="5c12a4f273cf" time="0.006">
+<testsuite name="org.zotero.android.sync.NotePreviewGeneratorTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-30T20:12:43.229Z" hostname="5e949c3ee07f" time="0.008">
   <properties/>
-  <testcase name="returns only first sentence from a paragraph with new lines" classname="org.zotero.android.sync.NotePreviewGeneratorTest" time="0.002"/>
+  <testcase name="returns only first sentence from a paragraph with new lines" classname="org.zotero.android.sync.NotePreviewGeneratorTest" time="0.004"/>
   <testcase name="returns null for an empty note" classname="org.zotero.android.sync.NotePreviewGeneratorTest" time="0.001"/>
   <testcase name="returns only first 200 chars from a note" classname="org.zotero.android.sync.NotePreviewGeneratorTest" time="0.0"/>
   <testcase name="returns string with last character dropped if note ends with incomplete surrogate" classname="org.zotero.android.sync.NotePreviewGeneratorTest" time="0.0"/>

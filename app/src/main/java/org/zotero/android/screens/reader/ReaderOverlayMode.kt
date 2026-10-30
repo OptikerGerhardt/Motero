@@ -36,7 +36,8 @@ internal fun ReaderOverlayMode(
     val insetBottom = with(density) { systemBarsInsets.getBottom(this).toDp() }
     boxModifier = boxModifier
         .padding(
-            bottom = insetBottom
+            bottom = insetBottom,
+            top = if (isPdfOrHtml) with(density) { systemBarsInsets.getTop(this).toDp() } else 0.dp,
         )
 
     if (!isPdfOrHtml) {

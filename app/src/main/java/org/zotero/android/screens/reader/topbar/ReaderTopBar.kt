@@ -1,5 +1,12 @@
 package org.zotero.android.screens.reader.topbar
 
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
@@ -47,16 +54,11 @@ internal fun ReaderTopBar(
     viewModel: ReaderViewModel,
     readerSearchViewModel: ReaderSearchViewModel,
     readerSearchViewState: ReaderSearchViewState,
+    floating: Boolean = false,
 ) {
     val isTablet = CustomLayoutSize.calculateLayoutType().isTablet()
 
-    TopAppBar(
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer
-        ),
-        title = {},
-        navigationIcon = {
+    val navigation: @Composable () -> Unit = {
             IconButton(onClick = onBack) {
                 Icon(
                     painter = painterResource(Drawables.arrow_back_24dp),
@@ -64,9 +66,8 @@ internal fun ReaderTopBar(
                     tint = MaterialTheme.colorScheme.onSurface,
                 )
             }
-        },
-        actions = {
-            Spacer(modifier = Modifier.width(48.dp))
+    }
+    val leading: @Composable () -> Unit = {
             TooltipBox(
                 positionProvider = rememberTooltipPositionProvider(
                     TooltipAnchorPosition.Below,
@@ -128,7 +129,9 @@ internal fun ReaderTopBar(
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+
+    }
+    val trailing: @Composable () -> Unit = {
             TooltipBox(
                 positionProvider = rememberTooltipPositionProvider(
                     TooltipAnchorPosition.Below,
@@ -239,6 +242,25 @@ internal fun ReaderTopBar(
                 )
 
             }
-        },
-    )
+    }
+    if (floating) {
+        Row(Modifier.fillMaxWidth().windowInsetsPadding(TopAppBarDefaults.windowInsets).padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically) {
+            Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceContainer) {
+                Row(Modifier.padding(4.dp), verticalAlignment = Alignment.CenterVertically) { navigation(); leading() }
+            }
+            Spacer(Modifier.weight(1f))
+            Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceContainer) {
+                Row(Modifier.padding(4.dp), verticalAlignment = Alignment.CenterVertically) { trailing() }
+            }
+        }
+    } else {
+        TopAppBar(
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+                scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer),
+            title = {}, navigationIcon = navigation,
+            actions = { Spacer(Modifier.width(48.dp)); leading(); Spacer(Modifier.weight(1f)); trailing() },
+        )
+    }
 }

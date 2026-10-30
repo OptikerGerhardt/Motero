@@ -229,7 +229,8 @@ class ReaderViewModel @Inject constructor(
         viewModelScope.launch {
             // A closing/animating editor must not deselect a newer annotation.
             if (viewState.selectedAnnotationKey == result.annotationKey) {
-                _select(null, false)
+                readerWebCallChainExecutor.resetAndroidReaderInput(result.annotationKey)
+                if (viewState.selectedAnnotationKey == result.annotationKey) _select(null, false)
             }
         }
     }
@@ -906,6 +907,7 @@ class ReaderViewModel @Inject constructor(
     }
 
     private suspend fun _select(key: String?, didSelectInDocument: Boolean, inlineTextEditing: Boolean = false) {
+        if (key != null && annotation(key) == null) return
         if (key == viewState.selectedAnnotationKey) {
             return
         }
@@ -1481,6 +1483,17 @@ class ReaderViewModel @Inject constructor(
 
         this.annotations = annotations
         this.comments = comments
+        // Remove the editor layer as well as its deleted annotation body.
+        val deletedKeys = deletedPdfAnnotations.map { it.asString }.toSet()
+        if (viewState.readerAnnotationArgs?.selectedAnnotation?.key in deletedKeys
+            || viewState.readerAnnotationMoreArgs?.selectedAnnotation?.key in deletedKeys) {
+            updateState {
+                copy(
+                    readerAnnotationArgs = readerAnnotationArgs?.takeUnless { it.selectedAnnotation?.key in deletedKeys },
+                    readerAnnotationMoreArgs = readerAnnotationMoreArgs?.takeUnless { it.selectedAnnotation?.key in deletedKeys },
+                )
+            }
+        }
 
         updateState {
             if (this@ReaderViewModel.snapshotKeys == null) {
@@ -1673,6 +1686,13 @@ class ReaderViewModel @Inject constructor(
                         successValue.params
                     )
                 )
+            }
+            is ReaderWebData.deleteAnnotations -> {
+                val keys = successValue.params.getAsJsonArray("ids")?.mapNotNull {
+                    runCatching { it.asString }.getOrNull()
+                }?.filter { annotations[it] != null } ?: emptyList()
+                if (viewState.selectedAnnotationKey in keys) _select(null, false)
+                if (keys.isNotEmpty()) remove(keys)
             }
             is ReaderWebData.saveAnnotations -> {
                 saveAnnotations(successValue.params)

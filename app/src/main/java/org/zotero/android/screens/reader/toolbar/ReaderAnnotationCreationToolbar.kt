@@ -175,7 +175,7 @@ internal fun BoxScope.ReaderAnnotationCreationToolbar(
                 .width(48.dp)
                 .height(toolbarHeight)
                 .statusBarsPadding()
-                .padding(start = 16.dp)
+                .padding(start = 16.dp, top = if (viewState.isPdfOrHtml()) 64.dp else 0.dp)
                 .background(
                     color = snapAreaBackgroundColor,
                     roundCornerShape
@@ -191,7 +191,7 @@ internal fun BoxScope.ReaderAnnotationCreationToolbar(
                 .width(48.dp)
                 .height(toolbarHeight)
                 .statusBarsPadding()
-                .padding(end = 16.dp)
+                .padding(end = 16.dp, top = if (viewState.isPdfOrHtml()) 64.dp else 0.dp)
                 .background(
                     color = snapAreaBackgroundColor,
                     roundCornerShape
@@ -221,7 +221,7 @@ internal fun BoxScope.ReaderAnnotationCreationToolbar(
 
     LazyColumn(
         modifier = columnModifier
-            .padding(start = animatedExtraLeftPadding, top = 16.dp)
+            .padding(start = animatedExtraLeftPadding, top = if (viewState.isPdfOrHtml()) 80.dp else 16.dp)
             .background(
                 color = snapAreaBackgroundColor,
                 shape = roundCornerShape

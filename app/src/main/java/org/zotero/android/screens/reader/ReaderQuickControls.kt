@@ -2,7 +2,7 @@ package org.zotero.android.screens.reader
 
 import android.widget.Toast
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
@@ -37,7 +37,7 @@ private fun tagColor(hex: String): Color = runCatching {
 internal fun ReaderFilterColorButton(hex: String, isSelected: Boolean, onClick: () -> Unit) {
     Box(
         Modifier.size(40.dp)
-            .border(if (isSelected) 3.dp else 1.dp, MaterialTheme.colorScheme.onSurface, RoundedCornerShape(6.dp))
+            .background(if (isSelected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent, RoundedCornerShape(8.dp))
             .semantics { selected = isSelected; contentDescription = hex }
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
@@ -67,8 +67,8 @@ internal fun ReaderColoredTagShortcuts(
                 val checked = selectedTags.any { it.name == tag.name }
                 Box(
                     Modifier.weight(1f).height(48.dp)
-                        .border(if (checked) 3.dp else 1.dp, MaterialTheme.colorScheme.onSurface,
-                            RoundedCornerShape(6.dp))
+                        .background(if (checked) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
+                            RoundedCornerShape(8.dp))
                         .semantics { selected = checked; contentDescription = tag.name }
                         .combinedClickable(enabled = enabled, onClick = { onToggle(tag) },
                             onLongClick = { Toast.makeText(context, tag.name, Toast.LENGTH_SHORT).show() }),

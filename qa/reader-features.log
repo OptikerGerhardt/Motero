@@ -17,7 +17,7 @@ PASS annotation reopens after selection-clear bridge
 PASS dated bookmarks, repeated tap, multiple pages, restoration and standard deletion
 PASS fixed bookmark PDF position independent of tap and zoom
 PASS upper right edge bookmarks; lower right edge still turns pages
-PASS rotated page bookmark remains at visual upper right { top: 4, right: 28.346000000000004 }
+PASS rotated page bookmark remains at visual upper right { top: 4, right: 8 }
 Overview before manual {
   page: 1,
   scale: 0.28,

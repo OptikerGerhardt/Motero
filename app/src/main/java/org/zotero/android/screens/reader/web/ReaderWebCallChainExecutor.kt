@@ -124,6 +124,9 @@ class ReaderWebCallChainExecutor @Inject constructor(
                             )
                         }
 
+                        "onDeleteAnnotations" -> {
+                            observable.emitAsync(Result.Success(ReaderWebData.deleteAnnotations(data["params"].asJsonObject)))
+                        }
                         "onSaveAnnotations" -> {
                             val params = data["params"].asJsonObject
                             Timber.i("ReaderWebCallChainExecutor: $params")
@@ -308,6 +311,12 @@ class ReaderWebCallChainExecutor @Inject constructor(
 
     private fun onIndexHtmlLoaded() {
         //no-op
+    }
+
+    suspend fun resetAndroidReaderInput(key: String) {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("window.resetAndroidReaderInput?.(${gson.toJson(key)});") { cont.resume(Unit) }
+        }
     }
 
     suspend fun selectInDocument(key: String, centerInDocument: Boolean = true) {

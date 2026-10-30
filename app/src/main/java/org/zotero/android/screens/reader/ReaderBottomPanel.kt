@@ -27,7 +27,7 @@ internal fun BoxScope.ReaderBottomPanel(viewModel: ReaderViewModel, viewState: R
                 Text(stringResource(R.string.boox_filter_tags) + if (count > 0) " ($count)" else "")
             }
             LazyRow(Modifier.weight(1f), contentPadding = PaddingValues(end = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(0.dp),
                 verticalAlignment = Alignment.CenterVertically) {
                 items(viewModel.annotationFilterColors(), key = { it }) { color ->
                     ReaderFilterColorButton(color, viewState.annotationFilter?.colors?.contains(color) == true) {

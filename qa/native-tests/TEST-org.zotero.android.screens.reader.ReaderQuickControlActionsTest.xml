@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.zotero.android.screens.reader.ReaderQuickControlActionsTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-30T13:46:31.095Z" hostname="5c12a4f273cf" time="0.005">
+<testsuite name="org.zotero.android.screens.reader.ReaderQuickControlActionsTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-30T20:12:42.504Z" hostname="5e949c3ee07f" time="0.008">
   <properties/>
-  <testcase name="colorTogglesPreserveTagsAndAllowMultipleColors" classname="org.zotero.android.screens.reader.ReaderQuickControlActionsTest" time="0.0"/>
+  <testcase name="colorTogglesPreserveTagsAndAllowMultipleColors" classname="org.zotero.android.screens.reader.ReaderQuickControlActionsTest" time="0.001"/>
   <testcase name="clearingTheFinalSelectionReturnsToAnUnfilteredList" classname="org.zotero.android.screens.reader.ReaderQuickControlActionsTest" time="0.0"/>
   <testcase name="quickTagAddsAndRemovesOnlyTheChosenAssignment" classname="org.zotero.android.screens.reader.ReaderQuickControlActionsTest" time="0.001"/>
   <testcase name="changedLibraryTagColorDoesNotCreateADuplicateAssignment" classname="org.zotero.android.screens.reader.ReaderQuickControlActionsTest" time="0.0"/>
-  <testcase name="pdfScrubberUsesTheSameVisibilityFlagAsTheTopBar" classname="org.zotero.android.screens.reader.ReaderQuickControlActionsTest" time="0.002"/>
+  <testcase name="pdfScrubberUsesTheSameVisibilityFlagAsTheTopBar" classname="org.zotero.android.screens.reader.ReaderQuickControlActionsTest" time="0.006"/>
   <testcase name="changingTagFiltersKeepsTheColorFilter" classname="org.zotero.android.screens.reader.ReaderQuickControlActionsTest" time="0.0"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
