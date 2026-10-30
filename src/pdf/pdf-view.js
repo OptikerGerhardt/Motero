@@ -3496,6 +3496,13 @@ class PDFView {
 	}
 
 	_handlePointerDown(event) {
+		// This listener runs on window during capture, before the palette stops
+		// propagation. Its pointerup never reaches us: don't start a page action
+		// for a palette button, or the next annotation tap only clears that action.
+		if (this._options.platform === 'android'
+				&& event.target?.closest?.('.boox-highlight-palette')) {
+			return;
+		}
 		// A pending content fit must not override the user's own zooming and scrolling
 		this._contentFitRequest = null;
 		// Android WebView dispatches a compatibility mousedown after touchend. Suppress

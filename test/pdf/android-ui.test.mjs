@@ -1397,6 +1397,22 @@ test('Android edge taps tolerate boundary drift and use the delayed pointer path
 	assert.equal(pdfViewer.currentScaleValue, 3);
 });
 
+test('Android palette input never starts a page action that consumes the next tap', () => {
+	for (let [type, pointerType] of [['pointerdown', 'touch'], ['pointerdown', 'pen'], ['mousedown', undefined]]) {
+		let pendingFit = {};
+		let view = { _options: { platform: 'android' }, _pointerDownTriggered: false,
+			_contentFitRequest: pendingFit,
+			_directHighlight: { down() { throw new Error('Palette must not start a page gesture'); } },
+		};
+		let event = { type, pointerType,
+			target: { closest: selector => selector === '.boox-highlight-palette' ? {} : null },
+		};
+		PDFView.prototype._handlePointerDown.call(view, event);
+		assert.equal(view._pointerDownTriggered, false);
+		assert.equal(view._contentFitRequest, pendingFit);
+	}
+});
+
 test('Android double taps suppress only their touch-generated compatibility mouse event', (t) => {
 	t.mock.timers.enable({ apis: ['Date'], now: 1000 });
 	let prevented = 0;

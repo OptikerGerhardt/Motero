@@ -169,8 +169,32 @@ const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/ja
   assert.deepEqual(recolored, [{ id: first[0].id, color: '#2ea8e5' }]);
   assert.equal(await palette.count(), 0);
   console.log('PASS immediate palette, same annotation ID');
-  // Native Done now calls the same selection-clear bridge before re-opening.
+  const beforeFirstTap = await page.evaluate(() => window.testMessages.length);
   await tap(points[0]);
+  assert.deepEqual(await page.evaluate(() => window._view.getSelectedAnnotationIDs()), [first[0].id]);
+  assert.ok(await page.evaluate(({ start, id }) => window.testMessages.slice(start).some(x =>
+   x.message?.event === 'onSetAnnotationPopup' && x.message.params?.annotation?.id === id),
+   { start: beforeFirstTap, id: first[0].id }));
+  console.log('PASS first tap after palette color opens annotation popup');
+  // Exercise an actual touch on the palette as well as the mouse-compatible
+  // click above. Palette input must leave the page's pointer state idle.
+  await page.evaluate(() => {
+   window._view.selectAnnotations([]);
+   const view = window._view._view;
+   view._booxReader.showPalette(view._annotations);
+  });
+  const touchColor = await palette.locator('button[data-color="#ff6666"]').boundingBox();
+  await tap({ x: touchColor.x + touchColor.width / 2, y: touchColor.y + touchColor.height / 2 });
+  assert.equal(await palette.count(), 0);
+  assert.equal(await page.evaluate(() => !!window._view._view._pointerDownTriggered), false);
+  const beforeTouchReopen = await page.evaluate(() => window.testMessages.length);
+  await tap(points[0]);
+  assert.deepEqual(await page.evaluate(() => window._view.getSelectedAnnotationIDs()), [first[0].id]);
+  assert.ok(await page.evaluate(({ start, id }) => window.testMessages.slice(start).some(x =>
+   x.message?.event === 'onSetAnnotationPopup' && x.message.params?.annotation?.id === id),
+   { start: beforeTouchReopen, id: first[0].id }));
+  console.log('PASS first tap after touch palette selection opens annotation popup');
+  // Native Done now calls the same selection-clear bridge before re-opening.
   await page.evaluate(() => window._view.selectAnnotations([]));
   assert.deepEqual(await page.evaluate(() => window._view._view._selectedAnnotationIDs), []);
   const beforeReopen = await page.evaluate(() => window.testMessages.filter(x => x.message?.event === 'onSelectAnnotations').length);
