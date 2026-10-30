@@ -56,10 +56,10 @@ internal fun ReaderColoredTagShortcuts(
     val context = LocalContext.current
     NewSettingsDivider()
     BoxWithConstraints(Modifier.fillMaxWidth()) {
-        // The color row uses 28dp circles with SpaceEvenly. Match the outer
-        // edges of its first and last circle, even with nine tags/eight colors.
+        // Extend half a center-to-center color spacing beyond each outer
+        // circle's center: with SpaceEvenly this is half its outer gap.
         val count = colorCount.coerceAtLeast(1)
-        val inset = ((maxWidth - 28.dp * count) / (count + 1)).coerceAtLeast(0.dp)
+        val inset = ((maxWidth - 28.dp * count) / (count + 1) / 2).coerceAtLeast(0.dp)
         Row(Modifier.fillMaxWidth().padding(horizontal = inset),
             horizontalArrangement = Arrangement.spacedBy(3.dp),
             verticalAlignment = Alignment.CenterVertically) {

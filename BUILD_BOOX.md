@@ -1,17 +1,25 @@
-# Zotero BOOX: Build 294
+# Motero auf BOOX: Build 295
 
 ## Installation als Update
 
 Die APK über die installierte Testversion installieren. Vorher nicht deinstallieren.
-Paketkennung: `org.zotero.android.debug`. Version: `1.0.0-294`, Versionscode 294; zuvor 293.
+Paketkennung: `org.zotero.android.debug`. Version: `1.0.0-295`, Versionscode 295; zuvor 294.
 Derselbe Debug-Signierschlüssel wird weiterverwendet. Paketkennung, Zertifikat und höherer Versionscode werden direkt gegen die bisherige APK geprüft. Datenbank, gespeicherte Konten und Reader-Einstellungen verwenden ihre bisherigen Speicherpfade. Die offizielle Zotero-App wird durch diese Testversion nicht ersetzt.
 
-## Nachbesserungen gegenüber Build 293
+## Änderungen in Build 295
+
+Der sichtbare Android-App-Name lautet jetzt **Motero**. Paketkennung und Signierschlüssel bleiben gleich.
+
+Die Quick-Tag-Reihe reicht jetzt links und rechts jeweils einen halben Mittelpunktabstand über die äußerste Highlight-Farbe hinaus. Bei den vorhandenen gleichmäßig verteilten Farbkreisen entspricht dies einem halben äußeren Zwischenraum zum Fensterrand. Die Grenze orientiert sich damit an den Farbplätzen, nicht an der Kreisaußenkante. Alle bis zu neun Tags bleiben sichtbar und mittig verteilt.
+
+Nach einer Farbwahl in der kleinen Palette öffnet bereits der erste folgende Tipp auf das Highlight das Annotationsfenster. Ursache war der globale Pointer-Capture-Handler: Er registrierte den Tastendruck auf der Palette als begonnenen PDF-Vorgang, während das Loslassen von der Palette abgefangen wurde. Die nächste Berührung wurde deshalb nur zum Aufräumen dieses Zustands verbraucht. Android-Paletteneingaben werden jetzt vor dem Beginn einer PDF-Aktion erkannt. Browserprüfungen decken sowohl Mausklick-/Kompatibilitätsereignisse als auch echte Touch-Eingaben ab. Zusätzlich prüft ein Reader-Unit-Test Touch, Stift und mousedown auf der Palette.
+
+## Weiterhin enthaltene Nachbesserungen aus Build 294
 
 | Bereich | Verhalten |
 |---|---|
 | Done / Schließen | Die gerade bearbeitete Annotation wird in Android und Reader abgewählt und kann anschließend unmittelbar wieder angetippt werden. Ein verspätetes Schließereignis eines anderen Highlights lässt eine neuere Auswahl bestehen. Kommentare werden vorher über den bisherigen Speicherpfad weitergegeben. |
-| Quick Tags | Ohne Überschrift, mit denselben Formular-Trennlinien und Abständen wie bei Add Tags. Bis zu neun Felder bleiben in einer zentrierten Reihe innerhalb der äußeren Grenzen der Farbauswahl sichtbar. Sie sind 48 dp hoch; ihre Breite passt sich dem Fenster an. |
+| Quick Tags | Ohne Überschrift, mit denselben Formular-Trennlinien und Abständen wie bei Add Tags. Bis zu neun Felder bleiben in einer zentrierten Reihe zwischen den halben Mittelpunktabständen jenseits der äußersten Farben sichtbar. Sie sind 48 dp hoch; ihre Breite passt sich dem Fenster an. |
 | Originaltext | Ohne Überschrift und Kasten als eingerücktes Blockzitat mit vertikalem Balken zwischen denselben Trennlinien. Kurze Texte bleiben kompakt; lange Texte bleiben scrollbar und kopierbar. |
 | Lesekante F17 | Die graue gestrichelte Linie hat 50 % Deckkraft und fängt keine Eingaben ab. |
 | Bookmarks F18 | Die rechte Hälfte des oberen Elftels des Reader-Bereichs ist die Touchfläche bis einschließlich äußerem rechtem Rand. Dort hat das Lesezeichen Vorrang vor dem Blättern. Neue Marker sitzen unabhängig vom Tipppunkt und Zoom oben rechts auf der PDF-Seite, auch bei gedrehten Seiten. |
@@ -22,7 +30,7 @@ Alle neun Funktionen aus Build 293 bleiben enthalten: F01/F02 Navigation und Wra
 
 ## Bewusst zurückgestellt
 
-Fit to Content, Fit to Width, Randgrößen und eine gesonderte Ausrichtung gerader/ungerader Seiten sind unverändert. Die bisherige Stichprobe über bis zu acht Seiten des ganzen Dokuments bleibt bestehen. Die mittlere Stichprobe und getrennte horizontale Ausrichtungen wurden noch nicht eingebaut. Der Verifikationslauf mit `--preserve-fitting` vergleicht die Anpassungsfunktionen und alle PDF.js-Dateien direkt mit der bisherigen APK.
+Fit to Content, Fit to Width, Randgrößen und eine gesonderte Ausrichtung gerader/ungerader Seiten sind unverändert. Die bisherige Stichprobe über bis zu acht Seiten des ganzen Dokuments bleibt bestehen. Die mittlere Stichprobe und getrennte horizontale Ausrichtungen wurden noch nicht eingebaut. Der Verifikationslauf mit `--preserve-fitting` vergleicht die unveränderten Anpassungsfunktionen und alle PDF.js-Dateien direkt mit der bisherigen APK.
 
 F19 Tag-Autocomplete und andere nicht beauftragte Backlog-Punkte wurden nicht ergänzt.
 

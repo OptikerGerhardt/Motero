@@ -17,6 +17,7 @@ parser.add_argument('--apk', type=Path, required=True)
 parser.add_argument('--build-tools', type=Path, required=True)
 parser.add_argument('--qa-directory', type=Path)
 parser.add_argument('--preserve-fitting', action='store_true', help='Require the existing PDF fitting implementation and PDF.js to be unchanged')
+parser.add_argument('--label', help='Expected visible Android application name')
 args = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
 
@@ -35,7 +36,8 @@ def info(apk):
     badging = subprocess.run([str(args.build_tools / 'aapt2'), 'dump', 'badging', str(apk)],
                             capture_output=True, text=True, check=True).stdout
     package, code, version = re.search(r"package: name='([^']+)' versionCode='(\d+)' versionName='([^']+)'", badging).groups()
-    return dict(package=package, version_code=int(code), version_name=version, certificate_sha256=digest)
+    label = re.search(r"application-label:'([^']+)'", badging).group(1)
+    return dict(package=package, version_code=int(code), version_name=version, certificate_sha256=digest, application_label=label)
 
 old, new = info(args.base), info(args.apk)
 assert new['package'] == old['package'] == 'org.zotero.android.debug'
@@ -43,6 +45,8 @@ assert new['certificate_sha256'] == old['certificate_sha256']
 assert new['version_code'] > old['version_code']
 expected_code = int(re.search(r'versionCode = (\d+)', (root / 'buildSrc/src/main/kotlin/BuildConfig.kt').read_text()).group(1))
 assert new['version_code'] == expected_code
+if args.label:
+    assert new['application_label'] == args.label
 subprocess.run([str(args.build_tools / 'zipalign'), '-c', '-P', '16', '4', str(args.apk)],
                capture_output=True, text=True, check=True)
 
@@ -77,8 +81,11 @@ with zipfile.ZipFile(args.apk) as apk:
         if args.preserve_fitting:
             with zipfile.ZipFile(io.BytesIO(previous_reader)) as previous:
                 previous_mapping = json.loads(previous.read('view.js.map'))
-                for name in ['pdf/pdf-view.js', 'pdf/content-fit.mjs']:
-                    assert source(mapping, name) == source(previous_mapping, name), name
+                assert source(mapping, 'pdf/content-fit.mjs') == source(previous_mapping, 'pdf/content-fit.mjs')
+                # Input handling can change while all fitting functions stay identical.
+                def fitting_functions(value):
+                    return value[value.index('\n\tzoomPageWidth() {'):value.index('\n\t_clearPendingBackdropTap(')]
+                assert fitting_functions(source(mapping, 'pdf/pdf-view.js')) == fitting_functions(source(previous_mapping, 'pdf/pdf-view.js'))
                 for name in previous.namelist():
                     if name.startswith('pdf/') and not name.endswith('/'):
                         assert bundle.read(name) == previous.read(name), name
@@ -93,7 +100,9 @@ if args.qa_directory:
     assert 'PASS: all new Reader features' in features and 'PAGE ERROR' not in features
     for check in ['opacity: \'0.5\'', 'PASS fixed bookmark PDF position independent of tap and zoom',
                   'PASS upper right edge bookmarks', 'PASS rotated page bookmark',
-                  'PASS annotation reopens after selection-clear bridge']:
+                  'PASS annotation reopens after selection-clear bridge',
+                  'PASS first tap after palette color opens annotation popup',
+                  'PASS first tap after touch palette selection opens annotation popup']:
         assert check in features, check
     gestures = (args.qa_directory / 'reader-final-gestures.log').read_text()
     assert 'PASS: width and resize' in gestures and 'PAGE ERROR' not in gestures
