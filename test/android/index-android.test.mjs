@@ -277,3 +277,13 @@ test('queued hardware presses ignore editing and a replaced document', async () 
 	assert.equal(await pending, 'ignored');
 	assert.equal(calls, 0);
 });
+
+
+test('Android editor cleanup remains safe for non-PDF views without pointer-reset support', () => {
+ const original = window._view;
+ try {
+  window._view = { _view: { _selectedAnnotationIDs: ['EPUBNOTE'] } };
+  assert.doesNotThrow(() => window.resetAndroidReaderInput('EPUBNOTE'));
+  assert.deepEqual(window._view._view._selectedAnnotationIDs, ['EPUBNOTE']);
+ } finally { window._view = original; }
+});

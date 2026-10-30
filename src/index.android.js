@@ -321,6 +321,6 @@ window.enterPassword = (options) => {
 // A late close event must not cancel a newer annotation's gesture/selection.
 window.resetAndroidReaderInput = key => {
 	let view = window._view?._view;
-	if (key && !view?._selectedAnnotationIDs.includes(key)) return;
-	view?.resetAndroidInput();
+	if (key && !view?._selectedAnnotationIDs?.includes(key)) return;
+	view?.resetAndroidInput?.();
 };
