@@ -1,13 +1,13 @@
 {
   "package": "org.zotero.android.debug",
-  "version_code": 297,
-  "version_name": "1.0.0-297",
+  "version_code": 298,
+  "version_name": "1.0.0-298",
   "certificate_sha256": "c4e70a6935d239246540532b6d3ea514eb2a428e1e8eaacbf94c8a9a01989299",
   "application_label": "Motero",
-  "previous_version_code": 296,
-  "sha256": "3567847489b7fa16ff41cc0071da25f84eadf6dd8073d1073247c0ecf4e4451c",
-  "size_bytes": 197510737,
-  "reader_sha256": "de4091774a0ce14172585f9be717338757d30c6c5df40696c43fc9345821bd20",
+  "previous_version_code": 297,
+  "sha256": "0c97a44df914b03c5d3f4fdf98ccdc17d5016b4000ac4bc864ac2cae1fb354c5",
+  "size_bytes": 197379462,
+  "reader_sha256": "e949c7fda80a4ccc60fa3c35066a4b080b79b49bb009e758fcdf68ed76e3d60e",
   "dex_count": 8,
   "reader_sources_verified": [
     "pdf/boox-reader.js",
@@ -36,7 +36,7 @@
   "pdfjs_unchanged": true,
   "zip_alignment_verified": true,
   "apk_entry_names_unchanged": true,
-  "reader_tests": 233,
+  "reader_tests": 240,
   "native_logic_tests": 6,
   "native_tests_total": 73,
   "native_tests_skipped": 0,
@@ -45,5 +45,8 @@
   "browser_fitting_passed": true,
   "browser_stability_passed": true,
   "verified": true,
-  "physical_device_tested": false
+  "physical_device_tested": false,
+  "motero_icon_verified": true,
+  "fullscreen_hooks_verified": true,
+  "palette_halves_verified": true
 }

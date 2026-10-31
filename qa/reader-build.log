@@ -16,12 +16,12 @@ android:
     asset pdf/web/iccs/CGATS001Compat-v2-micro.icc 8.27 KiB [compared for emit] [from: build/mobile/pdf/web/iccs/CGATS001Compat-v2-micro.icc] [copied]
     asset pdf/web/iccs/LICENSE 6.4 KiB [compared for emit] [from: build/mobile/pdf/web/iccs/LICENSE] [copied]
   + 6 assets
-  Entrypoint view [big] 4.68 MiB (7.27 MiB) = view.css 11.2 KiB view.js 4.67 MiB 2 auxiliary assets
+  Entrypoint view [big] 4.69 MiB (7.28 MiB) = view.css 11.2 KiB view.js 4.67 MiB 2 auxiliary assets
   orphan modules 3.67 MiB (javascript) 1.83 KiB (runtime) [orphan] 162 modules
   runtime modules 6.8 KiB 15 modules
   modules by path ./node_modules/ 2.52 MiB 361 modules
-  modules by path ./src/ 3.64 MiB (javascript) 11.1 KiB (css/mini-extract)
-    javascript modules 3.64 MiB
+  modules by path ./src/ 3.65 MiB (javascript) 11.1 KiB (css/mini-extract)
+    javascript modules 3.65 MiB
       modules by path ./src/common/stylesheets/*.scss 100 bytes
         ./src/common/stylesheets/view.scss 50 bytes [built] [code generated]
         ./src/common/stylesheets/android-theme.scss 50 bytes [built] [code generated]
@@ -38,17 +38,17 @@ android:
   Assets:
     view.js (4.67 MiB)
     903.view.js (1.51 MiB)
-    pdf/web/viewer.mjs (631 KiB)
     pdf/build/pdf.mjs (821 KiB)
-    pdf/build/pdf.worker.mjs (2.13 MiB)
+    pdf/web/viewer.mjs (631 KiB)
     pdf/web/wasm/openjpeg.wasm (246 KiB)
     pdf/web/wasm/openjpeg_nowasm_fallback.js (441 KiB)
     pdf/web/wasm/quickjs-eval.wasm (422 KiB)
+    pdf/build/pdf.worker.mjs (2.13 MiB)
 
   WARNING in entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.
   Entrypoints:
-    view (4.68 MiB)
+    view (4.69 MiB)
         view.css
         view.js
 
-  android (webpack 5.99.9) compiled with 2 warnings in 17370 ms
+  android (webpack 5.99.9) compiled with 2 warnings in 6654 ms

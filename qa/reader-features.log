@@ -1,5 +1,8 @@
 PASS pan /fixture.pdf 0 80 80
 PASS pan /fixture.pdf 2 80 80
+PASS pan /problem.pdf 0 80 80
+PASS pan /problem.pdf 2 80 80
+PASS Fit to Content pan in body pages of problem PDF 106 106
 PASS reading edge {
   expected: 267,
   actual: 267,

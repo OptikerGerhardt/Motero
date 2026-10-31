@@ -1,35 +1,33 @@
-# Motero Build 297: geprüfter Stand
+# Motero Build 298: geprüfter Stand
 
-Alle folgenden Ergebnisse beziehen sich auf die ausgelieferte APK.
+Ergebnisse beziehen sich auf die ausgelieferte APK.
 
 | Eigenschaft | Ergebnis |
 |---|---|
 | Name | Motero |
 | Paket | org.zotero.android.debug |
-| Version | 1.0.0-297 / Code 297 |
-| Vorgänger | Build 296 |
-| APK-Größe | 197510737 Bytes |
-| APK SHA-256 | 3567847489b7fa16ff41cc0071da25f84eadf6dd8073d1073247c0ecf4e4451c |
+| Version | 1.0.0-298 / Code 298 |
+| Vorgänger | Build 297 |
+| APK-Größe | 197379462 Bytes |
+| APK SHA-256 | 0c97a44df914b03c5d3f4fdf98ccdc17d5016b4000ac4bc864ac2cae1fb354c5 |
 | Zertifikat SHA-256 | c4e70a6935d239246540532b6d3ea514eb2a428e1e8eaacbf94c8a9a01989299 |
-| Reader SHA-256 | de4091774a0ce14172585f9be717338757d30c6c5df40696c43fc9345821bd20 |
-| Reader-Tests | 233 bestanden, 0 Fehler/Abbrüche/übersprungen |
-| Native Tests | 73 bestanden, 0 übersprungen |
-| Browser | Funktionen, Gesten, Fits einschließlich Original-Mul und neue Stabilitätsprüfung bestanden |
-| Eingebettete Quellen | 9 direkt gegen Source Map geprüft; CSS bytegleich zum geprüften Build |
-| Weitere Laufzeitdateien | 88 bytegleich zur bisherigen APK |
-| PDF.js | Vollständig bytegleich zur bisherigen APK |
-| APK-Dateinamen | Identisch zur bisherigen APK; 8 DEX-Dateien |
-| Update | Gleiche Paketkennung und Signierer, Versionscode erhöht, v2-Signatur geprüft |
-| Ausrichtung | ZIP einschließlich 16-KiB-Nativbibliotheken geprüft |
+| Reader SHA-256 | e949c7fda80a4ccc60fa3c35066a4b080b79b49bb009e758fcdf68ed76e3d60e |
+| Reader-Tests | 240 bestanden, 0 Fehler/Abbrüche/übersprungen |
+| Native Tests | 73 bestanden, 0 Fehler/übersprungen |
+| Browser | Funktionen, Gesten, Fits einschließlich Mul, neue Header-Fixture und Modushälften bestanden |
+| Quellen | 9 eingebettete JS-Quellen geprüft, CSS bytegleich zum getesteten Build |
+| Weitere Laufzeitdateien | 88 bytegleich zu Build 297 |
+| PDF.js | Vollständig bytegleich zu Build 297 |
+| APK-Dateinamen | Identisch; 8 DEX-Dateien |
+| Motero-M | Beide Vektoren, fünf Rasterdichten und unveränderter Rotverlauf/Hintergrund geprüft |
+| Update | Identisches Paket und Signierer, erhöhter Code, v2-Signatur und 16-KiB-ZIP-Ausrichtung geprüft |
 
-Mit aktivem Fit wird die Zielgeometrie vor der Navigation vorbereitet und zusammen mit dem Seitenwechsel gesetzt. Die Browserprüfung zeichnet bei einem künstlich verzögerten uncached Seitenwechsel keine ungepasste Zwischenposition auf. Neue Eingabe verwirft die wartende Navigation. Eine schwebende obere Leiste und feste PDF-Systemleisten-Inset-Geometrie vermeiden Änderungen der WebView-Höhe. Die native Darstellung wurde nicht am physischen Gerät geprüft.
+PDF/HTML verwenden die vollständige Edge-to-Edge-Fläche ohne dauerhafte Systemleisten-Padding. Die Bars-Steuerung wird nach Compose-Commit, Fensterfokus und Resume mit der Toolbar synchronisiert, beim Verlassen des Readers wiederhergestellt. Sidebar-Abstand ist separat. Hashtag-Außenmittelpunkte liegen unter den Außenmittelpunkten der Highlight-Kreise, Touchhöhen bleiben 48 dp. Native Darstellung und echtes Vollbild auf BOOX sind hier nicht physisch geprüft.
 
-Löschen bereinigt Auswahl, Pointer/Drag und passendes natives Fenster. Original-Zotero-Farben ohne schwarze Kästen, Pointer-Spitze und Highlight/Underline-Wahl sind umgesetzt. Die reguläre Typkonvertierung legt eine neue Annotation an und löscht die alte ID; Tags, Kommentare und Text werden im Browser geprüft. Der native Bridge-Pfad verwendet vorhandene Erstellen-/Löschlogik.
+Highlight/Underline sind als vollständige Palettenhälften mit zentrierten Originalsymbolen und Rand-Touchzielen im Browser geprüft. Das neue M verwendet die ursprünglichen Vektor-Farbverläufe; die Farb-/Hintergrund-Ressourcen sind bytegleich zum bisherigen Icon, nur die Buchstabengeometrie ist ersetzt. PNG-Pixel werden direkt gegen die gebauten Quellexporte verglichen.
 
-Bookmarks nutzen den ungerandeten Inhaltsrahmen unabhängig vom aktiven Fit. Erneuter Shortcut passt nur die ausgewählte bearbeitbare datierte Notiz an; andere und schreibgeschützte Notizen bleiben unverändert. Die Position wird auch bei Rotation geprüft. Ein Bild-PDF ohne Textschicht mit neutralgrauem Papier und Fußnotenzeilen wird zugeschnitten; Farbbilder und ein graues Foto ohne Zeilenbänder bleiben konservativ. Kein OCR-Verfahren und keine garantierte Metadaten-Erkennung bei Scans.
+Die obere Inhaltskante berücksichtigt mehrzeilige Header und eigene gerade/ungerade Muster. Große Überschriften und gewöhnliche erste Absätze bleiben erhalten; überlappende Schriftkästen gelten nicht als Weißraum. Die Mul-Prüfung erhält den Textbeginn bei 10,44 % der Seitenhöhe auf den geprüften PDF-Seiten 250/251. Fußnoten bleiben enthalten. Heuristik kann mehrdeutige Randtexte behalten; die neu erwähnte Problem-PDF wurde nicht bereitgestellt und ist nicht konkret geprüft.
 
-Kein physischer BOOX angeschlossen. Installation/Login auf dem Zielgerät, E-Ink-Reaktion, tatsächliche Pinch-Skalenänderung auf dem Gerät und Kontosynchronisation sind hier nicht geprüft. Fit ändert die Ansicht, nicht die PDF-Datei. Manueller Zuschnitt, Randtippen in allen Modi und Autocomplete bleiben offen.
-
-Der erste native Kompilierlauf erkannte einen JSON-/String-Typfehler in der neuen Fensterbereinigung; er wurde vor dem erfolgreichen Test-/APK-Lauf korrigiert. Ein fehlgeschlagener JDK-Image-Transform wurde aus dem erzeugten Cache entfernt; der finale Lauf verwendet keinen Gradle-Konfigurationscache. Das schwächt keine App-Prüfung oder Bibliothek ab. ByteBuddy-Vorabladung betrifft ausschließlich die Test-JVM.
+Kein physischer BOOX oder echter Kontosync geprüft. Der vorhandene Debug-Schlüssel und die Paketkennung sind beibehalten. Fit verändert ausschließlich die Ansicht. Manuelles Cropping, Randtippen in allen Modi und Tag-Autocomplete bleiben offen. ByteBuddy-Vorabladung betrifft nur die Test-JVM. Native Änderungen werden regulär kompiliert; kein Smali-/DEX-Patching.
 
 Details: BUILD_BOOX.md, BUILD_VERIFICATION.json und qa/.

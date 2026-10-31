@@ -8,9 +8,6 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsIgnoringVisibility
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -36,10 +33,10 @@ internal fun ReaderSideBySideMode(
 
     var rowModifier = Modifier
         .fillMaxSize()
-        .windowInsetsPadding(if (isPdfOrHtml) WindowInsets.systemBarsIgnoringVisibility.only(WindowInsetsSides.Vertical)
-            else BottomAppBarDefaults.windowInsets)
+
     if (!isPdfOrHtml) {
         rowModifier = rowModifier
+            .windowInsetsPadding(BottomAppBarDefaults.windowInsets)
             .windowInsetsPadding(TopAppBarDefaults.windowInsets)
             .padding(
                 top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()

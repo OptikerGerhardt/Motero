@@ -1,13 +1,23 @@
-# Motero auf BOOX: Build 297
+# Motero auf BOOX: Build 298
 
 ## Installation als Update
 
-Über die vorhandene Motero-/Zotero-Testversion installieren, vorher nicht deinstallieren. Paketkennung `org.zotero.android.debug`, Versionscode 297, Version `1.0.0-297`, sichtbarer Name Motero. Derselbe enthaltene Debug-Schlüssel wie Build 296. Die technische Update-Identität wird direkt gegen die bisherige APK geprüft: Paket, Signierer, Versionsanstieg, v2-Signatur, ZIP-Ausrichtung einschließlich 16-KiB-Nativbibliotheken und unveränderte weitere Laufzeitpakete. Tatsächliche Installation/Login am physischen BOOX sind hier nicht geprüft.
+Über die vorhandene Motero-/Zotero-Testversion installieren, vorher nicht deinstallieren. Paketkennung `org.zotero.android.debug`, Versionscode 298, Version `1.0.0-298`, sichtbarer Name Motero. Derselbe enthaltene Debug-Schlüssel wie Build 297. Die technische Update-Identität wird direkt gegen die bisherige APK geprüft: Paket, Signierer, Versionsanstieg, v2-Signatur, ZIP-Ausrichtung einschließlich 16-KiB-Nativbibliotheken und unveränderte weitere Laufzeitpakete. Tatsächliche Installation/Login am physischen BOOX sind hier nicht geprüft.
 
-## Änderungen
+## Neu in Build 298
+
+Vollbild ohne dauerhaft reservierte Systemleisten-Ränder im PDF-/HTML-Bereich. Sichtbarkeit wird nach Compose-Commit, Fensterfokus und Resume mit der Toolbar abgeglichen; beim Verlassen des Readers wiederhergestellt. PDF-Fläche bleibt beim Ein-/Ausblenden konstant. Sidebar besitzt einen eigenen Statusleistenabstand. EPUB behält seine vorhandenen Inhaltsabstände.
+
+Motero-M in derselben kräftigen geometrischen Formensprache, ursprünglicher Rotverlauf #ff6666 bis #db2c3a, weißer Hintergrund. Adaptiver Vordergrund, monochrome Geometrie und alle fünf Legacy-Dichten aktualisiert. Quelle: design/motero-icon.svg; Neu-Export mit python3 scripts/regenerate_motero_icons.py (CairoSVG erforderlich).
+
+Unterer Bereich der Drag-Palette: zwei gleich große, vollständig antippbare Hälften mit jeweils zentriertem Highlight-/Underline-Symbol. Äußere Hashtag-Mittelpunkte direkt unter den äußeren Farbkreis-Mittelpunkten; gleichmäßige Verteilung dazwischen, einzelner Tag mittig. Vorherige Erweiterung um halbe Farbabstände entfällt.
+
+Mehrzeilige Kopfbereiche, parity-spezifische Muster mit mindestens drei passenden Stichprobenseiten und vorsichtige Erkennung kleiner tieferer Kopfzeilen. Größere Kapitelüberschriften und erste Absätze werden durch Schrift-/Abstandsregeln geschützt. Schriftkästen, die die nächste Körpertextzeile überlappen, sind kein Weißraum nach einer Kopfzeile. Fußnoten bleiben enthalten. 240 Reader-Tests; Browser prüft mehrzeilige Header, unveränderte Mul-Ausrichtung sowie Modushälften und Rand-Touchziele. Die neu erwähnte Problem-PDF liegt nicht vor; ihr konkreter Fall bleibt ungeprüft.
+
+## Weiter enthalten aus Build 297
 
 * Aktiver Fit: Zielseite vollständig vorbereiten; erst dann Navigation, Zoom, Position und Clip synchron setzen. Keine sichtbare Zwischenposition während der Inhaltsanalyse. Neue Eingaben haben Vorrang. Begrenzter Nachbarseiten-Vorlauf verwendet den vorhandenen Cache. Wrapped-Einstieg verwendet denselben Pfad.
-* Schwebende obere Leiste für PDF/HTML: zwei Material-Flächen mit 16-dp-Rundung und transparenter, durchlässiger Mitte. WebView-Höhe bleibt auch bei ein-/ausgeblendeten Systemleisten konstant. Sidebar und Zeichenwerkzeuge erhalten festen Platz unter den Buttons. EPUB unverändert.
+* Schwebende obere Leiste für PDF/HTML: zwei Material-Flächen mit 16-dp-Rundung und transparenter, durchlässiger Mitte. Die PDF-/HTML-Fläche bleibt beim Umschalten konstant und verwendet ab Build 298 keine dauerhaften Systemleisten-Abstände. Sidebar und Zeichenwerkzeuge erhalten festen Platz unter den Buttons. EPUB unverändert.
 * Löschen: Reader-Pointer/Drag/Auswahl sowie das passende native Annotationsfenster bereinigen. Verspätetes Schließen eines alten Fensters lässt neue Auswahl bestehen. Ein verspäteter Auswahlaufruf für eine gelöschte ID öffnet kein leeres Fenster.
 * Drag-Palette: acht Original-Zotero-Farben ohne schwarze Rahmen, kleine Spitze, Originalsymbole für Highlight/Underline, offizielle helle/dunkle Theme-Farben. Werkzeugkonvertierung verwendet Zoteros reguläre neue ID plus Löschen der alten ID; Text, Kommentare, Tags und PDF-Position bleiben erhalten. Native Speicherung verwendet den normalen Erstellen-/Löschpfad, eingegrenzt auf den geöffneten Anhang. Keine Änderung am Sync-Datenformat.
 * Native Farbfilter/Quick Tags: schwarze Kästen entfernen, Auswahl über Material-Fläche plus Häkchen; Sidebar-Farben enger gruppieren. Touchflächen erhalten. Künftige UI an Zotero/Material ausrichten.
@@ -45,4 +55,4 @@ JDK 17 mit Compiler, Android Platform 37.0 Revision 2, Build Tools 36.0.0, Gradl
 
 Im Android-Projekt python3 scripts/package_reader_assets.py; dann :app:testDevDebugUnitTest :app:assembleDevDebug --no-build-cache. In Umgebungen ohne dynamisches Java-Attach ByteBuddy-Agent ausschließlich in der Test-JVM vorladen; keine solche Startoption in der APK. Bei unverändertem Reader-Build kann die reguläre native Kompilierung parallel zur Reader-Prüfung laufen; vor Paketierung Reader neu verpacken und Hash prüfen.
 
-scripts/verify_boox_update.py --base <296.apk> --apk <297.apk> --build-tools <SDK/build-tools/36.0.0> --qa-directory qa --label Motero --fitting-update --reader-polish prüft das Update, neun eingebettete Reader-Quellen und die gebaute CSS. PDF.js und alle weiteren Laufzeitpakete müssen bytegleich zur bisherigen APK sein.
+scripts/verify_boox_update.py --base <297.apk> --apk <298.apk> --build-tools <SDK/build-tools/36.0.0> --qa-directory qa --label Motero --fitting-update --reader-polish --motero-refinement prüft das Update, neun eingebettete Reader-Quellen, die gebaute CSS, die M-Geometrie in beiden Vektoren, fünf PNG-Dichten, unveränderten Rotverlauf/Hintergrund und die neuen Browser-Modusflächen. PDF.js und alle weiteren Laufzeitpakete müssen bytegleich zur bisherigen APK sein.

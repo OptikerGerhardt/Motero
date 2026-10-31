@@ -1,11 +1,11 @@
-# Motero Build 297: Prüfungen
+# Motero Build 298: Prüfungen
 
-reader-final-tests.log: 233 Reader-Tests, kein Fehler/Abbruch/übersprungen.
-reader-features.log: bisherige Funktionen, erste Maus-/Touch-Auswahl nach Palette, Done, Bookmarks/Rotation, Wrapped, Lesekante 50 %.
-reader-final-gestures.log: Finger/Stift, Scrollen, Pinch-Unterbrechung, PDF.js-Übergabe, Resize.
-reader-fitting.log: vier Fits, drei Scrollmodi, vier Rotationen, Ränder, Fußnoten, breite Tabellen, andere Seitenformate und originale Mul-PDF.
-reader-stability.log: RAF-Frames beim verzögerten Seitenwechsel, Eingabeabbruch, Löschen ohne Pointer-Release, erster Backdrop-Tipp, veralteter Fensterschluss, Originalpalette/Dark Mode, Highlight-Unterstreichen-Konvertierung samt Text/Tags/Kommentar, Inhalts-Bookmarks und schreibgeschützte Notiz, echte Bild-PDF mit null Textobjekten.
-native-tests/: 73 Android-Tests als aktuelle JUnit-XML. android-full-tests.log und android-packaging-final.log enthalten dasselbe Protokoll des erfolgreichen Test-/APK-Laufs und des abschließenden Reader-Asset-Paketierlaufs.
-apk-verification.log: direkter APK-Vergleich gegen Build 296, gleicher Signierer/Paket, erhöhter Code, v2-Signatur, 16-KiB-ZIP-Ausrichtung, Reader-Quellen/CSS und unveränderte sonstige Laufzeitpakete.
+reader-final-tests.log: 240 Reader-Tests ohne Fehler/Abbruch/übersprungen. Neu: mehrzeilige und parity-spezifische Kopfzeilen, tiefere kleine Header, große echte Überschriften, erste Absätze und überlappende Schriftkästen.
+reader-features.log: bisherige Funktionen, erstes Antippen nach Palette, Done, Bookmarks/Rotation, Wrapped und Lesekante.
+reader-final-gestures.log: Finger/Stift, Scrollen, Pinch-Unterbrechung, PDF.js-Übergabe und Resize.
+reader-fitting.log: vier Fits, alle Scrollmodi/Rotationen, mehrzeilige Header-Fixture, Fußnoten und originale Mul-PDF.
+reader-stability.log: Seitenwechsel ohne sichtbare Zwischenposition, Eingabeabbruch, Löschen, Originalfarben und Themes, Modusschaltflächen als gleich breite Hälften mit zentrierten Symbolen und äußerem Rand-Touch, normale Typkonvertierung, Bookmarks und Bild-PDF.
+native-tests/: aktuelle 73 Android-Tests als JUnit-XML. android-full-tests.log und android-packaging-final.log enthalten denselben erfolgreichen abschließenden Test-/APK-Lauf. Der Test-Task wurde ausdrücklich erneut ausgeführt.
+apk-verification.log: Vergleich gegen Build 297, Update-Identität, v2-Signatur, 16-KiB-ZIP-Ausrichtung, neun Reader-Quellen/CSS, unveränderte Laufzeitdateien/PDF.js, zwei M-Vektoren und fünf Rasterdichten sowie unveränderter Rotverlauf/Hintergrund.
 
-Original-Mul-PDF und interne Screenshots sind nicht im Quellarchiv. Keine physische BOOX-Installation oder Kontosynchronisation geprüft. Die Bild-PDF-Fixture ist synthetisch; beliebige schräge/verrauschte Scans und semantische Header/Footer ohne OCR bleiben Grenzen.
+Keine physische BOOX-Prüfung. Vollbild-/Fensterfokussteuerung und native Hashtag-Ausrichtung sind kompiliert und am Code geprüft; deren Darstellung auf dem Zielgerät ist nicht verifiziert. Die neu erwähnte Problem-PDF wurde nicht bereitgestellt. Original-Mul-PDF und interne Screenshots sind nicht im Archiv. Keine echte Kontosynchronisation geprüft.

@@ -1,5 +1,8 @@
 package org.zotero.android.screens.reader
 
+import android.view.View
+import android.view.Window
+import android.view.ViewTreeObserver
 import android.content.res.Resources
 import android.util.TypedValue
 import androidx.activity.compose.LocalActivity
@@ -16,6 +19,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -98,17 +104,7 @@ internal fun ReaderScreen(
         }
     }
     AppThemeM3(darkTheme = viewState.isDark) {
-        val window = activity.window
-        val decorView = window.decorView
-        val systemBars = WindowInsetsCompat.Type.systemBars()
-        val insetsController = WindowCompat.getInsetsController(window, decorView)
-        insetsController.systemBarsBehavior =
-            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        if (viewState.isTopBarVisible) {
-            insetsController.show(systemBars)
-        } else {
-            insetsController.hide(systemBars)
-        }
+        ReaderSystemBars(activity.window, currentView, viewState.isTopBarVisible)
 
         val annotationMaxSideSize = annotationMaxSideSize()
 
@@ -324,4 +320,41 @@ private fun annotationMaxSideSize(): Int {
         }
     }
     return result
+}
+// Apply after Compose commits, and again when an editor/dialog returns focus.
+// The PDF itself stays edge-to-edge; system bars only overlay it while visible.
+@Composable
+private fun ReaderSystemBars(window: Window, view: View, chromeVisible: Boolean) {
+    val bars = WindowInsetsCompat.Type.systemBars()
+    val controller = WindowCompat.getInsetsController(window, window.decorView)
+    val synchronize = remember(window, view, chromeVisible) {
+        Runnable {
+            if (view.hasWindowFocus()) {
+                controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                if (chromeVisible) controller.show(bars) else controller.hide(bars)
+            }
+        }
+    }
+    SideEffect {
+        view.removeCallbacks(synchronize)
+        view.post(synchronize)
+    }
+    ObserveLifecycleEvent { event ->
+        if (event == Lifecycle.Event.ON_RESUME) view.post(synchronize)
+    }
+    DisposableEffect(window, view, synchronize) {
+        val observer = view.viewTreeObserver
+        val listener = ViewTreeObserver.OnWindowFocusChangeListener { focused ->
+            if (focused) view.post(synchronize)
+        }
+        observer.addOnWindowFocusChangeListener(listener)
+        view.post(synchronize)
+        onDispose {
+            view.removeCallbacks(synchronize)
+            if (observer.isAlive) observer.removeOnWindowFocusChangeListener(listener)
+        }
+    }
+    DisposableEffect(window) {
+        onDispose { controller.show(bars) }
+    }
 }

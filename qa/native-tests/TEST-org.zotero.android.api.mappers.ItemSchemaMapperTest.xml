@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.zotero.android.api.mappers.ItemSchemaMapperTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-10-30T20:12:39.409Z" hostname="5e949c3ee07f" time="0.004">
+<testsuite name="org.zotero.android.api.mappers.ItemSchemaMapperTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-10-31T00:33:17.173Z" hostname="1b48a59a9bb4" time="0.003">
   <properties/>
   <testcase name="testItemSchemaWithItemTypeParsesSuccessfully" classname="org.zotero.android.api.mappers.ItemSchemaMapperTest" time="0.002"/>
   <testcase name="testItemSchemaWithoutItemTypeReturnsNull" classname="org.zotero.android.api.mappers.ItemSchemaMapperTest" time="0.001"/>

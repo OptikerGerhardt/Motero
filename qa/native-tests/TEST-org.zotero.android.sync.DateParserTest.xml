@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.zotero.android.sync.DateParserTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-10-30T20:12:43.140Z" hostname="5e949c3ee07f" time="0.087">
+<testsuite name="org.zotero.android.sync.DateParserTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-10-31T00:33:19.146Z" hostname="1b48a59a9bb4" time="0.062">
   <properties/>
-  <testcase name="should parse day with suffix" classname="org.zotero.android.sync.DateParserTest" time="0.064"/>
+  <testcase name="should parse day with suffix" classname="org.zotero.android.sync.DateParserTest" time="0.045"/>
   <testcase name="returns null for blank string" classname="org.zotero.android.sync.DateParserTest" time="0.001"/>
-  <testcase name="should parse three- and four-digit dates with leading zeros" classname="org.zotero.android.sync.DateParserTest" time="0.007"/>
-  <testcase name="returns null for empty string" classname="org.zotero.android.sync.DateParserTest" time="0.001"/>
+  <testcase name="should parse three- and four-digit dates with leading zeros" classname="org.zotero.android.sync.DateParserTest" time="0.003"/>
+  <testcase name="returns null for empty string" classname="org.zotero.android.sync.DateParserTest" time="0.0"/>
   <testcase name="should parse month written as word" classname="org.zotero.android.sync.DateParserTest" time="0.002"/>
   <testcase name="should parse string with just number g 12 and le 31 as day" classname="org.zotero.android.sync.DateParserTest" time="0.001"/>
-  <testcase name="should parse string with just number g 100 as year" classname="org.zotero.android.sync.DateParserTest" time="0.001"/>
+  <testcase name="should parse string with just number g 100 as year" classname="org.zotero.android.sync.DateParserTest" time="0.0"/>
   <testcase name="should parse string with just number le 12 as month" classname="org.zotero.android.sync.DateParserTest" time="0.001"/>
   <testcase name="should parse two-digit month with leading zero and four-digit year" classname="org.zotero.android.sync.DateParserTest" time="0.001"/>
   <testcase name="should parse one-digit month and four-digit year" classname="org.zotero.android.sync.DateParserTest" time="0.001"/>
-  <testcase name="should parse two-digit year greater than current year as previous century" classname="org.zotero.android.sync.DateParserTest" time="0.005"/>
+  <testcase name="should parse two-digit year greater than current year as previous century" classname="org.zotero.android.sync.DateParserTest" time="0.004"/>
   <testcase name="should parse two-digit year less than or equal to current year as current century" classname="org.zotero.android.sync.DateParserTest" time="0.001"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>

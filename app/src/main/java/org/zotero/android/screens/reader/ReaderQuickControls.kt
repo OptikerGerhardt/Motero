@@ -56,17 +56,22 @@ internal fun ReaderColoredTagShortcuts(
     val context = LocalContext.current
     NewSettingsDivider()
     BoxWithConstraints(Modifier.fillMaxWidth()) {
-        // Extend half a center-to-center color spacing beyond each outer
-        // circle's center: with SpaceEvenly this is half its outer gap.
+        // Align the outer hashtag centers with the outer color-circle centers.
+        // Match the 28dp circles in ReaderAnnotationColorOptions (SpaceEvenly).
         val count = colorCount.coerceAtLeast(1)
-        val inset = ((maxWidth - 28.dp * count) / (count + 1) / 2).coerceAtLeast(0.dp)
+        val colorGap = ((maxWidth - 28.dp * count) / (count + 1)).coerceAtLeast(0.dp)
+        val outerCenter = colorGap + 14.dp
+        val centerSpan = (maxWidth - outerCenter * 2).coerceAtLeast(0.dp)
+        val touchWidth = if (tags.size == 1) 48.dp.coerceAtMost(maxWidth)
+            else (centerSpan / (tags.size - 1)).coerceIn(1.dp, 48.dp).coerceAtMost(outerCenter * 2)
+        val inset = if (tags.size == 1) 0.dp else (outerCenter - touchWidth / 2).coerceAtLeast(0.dp)
         Row(Modifier.fillMaxWidth().padding(horizontal = inset),
-            horizontalArrangement = Arrangement.spacedBy(3.dp),
+            horizontalArrangement = if (tags.size == 1) Arrangement.Center else Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically) {
             tags.forEach { tag ->
                 val checked = selectedTags.any { it.name == tag.name }
                 Box(
-                    Modifier.weight(1f).height(48.dp)
+                    Modifier.width(touchWidth).height(48.dp)
                         .background(if (checked) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
                             RoundedCornerShape(8.dp))
                         .semantics { selected = checked; contentDescription = tag.name }

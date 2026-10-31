@@ -1,6 +1,7 @@
 package org.zotero.android.screens.reader.sidebar
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -39,7 +40,8 @@ internal fun ReaderSidebar(
     annotationsLazyListState: LazyListState,
     annotationMaxSideSize: Int,
 ) {
-    Column(Modifier.background(MaterialTheme.colorScheme.surface).padding(top = if (viewState.isPdfOrHtml()) 64.dp else 0.dp)) {
+    val sidebarModifier = if (viewState.isPdfOrHtml()) Modifier.statusBarsPadding().padding(top = 64.dp) else Modifier
+    Column(sidebarModifier.background(MaterialTheme.colorScheme.surface)) {
         val selectorOptions = if (viewState.fileType == ReaderFileType.PDF) {
             pdfSliderOptions
         } else {

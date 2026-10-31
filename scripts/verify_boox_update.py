@@ -10,6 +10,7 @@ import re
 import subprocess
 import zipfile
 import xml.etree.ElementTree as ET
+from PIL import Image
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--base', type=Path, required=True)
@@ -20,6 +21,7 @@ parser.add_argument('--preserve-fitting', action='store_true', help='Require the
 parser.add_argument('--label', help='Expected visible Android application name')
 parser.add_argument('--fitting-update', action='store_true', help='Require the four-mode Android fitting checks')
 parser.add_argument('--reader-polish', action='store_true', help='Require page-turn, deletion, palette, bookmark and scan regressions')
+parser.add_argument('--motero-refinement', action='store_true', help='Verify launcher M, fullscreen hooks and full-width palette modes')
 args = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
 
@@ -56,6 +58,21 @@ with zipfile.ZipFile(args.apk) as apk:
     assert apk.testzip() is None
     with zipfile.ZipFile(args.base) as base:
         previous_reader = base.read('assets/reader/reader.zip')
+        if args.motero_refinement:
+            expected_path = re.search(r'android:pathData="([^"]+)"', (root / 'app/src/main/res/drawable-v24/ic_launcher_foreground.xml').read_text()).group(1)
+            assert expected_path.startswith('M34,76V32H43L54,51'), 'Expected geometric Motero M'
+            for name in ['res/drawable-anydpi-v24/ic_launcher_foreground.xml', 'res/drawable/ic_launcher_monochrome.xml']:
+                raw = apk.read(name)
+                assert expected_path.encode() in raw or expected_path.encode('utf-16le') in raw, name
+                assert raw != base.read(name), name
+            for name in ['res/drawable-anydpi-v24/$ic_launcher_foreground__0.xml', 'res/drawable/ic_launcher_background.xml', 'res/mipmap-anydpi-v26/ic_launcher.xml']:
+                assert apk.read(name) == base.read(name), 'Keep original icon color/background configuration: ' + name
+            for density in ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi']:
+                name = 'res/mipmap-' + density + '-v4/ic_launcher.png'
+                actual = Image.open(io.BytesIO(apk.read(name))).convert('RGBA')
+                expected = Image.open(root / ('app/src/main/res/mipmap-' + density + '/ic_launcher.png')).convert('RGBA')
+                assert actual.size == expected.size and actual.tobytes() == expected.tobytes(), name
+                assert apk.read(name) != base.read(name), name
         entry_names_unchanged = set(base.namelist()) == set(apk.namelist())
         assert entry_names_unchanged, 'Unexpected APK entry additions/removals'
         unchanged_runtime_files = [n for n in base.namelist() if n.startswith(('assets/', 'lib/'))
@@ -73,6 +90,9 @@ with zipfile.ZipFile(args.apk) as apk:
                  b'ReaderAnnotationScreenClosed', b'reportScreenClosed', b'didReportClosed']:
         assert any(name in d for d in dex), name
     assert not any(b'isScrubberSuppressedByScroll' in d for d in dex)
+    if args.motero_refinement:
+        for name in [b'ReaderSystemBars', b'addOnWindowFocusChangeListener']:
+            assert any(name in d for d in dex), name
     if args.reader_polish:
         for name in [b'resetAndroidReaderInput', b'deleteAnnotations']:
             assert any(name in d for d in dex), name
@@ -140,6 +160,8 @@ if args.qa_directory:
                       'PASS: all Android reader stability checks']:
             assert check in stability, check
         assert 'Error' not in stability and 'AssertionError' not in stability
+        if args.motero_refinement:
+            assert 'PASS palette mode buttons fill equal halves with centered icons and edge touch targets' in stability
     native_xml = root / 'app/build/test-results/testDevDebugUnitTest/TEST-org.zotero.android.screens.reader.ReaderQuickControlActionsTest.xml'
     native = ET.parse(native_xml).getroot()
     assert native.get('failures') == native.get('errors') == native.get('skipped') == '0'
@@ -165,6 +187,9 @@ report = dict(new, previous_version_code=old['version_code'], sha256=sha(args.ap
               zip_alignment_verified=True,
               apk_entry_names_unchanged=entry_names_unchanged,
               **qa, verified=True,
-              physical_device_tested=False)
+              physical_device_tested=False,
+              motero_icon_verified=args.motero_refinement,
+              fullscreen_hooks_verified=args.motero_refinement,
+              palette_halves_verified=args.motero_refinement)
 (root / 'BUILD_VERIFICATION.json').write_text(json.dumps(report, indent=2) + '\n')
 print(json.dumps(report, indent=2))
