@@ -62,20 +62,50 @@ function isOuter(line) {
 	return y1 < 0.18 || y0 > 0.82 || x1 < 0.13 || x0 > 0.87;
 }
 
+function bodyLineHeight(lines) {
+	let heights = lines.filter(l => !l.vertical && l.rect[1] > 0.18 && l.rect[3] < 0.8 && l.text.length > 20)
+		.map(l => l.rect[3] - l.rect[1]).sort((a, b) => a - b);
+	return heights[Math.floor(heights.length / 2)] || 0;
+}
+
+function headerCandidatesFor(lines) {
+	let bodyHeight = bodyLineHeight(lines);
+	if (!bodyHeight) return [];
+	let upper = lines.filter(l => !l.vertical && l.rect[3] < 0.18 && l.text.length > 3
+		&& l.rect[3] - l.rect[1] <= bodyHeight * 1.05).sort((a, b) => a.rect[1] - b.rect[1]);
+	let groups = [];
+	for (let line of upper) {
+		let group = groups.at(-1);
+		if (!group || line.rect[1] - Math.max(...group.map(l => l.rect[3])) > bodyHeight * 0.8) groups.push([line]);
+		else group.push(line);
+	}
+	let result = [];
+	for (let group of groups) {
+		let first = Math.min(...group.map(l => l.rect[1])), last = Math.max(...group.map(l => l.rect[3]));
+		let rows = new Set(group.map(l => Math.round((l.rect[1] + l.rect[3]) / 2 / bodyHeight)));
+		if (rows.size > 3 || group.reduce((n, l) => n + l.text.length, 0) > 180) continue;
+		// Lower candidates need smaller type; ordinary first paragraphs and
+		// large chapter titles must remain content even at repeatable positions.
+		if (last >= 0.10 && group.some(l => l.rect[3] - l.rect[1] > bodyHeight * 0.92)) continue;
+		let next = lines.filter(l => !group.includes(l) && l.rect[1] > last && l.text.length > 15)
+			.sort((a, b) => a.rect[1] - b.rect[1])[0];
+		if (next && next.rect[1] - last > Math.max(bodyHeight * 0.45, Math.max(...group.map(l => l.rect[3] - l.rect[1])) * 0.8)) result.push(...group);
+	}
+	return result;
+}
+
+function sameHeaderBand(a, b) {
+	return Math.abs(a.y0 - b.y0) < 0.012 && Math.abs(a.y1 - b.y1) < 0.012;
+}
+
 export function buildReadingModel(pages) {
 	let occurrences = new Map();
 	let headerCandidates = [];
 	for (let page of pages) {
-		let bodyHeights = page.lines.filter(l => l.rect[1] > 0.18 && l.rect[3] < 0.8 && l.text.length > 20)
-			.map(l => l.rect[3] - l.rect[1]).sort((a, b) => a - b);
-		let bodyHeight = bodyHeights[Math.floor(bodyHeights.length / 2)] || 0;
+		for (let line of headerCandidatesFor(page.lines)) {
+			headerCandidates.push({ index: page.index, y0: line.rect[1], y1: line.rect[3] });
+		}
 		for (let line of page.lines) {
-			let [, y0, , y1] = line.rect;
-			if (bodyHeight && y1 < 0.15 && line.text.length > 4 && y1 - y0 < bodyHeight * 1.05) {
-				let next = page.lines.filter(l => l.rect[1] > y1 && l.text.length > 15)
-					.sort((a, b) => a.rect[1] - b.rect[1])[0];
-				if (next && next.rect[1] - y1 > (y1 - y0) * 0.8) headerCandidates.push({ index: page.index, y0, y1 });
-			}
 			if (!isOuter(line) || line.text.length < 4) continue;
 			let key = normalize(line.text);
 			if (!occurrences.has(key)) occurrences.set(key, new Set());
@@ -86,12 +116,22 @@ export function buildReadingModel(pages) {
 	// Running chapter titles can change between sampled page pairs. A stable
 	// small, separated header position is evidence even when the words differ.
 	let headerBands = headerCandidates.filter(candidate => new Set(headerCandidates
-		.filter(other => Math.abs(other.y0 - candidate.y0) < 0.008 && Math.abs(other.y1 - candidate.y1) < 0.008)
-		.map(other => other.index)).size >= Math.max(3, Math.ceil(pages.length / 2)));
+		.filter(other => sameHeaderBand(other, candidate)).map(other => other.index))
+		.size >= Math.max(3, Math.ceil(pages.length / 2)));
+	for (let parity = 0; parity < 2; parity++) {
+		let count = pages.filter(p => p.index % 2 === parity).length;
+		if (count < 3) continue;
+		let candidates = headerCandidates.filter(c => c.index % 2 === parity);
+		for (let candidate of candidates) {
+			if (new Set(candidates.filter(other => sameHeaderBand(other, candidate)).map(c => c.index))
+				.size >= Math.max(3, Math.ceil(count * 0.65))) headerBands.push({ ...candidate, parity });
+		}
+	}
+
 	return { repeated, headerBands };
 }
 
-export function getReadingExclusions(lines, model = { repeated: new Set() }) {
+export function getReadingExclusions(lines, model = { repeated: new Set() }, pageIndex = null) {
 	let excluded = new Set();
 	for (let line of lines) {
 		let [x0, y0, x1, y1] = line.rect;
@@ -103,14 +143,34 @@ export function getReadingExclusions(lines, model = { repeated: new Set() }) {
 			&& other.rect[1] < y1 && other.rect[3] > y0
 			&& Math.min(Math.abs(other.rect[0] - x1), Math.abs(x0 - other.rect[2])) < 0.05);
 		if (pageNumber(line.text) && !adjacentText && (y1 < 0.10 || y0 > 0.94)) excluded.add(line);
-		if (y1 < 0.15 && (model.repeated.has(normalize(line.text))
-				|| model.headerBands?.some(band => Math.abs(band.y0 - y0) < 0.008 && Math.abs(band.y1 - y1) < 0.008))) {
-			let next = lines.filter(other => other !== line && other.rect[1] > y1
-				&& other.rect[0] < 0.85 && other.rect[2] > 0.15)
-				.sort((a, b) => a.rect[1] - b.rect[1])[0];
-			if (next && next.rect[1] - y1 > (y1 - y0) * 0.65) excluded.add(line);
-		}
 	}
+	let bodyHeight = bodyLineHeight(lines);
+	let headers = lines.filter(line => {
+		let [ , y0, , y1] = line.rect;
+		if (line.vertical || y1 >= 0.18 || bodyHeight && y1 - y0 > bodyHeight * 1.1) return false;
+		let knownBand = model.headerBands?.some(band => (band.parity === undefined
+			|| pageIndex !== null && band.parity === pageIndex % 2) && sameHeaderBand(band, { y0, y1 }));
+		return knownBand || model.repeated.has(normalize(line.text))
+			&& (bodyHeight ? y1 - y0 <= bodyHeight * 1.1 : y1 < 0.1);
+	}).sort((a, b) => a.rect[1] - b.rect[1]);
+	let blocks = [];
+	for (let line of headers) {
+		let block = blocks.at(-1), h = line.rect[3] - line.rect[1];
+		if (!block || line.rect[1] - Math.max(...block.map(l => l.rect[3])) > Math.max(h, bodyHeight) * 0.8) blocks.push([line]);
+		else block.push(line);
+	}
+	for (let block of blocks) {
+		let end = Math.max(...block.map(l => l.rect[3]));
+		let height = Math.max(...block.map(l => l.rect[3] - l.rect[1]));
+		// Tall glyph boxes can overlap the next body line. That is continuous
+		// text, not a whitespace gap after a running header.
+		if (lines.some(l => !headers.includes(l) && !excluded.has(l) && l.rect[1] < end
+			&& l.rect[3] > end && l.rect[0] < 0.85 && l.rect[2] > 0.15)) continue;
+		let next = lines.filter(l => !headers.includes(l) && !excluded.has(l) && l.rect[1] > end
+			&& l.rect[0] < 0.85 && l.rect[2] > 0.15).sort((a, b) => a.rect[1] - b.rect[1])[0];
+		if (next && next.rect[1] - end > height * 0.65) block.forEach(l => excluded.add(l));
+	}
+
 	// A JSTOR URL can be a legitimate footnote. Remove continuation lines only
 	// when they are attached to an identified download/terms block.
 	let stamps = [...excluded].filter(line => downloadStamp(line.text));
@@ -141,8 +201,8 @@ export function getReadingExclusions(lines, model = { repeated: new Set() }) {
 	return [...excluded].map(line => line.rect);
 }
 
-export function getReadingBounds(image, lines, model) {
-	let ignored = getReadingExclusions(lines, model);
+export function getReadingBounds(image, lines, model, pageIndex = null) {
+	let ignored = getReadingExclusions(lines, model, pageIndex);
 	let { width, height } = image;
 	let data = new Uint8ClampedArray(image.data);
 	// Neutral gray scan paper is not ink. Only normalize it when many distinct
@@ -182,7 +242,7 @@ export function getReadingBounds(image, lines, model) {
 	}
 	// Remove a thin rule belonging to an excluded running header, while keeping
 	// the rules above footnotes and tables intact.
-	for (let rect of ignored.filter(rect => rect[3] < 0.15)) {
+	for (let rect of ignored.filter(rect => rect[3] < 0.18)) {
 		let next = lines.filter(l => !ignored.includes(l.rect) && l.rect[1] > rect[3] && l.text.length > 15)
 			.sort((a, b) => a.rect[1] - b.rect[1])[0];
 		if (!next) continue;

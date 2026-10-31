@@ -210,10 +210,10 @@ export class PDFBooxReader {
 		for (let name of ['--color-background', '--fill-primary', '--fill-quinary', '--color-border', '--accent-blue']) {
 			let value = theme.getPropertyValue(name); if (value) box.style.setProperty(name, value);
 		}
-		box.style.cssText += 'position:fixed;z-index:10000;display:flex;flex-direction:column;padding:4px;max-width:calc(100vw - 12px);background:var(--color-background,#fff);color:var(--fill-primary,#222);border-radius:6px;box-shadow:0 2px 10px #0002,0 0 0 1px var(--color-border,#ddd);box-sizing:border-box;';
+		box.style.cssText += 'position:fixed;z-index:10000;display:flex;flex-direction:column;padding:0;max-width:calc(100vw - 12px);background:var(--color-background,#fff);color:var(--fill-primary,#222);border-radius:6px;box-shadow:0 2px 10px #0002,0 0 0 1px var(--color-border,#ddd);box-sizing:border-box;';
 		for (let event of ['pointerdown', 'pointerup', 'mousedown', 'touchstart', 'touchend']) box.addEventListener(event, e => e.stopPropagation());
 		let colors = this.doc.createElement('div');
-		colors.style.cssText = 'display:flex;overflow-x:auto;max-width:100%;';
+		colors.style.cssText = 'display:flex;overflow-x:auto;max-width:100%;padding:4px;box-sizing:border-box;';
 		let labels = this.de ? ['Gelb', 'Rot', 'Grün', 'Blau', 'Violett', 'Magenta', 'Orange', 'Grau']
 			: ['Yellow', 'Red', 'Green', 'Blue', 'Purple', 'Magenta', 'Orange', 'Gray'];
 		ANNOTATION_COLORS.forEach(([, color], index) => {
@@ -236,11 +236,12 @@ export class PDFBooxReader {
 		});
 		box.append(colors);
 		let tools = this.doc.createElement('div');
-		tools.style.cssText = 'display:flex;justify-content:center;gap:4px;border-top:1px solid var(--color-border,#ddd);padding-top:4px;margin-top:4px;';
+		tools.style.cssText = 'display:flex;align-items:stretch;width:100%;border-top:1px solid var(--color-border,#ddd);box-sizing:border-box;';
 		for (let [type, icon, label] of [['highlight', highlightIcon, this.de ? 'Hervorheben' : 'Highlight'], ['underline', underlineIcon, this.de ? 'Unterstreichen' : 'Underline']]) {
 			let button = this.doc.createElement('button'); button.type = 'button'; button.dataset.type = type;
 			button.setAttribute('aria-label', label); button.setAttribute('aria-pressed', String(annotations[0].type === type));
-			button.style.cssText = `display:flex;align-items:center;justify-content:center;width:48px;height:40px;border:0;border-radius:4px;color:inherit;background:${annotations[0].type === type ? 'var(--fill-quinary,#0001)' : 'transparent'};`;
+			button.style.cssText = `display:flex;align-items:center;justify-content:center;flex:1 1 0;min-width:0;height:44px;padding:0;border:0;color:inherit;background:${annotations[0].type === type ? 'var(--fill-quinary,#0001)' : 'transparent'};`;
+			button.style.borderRadius = type === 'highlight' ? '0 0 0 6px' : '0 0 6px 0';
 			button.innerHTML = icon; let svg = button.querySelector('svg'); svg.style.width = svg.style.height = '20px';
 			button.addEventListener('click', event => {
 				event.preventDefault(); event.stopPropagation();

@@ -8,7 +8,8 @@ for (let index = 0; index < 18; index++) {
  let left = index % 2 ? 78 : 132, stream = '', width = 600, height = 800;
  if (index === 0) stream = text(110,600,'A cover outside the middle sample',18);
  else if (index !== 16) {
-  stream += text(180,755,'Author: A recurring running header',9);
+  stream += text(180,index%2?752:763,'Author: '+['Being','Time','Reason','Nature','Mind','Life','Culture','History','Ethics'][index%9],9);
+  stream += text(180,index%2?738:749,'A second running-header line',9);
   for (let row=0; row<34; row++) {
    const y=670-row*14;
    stream += text(left,y,`Page ${String(index+1).padStart(2,'0')}, line ${String(row+1).padStart(2,'0')}: Philosophy, footnotes and actual body text.`);

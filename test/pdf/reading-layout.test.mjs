@@ -162,3 +162,67 @@ test('full color image is not treated as gray scan paper', () => {
  let scan=image([]);for(let i=0;i<scan.data.length;i+=4){scan.data[i]=180;scan.data[i+1]=210;scan.data[i+2]=170;}
  assert.deepEqual(getReadingBounds(scan,[],buildReadingModel([])),[0,0,1,1]);
 });
+
+
+const chapterWords = ['Being', 'Time', 'Reason', 'Nature', 'Mind', 'Life', 'History', 'Culture'];
+function pairedHeaders(index) {
+ const y = index % 2 ? .10 : .04;
+ return [line(chapterWords[index] + ' and its interpretation', [.2,y,.7,y+.012]),
+  line('Research on ' + chapterWords[7-index], [.2,y+.02,.65,y+.032])];
+}
+test('two-line changing running headers are recognized per parity with chapter-opening outliers', () => {
+ const pages = Array.from({length:8}, (_,index)=>({index,lines:[...(index<2 ? [line('An actual chapter heading', [.2,.04,.8,.068])] : pairedHeaders(index)),...body]}));
+ const model = buildReadingModel(pages);
+ for(const index of [2,3,4,5,6,7]) {
+  const excluded = getReadingExclusions(pages[index].lines,model,index);
+  assert.ok(pairedHeaders(index).every(h=>excluded.some(r=>JSON.stringify(r)===JSON.stringify(h.rect))),String(index));
+ }
+ assert.ok(model.headerBands.some(b=>b.parity===0));assert.ok(model.headerBands.some(b=>b.parity===1));
+ assert.equal(getReadingExclusions(pages[0].lines,model,0).length,0);
+});
+test('a small running header below fifteen percent is excluded while footnotes remain', () => {
+ const header=line('Edition and institutional metadata', [.2,.16,.8,.172]);
+ const lines=[header,...body,line('1 A real footnote.', [.2,.91,.6,.928])];
+ const model=buildReadingModel(Array.from({length:8},(_,index)=>({index,lines})));
+ const b=getReadingBounds(image(lines.map(l=>l.rect)),lines,model,2);
+ assert.ok(b[1]>=.198&&b[3]>.925,JSON.stringify(b));
+});
+test('a larger chapter title at a known running-header position stays in the content', () => {
+ const model=buildReadingModel(Array.from({length:8},(_,index)=>({index,lines:[line('Running title', [.2,.04,.8,.052]),...body]})));
+ const heading=line('A genuine chapter title', [.2,.04,.8,.063]);
+ assert.ok(!getReadingExclusions([heading,...body],model,2).includes(heading.rect));
+});
+test('ordinary first paragraphs are not learned as lower headers from position alone', () => {
+ const pages=Array.from({length:8},(_,index)=>({index,lines:[
+  line(chapterWords[index]+' begins an ordinary body paragraph.', [.2,.14,.8,.16]),
+  line('The argument about '+chapterWords[index]+' continues here.', [.2,.165,.8,.185]),...body]}));
+ const model=buildReadingModel(pages),p=pages[2];
+ assert.ok(!getReadingExclusions(p.lines,model,2).includes(p.lines[0].rect));
+ const b=getReadingBounds(image(p.lines.map(l=>l.rect)),p.lines,model,2);assert.ok(b[1]<=.141,JSON.stringify(b));
+});
+test('two-line headers do not remove a genuine section heading below them', () => {
+ const pages=Array.from({length:8},(_,index)=>({index,lines:[...pairedHeaders(index),...body]}));
+ const model=buildReadingModel(pages),heading=line('A real section title', [.2,.15,.8,.18]);
+ const lines=[...pairedHeaders(2),heading,...body],b=getReadingBounds(image(lines.map(l=>l.rect)),lines,model,2);
+ assert.ok(b[1]>=.148&&b[1]<=.152,JSON.stringify(b));
+});
+
+
+test('a short first body paragraph near the top is not mistaken for a running header', () => {
+ const pages=Array.from({length:8},(_,index)=>({index,lines:[
+  line('The '+chapterWords[index]+' argument begins here.', [.2,.105,.8,.125]),
+  line('A short continuation about '+chapterWords[index]+'.', [.2,.13,.8,.15]),...body]}));
+ const model=buildReadingModel(pages);
+ for(const p of pages) assert.ok(!getReadingExclusions(p.lines,model,p.index).includes(p.lines[0].rect));
+});
+
+
+test('header separation tolerates body-font boxes that overlap adjacent text lines', () => {
+ const pages=Array.from({length:8},(_,index)=>({index,lines:[
+  line(chapterWords[index]+' as a running title', [.14,.06458,.50,.07726]),
+  line(String(249+index), [.814,.06171,.846,.07802]),
+  ...Array.from({length:20},(_,i)=>line('Ordinary body text with a tall font bounding box, row '+i, [.14,.09918+i*.02035,.846,.12294+i*.02035]))]}));
+ const model=buildReadingModel(pages),p=pages[2],excluded=getReadingExclusions(p.lines,model,2);
+ assert.ok(excluded.includes(p.lines[0].rect));assert.ok(!excluded.includes(p.lines[2].rect));
+ const b=getReadingBounds(image(p.lines.map(l=>l.rect)),p.lines,model,2);assert.ok(b[1]>.097&&b[1]<.102,JSON.stringify(b));
+});

@@ -130,7 +130,7 @@ export class AndroidPageFitting {
 				}
 				let model = buildReadingModel(pages);
 				for (let page of pages) {
-					page.bounds = getReadingBounds(page.image, page.lines, model);
+					page.bounds = getReadingBounds(page.image, page.lines, model, page.index);
 					delete page.image; delete page.lines;
 					if (rotation === this.viewer.pagesRotation) this.cache.set(page.index, Promise.resolve(page));
 				}
@@ -147,7 +147,7 @@ export class AndroidPageFitting {
 		if (!this.cache.has(index)) {
 			let rotation = this.viewer.pagesRotation;
 			this.cache.set(index, this.readPage(index, rotation).then(page => ({
-				index, aspect: page.aspect, bounds: getReadingBounds(page.image, page.lines, model),
+				index, aspect: page.aspect, bounds: getReadingBounds(page.image, page.lines, model, page.index),
 			})).catch(error => { console.error(error); return { bounds: null }; }));
 			if (this.cache.size > 32) this.cache.delete(this.cache.keys().next().value);
 		}

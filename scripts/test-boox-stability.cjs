@@ -90,9 +90,23 @@ const types = { '.html':'text/html', '.js':'text/javascript', '.mjs':'text/javas
   const dark=await palette.evaluate(b=>getComputedStyle(b).backgroundColor);assert.notEqual(dark,'rgb(255, 255, 255)');
   console.log('PASS exact Zotero colors, borderless buttons, pointer and dark theme');
   if(process.env.BOOX_UI_SHOT)await palette.screenshot({path:process.env.BOOX_UI_SHOT});
-  await palette.locator('[data-type="underline"]').click();
+  const halves=await palette.evaluate(box=>{
+   const b=box.getBoundingClientRect();return [...box.querySelectorAll('[data-type]')].map(button=>{
+    const r=button.getBoundingClientRect(),s=button.querySelector('svg').getBoundingClientRect();
+    return {left:r.left-b.left,right:r.right-b.left,width:r.width,boxWidth:b.width,height:r.height,centerError:Math.abs((s.left+s.right-r.left-r.right)/2)};
+   });
+  });
+  assert.equal(halves.length,2);assert.ok(halves.every(b=>Math.abs(b.width-b.boxWidth/2)<1&&b.height>=44&&b.centerError<.6),JSON.stringify(halves));
+  assert.ok(halves[0].left<1&&Math.abs(halves[1].right-halves[1].boxWidth)<1);
+  const left=await palette.locator('[data-type="highlight"]').boundingBox();
+  await page.touchscreen.tap(left.x+2,left.y+left.height/2);await page.waitForTimeout(100);
+  const right=await palette.locator('[data-type="underline"]').boundingBox();
+  await page.touchscreen.tap(right.x+right.width-2,right.y+right.height/2);
+  await page.waitForFunction(()=>window._view._view._annotations.some(a=>a.type==='underline'));
+  console.log('PASS palette mode buttons fill equal halves with centered icons and edge touch targets');
   const converted=await page.evaluate(()=>window._view._view._annotations.find(a=>a.type==='underline'));
   assert.ok(converted);assert.notEqual(converted.id,added.id);assert.equal(converted.comment,added.comment);assert.equal(converted.text,added.text);assert.deepEqual(converted.tags,added.tags);
+  await page.waitForFunction(id=>window.messages.some(m=>m.message?.event==='onDeleteAnnotations'&&m.message.params.ids.includes(id)),added.id);
   assert.ok(await page.evaluate(id=>window.messages.some(m=>m.message?.event==='onDeleteAnnotations'&&m.message.params.ids.includes(id)),added.id));
   console.log('PASS canonical underline conversion preserves comments tags text and sends deletion');
   await page.evaluate(()=>window._view._view._booxReader.closePalette());
