@@ -56,6 +56,7 @@ import { debounce } from '../common/lib/debounce';
 import { AutoScroll } from './lib/auto-scroll';
 import { AndroidPageFitting } from './android-page-fitting';
 import { PDFBooxReader } from './boox-reader';
+import { PDFChromeTapGuard } from './chrome-tap-guard.mjs';
 import { PDFThumbnails } from './pdf-thumbnails';
 import {
 	A11Y_VIRT_CURSOR_DEBOUNCE_LENGTH,
@@ -160,6 +161,7 @@ class PDFView {
 		this._onKeyDown = options.onKeyDown;
 		this._onFocusAnnotation = options.onFocusAnnotation;
 		this._onBackdropTap = options.onBackdropTap;
+		this._onDismissReaderChrome = options.onDismissReaderChrome;
 		this._onEdgePageTurnTap = options.onEdgePageTurnTap;
 
 		this._onTabOut = options.onTabOut;
@@ -349,6 +351,8 @@ class PDFView {
 				else {
 					this._init();
 					if (this._options.platform === 'android') {
+						this._readerChromeVisible = this._options.readerChromeVisible === true;
+						this._chromeTapGuard = new PDFChromeTapGuard(this);
 						this._booxReader = new PDFBooxReader(this);
                         this._pageFitting = new AndroidPageFitting(this);
 					}
@@ -456,8 +460,13 @@ class PDFView {
 		this._iframeWindow.addEventListener('pointermove', this._handlePointerMove.bind(this), { passive: true });
 		// PDF.js consumes pointer endings during pinch gestures. Observe them before
 		// its container listeners so no finger remains registered in our gesture.
-		this._iframeWindow.addEventListener('pointerup', event => this._directHighlight?.up(event), true);
-		this._iframeWindow.addEventListener('pointercancel', event => this._directHighlight?.gesture.interrupted(event), true);
+		this._iframeWindow.addEventListener('pointerup', event => {
+			if (!this._chromeTapGuard?.up(event)) this._directHighlight?.up(event);
+		}, true);
+		this._iframeWindow.addEventListener('pointercancel', event => {
+			this._chromeTapGuard?.reset();
+			this._directHighlight?.gesture.interrupted(event);
+		}, true);
 		this._iframeWindow.addEventListener('pointerup', this._handlePointerUp.bind(this));
 		this._iframeWindow.addEventListener('pointercancel', this._handlePointerCancel.bind(this));
 		this._iframeWindow.addEventListener('lostpointercapture', this._handleTouchTransformInterrupted.bind(this));
@@ -1233,6 +1242,7 @@ class PDFView {
 	}
 
 	destroy() {
+		this._chromeTapGuard?.reset();
 		this._booxReader?.destroy();
         this._pageFitting?.destroy();
 		if (this._destroyed) {
@@ -3548,7 +3558,7 @@ class PDFView {
 			event.preventDefault();
 			return;
 		}
-		if (this._directHighlight?.down(event)) {
+		if (this._chromeTapGuard?.down(event) || this._directHighlight?.down(event)) {
 			return;
 		}
 		let doubleTap = this._isDoubleTapCandidate(event);
@@ -3828,6 +3838,7 @@ class PDFView {
 	}
 
 	_handlePointerMove = throttle((event) => {
+		if (this._chromeTapGuard?.move(event)) return;
 		if (this._directHighlight?.move(event)) {
 			return;
 		}
@@ -4270,6 +4281,7 @@ class PDFView {
 	}
 
 	_handlePointerUp(event) {
+		if (this._chromeTapGuard?.up(event)) return;
 		if (this._directHighlight?.up(event)) {
 			return;
 		}
@@ -4513,6 +4525,7 @@ class PDFView {
 	}
 
 	_handlePointerCancel(event) {
+		this._chromeTapGuard?.reset();
 		if (event) {
 			this._directHighlight?.gesture.interrupted(event);
 		}

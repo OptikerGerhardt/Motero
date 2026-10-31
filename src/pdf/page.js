@@ -663,6 +663,14 @@ export default class Page {
 
 	_buildDisplayList() {
 		let items = [];
+		// Hide recognized line/edition references below the annotation overlays.
+		// Rectangular fitting alone can leave half a number visible when a real
+		// footnote marker extends farther right, or the user adds reading margins.
+		let viewport = this._originalPage.viewport;
+		for (let r of this._layer._pageFitting?.maskRectsFor(this._pageIndex) || []) {
+			items.push({ kind: 'rect', marginalia: true, color: 'var(--background-color, #fff)',
+				rect: [r[0] * viewport.width, r[1] * viewport.height, r[2] * viewport.width, r[3] * viewport.height] });
+		}
 		let annotations = this._layer._getPageAnnotations(this._pageIndex);
 		let action = this._layer.action;
 
@@ -801,6 +809,7 @@ export default class Page {
 	_createRectElement(doc, item) {
 		let div = doc.createElement('div');
 		div.className = 'overlayRect';
+		if (item.marginalia) div.classList.add('boox-marginalia-mask');
 		let { scale } = this._originalPage.viewport;
 		let s = value => round(value / scale);
 		let [x1, y1, x2, y2] = item.rect;

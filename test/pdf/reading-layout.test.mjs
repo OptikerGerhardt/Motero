@@ -1,12 +1,75 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { getReadingSamples, buildReadingModel, getReadingExclusions, getReadingBounds,
-	buildReadingProfiles, resolveReadingBounds, getReadingFit, getReadingTextLines, rotateReadingBounds } from '../../src/pdf/reading-layout.mjs';
+	buildReadingProfiles, resolveReadingBounds, getReadingFit, getReadingTextLines, rotateReadingBounds, getReadingMarginalia } from '../../src/pdf/reading-layout.mjs';
 
 const line = (text, rect) => ({ text, rect });
 const body = [line('This is a complete line of ordinary text.', [.2, .2, .8, .22]),
 	line('The next full line belongs to the page body.', [.2, .3, .8, .32]),
 	line('Another ordinary line, with more content.', [.2, .5, .8, .52])];
+
+test('vector separators in excluded running-head bands do not hold the upper crop edge', () => {
+	let header = line('Author or chapter title', [.22,.045,.65,.058]);
+	let folio = line('14', [.12,.045,.15,.059]);
+	let lines = [header, folio, ...body];
+	let model = buildReadingModel(Array.from({length:8},(_,index)=>({index,lines})));
+	let pixels = image([...lines.map(l=>l.rect), [.18,.049,.21,.052]]);
+	let b = getReadingBounds(pixels, lines, model, 1);
+	assert.ok(b[1] >= .198, JSON.stringify(b));
+});
+
+test('optional edition and line columns are independent of footnotes and running heads', () => {
+	let references = [line('B 288',[.9,.3,.96,.315]),line('[372]',[.9,.5,.96,.515]),
+		line('5',[.11,.21,.13,.225]),line('10',[.11,.4,.13,.415]),line('15',[.11,.7,.13,.715])];
+	let footnote = line('1 This is an ordinary footnote.',[.2,.92,.75,.94]);
+	let header = line('A repeated running title',[.2,.04,.7,.055]);
+	let lines = [header,...body,...references,footnote];
+	let model = buildReadingModel(Array.from({length:8},(_,index)=>({index,lines})));
+	let pixels = image(lines.map(l=>l.rect));
+	let without = getReadingBounds(pixels,lines,model,0), withRefs = getReadingBounds(pixels,lines,model,0,{includeMarginalia:true});
+	assert.ok(without[0]>.19 && without[2]<.81,JSON.stringify(without));
+	assert.ok(withRefs[0]<.12 && withRefs[2]>.95,JSON.stringify(withRefs));
+	for(let b of [without,withRefs]) assert.ok(b[1]>.19 && b[3]>=.938,JSON.stringify(b));
+});
+
+test('a smaller line number inside one OCR item is split by glyph geometry; superscripts stay', () => {
+	let chars = [...'alpha'].map((c,i)=>({c,u:c,rect:[100+i*60,495,150+i*60,510],fontSize:14,baseline:500}));
+	chars.push({c:'5',u:'5',rect:[465,498,472,508],fontSize:10,baseline:500});
+	let item = {str:'alpha 5',width:372,transform:[14,0,0,14,100,500],chars};
+	let viewport = {width:500,height:700,scale:1,transform:[1,0,0,-1,0,700]};
+	let lines = getReadingTextLines({items:[item]},viewport);
+	assert.equal(lines.length,2);assert.equal(lines.find(l=>l.text==='5').sideCandidate,true);
+	assert.ok(lines.find(l=>l.text==='alpha').rect[2]<.81);
+	chars.at(-1).baseline = 508;
+	assert.equal(getReadingTextLines({items:[item]},viewport).length,1,'superscript footnote marker');
+});
+
+test('cropped text width uses the same width scale while taller pages remain scrollable', () => {
+	let options = {mode:'width',reference:'content',margin:.01,bounds:[.2,.1,.8,.95],width:600,height:800,pageWidth:600,pageHeight:1200};
+	let ordinary = getReadingFit(options), cropped = getReadingFit({...options,reference:'cropped-content'});
+	assert.deepEqual(cropped,ordinary);
+	assert.equal(cropped.scale,getReadingFit({...options,height:1000,reference:'cropped-content'}).scale);
+	assert.ok((cropped.bounds[3]-cropped.bounds[1])*options.pageHeight*cropped.scale>options.height);
+});
+
+test('detached footnote labels and explicitly included outer editions are kept', () => {
+	let notes = [.68,.8,.92].flatMap((y,i)=>[line(String(i+1),[.1,y,.12,y+.015]),
+		line('An ordinary, complete footnote reference.',[.2,y,.8,y+.02])]);
+	let lines = [...body,...notes];
+	let excluded = getReadingExclusions(lines);
+	assert.ok(notes.every(n=>!excluded.includes(n.rect)));
+	let edition = {...line('B 288',[.9,.07,.96,.085]),sideCandidate:true};
+	let model = {repeated:new Set(['b #']),headerBands:[]};
+	assert.ok(!getReadingExclusions([edition,...body],model,0,{includeMarginalia:true}).includes(edition.rect));
+});
+
+test('visible margin masks contain only excluded reference boxes, never footnotes or their markers', () => {
+	let references=[line('B 288',[.9,.3,.96,.315]),line('[372]',[.9,.5,.96,.515])];
+	let star=line('*',[.94,.2,.96,.22]);
+	let footnote=line('1 A complete footnote.',[.2,.91,.8,.93]);
+	let lines=[...body,...references,star,footnote],model=buildReadingModel([]);
+	assert.deepEqual(getReadingMarginalia(lines,model,0),references.map(l=>l.rect));
+});
 function image(rectangles) {
 	let width = 500, height = 700, data = new Uint8ClampedArray(width * height * 4).fill(255);
 	for (let [x0, y0, x1, y1] of rectangles) {

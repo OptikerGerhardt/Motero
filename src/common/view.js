@@ -165,6 +165,7 @@ class View {
 			onKeyUp: nop,
 			onFocusAnnotation: nop,
 			onBackdropTap: this._options.onBackdropTap,
+			onDismissReaderChrome: this._options.onDismissReaderChrome,
 			onEdgePageTurnTap: this._options.onEdgePageTurnTap,
 		};
 		return common;
@@ -180,6 +181,7 @@ class View {
 			pageFitting: this._options.pageFitting || null,
 			pageWidthFit: this._options.pageWidthFit || false,
 			directHighlight: this._options.directHighlight || false,
+			readerChromeVisible: this._options.readerChromeVisible === true,
 			onChangeViewState: debounce(this._options.onChangeViewState, DEBOUNCE_STATE_CHANGE),
 			onChangeViewStats: (stats) => {
 				this._baseViewStats = stats;
@@ -508,6 +510,11 @@ class View {
 
 	setContentFit(contentFit) {
 		this._view.setContentFit?.(contentFit);
+	}
+
+	setReaderChromeVisible(visible) {
+		this._options.readerChromeVisible = visible === true;
+		if (this._view) this._view._readerChromeVisible = visible === true;
 	}
 
 	setPageFitting(options, apply = true) {

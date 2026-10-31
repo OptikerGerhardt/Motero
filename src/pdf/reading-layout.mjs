@@ -18,12 +18,47 @@ const clamp = n => Math.max(0, Math.min(1, n));
 const normalize = text => text.toLowerCase().replace(/\d+/g, '#').replace(/\s+/g, ' ').trim();
 const pageNumber = text => /^(?:[-–—]?\s*)?(?:\d{1,5}|[ivxlcdm]{1,8})(?:\s*[-–—]?)$/i.test(text.trim());
 const downloadStamp = text => /^(?:(?:this content )?downloaded\s+(?:from|by|on)|(?:accessed|retrieved)\s+(?:on|from)|all use subject to)/i.test(text.trim());
+const editionReference = text => /^(?:(?:AA|Ak\.?)\s*)?(?:[IVXLC]+|\d{1,3})\s*[:,.]\s*\d{1,4}$|^[AB]\s*\d{1,4}(?:\s*[/–-]\s*[AB]?\s*\d{1,4})?$|^\[\s*\d{1,4}\s*\]$/i.test(text.trim());
+
+function splitOuterReference(item, viewport) {
+	if (!item.chars?.length) return null;
+	let text = item.str.trim(), pattern = '(?:[AB]\\s*\\d{1,4}|\\d{1,3}|\\[\\d{1,4}\\])';
+	let tail = text.match(new RegExp('^(.*\\S)\\s+(' + pattern + ')$'));
+	let head = !tail && text.match(new RegExp('^(' + pattern + ')\\s+(\\S.*)$'));
+	if (!tail && !head) return null;
+	let refText = tail ? tail[2] : head[1], bodyText = tail ? tail[1] : head[2];
+	let count = [...refText.replace(/\s/g, '')].length;
+	let chars = item.chars.filter(c => (c.u || c.c)?.trim() && c.rect?.length === 4);
+	if (chars.length <= count) return null;
+	let ref = tail ? chars.slice(-count) : chars.slice(0, count);
+	let body = tail ? chars.slice(0, -count) : chars.slice(count);
+	if (ref.map(c => c.u || c.c).join('') !== refText.replace(/\s/g, '')) return null;
+	let bounds = group => {
+		let points = group.flatMap(c => [[c.rect[0], c.rect[1]], [c.rect[2], c.rect[3]]])
+			.map(([x, y]) => [viewport.transform[0] * x + viewport.transform[2] * y + viewport.transform[4],
+				viewport.transform[1] * x + viewport.transform[3] * y + viewport.transform[5]]);
+		return [clamp(Math.min(...points.map(p => p[0])) / viewport.width), clamp(Math.min(...points.map(p => p[1])) / viewport.height),
+			clamp(Math.max(...points.map(p => p[0])) / viewport.width), clamp(Math.max(...points.map(p => p[1])) / viewport.height)];
+	};
+	let r = bounds(ref), b = bounds(body), height = Math.max(...body.map(c => c.fontSize || 0));
+	let baseline = body.at(tail ? -1 : 0).baseline;
+	// Same baseline and a separate outer position distinguish line references
+	// from superscript footnote markers, even in a single merged OCR item.
+	if (!(r[2] < 0.14 || r[0] > 0.86) || r[2] - r[0] > 0.1
+		|| !Number.isFinite(baseline) || !ref.every(c => Math.abs(c.baseline - baseline) < height * 0.2)
+		|| !editionReference(refText) && !ref.every(c => c.fontSize < height * 0.9)
+		|| Math.max(r[0] - b[2], b[0] - r[2]) < 0.005) return null;
+	return [{ text: bodyText, rect: b, vertical: false, sideCandidate: false },
+		{ text: refText, rect: r, vertical: false, sideCandidate: true }];
+}
 
 // Use the rendered viewport transform, including PDF CropBox and rotation.
 export function getReadingTextLines(content, viewport) {
 	let v = viewport.transform, spans = [];
 	for (let item of content?.items || []) {
 		if (!item.str?.trim() || !item.transform || !item.width) continue;
+		let split = splitOuterReference(item, viewport);
+		if (split) { spans.push(...split); continue; }
 		let t = item.transform;
 		let a = v[0] * t[0] + v[2] * t[1], b = v[1] * t[0] + v[3] * t[1];
 		let c = v[0] * t[2] + v[2] * t[3], d = v[1] * t[2] + v[3] * t[3];
@@ -39,13 +74,18 @@ export function getReadingTextLines(content, viewport) {
 		let rect = [clamp(Math.min(...xs) / viewport.width), clamp(Math.min(...ys) / viewport.height),
 			clamp(Math.max(...xs) / viewport.width), clamp(Math.max(...ys) / viewport.height)];
 		// Vertical/rotated marginal text is kept unless it is a known stamp.
-		spans.push({ text: item.str.trim(), rect, vertical: Math.abs(dy) > Math.abs(dx) });
+		let text = item.str.trim();
+		// OCR often places a line number directly against the final word's text
+		// box. Keep outer reference spans separate before merging body words.
+		let sideCandidate = (rect[2] < 0.14 || rect[0] > 0.86)
+			&& rect[2] - rect[0] < 0.1 && (/^\d{1,3}$/.test(text) || editionReference(text));
+		spans.push({ text, rect, vertical: Math.abs(dy) > Math.abs(dx), sideCandidate });
 	}
 	spans.sort((a, b) => a.rect[1] - b.rect[1] || a.rect[0] - b.rect[0]);
 	let lines = [];
 	for (let span of spans) {
 		let [x0, y0, x1, y1] = span.rect;
-		let row = [...lines].reverse().find(line => !span.vertical && !line.vertical
+		let row = [...lines].reverse().find(line => !span.sideCandidate && !line.sideCandidate && !span.vertical && !line.vertical
 			&& Math.abs((line.rect[1] + line.rect[3] - y0 - y1) / 2) < Math.max(y1 - y0, line.rect[3] - line.rect[1]) * 0.4
 			&& x0 >= line.rect[2] - 0.005 && x0 - line.rect[2] < Math.max(0.025, (y1 - y0) * 2));
 		if (row) {
@@ -71,7 +111,7 @@ function bodyLineHeight(lines) {
 function headerCandidatesFor(lines) {
 	let bodyHeight = bodyLineHeight(lines);
 	if (!bodyHeight) return [];
-	let upper = lines.filter(l => !l.vertical && l.rect[3] < 0.18 && l.text.length > 3
+	let upper = lines.filter(l => !l.sideCandidate && !l.vertical && l.rect[3] < 0.18 && l.text.length > 3
 		&& l.rect[3] - l.rect[1] <= bodyHeight * 1.05).sort((a, b) => a.rect[1] - b.rect[1]);
 	let groups = [];
 	for (let line of upper) {
@@ -131,7 +171,7 @@ export function buildReadingModel(pages) {
 	return { repeated, headerBands };
 }
 
-export function getReadingExclusions(lines, model = { repeated: new Set() }, pageIndex = null) {
+export function getReadingExclusions(lines, model = { repeated: new Set() }, pageIndex = null, { includeMarginalia = false } = {}) {
 	let excluded = new Set();
 	for (let line of lines) {
 		let [x0, y0, x1, y1] = line.rect;
@@ -147,6 +187,7 @@ export function getReadingExclusions(lines, model = { repeated: new Set() }, pag
 	let bodyHeight = bodyLineHeight(lines);
 	let headers = lines.filter(line => {
 		let [ , y0, , y1] = line.rect;
+		if (line.sideCandidate && editionReference(line.text)) return false;
 		if (line.vertical || y1 >= 0.18 || bodyHeight && y1 - y0 > bodyHeight * 1.1) return false;
 		let knownBand = model.headerBands?.some(band => (band.parity === undefined
 			|| pageIndex !== null && band.parity === pageIndex % 2) && sameHeaderBand(band, { y0, y1 }));
@@ -179,30 +220,34 @@ export function getReadingExclusions(lines, model = { repeated: new Set() }, pag
 		if (stamps.some(stamp => line.rect[1] >= stamp.rect[1] - 0.005
 			&& line.rect[1] - stamp.rect[3] < 0.05)) excluded.add(line);
 	}
+	if (includeMarginalia) return [...excluded].map(line => line.rect);
 	let numbers = lines.filter(line => /^\d{1,3}$/.test(line.text) && line.rect[2] - line.rect[0] < 0.045);
 	for (let line of numbers) {
 		let [x0, , x1] = line.rect;
 		let column = numbers.filter(other => Math.abs(other.rect[0] - x0) < 0.012);
 		if (column.length < 3 || Math.max(...column.map(l => l.rect[3])) - Math.min(...column.map(l => l.rect[1])) < 0.2) continue;
-		let neighbors = lines.filter(other => !column.includes(other) && other.text.length > 15
+		// A detached series confined to the lower page can be footnote labels.
+		// Line-number columns also accompany the main body higher on the page.
+		if (!column.some(other => other.rect[1] < 0.6)) continue;
+		let neighbors = lines.filter(other => !other.sideCandidate && !column.includes(other) && other.text.length > 15
 			&& other.rect[1] < 0.92 && other.rect[3] > 0.12);
-		if (neighbors.length >= 3 && neighbors.every(other => other.rect[0] > x1 + 0.012
-			|| other.rect[2] < x0 - 0.012)) column.forEach(item => excluded.add(item));
+		if (neighbors.length >= 3 && neighbors.every(other => other.rect[0] >= x1 - 0.002
+			|| other.rect[2] <= x0 + 0.002)) column.forEach(item => excluded.add(item));
 	}
 	// Edition references occupy a separate narrow outer column, never an
 	// arbitrary number inside an equation or a footnote citation.
 	for (let line of lines) {
-		if (!/^(?:(?:AA|Ak\.?)\s*)?(?:[IVXLC]+|\d{1,3})\s*[:,.]\s*\d{1,4}$|^[AB]\s*\d{1,4}(?:\s*[/–-]\s*[AB]?\s*\d{1,4})?$/i.test(line.text)) continue;
+		if (!editionReference(line.text)) continue;
 		let [x0, y0, x1, y1] = line.rect;
 		if (x1 - x0 > 0.10) continue;
-		let body = lines.filter(other => other.text.length > 20 && other.rect[1] < y1 + 0.03 && other.rect[3] > y0 - 0.03);
-		if (body.length && body.every(other => other.rect[0] > x1 + 0.012 || other.rect[2] < x0 - 0.012)) excluded.add(line);
+		let body = lines.filter(other => !other.sideCandidate && other.text.length > 20 && other.rect[1] < y1 + 0.03 && other.rect[3] > y0 - 0.03);
+		if (body.length && body.every(other => other.rect[0] > x1 + 0.004 || other.rect[2] < x0 - 0.004)) excluded.add(line);
 	}
 	return [...excluded].map(line => line.rect);
 }
 
-export function getReadingBounds(image, lines, model, pageIndex = null) {
-	let ignored = getReadingExclusions(lines, model, pageIndex);
+export function getReadingBounds(image, lines, model, pageIndex = null, options = {}) {
+	let ignored = getReadingExclusions(lines, model, pageIndex, options);
 	let { width, height } = image;
 	let data = new Uint8ClampedArray(image.data);
 	// Neutral gray scan paper is not ink. Only normalize it when many distinct
@@ -240,6 +285,16 @@ export function getReadingBounds(image, lines, model, pageIndex = null) {
 		let x1 = Math.min(width, Math.ceil(rect[2] * width) + 2), y1 = Math.min(height, Math.ceil(rect[3] * height) + 2);
 		for (let y = y0; y < y1; y++) data.fill(255, (y * width + x0) * 4, (y * width + x1) * 4);
 	}
+	// Running heads can contain vector separators (Höffe: page number — author)
+	// which are absent from the text layer. Clear their band only if no retained
+	// text overlaps it; a marginal reference beside body text never clears a row.
+	for (let rect of ignored.filter(rect => rect[3] < 0.18)) {
+		if (lines.some(line => !ignored.includes(line.rect)
+			&& line.rect[1] < rect[3] && line.rect[3] > rect[1])) continue;
+		let y0 = Math.max(0, Math.floor(rect[1] * height) - 2);
+		let y1 = Math.min(height, Math.ceil(rect[3] * height) + 2);
+		data.fill(255, y0 * width * 4, y1 * width * 4);
+	}
 	// Remove a thin rule belonging to an excluded running header, while keeping
 	// the rules above footnotes and tables intact.
 	for (let rect of ignored.filter(rect => rect[3] < 0.18)) {
@@ -253,8 +308,13 @@ export function getReadingBounds(image, lines, model, pageIndex = null) {
 		}
 	}
 	// No vertical band trimming: even a one-line footnote is part of the page.
-	let bounds = getInkBounds({ data, width, height }, { trimVertical: false });
+	let bounds = getInkBounds({ data, width, height }, { trimVertical: false, trimHorizontal: !options.includeMarginalia });
 	return bounds && bounds[2] - bounds[0] > 0.015 && bounds[3] - bounds[1] > 0.015 ? bounds : null;
+}
+
+export function getReadingMarginalia(lines, model, pageIndex) {
+	let always = new Set(getReadingExclusions(lines, model, pageIndex, { includeMarginalia: true }));
+	return getReadingExclusions(lines, model, pageIndex).filter(rect => !always.has(rect));
 }
 
 export function buildReadingProfiles(pages) {
@@ -283,7 +343,7 @@ export function resolveReadingBounds(actual, index, profiles) {
 }
 
 export function getReadingFit({ mode, reference, margin, bounds, width, height, pageWidth, pageHeight }) {
-	let content = mode === 'content' || reference === 'content';
+	let content = mode === 'content' || reference === 'content' || reference === 'cropped-content';
 	let b = content ? bounds : [0, 0, 1, 1];
 	let pad = content ? Math.max(0, margin || 0) * Math.min(width, height) : 0;
 	let sx = Math.max(1, width - 2 * pad) / ((b[2] - b[0]) * pageWidth);

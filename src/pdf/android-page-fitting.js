@@ -1,5 +1,5 @@
 import { getReadingSamples, getReadingTextLines, buildReadingModel, getReadingBounds,
-	buildReadingProfiles, resolveReadingBounds, getReadingFit, rotateReadingBounds } from './reading-layout.mjs';
+	buildReadingProfiles, resolveReadingBounds, getReadingFit, rotateReadingBounds, getReadingMarginalia } from './reading-layout.mjs';
 
 // View-only fitting. PDF coordinates, annotations and the PDF file are untouched.
 export class AndroidPageFitting {
@@ -59,7 +59,8 @@ export class AndroidPageFitting {
 	configure(options, apply = true) {
 		this.options = {
 			mode: ['none', 'content', 'width', 'height'].includes(options?.mode) ? options.mode : 'none',
-			reference: options?.reference === 'content' ? 'content' : 'page',
+			reference: ['content', 'cropped-content'].includes(options?.reference) ? options.reference : 'page',
+			includeMarginalia: options?.includeMarginalia === true,
 			margin: Math.max(0, Math.min(0.2, Number(options?.margin) || 0)),
 			revision: options?.revision || 0,
 		};
@@ -69,8 +70,10 @@ export class AndroidPageFitting {
 		this.win.clearTimeout(this.timer);
 		this.pendingPage = false;
 		this.clearClips();
+		this.masks = null;
 		this.active = this.options.mode !== 'none';
 		this.applied = null;
+		this.view._render();
 		return this.active ? this.apply({ alignTop: true }) : Promise.resolve(true);
 	}
 
@@ -84,6 +87,7 @@ export class AndroidPageFitting {
 	suspend() {
 		this.token++; this.active = false; this.applied = null;
 		this.win.clearTimeout(this.timer); this.pendingPage = false; this.clearClips();
+		this.masks = null; this.view._render();
 	}
 
 	schedule(delay = 70) {
@@ -130,32 +134,53 @@ export class AndroidPageFitting {
 				}
 				let model = buildReadingModel(pages);
 				for (let page of pages) {
+					page.marginalia = this.readMarginalia(page, model);
 					page.bounds = getReadingBounds(page.image, page.lines, model, page.index);
+					page.withMarginalia = getReadingBounds(page.image, page.lines, model, page.index, { includeMarginalia: true });
 					delete page.image; delete page.lines;
 					if (rotation === this.viewer.pagesRotation) this.cache.set(page.index, Promise.resolve(page));
 				}
 				let aspects = pages.map(p => p.aspect).sort((a, b) => a - b);
-				return { ...model, ...buildReadingProfiles(pages), aspect: aspects[Math.floor(aspects.length / 2)] };
+				return { ...model, ...buildReadingProfiles(pages),
+					withMarginalia: buildReadingProfiles(pages.map(page => ({ ...page, bounds: page.withMarginalia }))),
+					aspect: aspects[Math.floor(aspects.length / 2)] };
 			})();
 		}
 		return this.modelPromise;
 	}
 
-	async boundsFor(index) {
+	async boundsFor(index, { includeMarginalia = false } = {}) {
 		let model = await this.ensureModel();
 		if (!model) return [0, 0, 1, 1];
 		if (!this.cache.has(index)) {
 			let rotation = this.viewer.pagesRotation;
 			this.cache.set(index, this.readPage(index, rotation).then(page => ({
 				index, aspect: page.aspect, bounds: getReadingBounds(page.image, page.lines, model, page.index),
+				marginalia: this.readMarginalia(page, model),
+				withMarginalia: getReadingBounds(page.image, page.lines, model, page.index, { includeMarginalia: true }),
 			})).catch(error => { console.error(error); return { bounds: null }; }));
 			if (this.cache.size > 32) this.cache.delete(this.cache.keys().next().value);
 		}
 		let page = await this.cache.get(index);
-		if (!page.bounds) return [0, 0, 1, 1];
-		let bounds = Math.abs(page.aspect / model.aspect - 1) > 0.05 ? page.bounds
-			: resolveReadingBounds(page.bounds, index, model);
+		let actual = includeMarginalia ? page.withMarginalia : page.bounds;
+		if (!actual) return [0, 0, 1, 1];
+		let bounds = Math.abs(page.aspect / model.aspect - 1) > 0.05 ? actual
+			: resolveReadingBounds(actual, index, includeMarginalia ? model.withMarginalia : model);
 		return rotateReadingBounds(bounds, this.viewer.pagesRotation);
+	}
+
+	readMarginalia(page, model) {
+		return getReadingMarginalia(page.lines, model, page.index).map(r => [
+			Math.max(0, r[0] - 2 / page.image.width), Math.max(0, r[1] - 2 / page.image.height),
+			Math.min(1, r[2] + 2 / page.image.width), Math.min(1, r[3] + 2 / page.image.height),
+		]);
+	}
+
+	maskRectsFor(index) {
+		return this.active && !this.options.includeMarginalia
+			&& (this.options.mode === 'content' || this.options.reference !== 'page')
+			&& this.masks?.index === index && this.masks.rotation === this.viewer.pagesRotation
+			? this.masks.rects : [];
 	}
 
 
@@ -166,12 +191,14 @@ export class AndroidPageFitting {
 		if (!v.pdfDocument || this.view._destroyed || v.spreadMode !== 0) return null;
 		let rotation = v.pagesRotation, inputEpoch = this.inputEpoch;
 		let width = c.clientWidth, height = c.clientHeight;
-		let bounds = options.mode === 'content' || options.reference === 'content'
-			? await this.boundsFor(index) : [0, 0, 1, 1];
+		let bounds = options.mode === 'content' || options.reference !== 'page'
+			? await this.boundsFor(index, options) : [0, 0, 1, 1];
 		let pdfPage = await v.pdfDocument.getPage(index + 1);
 		let base = pdfPage.getViewport({ scale: 96 / 72, rotation: pdfPage.rotate + rotation });
 		let fit = getReadingFit({ ...options, bounds, width, height, pageWidth: base.width, pageHeight: base.height });
-		return { index, key: this.key(options), bounds, pdfPage, fit, rotation, inputEpoch, width, height };
+		let page = await this.cache.get(index);
+		let marginalia = (page?.marginalia || []).map(r => rotateReadingBounds(r, rotation));
+		return { index, key: this.key(options), bounds, pdfPage, fit, rotation, inputEpoch, width, height, marginalia };
 	}
 
 	commit(prepared, { alignTop = false, topFraction = 0, navigate } = {}) {
@@ -204,13 +231,15 @@ export class AndroidPageFitting {
 					? Math.max(0, b[1] * d.clientHeight - fit.pad) : topFraction * d.clientHeight));
 			}
 			this.clearClips();
-			if (this.options.mode === 'content') {
+			this.masks = { index, rotation: v.pagesRotation, rects: prepared.marginalia };
+			if (this.options.mode === 'content' || this.isCroppedWidth()) {
 				this.clipped.set(d, d.style.clipPath);
 				d.style.clipPath = `inset(${Math.max(0, b[1] * d.clientHeight - fit.pad)}px ${Math.max(0, (1 - b[2]) * d.clientWidth - fit.pad)}px ${Math.max(0, (1 - b[3]) * d.clientHeight - fit.pad)}px ${Math.max(0, b[0] * d.clientWidth - fit.pad)}px)`;
 			}
 			this.applied = { scale: v.currentScale, bounds, pageIndex: index, left: c.scrollLeft, top: c.scrollTop };
 		}
 		finally { this.applying = false; }
+		this.view._render();
 		this.view._updateViewStats();
 		this.win.clearTimeout(this.prefetchTimer);
 		this.prefetchTimer = this.win.setTimeout(() => {
@@ -221,6 +250,8 @@ export class AndroidPageFitting {
 		}, 180);
 		return true;
 	}
+
+	isCroppedWidth() { return this.options.mode === 'width' && this.options.reference === 'cropped-content'; }
 
 	async apply({ alignTop = false } = {}) {
 		let v = this.viewer, c = v.container;

@@ -127,6 +127,7 @@ window.createView = (encodedOptions) => {
 		onBackdropTap: () => {
 			postMessage('onBackdropTap');
 		},
+		onDismissReaderChrome: () => postMessage('onDismissReaderChrome'),
 		onEdgePageTurnTap: () => {
 			postMessage('onEdgePageTurnTap');
 		}
@@ -150,6 +151,7 @@ window.fitToContent = (options) => {
 window.fitToWidth = () => window._view.fitToWidth();
 window.setPageFitting = (options, apply = true) => window._view.setPageFitting(options, apply);
 window.setDirectHighlight = enabled => window._view.setDirectHighlight(enabled);
+window.setReaderChromeVisible = visible => window._view?.setReaderChromeVisible(visible);
 
 window.setContentFit = (options) => {
 	log("Set content fit: " + JSON.stringify(options));

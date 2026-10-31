@@ -15,6 +15,7 @@ export class PDFDirectHighlight {
 			finish: () => this.finish(),
 			cancel: () => this.clear(),
 			tap: (down, up) => {
+				if (view._chromeTapGuard?.consumeTap(down, up)) return;
 				this.bypass = true;
 				try {
 					view._handlePointerDown(down);

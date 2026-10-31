@@ -20,6 +20,14 @@ export function getHardwareScrollLimits(view, viewer, page) {
 		return { min: pageFit.applied.top, max: pageFit.applied.top, viewportHeight: height };
 	}
 	let start = 0, end = fullMax;
+	if (pageFit?.active && pageFit.options.mode === 'width'
+			&& pageFit.options.reference === 'cropped-content'
+			&& pageFit.applied?.pageIndex === viewer.currentPageNumber - 1
+			&& pageFit.applied.scale === viewer.currentScale) {
+		let margin = Math.max(0, pageFit.options.margin || 0) * Math.min(container.clientWidth, height);
+		start = clamp(pageFit.applied.bounds[1] * div.clientHeight - margin, 0, fullMax);
+		end = clamp(pageFit.applied.bounds[3] * div.clientHeight + margin - height, start, fullMax);
+	}
 	let fit = view._appliedContentFit;
 	if (fit && fit.scale === viewer.currentScale && view._contentFit
 			&& fit.margin === view._contentFit.margin && viewer.spreadMode === 0) {
