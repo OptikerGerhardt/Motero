@@ -19,6 +19,7 @@ sealed interface ReaderWebData {
     data class processDocumentSearchResults(val params: JsonObject) : ReaderWebData
     object toggleInterfaceVisibility : ReaderWebData
     object onEdgePageTurnTap : ReaderWebData
+    object onDismissReaderChrome : ReaderWebData
 
     data class onInitThumbnails(val thumbnailsJsonArray: JsonArray) : ReaderWebData
     data class onRenderThumbnail(val thumbnailJsonObject: JsonObject) : ReaderWebData

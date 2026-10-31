@@ -93,7 +93,7 @@ internal fun LazyListScope.readerSettingsSettingRow(
                             Text(
                                 text = opt.optionString,
                                 style = MaterialTheme.typography.labelLarge,
-                                maxLines = if (columns == 2) 2 else 1
+                                maxLines = 2
                             )
                         }
                     }

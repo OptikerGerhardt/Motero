@@ -11,6 +11,9 @@ class ReaderPageFittingSettingsTest {
         assertEquals("width", old.pageFitMode())
         assertFalse(old.fitToHeight)
         assertFalse(old.fitTextReference)
+        assertFalse(old.fitWidthCrop)
+        assertFalse(old.includeMarginalia)
+        assertEquals("page", old.fitReference())
         assertEquals(0L, old.fittingRevision)
     }
 
@@ -28,10 +31,29 @@ class ReaderPageFittingSettingsTest {
         val settings = ReaderSettings.default().apply {
             setPageFitMode("height")
             fitTextReference = true
+            fitWidthCrop = true
+            includeMarginalia = true
             fittingRevision = 17
         }
         val restored = Gson().fromJson(Gson().toJson(settings), ReaderSettings::class.java)
         assertEquals(settings, restored)
         assertEquals("height", restored.pageFitMode())
+        assertEquals("content", restored.fitReference())
+    }
+
+    @Test fun `cropped width is distinct and never changes height or existing text width`() {
+        val settings = ReaderSettings.default().apply {
+            setPageFitMode("width")
+            fitTextReference = true
+        }
+        assertEquals("content", settings.fitReference())
+        settings.fitWidthCrop = true
+        assertEquals("cropped-content", settings.fitReference())
+        settings.setPageFitMode("height")
+        assertEquals("content", settings.fitReference())
+        settings.setPageFitMode("width")
+        assertEquals("cropped-content", settings.fitReference())
+        settings.fitTextReference = false
+        assertEquals("page", settings.fitReference())
     }
 }

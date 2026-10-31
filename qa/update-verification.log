@@ -1,0 +1,69 @@
+{
+  "package": "org.zotero.android.debug",
+  "version_code": 299,
+  "version_name": "1.0.0-299",
+  "certificate_sha256": "c4e70a6935d239246540532b6d3ea514eb2a428e1e8eaacbf94c8a9a01989299",
+  "application_label": "Motero",
+  "previous_version_code": 298,
+  "sha256": "11c6f3f64d891f11829bc5a20cdc5ff0177d751ee60c7b2f461361cc1b369dc3",
+  "size_bytes": 197392898,
+  "reader_sha256": "70b48326c574f85535f393454f8d70c68d9de9df42ac35bda82e26aa5e181fd1",
+  "dex_count": 8,
+  "reader_sources_verified": [
+    "pdf/boox-reader.js",
+    "pdf/pdf-view.js",
+    "pdf/content-fit.mjs",
+    "pdf/direct-highlight.js",
+    "pdf/hardware-navigation.mjs",
+    "index.android.js",
+    "common/view.js",
+    "pdf/reading-layout.mjs",
+    "pdf/android-page-fitting.js",
+    "pdf/chrome-tap-guard.mjs",
+    "pdf/page.js"
+  ],
+  "unchanged_runtime_files_verified": 88,
+  "selected_features": [
+    1,
+    2,
+    5,
+    6,
+    16,
+    17,
+    18,
+    20,
+    21
+  ],
+  "fitting_unchanged": false,
+  "pdfjs_unchanged": true,
+  "zip_alignment_verified": true,
+  "apk_entry_names_unchanged": true,
+  "reader_tests": 250,
+  "native_logic_tests": 6,
+  "native_tests_total": 74,
+  "native_tests_skipped": 0,
+  "browser_features_passed": true,
+  "browser_gestures_passed": true,
+  "browser_fitting_passed": true,
+  "browser_stability_passed": true,
+  "browser_reader_controls_passed": true,
+  "concrete_pdf_test_pages": {
+    "hoeffe": [
+      26,
+      27,
+      191,
+      192
+    ],
+    "kant": [
+      369,
+      370,
+      380,
+      381
+    ]
+  },
+  "verified": true,
+  "physical_device_tested": false,
+  "motero_icon_verified": true,
+  "fullscreen_hooks_verified": true,
+  "palette_halves_verified": true
+}

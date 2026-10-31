@@ -32,4 +32,7 @@ enum class ReaderSettingsOptions(@StringRes val optionStringId: Int) {
     FitToHeight(Strings.pdf_settings_fit_to_height),
     FitReferencePage(Strings.pdf_settings_fit_reference_page),
     FitReferenceText(Strings.pdf_settings_fit_reference_text),
+    FitReferenceCroppedText(Strings.pdf_settings_fit_reference_cropped_text),
+    MarginaliaExclude(Strings.pdf_settings_marginalia_exclude),
+    MarginaliaInclude(Strings.pdf_settings_marginalia_include),
 }

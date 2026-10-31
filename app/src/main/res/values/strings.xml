@@ -101,7 +101,11 @@
     <string name="pdf_settings_fit_to_height">Fit to Height</string>
     <string name="pdf_settings_fit_reference_title">Fit relative to</string>
     <string name="pdf_settings_fit_reference_page">PDF page</string>
-    <string name="pdf_settings_fit_reference_text">Content</string>
+    <string name="pdf_settings_fit_reference_text">Text</string>
+    <string name="pdf_settings_fit_reference_cropped_text">Text + crop</string>
+    <string name="pdf_settings_marginalia_title">Line and edition references</string>
+    <string name="pdf_settings_marginalia_exclude">Exclude</string>
+    <string name="pdf_settings_marginalia_include">Include</string>
     <string name="pdf_settings_selection_title">Text marking</string>
     <string name="pdf_settings_selection_direct">Hold and drag</string>
     <string name="pdf_settings_selection_android">Android selection</string>

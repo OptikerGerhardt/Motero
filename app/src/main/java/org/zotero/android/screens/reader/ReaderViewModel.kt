@@ -1546,7 +1546,8 @@ class ReaderViewModel @Inject constructor(
                 )
                 readerWebCallChainExecutor.loadDocument(
                     data = documentData,
-                    isDark = pdfReaderCurrentThemeEventStream.currentValue()!!.isDark
+                    isDark = pdfReaderCurrentThemeEventStream.currentValue()!!.isDark,
+                    chromeVisible = viewState.isTopBarVisible,
                 )
             } else {
                 var shouldIgnoreUpdate = false
@@ -1718,6 +1719,7 @@ class ReaderViewModel @Inject constructor(
             ReaderWebData.toggleInterfaceVisibility -> {
                 decideTopBarAndBottomBarVisibility()
             }
+            ReaderWebData.onDismissReaderChrome -> setReaderChromeVisible(false)
 
             ReaderWebData.onEdgePageTurnTap -> {
                 onDocumentUserGestureDetected()
@@ -2557,6 +2559,10 @@ class ReaderViewModel @Inject constructor(
         }
     }
 
+    fun syncReaderChromeVisibility() {
+        if (!viewState.isReaderLoading) readerWebCallChainExecutor.setReaderChromeVisible(viewState.isTopBarVisible)
+    }
+
     fun onDocumentUserGestureDetected() {
         if (viewState.fileType != ReaderFileType.PDF) {
             return
@@ -2671,6 +2677,8 @@ class ReaderViewModel @Inject constructor(
         updatePdfPageAppearanceMode(readerSettings)
         val applyFit = reapplyFitting || previousSettings.pageFitMode() != readerSettings.pageFitMode()
             || previousSettings.fitTextReference != readerSettings.fitTextReference
+            || previousSettings.fitWidthCrop != readerSettings.fitWidthCrop
+            || previousSettings.includeMarginalia != readerSettings.includeMarginalia
             || previousSettings.contentMargin != readerSettings.contentMargin
             || previousSettings.scrollMode != readerSettings.scrollMode
             || previousSettings.spreadsMode != readerSettings.spreadsMode

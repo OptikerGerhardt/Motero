@@ -1,17 +1,17 @@
 DIAG odd {
   page: 9,
-  scale: 1.2082191780821916,
+  scale: 1.2115384615384615,
   active: true,
   mode: 'width',
   reference: 'content',
-  bounds: [ 0.21999999999999997, 0.17, 0.8283333333333334, 0.9 ],
-  x: 206,
+  bounds: [ 0.21999999999999997, 0.17, 0.8266666666666667, 0.9 ],
+  x: 207,
   y: 213,
-  visible: [ 6.519999999999982, 5.960000000000008, 594.1700000000001, 946.2 ],
+  visible: [ 6.179999999999978, 6.640000000000015, 594.04, 949.8 ],
   width: 600,
   height: 800,
-  pw: 966,
-  ph: 1288,
+  pw: 969,
+  ph: 1292,
   clip: '',
   cache: 8,
   reported: { pageFitMode: 'width', pageFitRevision: 1 },
@@ -19,18 +19,18 @@ DIAG odd {
 }
 DIAG even {
   page: 10,
-  scale: 1.2082191780821916,
+  scale: 1.2115384615384615,
   active: true,
   mode: 'width',
   reference: 'content',
-  bounds: [ 0.12999999999999995, 0.17, 0.7383333333333333, 0.9 ],
+  bounds: [ 0.13, 0.17, 0.7366666666666667, 0.9 ],
   x: 119,
   y: 213,
-  visible: [ 6.579999999999956, 5.960000000000008, 594.2299999999999, 946.2 ],
+  visible: [ 6.969999999999999, 6.640000000000015, 594.83, 949.8 ],
   width: 600,
   height: 800,
-  pw: 966,
-  ph: 1288,
+  pw: 969,
+  ph: 1292,
   clip: '',
   cache: 8,
   reported: { pageFitMode: 'width', pageFitRevision: 1 },
@@ -50,6 +50,4 @@ PASS new touch cancels pending fitting without late zoom
 PASS touch highlighting, palette and first annotation tap with active fitting width
 PASS touch highlighting, palette and first annotation tap with active fitting content
 PASS touch highlighting, palette and first annotation tap with active fitting height
-DIAG Mul pages 250/251 {"a":{"page":250,"scale":1.4046127035275051,"active":true,"mode":"width","reference":"content","bounds":[0.14,0.10444444444444445,0.85,0.9133333333333333],"x":110,"y":124,"visible":[5.920000000000016,5.719999999999999,593.8,1010.3599999999999],"width":600,"height":800,"pw":828,"ph":1242,"clip":"","cache":11,"reported":{"pageFitMode":"width","pageFitRevision":1},"overview":false},"b":{"page":251,"scale":1.4013232124185415,"active":true,"mode":"width","reference":"content","bounds":[0.15,0.10444444444444445,0.8616666666666667,0.9133333333333333],"x":118,"y":123,"visible":[5.8999999999999915,6.406666666666666,593.7366666666667,1008.6199999999999],"width":600,"height":800,"pw":826,"ph":1239,"clip":"","cache":11,"reported":{"pageFitMode":"width","pageFitRevision":1},"overview":false}}
-PASS original Mul PDF odd/even and complete content fit
 PASS: all Android fitting checks

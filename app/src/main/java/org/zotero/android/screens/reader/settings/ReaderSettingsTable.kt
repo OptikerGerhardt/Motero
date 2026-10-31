@@ -47,17 +47,24 @@ internal fun ReaderSettingsTable(
             if (axisFit) {
                 readerSettingsSettingRow(
                     titleResId = Strings.pdf_settings_fit_reference_title,
-                    options = viewState.fitReferenceOptions,
+                    options = if (viewState.selectedFitToContentOption == ReaderSettingsOptions.FitToWidth)
+                        viewState.widthReferenceOptions else viewState.fitReferenceOptions,
                     selectedOption = viewState.selectedFitReferenceOption,
                     optionSelected = viewModel::onOptionSelected
                 )
             }
             if (viewState.selectedFitToContentOption == ReaderSettingsOptions.FitToContentOn
-                || (axisFit && viewState.selectedFitReferenceOption == ReaderSettingsOptions.FitReferenceText)) {
+                || (axisFit && viewState.selectedFitReferenceOption != ReaderSettingsOptions.FitReferencePage)) {
                 readerSettingsSettingRow(
                     titleResId = Strings.pdf_settings_content_margin_title,
                     options = viewState.contentMarginOptions,
                     selectedOption = viewState.selectedContentMarginOption,
+                    optionSelected = viewModel::onOptionSelected
+                )
+                readerSettingsSettingRow(
+                    titleResId = Strings.pdf_settings_marginalia_title,
+                    options = viewState.marginaliaOptions,
+                    selectedOption = viewState.selectedMarginaliaOption,
                     optionSelected = viewModel::onOptionSelected
                 )
             }

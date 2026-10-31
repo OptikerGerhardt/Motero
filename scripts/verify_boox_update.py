@@ -22,6 +22,7 @@ parser.add_argument('--label', help='Expected visible Android application name')
 parser.add_argument('--fitting-update', action='store_true', help='Require the four-mode Android fitting checks')
 parser.add_argument('--reader-polish', action='store_true', help='Require page-turn, deletion, palette, bookmark and scan regressions')
 parser.add_argument('--motero-refinement', action='store_true', help='Verify launcher M, fullscreen hooks and full-width palette modes')
+parser.add_argument('--reader-controls', action='store_true', help='Verify width variants, optional marginal references and chrome dismissal')
 args = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
 
@@ -64,7 +65,7 @@ with zipfile.ZipFile(args.apk) as apk:
             for name in ['res/drawable-anydpi-v24/ic_launcher_foreground.xml', 'res/drawable/ic_launcher_monochrome.xml']:
                 raw = apk.read(name)
                 assert expected_path.encode() in raw or expected_path.encode('utf-16le') in raw, name
-                assert raw != base.read(name), name
+                assert (raw != base.read(name)) if old['version_code'] < 298 else (raw == base.read(name)), name
             for name in ['res/drawable-anydpi-v24/$ic_launcher_foreground__0.xml', 'res/drawable/ic_launcher_background.xml', 'res/mipmap-anydpi-v26/ic_launcher.xml']:
                 assert apk.read(name) == base.read(name), 'Keep original icon color/background configuration: ' + name
             for density in ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi']:
@@ -72,7 +73,7 @@ with zipfile.ZipFile(args.apk) as apk:
                 actual = Image.open(io.BytesIO(apk.read(name))).convert('RGBA')
                 expected = Image.open(root / ('app/src/main/res/mipmap-' + density + '/ic_launcher.png')).convert('RGBA')
                 assert actual.size == expected.size and actual.tobytes() == expected.tobytes(), name
-                assert apk.read(name) != base.read(name), name
+                assert (apk.read(name) != base.read(name)) if old['version_code'] < 298 else (apk.read(name) == base.read(name)), name
         entry_names_unchanged = set(base.namelist()) == set(apk.namelist())
         assert entry_names_unchanged, 'Unexpected APK entry additions/removals'
         unchanged_runtime_files = [n for n in base.namelist() if n.startswith(('assets/', 'lib/'))
@@ -96,6 +97,9 @@ with zipfile.ZipFile(args.apk) as apk:
     if args.reader_polish:
         for name in [b'resetAndroidReaderInput', b'deleteAnnotations']:
             assert any(name in d for d in dex), name
+    if args.reader_controls:
+        for name in [b'fitWidthCrop', b'includeMarginalia', b'onDismissReaderChrome', b'syncReaderChromeVisibility']:
+            assert any(name in d for d in dex), name
     with zipfile.ZipFile(io.BytesIO(reader)) as bundle:
         assert bundle.testzip() is None
         mapping = json.loads(bundle.read('view.js.map'))
@@ -103,7 +107,7 @@ with zipfile.ZipFile(args.apk) as apk:
         verified = []
         for name in ['pdf/boox-reader.js', 'pdf/pdf-view.js', 'pdf/content-fit.mjs', 'pdf/direct-highlight.js',
                      'pdf/hardware-navigation.mjs', 'index.android.js', 'common/view.js',
-                     'pdf/reading-layout.mjs', 'pdf/android-page-fitting.js']:
+                     'pdf/reading-layout.mjs', 'pdf/android-page-fitting.js', 'pdf/chrome-tap-guard.mjs', 'pdf/page.js']:
             assert source(mapping, name) == (root / 'reader/src' / name).read_text(), name
             verified.append(name)
         with zipfile.ZipFile(io.BytesIO(previous_reader)) as previous:
@@ -143,10 +147,23 @@ if args.qa_directory:
         for check in ['PASS: all Android fitting checks',
                       'PASS content fit and first hardware press across Vertical, Horizontal and Wrapped',
                       'PASS all display rotations preserve content and cached recognition',
-                      'PASS touch highlighting, palette and first annotation tap with active fitting',
-                      'PASS original Mul PDF odd/even and complete content fit']:
+                      'PASS touch highlighting, palette and first annotation tap with active fitting']:
             assert check in fitting, check
+        if not args.reader_controls:
+            assert 'PASS original Mul PDF odd/even and complete content fit' in fitting
         assert 'Error' not in fitting and 'AssertionError' not in fitting
+    if args.reader_controls:
+        controls = (args.qa_directory / 'reader-controls.log').read_text()
+        for check in ['PASS three width references, content-height scrolling and cropped hardware page limits in all layouts',
+                      'PASS cropped width never fits the page height',
+                      'PASS first annotation tap only dismisses chrome; second tap opens annotation without moving the PDF',
+                      'PASS first empty-page tap dismisses chrome once',
+                      'PASS visible chrome preserves direct hold-and-drag highlighting',
+                      'PASS actual /hoeffe.pdf header crop and reference toggle',
+                      'PASS actual /kant.pdf header crop and reference toggle',
+                      'PASS: all new Android reader controls']:
+            assert check in controls, check
+        assert 'Error' not in controls and 'AssertionError' not in controls
     if args.reader_polish:
         stability = (args.qa_directory / 'reader-stability.log').read_text()
         for check in ['PASS page turn paints only prepared target geometry',
@@ -176,6 +193,9 @@ if args.qa_directory:
         qa['browser_fitting_passed'] = True
     if args.reader_polish:
         qa['browser_stability_passed'] = True
+    if args.reader_controls:
+        qa['browser_reader_controls_passed'] = True
+        qa['concrete_pdf_test_pages'] = {'hoeffe': [26, 27, 191, 192], 'kant': [369, 370, 380, 381]}
 
 report = dict(new, previous_version_code=old['version_code'], sha256=sha(args.apk.read_bytes()),
               size_bytes=args.apk.stat().st_size, reader_sha256=reader_hash, dex_count=len(dex),

@@ -263,6 +263,10 @@ class ReaderWebCallChainExecutor @Inject constructor(
                             )
                         }
 
+                        "onDismissReaderChrome" -> {
+                            observable.emitAsync(Result.Success(ReaderWebData.onDismissReaderChrome))
+                        }
+
                         "onEdgePageTurnTap" -> {
                             observable.emitAsync(
                                 Result.Success(
@@ -456,7 +460,7 @@ class ReaderWebCallChainExecutor @Inject constructor(
         }
     }
 
-    suspend fun loadDocument(data: ReaderDocumentData, isDark: Boolean) {
+    suspend fun loadDocument(data: ReaderDocumentData, isDark: Boolean, chromeVisible: Boolean) {
         Timber.i("ReaderWebCallChainExecutor: try creating view for ${data.type}; page = ${data.page}")
         Timber.i("${data.file.absolutePath}")
         val createReaderViewOptions = CreateReaderViewOptions(
@@ -465,10 +469,11 @@ class ReaderWebCallChainExecutor @Inject constructor(
             annotations = data.annotationsJson,
             pageFitting = if (data.type == "pdf") defaults.getReaderSettings().let {
                 org.zotero.android.screens.reader.web.data.CreateReaderPageFitting(
-                    it.pageFitMode(), if (it.fitTextReference) "content" else "page", it.contentMargin.fraction, it.fittingRevision
+                    it.pageFitMode(), it.fitReference(), it.contentMargin.fraction, it.fittingRevision, it.includeMarginalia
                 )
             } else null,
             directHighlight = !defaults.getReaderSettings().nativeTextSelection,
+            readerChromeVisible = chromeVisible,
         )
 
         val flowModeString = when (defaults.getReaderSettings().pageLayoutFlowMode) {
@@ -604,9 +609,13 @@ class ReaderWebCallChainExecutor @Inject constructor(
         }
     }
 
+    fun setReaderChromeVisible(visible: Boolean) {
+        readerWebViewHandler.evaluateJavascript("window.setReaderChromeVisible?.($visible);") {}
+    }
+
     suspend fun setPageFitting(settings: org.zotero.android.screens.reader.settings.data.ReaderSettings, apply: Boolean) {
         val options = org.zotero.android.screens.reader.web.data.CreateReaderPageFitting(
-            settings.pageFitMode(), if (settings.fitTextReference) "content" else "page", settings.contentMargin.fraction, settings.fittingRevision
+            settings.pageFitMode(), settings.fitReference(), settings.contentMargin.fraction, settings.fittingRevision, settings.includeMarginalia
         )
         val json = gson.toJson(options)
         suspendCancellableCoroutine<Unit> { cont ->

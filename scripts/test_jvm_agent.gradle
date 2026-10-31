@@ -1,0 +1,8 @@
+allprojects {
+    tasks.withType(Test).configureEach {
+        doFirst {
+            def agent = classpath.files.find { it.name.startsWith('byte-buddy-agent-') && it.name.endsWith('.jar') }
+            if (agent) jvmArgs('-javaagent:' + agent.absolutePath)
+        }
+    }
+}

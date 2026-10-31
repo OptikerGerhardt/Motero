@@ -84,8 +84,13 @@ internal class ReaderSettingsViewModel @Inject constructor(
                         "height" -> ReaderSettingsOptions.FitToHeight
                         else -> convertFitToContent(readerSettings.fitToContent)
                     },
-                    selectedFitReferenceOption = if (readerSettings.fitTextReference) ReaderSettingsOptions.FitReferenceText
-                        else ReaderSettingsOptions.FitReferencePage,
+                    selectedFitReferenceOption = when (readerSettings.fitReference()) {
+                        "cropped-content" -> ReaderSettingsOptions.FitReferenceCroppedText
+                        "content" -> ReaderSettingsOptions.FitReferenceText
+                        else -> ReaderSettingsOptions.FitReferencePage
+                    },
+                    selectedMarginaliaOption = if (readerSettings.includeMarginalia) ReaderSettingsOptions.MarginaliaInclude
+                        else ReaderSettingsOptions.MarginaliaExclude,
                     selectedSelectionOption = if (readerSettings.nativeTextSelection) ReaderSettingsOptions.SelectionAndroid
                         else ReaderSettingsOptions.SelectionDirect,
                     selectedContentMarginOption = convert(readerSettings.contentMargin),
@@ -208,9 +213,15 @@ internal class ReaderSettingsViewModel @Inject constructor(
                 }
             }
 
-            ReaderSettingsOptions.FitReferencePage, ReaderSettingsOptions.FitReferenceText -> {
+            ReaderSettingsOptions.FitReferencePage, ReaderSettingsOptions.FitReferenceText,
+            ReaderSettingsOptions.FitReferenceCroppedText -> {
                 reapplyFitting = true
                 updateState { copy(selectedFitReferenceOption = option) }
+            }
+
+            ReaderSettingsOptions.MarginaliaExclude, ReaderSettingsOptions.MarginaliaInclude -> {
+                reapplyFitting = true
+                updateState { copy(selectedMarginaliaOption = option) }
             }
 
             ReaderSettingsOptions.SelectionDirect, ReaderSettingsOptions.SelectionAndroid -> {
@@ -226,6 +237,11 @@ internal class ReaderSettingsViewModel @Inject constructor(
             }
         }
         updatePdfSettings(option)
+        updateState { copy(selectedFitReferenceOption = when (readerSettings.fitReference()) {
+            "cropped-content" -> ReaderSettingsOptions.FitReferenceCroppedText
+            "content" -> ReaderSettingsOptions.FitReferenceText
+            else -> ReaderSettingsOptions.FitReferencePage
+        }) }
         if (option in viewState.fitToContentOptions && option != ReaderSettingsOptions.FitToContentOff) {
             readerSettings.spreadsMode = PageSpreadsMode.NONE
             updateState { copy(selectedSpreadsOption = ReaderSettingsOptions.PageSpreadsNone) }
@@ -330,7 +346,16 @@ internal class ReaderSettingsViewModel @Inject constructor(
             ReaderSettingsOptions.FitToWidth -> readerSettings.setPageFitMode("width")
             ReaderSettingsOptions.FitToHeight -> readerSettings.setPageFitMode("height")
             ReaderSettingsOptions.FitReferencePage -> readerSettings.fitTextReference = false
-            ReaderSettingsOptions.FitReferenceText -> readerSettings.fitTextReference = true
+            ReaderSettingsOptions.FitReferenceText -> {
+                readerSettings.fitTextReference = true
+                readerSettings.fitWidthCrop = false
+            }
+            ReaderSettingsOptions.FitReferenceCroppedText -> {
+                readerSettings.fitTextReference = true
+                readerSettings.fitWidthCrop = true
+            }
+            ReaderSettingsOptions.MarginaliaExclude -> readerSettings.includeMarginalia = false
+            ReaderSettingsOptions.MarginaliaInclude -> readerSettings.includeMarginalia = true
 
             ReaderSettingsOptions.SelectionDirect -> {
                 readerSettings.nativeTextSelection = false
@@ -376,6 +401,7 @@ internal data class ReaderSettingsViewState(
     val pageWidth: Float = 0f,
     val selectedFitToContentOption: ReaderSettingsOptions = ReaderSettingsOptions.FitToContentOff,
     val selectedFitReferenceOption: ReaderSettingsOptions = ReaderSettingsOptions.FitReferencePage,
+    val selectedMarginaliaOption: ReaderSettingsOptions = ReaderSettingsOptions.MarginaliaExclude,
     val selectedContentMarginOption: ReaderSettingsOptions = ReaderSettingsOptions.ContentMarginSmall,
     val selectedSelectionOption: ReaderSettingsOptions = ReaderSettingsOptions.SelectionDirect,
     val isDark: Boolean = false,
@@ -409,6 +435,8 @@ internal data class ReaderSettingsViewState(
         ReaderSettingsOptions.FitToHeight,
     )
     val fitReferenceOptions = listOf(ReaderSettingsOptions.FitReferencePage, ReaderSettingsOptions.FitReferenceText)
+    val widthReferenceOptions = fitReferenceOptions + ReaderSettingsOptions.FitReferenceCroppedText
+    val marginaliaOptions = listOf(ReaderSettingsOptions.MarginaliaExclude, ReaderSettingsOptions.MarginaliaInclude)
     val selectionOptions = listOf(
         ReaderSettingsOptions.SelectionDirect,
         ReaderSettingsOptions.SelectionAndroid,

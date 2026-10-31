@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.zotero.android.screens.reader.ReaderPageFittingSettingsTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-31T00:33:18.746Z" hostname="1b48a59a9bb4" time="0.016">
+<testsuite name="org.zotero.android.screens.reader.ReaderPageFittingSettingsTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-31T10:47:53.416Z" hostname="0bec8dbf2d00" time="0.013">
   <properties/>
-  <testcase name="new fitting settings survive persistence including revision and text reference" classname="org.zotero.android.screens.reader.ReaderPageFittingSettingsTest" time="0.015"/>
-  <testcase name="older settings keep their fitting mode and default to paper reference" classname="org.zotero.android.screens.reader.ReaderPageFittingSettingsTest" time="0.0"/>
+  <testcase name="new fitting settings survive persistence including revision and text reference" classname="org.zotero.android.screens.reader.ReaderPageFittingSettingsTest" time="0.012"/>
+  <testcase name="older settings keep their fitting mode and default to paper reference" classname="org.zotero.android.screens.reader.ReaderPageFittingSettingsTest" time="0.001"/>
   <testcase name="every fitting choice clears the other modes" classname="org.zotero.android.screens.reader.ReaderPageFittingSettingsTest" time="0.0"/>
+  <testcase name="cropped width is distinct and never changes height or existing text width" classname="org.zotero.android.screens.reader.ReaderPageFittingSettingsTest" time="0.0"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

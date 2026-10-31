@@ -48,7 +48,15 @@ data class ReaderSettings(
     var fitTextReference: Boolean = false,
     // Missing in older saved settings: false keeps the new direct gesture enabled.
     var nativeTextSelection: Boolean = false,
+    var fitWidthCrop: Boolean = false,
+    var includeMarginalia: Boolean = false,
 ) {
+    fun fitReference(): String = when {
+        !fitTextReference -> "page"
+        fitToWidth && fitWidthCrop -> "cropped-content"
+        else -> "content"
+    }
+
     fun pageFitMode(): String = when {
         fitToContent -> "content"
         fitToWidth -> "width"

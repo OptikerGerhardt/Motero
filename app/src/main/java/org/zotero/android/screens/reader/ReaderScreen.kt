@@ -75,6 +75,9 @@ internal fun ReaderScreen(
     viewModel.setOsTheme(isDark = isSystemInDarkTheme())
     val viewState by viewModel.viewStates.observeAsState(ReaderViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
+    LaunchedEffect(viewState.isTopBarVisible, viewState.isReaderLoading) {
+        viewModel.syncReaderChromeVisibility()
+    }
 
     val thumbnailsViewModel: ReaderThumbnailsViewModel = hiltViewModel()
     thumbnailsViewModel.initOnce()
@@ -198,7 +201,7 @@ internal fun ReaderScreen(
                             )
                         } else {
                             ReaderTopBar(
-                                floating = viewState.isPdfOrHtml(),
+                                floating = viewState.isPdfOrHtml() && !viewState.showSideBar,
                                 onBack = onBack,
                                 onShowHideSideBar = viewModel::toggleSideBar,
                                 toPdfSettings = viewModel::navigateToReaderSettings,
