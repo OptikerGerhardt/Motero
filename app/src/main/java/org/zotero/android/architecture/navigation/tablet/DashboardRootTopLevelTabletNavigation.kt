@@ -20,8 +20,6 @@ import org.zotero.android.architecture.navigation.dialogFixedMaxHeight
 import org.zotero.android.architecture.navigation.toAddOrEditNote
 import org.zotero.android.architecture.navigation.toZoteroWebViewScreen
 import org.zotero.android.architecture.navigation.zoterWebViewScreen
-import org.zotero.android.pdf.pdfReaderScreenAndNavigationForTablet
-import org.zotero.android.pdf.toPdfScreen
 import org.zotero.android.screens.dashboard.DashboardViewEffect
 import org.zotero.android.screens.reader.readerNavScreensForTablet
 import org.zotero.android.screens.reader.toReaderScreen
@@ -36,10 +34,8 @@ internal fun DashboardRootTopLevelTabletNavigation(
     onPickFile: (callPoint: EventBusConstants.FileWasSelected.CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (url: String) -> Unit,
-    onExportPdf: (file: File) -> Unit,
     onExportHtml: (file: File) -> Unit,
     onExitApp:() -> Unit,
-    wasPspdfkitInitialized: Boolean,
     viewEffect: Consumable<DashboardViewEffect>?,
 ) {
     val context = LocalContext.current
@@ -59,14 +55,6 @@ internal fun DashboardRootTopLevelTabletNavigation(
             onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,
             viewEffect = viewEffect,
-            onShowPdf = { pdfScreenParams, pdfScreenEncodedFilePathParam ->
-                navigation.toPdfScreen(
-                    context = context,
-                    wasPspdfkitInitialized = wasPspdfkitInitialized,
-                    pdfScreenParams = pdfScreenParams,
-                    pdfScreenEncodedFilePathParam = pdfScreenEncodedFilePathParam,
-                )
-            },
             onShowReader = { readerArgs, readerEncodedFilePathParam ->
                 navigation.toReaderScreen(
                     readerParams = readerArgs,
@@ -78,12 +66,6 @@ internal fun DashboardRootTopLevelTabletNavigation(
             onExitApp = onExitApp,
             onExportHtml = onExportHtml,
             navigateToRetrieveMetadata = navigation::toRetrieveMetadata
-        )
-        pdfReaderScreenAndNavigationForTablet(
-            onExportPdf = onExportPdf,
-            navigation = navigation,
-            navController = navController,
-            navigateToTagPickerDialog = navigation::toTagPickerDialog
         )
         tagPickerScreen(onBack = navigation::onBack)
         tagPickerDialog(onBack = navigation::onBack)
@@ -108,7 +90,6 @@ private fun NavGraphBuilder.dashboardScreen(
     collectionDefaultValue: String,
     onPickFile: (callPoint: EventBusConstants.FileWasSelected.CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
-    onShowPdf: (String, String) -> Unit,
     onShowReader: (String, String) -> Unit,
     onExportHtml: (file: File) -> Unit,
     toAddOrEditNote: (String) -> Unit,
@@ -126,7 +107,6 @@ private fun NavGraphBuilder.dashboardScreen(
             collectionDefaultValue = collectionDefaultValue,
             onPickFile = onPickFile,
             onOpenFile = onOpenFile,
-            onShowPdf = onShowPdf,
             onShowHtmlOrEpub = onShowReader,
             onExitApp = onExitApp,
             onExportHtml = onExportHtml,

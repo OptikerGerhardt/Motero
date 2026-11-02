@@ -17,7 +17,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.zotero.android.pdf.reader.sidebar.SidebarDivider
+import org.zotero.android.screens.reader.SidebarDivider
 import org.zotero.android.screens.reader.scrubber.ReaderScrubberViewModel
 import org.zotero.android.screens.reader.sidebar.ReaderSidebar
 

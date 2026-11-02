@@ -30,7 +30,6 @@ internal fun ItemDetailsScreen(
     navigateToZoterWebViewScreen: (String) -> Unit,
     onBack: () -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
-    onShowPdf: (String, String) -> Unit,
     onShowHtmlOrEpub: (String, String) -> Unit,
     onOpenWebpage: (url: String) -> Unit,
     onPickFile: () -> Unit,
@@ -76,9 +75,6 @@ internal fun ItemDetailsScreen(
                     onOpenFile(consumedEffect.file, consumedEffect.mimeType)
                 }
 
-                is ItemDetailsViewEffect.NavigateToPdfScreen -> {
-                    onShowPdf(consumedEffect.params, consumedEffect.encodedFilePath)
-                }
 
                 is ItemDetailsViewEffect.NavigateToReaderScreen -> {
                     onShowHtmlOrEpub(consumedEffect.params, consumedEffect.readerEncodedFilePathParam)

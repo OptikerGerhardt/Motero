@@ -35,7 +35,6 @@ import java.io.File
 internal fun TabletRightPaneNavigation(
     onPickFile: (callPoint: CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
-    onShowPdf: (String, String) -> Unit,
     onShowHtmlOrEpub: (String, String) -> Unit,
     onExportHtml: (file: File) -> Unit,
     toAddOrEditNote: (String) -> Unit,
@@ -69,7 +68,6 @@ internal fun TabletRightPaneNavigation(
             navigateToRetrieveMetadata = navigateToRetrieveMetadata,
             navigateToSingleCitation = navigation::toSingleCitationDialog,
             navigateToCitationBibliographyExport = navigation::toCitBibExportNavigation,
-            onShowPdf = onShowPdf,
             onShowHtmlOrEpub = onShowHtmlOrEpub,
             isTablet = true,
         )
@@ -85,7 +83,6 @@ internal fun TabletRightPaneNavigation(
             onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,
             onPickFile = { onPickFile(CallPoint.ItemDetails) },
-            onShowPdf = onShowPdf,
             onShowHtmlOrEpub = onShowHtmlOrEpub,
         )
         videoPlayerScreen()

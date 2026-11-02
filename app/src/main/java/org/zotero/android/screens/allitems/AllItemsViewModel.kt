@@ -61,7 +61,6 @@ import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.GetUriDetailsUseCase
 import org.zotero.android.helpers.MediaSelectionResult
 import org.zotero.android.helpers.SelectMediaUseCase
-import org.zotero.android.pdf.data.PdfReaderArgs
 import org.zotero.android.screens.addbyidentifier.data.AddByIdentifierPickerArgs
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.screens.addnote.data.SaveNoteAction
@@ -323,18 +322,6 @@ internal class AllItemsViewModel @Inject constructor(
         triggerEffect(AllItemsViewEffect.ShowImageViewer)
     }
 
-    private fun showPdf(file: File, key: String, parentKey: String?, library: Library) {
-        val pdfReaderArgs = PdfReaderArgs(
-            key = key,
-            parentKey = parentKey,
-            library = library,
-            page = null,
-            preselectedAnnotationKey = null,
-        )
-        val params = navigationParamsMarshaller.encodeObjectToBase64(pdfReaderArgs, StandardCharsets.UTF_8)
-        val encodedFilePath = Uri.encode(file.absolutePath)
-        triggerEffect(AllItemsViewEffect.NavigateToPdfScreen(params, encodedFilePath))
-    }
 
     private fun openFile(file: File, mime: String) {
         triggerEffect(AllItemsViewEffect.OpenFile(file, mime))
@@ -1480,7 +1467,6 @@ internal sealed class AllItemsViewEffect : ViewEffect {
     data class ShowZoteroWebView(val url: String): AllItemsViewEffect()
     object ShowVideoPlayer : AllItemsViewEffect()
     object ShowImageViewer : AllItemsViewEffect()
-    data class NavigateToPdfScreen(val params: String, val encodedFilePath: String) : AllItemsViewEffect()
     data class NavigateToReaderScreen(val params: String, val readerEncodedFilePathParam: String) : AllItemsViewEffect()
     object ScreenRefresh : AllItemsViewEffect()
     object ShowScanBarcode : AllItemsViewEffect()

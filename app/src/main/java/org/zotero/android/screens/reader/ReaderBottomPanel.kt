@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.R
-import org.zotero.android.pdf.reader.sidebar.PdfReaderSidebarDivider
+import org.zotero.android.screens.reader.PdfReaderSidebarDivider
 
 @Composable
 internal fun BoxScope.ReaderBottomPanel(viewModel: ReaderViewModel, viewState: ReaderViewState) {

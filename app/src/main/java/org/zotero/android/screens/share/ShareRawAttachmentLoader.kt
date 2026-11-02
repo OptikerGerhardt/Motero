@@ -4,7 +4,7 @@ import android.app.Application
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import com.pspdfkit.utils.getSupportParcelable
+import androidx.core.os.BundleCompat
 import kotlinx.coroutines.withContext
 import org.zotero.android.architecture.Result
 import org.zotero.android.architecture.coroutines.Dispatchers
@@ -57,7 +57,7 @@ class ShareRawAttachmentLoader @Inject constructor(
                 return Result.Success(RawAttachment.remoteUrl(listOfUrls[0]))
             }
         }
-        val fileContentUri = bundleExtras.getSupportParcelable(Intent.EXTRA_STREAM, Uri::class.java)
+        val fileContentUri = BundleCompat.getParcelable(bundleExtras, Intent.EXTRA_STREAM, Uri::class.java)
         if (fileContentUri != null) {
             return Result.Success(generateRawAttachmentFileUrl(fileContentUri))
         }
@@ -88,7 +88,7 @@ class ShareRawAttachmentLoader @Inject constructor(
     private fun doesIntentContainShareData(intent: Intent): Boolean {
         val bundleExtras = intent.extras
         val urlPath = bundleExtras?.getString(Intent.EXTRA_TEXT)
-        val fileContentUri = bundleExtras?.getSupportParcelable(Intent.EXTRA_STREAM, Uri::class.java)
+        val fileContentUri = bundleExtras?.let { BundleCompat.getParcelable(it, Intent.EXTRA_STREAM, Uri::class.java) }
         val dataPath = intent.data
         return urlPath != null || fileContentUri != null || dataPath != null
     }

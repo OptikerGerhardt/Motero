@@ -29,12 +29,6 @@ allprojects {
         google()
         mavenCentral()
         maven { setUrl("https://jitpack.io") }
-        maven {
-            url = uri("https://customers.pspdfkit.com/maven")
-        }
-        maven {
-            url = uri("https://my.nutrient.io/maven")
-        }
     }
 
     tasks.withType<KotlinJvmCompile>().configureEach {

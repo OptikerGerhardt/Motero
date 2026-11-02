@@ -1,6 +1,5 @@
 package org.zotero.android.database.objects
 
-import com.pspdfkit.annotations.AnnotationType
 import org.zotero.android.sync.AnnotationColorGenerator
 import java.util.EnumSet
 
@@ -24,14 +23,6 @@ object AnnotationsConfig {
     )
     val userInterfaceStylesWithVarition: List<Boolean> = listOf(false, true)
     const val positionSizeLimit = 65000
-    val supported: EnumSet<AnnotationType> = EnumSet.of(
-        AnnotationType.NOTE,
-        AnnotationType.HIGHLIGHT,
-        AnnotationType.SQUARE,
-        AnnotationType.INK,
-        AnnotationType.UNDERLINE,
-        AnnotationType.FREETEXT,
-    )
     val supportedV2: EnumSet<org.zotero.android.database.objects.AnnotationType> = EnumSet.of(
         org.zotero.android.database.objects.AnnotationType.note,
         org.zotero.android.database.objects.AnnotationType.highlight,

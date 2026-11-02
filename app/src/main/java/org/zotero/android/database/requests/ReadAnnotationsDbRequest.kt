@@ -22,7 +22,7 @@ class ReadAnnotationsDbRequest(
     override fun process(database: Realm): RealmResults<RItem> {
         val supportedTypes =
             AnnotationType.entries
-                .filter { AnnotationsConfig.supported.contains(it.kind) }
+                .filter { AnnotationsConfig.supportedV2.contains(it) }
                 .map { it.name }
         return database.where<RItem>()
             .parent(this.attachmentKey, this.libraryId)

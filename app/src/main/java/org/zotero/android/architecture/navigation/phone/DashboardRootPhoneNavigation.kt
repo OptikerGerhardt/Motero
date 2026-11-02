@@ -31,8 +31,6 @@ import org.zotero.android.architecture.navigation.toVideoPlayerScreen
 import org.zotero.android.architecture.navigation.toZoteroWebViewScreen
 import org.zotero.android.architecture.navigation.videoPlayerScreen
 import org.zotero.android.architecture.navigation.zoterWebViewScreen
-import org.zotero.android.pdf.pdfReaderNavScreensForPhone
-import org.zotero.android.pdf.toPdfScreen
 import org.zotero.android.screens.addbyidentifier.ui.AddByIdentifierScreen
 import org.zotero.android.screens.citation.singlecitation.SingleCitationScreen
 import org.zotero.android.screens.citbibexport.citBibExportNavScreens
@@ -65,10 +63,8 @@ internal fun DashboardRootPhoneNavigation(
     onPickFile: (callPoint: EventBusConstants.FileWasSelected.CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (url: String) -> Unit,
-    onExportPdf: (file: File) -> Unit,
     onExportHtml: (file: File) -> Unit,
     onExitApp:() -> Unit,
-    wasPspdfkitInitialized: Boolean,
     viewEffect: Consumable<DashboardViewEffect>?
 ) {
 
@@ -143,14 +139,6 @@ internal fun DashboardRootPhoneNavigation(
             navigateToScanBarcode = navigation::toScanBarcode,
             navigateToSingleCitation = navigation::toSingleCitation,
             navigateToCitationBibliographyExport = navigation::toCitBibExport,
-            onShowPdf = { pdfScreenParams, pdfScreenEncodedFilePathParam ->
-                navigation.toPdfScreen(
-                    context = context,
-                    pdfScreenParams = pdfScreenParams,
-                    wasPspdfkitInitialized = wasPspdfkitInitialized,
-                    pdfScreenEncodedFilePathParam = pdfScreenEncodedFilePathParam,
-                )
-            },
             onShowHtmlOrEpub = { readerArgs, readerEncodedFilePathParam ->
                 navigation.toReaderScreen(
                     readerParams = readerArgs,
@@ -171,14 +159,6 @@ internal fun DashboardRootPhoneNavigation(
             onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,
             onPickFile = { onPickFile(EventBusConstants.FileWasSelected.CallPoint.ItemDetails) },
-            onShowPdf = { pdfScreenParams, pdfScreenEncodedFilePathParam ->
-                navigation.toPdfScreen(
-                    context = context,
-                    wasPspdfkitInitialized = wasPspdfkitInitialized,
-                    pdfScreenParams = pdfScreenParams,
-                    pdfScreenEncodedFilePathParam = pdfScreenEncodedFilePathParam,
-                )
-            },
             onShowHtmlOrEpub = { readerArgs, readerEncodedFilePathParam ->
                 navigation.toReaderScreen(
                     readerParams = readerArgs,
@@ -257,11 +237,6 @@ internal fun DashboardRootPhoneNavigation(
         videoPlayerScreen()
         imageViewerScreen(onBack = navigation::onBack)
 
-        pdfReaderNavScreensForPhone(
-            onExportPdf = onExportPdf,
-            navigation = navigation,
-            navigateToTagPicker = navigation::toTagPicker
-        )
         addNoteScreen(
             onBack = navigation::onBack,
             navigateToTagPicker = navigation::toTagPicker

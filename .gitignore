@@ -82,3 +82,7 @@ app/src/main/assets/reader/
 
 #document-worker generated files:
 app/src/main/assets/document-worker/
+
+# Kotlin/compiler and Python local caches
+.kotlin/
+__pycache__/

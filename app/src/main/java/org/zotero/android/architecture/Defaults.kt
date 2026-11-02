@@ -41,7 +41,6 @@ open class Defaults @Inject constructor(
     private val tagPickerShowAutomaticTags = "tagPickerShowAutomaticTags"
     private val tagPickerDisplayAllTags = "tagPickerDisplayAllTags"
     private val isDebugLogEnabled = "isDebugLogEnabled"
-    private val wasPspdfkitInitialized = "wasPspdfkitInitialized"
     private val pdfSettings = "pdfSettings"
     private val highlightColorHex = "highlightColorHex"
     private val noteColorHex = "noteColorHex"
@@ -315,14 +314,6 @@ open class Defaults @Inject constructor(
         return sharedPreferences.getBoolean(isDebugLogEnabled, false)
     }
 
-    fun setPspdfkitInitialized(newValue: Boolean) {
-        sharedPreferences.edit { putBoolean(wasPspdfkitInitialized, newValue) }
-    }
-
-    fun wasPspdfkitInitialized(): Boolean {
-        return sharedPreferences.getBoolean(wasPspdfkitInitialized, false)
-    }
-
     fun setLastTimestamp(newValue: Long) {
         sharedPreferences.edit { putLong(lastTimestamp, newValue) }
     }
@@ -402,7 +393,6 @@ open class Defaults @Inject constructor(
     fun getWebDavUrl(): String? {
         return sharedPreferences.getString(webDavUrl, null )
     }
-
 
     fun setWebDavScheme(scheme: WebDavScheme) {
         val json = dataMarshaller.marshal(scheme)
@@ -580,7 +570,6 @@ open class Defaults @Inject constructor(
     fun isKeepZoom(): Boolean {
         return sharedPreferences.getBoolean(keepZoom, false)
     }
-
 
     fun getLastReaderCommitHash(): String {
         return sharedPreferences.getString(lastReaderCommitHash, "") ?: ""

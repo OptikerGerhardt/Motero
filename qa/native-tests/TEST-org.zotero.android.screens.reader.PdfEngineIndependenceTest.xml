@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.zotero.android.screens.reader.PdfEngineIndependenceTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-11-02T19:35:01.900Z" hostname="f08c36d9893e" time="0.315">
+  <properties/>
+  <testcase name="existing sort indexes stay ASCII and sortable under Arabic locale" classname="org.zotero.android.screens.reader.PdfEngineIndependenceTest" time="0.001"/>
+  <testcase name="all six persisted annotation names remain available without vendor classes" classname="org.zotero.android.screens.reader.PdfEngineIndependenceTest" time="0.203"/>
+  <testcase name="color alpha and light dark compositing retain their original values" classname="org.zotero.android.screens.reader.PdfEngineIndependenceTest" time="0.001"/>
+  <testcase name="PDFjs annotations preserve identity content dates and raw geometry for every tool" classname="org.zotero.android.screens.reader.PdfEngineIndependenceTest" time="0.11"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

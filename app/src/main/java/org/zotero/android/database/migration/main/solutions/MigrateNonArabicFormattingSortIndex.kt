@@ -6,7 +6,7 @@ import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.requests.changed
 import org.zotero.android.database.requests.key
-import org.zotero.android.sync.AnnotationConverter
+import org.zotero.android.sync.AnnotationSortIndex
 import timber.log.Timber
 
 class MigrateNonArabicFormattingSortIndex(private val dynamicRealm: DynamicRealm) {
@@ -32,7 +32,7 @@ class MigrateNonArabicFormattingSortIndex(private val dynamicRealm: DynamicRealm
                 return false
             }
             val (wrongPageIndex: Int, wrongTextOffset: Int, wrongMinY: Int) = splitted.map { it.toInt() }
-            val fixedSortIndex = AnnotationConverter.Companion.sortIndex(
+            val fixedSortIndex = AnnotationSortIndex.format(
                 pageIndex = wrongPageIndex,
                 textOffset = wrongTextOffset,
                 minY = wrongMinY
@@ -69,7 +69,7 @@ class MigrateNonArabicFormattingSortIndex(private val dynamicRealm: DynamicRealm
                     continue
                 }
                 val (wrongPageIndex: Int, wrongTextOffset: Int, wrongMinY: Int) = splitted.map { it.toInt() }
-                val fixedSortIndex = AnnotationConverter.Companion.sortIndex(
+                val fixedSortIndex = AnnotationSortIndex.format(
                     pageIndex = wrongPageIndex,
                     textOffset = wrongTextOffset,
                     minY = wrongMinY

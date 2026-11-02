@@ -45,7 +45,6 @@ fun NavGraphBuilder.allItemsScreen(
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (url: String) -> Unit,
     onPickFile: () -> Unit,
-    onShowPdf: (String, String) -> Unit,
     onShowHtmlOrEpub: (String, String) -> Unit,
     isTablet: Boolean
 ) {
@@ -96,7 +95,6 @@ fun NavGraphBuilder.allItemsScreen(
             onPickFile = onPickFile,
             onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,
-            onShowPdf = onShowPdf,
             onShowHtmlOrEpub =  onShowHtmlOrEpub,
             navigateToCollectionsScreen = navigateToCollectionsScreen,
             navigateToAddOrEditNote = navigateToAddOrEditNote,
@@ -129,7 +127,6 @@ fun NavGraphBuilder.itemDetailsScreen(
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (url: String) -> Unit,
     onPickFile: () -> Unit,
-    onShowPdf: (String, String) -> Unit,
     onShowHtmlOrEpub: (String, String) -> Unit,
 ) {
 
@@ -151,7 +148,6 @@ fun NavGraphBuilder.itemDetailsScreen(
             onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,
             onPickFile = onPickFile,
-            onShowPdf = onShowPdf,
             onShowHtmlOrEpub = onShowHtmlOrEpub,
         )
     }

@@ -40,7 +40,6 @@ android {
 
         buildConfigField("String", "BASE_API_URL", "\"https://api.zotero.org\"")
         buildConfigField("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", "false")
-        buildConfigField("String", "PSPDFKIT_KEY", "\"\"")
         manifestPlaceholders["enableCrashReporting"] = false
 
         //Making build version components to be accessible from within the app.
@@ -108,12 +107,10 @@ android {
     productFlavors {
         dev {
             resValue("string", "app_name", """"Motero""")
-            buildConfigField("String", "PSPDFKIT_KEY", readPspdfkitKey())
             applicationIdSuffix = ".debug"
         }
         internal {
             resValue("string", "app_name", """"Zotero""")
-            buildConfigField("String", "PSPDFKIT_KEY", readPspdfkitKey())
         }
     }
 
@@ -151,12 +148,14 @@ dependencies {
 
     //Material design
     implementation(Libs.materialDesign)
+    implementation(Libs.Compose.material)
+
+    // Used directly by ReaderWebViewHandler, independent of the PDF engine.
+    implementation(Libs.webkit)
 
     //Crash
     implementation(Libs.Firebase.Crashlytics.crashlytics)
 
-    //PSPDFKIT
-    implementation(Libs.nutrient)
 
     //GSON
     implementation(Libs.gson)
@@ -186,16 +185,4 @@ kapt {
 
 hilt {
     enableAggregatingTask = false
-}
-
-fun readPspdfkitKey() : String {
-    val file = rootProject
-        .file("pspdfkit-key.txt")
-    if (!file.exists()) {
-        logger.warn("pspdfkit-key.txt file not found. Using PSPDFKit without a key")
-        return "\"\""
-    }
-    val keys: List<String> = file
-        .readLines()
-    return "\"${keys[0]}\""
 }

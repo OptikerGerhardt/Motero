@@ -1,12 +1,5 @@
 package org.zotero.android.architecture
 
-import org.zotero.android.pdf.annotation.data.PdfAnnotationArgs
-import org.zotero.android.pdf.annotationmore.data.PdfAnnotationMoreArgs
-import org.zotero.android.pdf.annotationmore.editpage.data.PdfAnnotationEditPageArgs
-import org.zotero.android.pdf.colorpicker.data.PdfReaderColorPickerArgs
-import org.zotero.android.pdf.pdffilter.data.PdfFilterArgs
-import org.zotero.android.pdf.reader.pdfsearch.data.PdfReaderSearchArgs
-import org.zotero.android.pdf.settings.data.PdfSettingsArgs
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.screens.allitems.data.AllItemsArgs
 import org.zotero.android.screens.citation.singlecitation.data.SingleCitationArgs
@@ -45,14 +38,7 @@ object ScreenArguments {
     lateinit var videoPlayerArgs: VideoPlayerArgs
     lateinit var imageViewerArgs: ImageViewerArgs
     lateinit var collectionPickerArgs: CollectionPickerArgs
-    lateinit var pdfFilterArgs: PdfFilterArgs
-    lateinit var pdfSettingsArgs: PdfSettingsArgs
-    lateinit var pdfAnnotationArgs: PdfAnnotationArgs
-    lateinit var pdfAnnotationMoreArgs: PdfAnnotationMoreArgs
-    lateinit var pdfAnnotationEditPageArgs: PdfAnnotationEditPageArgs
-    lateinit var pdfReaderColorPickerArgs: PdfReaderColorPickerArgs
     lateinit var shareCollectionPickerArgs: ShareCollectionPickerArgs
-    lateinit var pdfReaderSearchArgs: PdfReaderSearchArgs
     lateinit var singleCitationArgs: SingleCitationArgs
     lateinit var citBibExportArgs: CitBibExportArgs
     lateinit var settingsCslLocalePickerArgs: SettingsCslLocalePickerArgs

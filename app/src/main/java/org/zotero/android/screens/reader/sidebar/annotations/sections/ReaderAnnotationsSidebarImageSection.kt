@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import org.zotero.android.androidx.content.pxToDp
-import org.zotero.android.pdf.reader.sidebar.sectionVerticalPadding
+import org.zotero.android.screens.reader.sectionVerticalPadding
 
 @Composable
 internal fun ReaderAnnotationsSidebarImageSection(

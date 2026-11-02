@@ -1,10 +1,14 @@
-# Motero auf BOOX: Build 299
+# Motero auf BOOX: Build 300
 
 ## Als Update installieren
 
-Die APK über die vorhandene Motero-Testversion installieren, vorher nicht deinstallieren. Paketkennung `org.zotero.android.debug`, Version `1.0.0-299`, Versionscode 299. Der enthaltene Debug-Schlüssel bleibt derselbe wie bei Build 298. Die technische Update-Prüfung vergleicht Paketkennung, Zertifikat, Versionsanstieg, v2-Signatur und ZIP-Ausrichtung einschließlich 16-KiB-Nativbibliotheken. Installation und Login an einem physischen BOOX sind hier nicht geprüft.
+Die APK über die vorhandene Motero-Testversion installieren, vorher nicht deinstallieren. Paketkennung `org.zotero.android.debug`, Version `1.0.0-300`, Versionscode 300. Der enthaltene Debug-Schlüssel bleibt derselbe wie bei Build 299. Die technische Update-Prüfung vergleicht Paketkennung, Zertifikat, Versionsanstieg, v2-Signatur und ZIP-Ausrichtung einschließlich 16-KiB-Nativbibliotheken. Installation und Login an einem physischen BOOX sind hier nicht geprüft.
 
-## Neu
+## SDK-Entfernung
+
+PSPDFKit/Nutrient ist vollständig entfernt. Der aktive PDF.js-Reader und sein gesamtes Laufzeitpaket bleiben bytegleich zu Build 299. Gemeinsame Annotations-/Farb-/Sortierhilfen wurden SDK-unabhängig gemacht; AndroidX WebKit und Compose Material sind direkt in ihren bisherigen Versionen eingebunden. Datenbank, Syncformat, Dateipfade und Einstellungen werden beibehalten. Details: SDK_REMOVAL.md.
+
+## Beibehaltener Reader aus Build 299
 
 Bei geöffneter Sidebar hat die obere Leiste wieder einen durchgehenden, undurchsichtigen Hintergrund. Die schwebenden Gruppen werden bei geschlossener Sidebar verwendet. Die PDF-Fläche behält ihre Geometrie beim Ein-/Ausblenden der Leisten.
 
@@ -16,7 +20,7 @@ Eine eigene Auswahl `Line and edition references → Exclude / Include` gilt fü
 
 In Höffes Klassiker-Auslegen-Datei blieb nach dem Entfernen der Kopftexte ein grafischer Trennstrich zwischen Seitenzahl und Autor übrig. Seine Kopfzeilenhöhe wird nur dann mit entfernt, wenn dort kein beizubehaltender Text überlappt. Bei Kant werden Randangaben vor dem Zusammenführen von Textspannen separat gehalten. Enthält ein einzelnes OCR-Objekt die letzte Silbe einer Textzeile und eine kleinere Zeilenzahl, trennen Zeichenposition und Grundlinie beide Bereiche. Hochgestellte Fußnotenmarker bleiben erhalten. Eckige Editionsreferenzen wie `[372]` werden erkannt. Gerade/ungerade Profile bleiben getrennt.
 
-PSPDFKit/Nutrient bleibt enthalten. Seine Entfernung ist ausdrücklich als nächster eigener Schritt im Featureplan vorgemerkt; der aktive Reader verwendet weiterhin PDF.js.
+Der aktive Reader verwendet ausschließlich PDF.js; ein alter SDK-Reader und dessen Initialisierung sind nicht mehr vorhanden.
 
 ## Bestehende Funktionen
 
@@ -37,20 +41,20 @@ Bei Bild-PDFs ohne Textschicht wird die Tintenfläche verwendet. Neutralgraues P
 
 ## Prüfung und Grenzen
 
-250 Reader-Tests, native JVM-Tests und Browserprüfungen für Funktionen, Gesten, Fits, Stabilität und die neuen Reader-Bedienelemente. Die gelieferten Höffe-/Kant-PDFs werden konkret auf jeweils vier Seiten geprüft: Höffe 26/27 und 191/192; Kant 369/370 und 380/381. Höffes obere Kante liegt danach bei rund 9,76 % statt am Kopfstrich bei rund 4,83 %. Einschließen der Kant-Randreferenzen erweitert den Rahmen; Fußnoten bleiben enthalten. Exclude-Masken werden auch bei Large geprüft.
+250 Reader-Tests, 78 native JVM-Tests und Browserprüfungen für Funktionen, Gesten, Fits, Stabilität und die neuen Reader-Bedienelemente. Die gelieferten Höffe-/Kant-PDFs werden konkret auf jeweils vier Seiten geprüft: Höffe 26/27 und 191/192; Kant 369/370 und 380/381. Höffes obere Kante liegt danach bei rund 9,76 % statt am Kopfstrich bei rund 4,83 %. Einschließen der Kant-Randreferenzen erweitert den Rahmen; Fußnoten bleiben enthalten. Exclude-Masken werden auch bei Large geprüft.
 
 Die neue Original-Mul-Prüfung ist hier nicht wiederholt, weil diese Datei in diesem Arbeitsstand nicht vorliegt. Frühere Mul-Ergebnisse sind in der Versionshistorie erhalten; die entsprechenden synthetischen Regressionsfälle laufen weiter. Heuristische Erkennung garantiert nicht die richtige Einordnung jeder unbekannten PDF.
 
-Kein physischer BOOX, echter Kontosync, Android-Darstellung am Gerät oder E-Ink-Reaktion getestet. Die aktuellen Zahlen, Hashwerte und Signatur stehen in BUILD_STATUS.md und BUILD_VERIFICATION.json; Protokolle in qa/. Die SDK-Entfernung, manuelles Cropping (All/Odd/Even), Randtippen in allen Modi und Tag-Autocomplete bleiben offen.
+Kein physischer BOOX, echter Kontosync, Android-Darstellung am Gerät oder E-Ink-Reaktion getestet. Die aktuellen Zahlen, Hashwerte und Signatur stehen in BUILD_STATUS.md und BUILD_VERIFICATION.json; Protokolle in qa/. Manuelles Cropping (All/Odd/Even), Randtippen in allen Modi und Tag-Autocomplete bleiben offen.
 
 ## Neubau
 
 Quellarchiv enthält aktuelle Quellen, Android-/Reader-Git-Bundles, Laufzeitpakete und den bisherigen Debug-Schlüssel. SDK/JDK, node_modules, Build-Caches, APK, Original-PDFs, Screenshots und private Release-Schlüssel sind ausgeschlossen.
 
-JDK 17, Android Platform 37.0 Revision 2, Build Tools 36.0.0, Gradle 9.6.1, Node/npm verwenden. Reader-Submodule auf den festgelegten Ständen initialisieren. Für unverändertes PDF.js den Ordner `pdf` aus `app/src/main/assets/reader/reader.zip` nach `reader/build/mobile/pdf` und `reader/build/android/pdf` übernehmen. Im Reader `npm ci`, `npx webpack --config-name android`, `npm test` ausführen. PDF.js nicht unnötig neu bauen.
+JDK 17, Android Platform 37.0 Revision 2, Build Tools 36.0.0, Gradle 9.6.1, Node/npm verwenden. Die im Quellarchiv enthaltenen Laufzeitpakete bleiben für diesen Build unverändert; kein SDK-Lizenzschlüssel erforderlich. `./gradlew :app:testDevDebugUnitTest :app:assembleDevDebug --no-build-cache` baut die Android-App. In Umgebungen ohne Java-Attach kann `--init-script scripts/test_jvm_agent.gradle` den ByteBuddy-Agent ausschließlich in der Test-JVM vorladen. Das ändert keine APK-Startoptionen.
 
-Die fünf Skripte `scripts/test-boox-{browser,features,fitting,stability,reader-controls}.cjs` im Reader mit Playwright ausführen. `BOOX_TEST_BROWSER` kann einen Chromium-Pfad angeben. `BOOX_HOEFFE_PDF` und `BOOX_KANT_PDF` verweisen auf die beiden konkreten Testdateien. Optional kann `BOOX_PROBLEM_PDF` die frühere Mul-PDF ergänzen.
+Für Reader-Tests die Submodule auf den festgelegten Ständen initialisieren, `reader/build/android` aus `app/src/main/assets/reader/reader.zip` entpacken und im Reader `npm ci`, `npm test` ausführen. Die fünf Skripte `scripts/test-boox-{browser,features,fitting,stability,reader-controls}.cjs` verwenden Playwright. `BOOX_TEST_BROWSER` kann einen Chromium-Pfad angeben, `BOOX_HOEFFE_PDF` und `BOOX_KANT_PDF` die beiden konkreten Testdateien. Optional kann `BOOX_PROBLEM_PDF` die frühere Mul-PDF ergänzen.
 
-Im Android-Projekt `python3 scripts/package_reader_assets.py`, danach `./gradlew :app:testDevDebugUnitTest :app:assembleDevDebug --no-build-cache`. In Umgebungen ohne Java-Attach kann `--init-script scripts/test_jvm_agent.gradle` den ByteBuddy-Agent ausschließlich in der Test-JVM vorladen. Das ändert keine APK-Startoptionen.
+Für spätere Reader-Änderungen den Ordner `pdf` aus dem bisherigen Reader-ZIP nach `reader/build/mobile/pdf` und `reader/build/android/pdf` übernehmen, dann `npx webpack --config-name android` und `python3 scripts/package_reader_assets.py` ausführen. PDF.js nur bei ausdrücklicher Änderung neu bauen. `--preserve-reader` ist ausschließlich für diesen Build ohne Reader-Änderungen vorgesehen und kann bei einer späteren Reader-Erweiterung entfallen; die SDK-Freiheit bleibt unabhängig davon prüfbar.
 
-Updateprüfung: `python3 scripts/verify_boox_update.py --base <298.apk> --apk <299.apk> --build-tools <SDK/build-tools/36.0.0> --qa-directory qa --label Motero --fitting-update --reader-polish --motero-refinement --reader-controls`. Elf eingebettete Reader-Quellen und CSS müssen zum getesteten Build passen. PDF.js und alle anderen Laufzeitpakete bleiben bytegleich zur Basis; das Motero-M bleibt ebenfalls erhalten.
+Updateprüfung: `python3 scripts/verify_boox_update.py --base <299.apk> --apk <300.apk> --build-tools <SDK/build-tools/36.0.0> --qa-directory qa --label Motero --preserve-fitting --preserve-reader --fitting-update --reader-polish --motero-refinement --reader-controls --without-pspdfkit`. Elf eingebettete Reader-Quellen und CSS müssen zum getesteten Stand passen. Der vollständige Reader und die übrigen 57 Laufzeitdateien bleiben bytegleich zur Basis. Das Motero-M behält seine Vektorgeometrie und die fünf bytegleichen Rasterdichten. 31 SDK-Laufzeitdateien, die SDK-Ressourcen und -Klassen sind entfernt. `scripts/audit_pdf_engine_removal.py --base-source <entpackte-299-Quellen> --output qa/sdk-removal-audit.json` ergänzt den Quellenvergleich.

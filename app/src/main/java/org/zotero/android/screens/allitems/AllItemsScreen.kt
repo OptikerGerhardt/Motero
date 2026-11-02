@@ -45,7 +45,6 @@ internal fun AllItemsScreen(
     navigateToScanBarcode: () -> Unit,
     navigateToSingleCitation: () -> Unit,
     navigateToCitationBibliographyExport:() -> Unit,
-    onShowPdf: (String, String) -> Unit,
     onShowHtmlOrEpub: (String, String) -> Unit,
 ) {
     AppThemeM3 {
@@ -112,9 +111,6 @@ internal fun AllItemsScreen(
                 )
 
                 is AllItemsViewEffect.OpenWebpage -> onOpenWebpage(consumedEffect.url)
-                is AllItemsViewEffect.NavigateToPdfScreen -> {
-                    onShowPdf(consumedEffect.params, consumedEffect.encodedFilePath)
-                }
                 is AllItemsViewEffect.NavigateToReaderScreen -> {
                     onShowHtmlOrEpub(consumedEffect.params, consumedEffect.readerEncodedFilePathParam)
                 }

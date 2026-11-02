@@ -26,7 +26,6 @@ internal fun DashboardRootTabletNavigationScreen(
     onExportHtml: (file: File) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (url: String) -> Unit,
-    onShowPdf: (String, String) -> Unit,
     onShowHtmlOrEpub: (String, String) -> Unit,
     toAddOrEditNote: (String) -> Unit,
     toZoteroWebViewScreen: (String) -> Unit,
@@ -66,7 +65,6 @@ internal fun DashboardRootTabletNavigationScreen(
             TabletRightPaneNavigation(
                 onPickFile = onPickFile,
                 onOpenFile = onOpenFile,
-                onShowPdf = onShowPdf,
                 onShowHtmlOrEpub = onShowHtmlOrEpub,
                 onExportHtml = onExportHtml,
                 onOpenWebpage = onOpenWebpage,

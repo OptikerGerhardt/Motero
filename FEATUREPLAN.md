@@ -1,6 +1,6 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 31. Oktober 2026. Umsetzungsstand Build 299; die verlinkte Grundrecherche stammt vom 28. Oktober.
+Stand: 2. November 2026. Umsetzungsstand Build 300; die verlinkte Grundrecherche stammt vom 28. Oktober.
 
 ## Festgehaltene Entscheidungen
 
@@ -11,6 +11,14 @@ Am 29. Oktober wurden F01, F02, F05, F06, F16, F17, F18, F20 und F21 für die n�
 Die danach beauftragten Fit-Modi und F07 sind in Build 296 umgesetzt. Die weiteren Nachbesserungen sind im Abschnitt Build 297 erfasst; die übrigen Punkte bleiben im Backlog. Ein eigener Outline-Editor auf Android wird weiterhin nicht benötigt; die Outline soll am Desktop in die PDF geschrieben werden. F19 Tag-Autocomplete ist auch nicht Teil von Build 296.
 
 Build 292 war die zuvor ausgelieferte Basis. Der Nutzer hatte erfolgreiche Installation als Update, gutes direktes Markieren und funktionierendes SmartScroll bestätigt. Build 293 verwendet denselben Signierschlüssel, dieselbe Datenhaltung und die unveränderten weiteren Laufzeitpakete.
+
+## SDK-Entfernung in Build 300
+
+**F24 umgesetzt:** PSPDFKit/Nutrient ist aus Build-Konfiguration, Startinitialisierung, Manifest, Herstellerklassen, altem Reader und Laufzeitdateien entfernt. Der aktive Zotero-/PDF.js-Reader samt vollständigem Reader-Paket bleibt bytegenau auf dem Stand von Build 299. Die aktuellen Fit-Modi einschließlich Randreferenzen, Wrapped-Auswahl, SmartScroll, direktes Markieren, Palette, Quick Tags, Bookmark-Notizen, Vollbild und schwebende Leisten behalten ihre Implementierung.
+
+Gemeinsame Typen und Helfer sind SDK-unabhängig: dieselben sechs Zotero-Annotationsarten, direkte `ReaderAnnotation`, ursprüngliche Farb-/Alpha-Logik, identisches Sortierindexformat und AndroidX-Parcelable-Zugriff. AndroidX WebKit und Compose Material werden jetzt direkt in genau den Versionen aus Build 299 eingebunden. Paketkennung, Signierschlüssel, Speicherpfade, Realm-/Syncformat und Einstellungen bleiben erhalten; keine Neuinstallation oder Datenrücksetzung vorgesehen.
+
+F19 Autocomplete, F22 manueller All/Odd/Even-Zuschnitt, F23 Randtippen und die optionalen Stifterweiterungen bleiben offen und technisch anschlussfähig. Die nativen Reader-/TagPicker-Pfade, Pointer-Brücke, Rahmen-/Paritätslogik und PDF-/Document-Worker wurden dafür erhalten. Einzelheiten und Prüfung: `SDK_REMOVAL.md`, `BUILD_STATUS.md`, `BUILD_VERIFICATION.json`, `qa/`. Kein physischer BOOX und kein echter Kontosync geprüft. Keine Veröffentlichung auf GitHub beauftragt.
 
 ## Nachbesserungen in Build 299
 
@@ -26,7 +34,7 @@ Build 292 war die zuvor ausgelieferte Basis. Der Nutzer hatte erfolgreiche Insta
 
 **Prüfung:** 250 Reader-Einheitstests und Browserprüfungen für vorhandene Funktionen, Gesten, Stabilität, alle Fit-Modi und die neuen Bedienelemente. Die bereitgestellte Höffe-Datei wurde auf PDF-Seiten 26/27 und 191/192 geprüft, die Kant-Datei auf 369/370 und 380/381. Die Höffe-Oberkante liegt danach bei rund 9,76 % statt am Kopfstrich bei rund 4,83 %. Kant zeigt beim Einschließen der Randreferenzen den entsprechend breiteren Rahmen; die unterste Inhaltszeile/Fußnoten bleiben erhalten. Original-Mul liegt in diesem Arbeitsstand nicht erneut vor; dafür wird kein neuer konkreter Test behauptet. Android-Testergebnis und technische Update-Prüfung stehen nach Abschluss in BUILD_STATUS.md und BUILD_VERIFICATION.json. Physischer BOOX und tatsächlicher Kontosync sind nicht geprüft.
 
-**Nächster eigener Schritt, noch nicht umgesetzt:** PSPDFKit/Nutrient vollständig aus der Android-App entfernen. Der aktuelle Reader verwendet PDF.js; alter Reader, Startinitialisierung und gemeinsame SDK-Typen/Hilfsfunktionen bleiben in Build 299 vorhanden. Erst die aktuelle Version am Gerät bewerten, dann diese Abhängigkeiten gezielt ersetzen und alle bisherigen Funktionen erneut prüfen. Keine Veröffentlichung auf GitHub oder öffentliche APK-Verteilung in diesem Auftrag.
+**Damals nächster eigener Schritt, inzwischen in Build 300 umgesetzt:** PSPDFKit/Nutrient vollständig aus der Android-App entfernen. Der aktuelle Reader verwendet PDF.js; alter Reader, Startinitialisierung und gemeinsame SDK-Typen/Hilfsfunktionen bleiben in Build 299 vorhanden. Erst die aktuelle Version am Gerät bewerten, dann diese Abhängigkeiten gezielt ersetzen und alle bisherigen Funktionen erneut prüfen. Keine Veröffentlichung auf GitHub oder öffentliche APK-Verteilung in diesem Auftrag.
 
 ## Nachbesserungen in Build 298
 
@@ -134,7 +142,7 @@ Aufwand: S = überschaubare Codeänderung, M = mehrere Eingabe-/Layoutfälle und
 | F21 | **Highlight-Text oben im Markierungsfenster anzeigen:** Den markierten Originaltext als eingerücktes Blockzitat zwischen Formular-Trennlinien ohne Überschrift und Kasten anzeigen, ungefähr ein Fünftel der Bildschirmhöhe; längere Textstellen dort lesbar durchscrollen. Kommentar bleibt ein eigener Bereich. | [ReaderAnnotation](https://github.com/zotero/zotero-android/blob/master/app/src/main/java/org/zotero/android/screens/reader/data/ReaderAnnotation.kt) besitzt bereits `text`, getrennt von `comment`. [ReaderAnnotationScreen](https://github.com/zotero/zotero-android/blob/master/app/src/main/java/org/zotero/android/screens/reader/annotation/ReaderAnnotationScreen.kt) übergibt die Annotation, [ReaderAnnotationRows](https://github.com/zotero/zotero-android/blob/master/app/src/main/java/org/zotero/android/screens/reader/annotation/ReaderAnnotationRows.kt) zeigt bei Highlights bisher Kommentar, Farben und Tags. Kein passgenauer fertiger PR bei gezielter Suche gefunden. Anzeige vorhandener Daten, keine neue OCR nötig. | **C, natives Android-Annotationsfenster**; dieselben Layoutstellen wie F20 | S; zusammen mit F20 prüfen | **Build 294, Nachbesserung** |
 | F22 | **Manueller Zuschnitt:** Rechteck an Beispielseite wählen; All / Odd / Even, bei Bedarf zwei Beispielseiten. Pro PDF speichern, später in die gemeinsame Fit-Geometrie einspeisen. | Kein neuer PR recherchiert; aktueller Entwurf aus dem Nutzerauftrag. Eigenes Auswahlfenster erforderlich. | **C + Reader** | Nächster Ausbau nach automatischem Fit | Offen |
 | F23 | **Randtippen zum Blättern in allen Scrollmodi:** Links zurück, rechts vor; vorhandene Highlights/Links und obere Bookmark-Fläche berücksichtigen. | Vorhandenen Android-Randtipp-Pfad untersuchen und auf alle Modi erweitern; keine neue externe Recherche behauptet. | **Reader**, ggf. C für Einstellung | Nächster Schritt; aktuell zurückgestellt | Offen |
-| F24 | **PSPDFKit/Nutrient entfernen:** Alten Reader und Startinitialisierung abbauen, gemeinsame SDK-Typen und Hilfsfunktionen ersetzen; PDF.js-Reader beibehalten. | Prüfung des aktuellen Motero-Quellstands am 31. Oktober; keine neue PR-/Plugin-Recherche. | **C, native Android-Abhängigkeiten** | Als nächster eigener Schritt nach Build 299; jetzt ausdrücklich zurückgestellt | Offen / nächste Priorität |
+| F24 | **PSPDFKit/Nutrient entfernen:** Alten Reader und Startinitialisierung abbauen, gemeinsame SDK-Typen und Hilfsfunktionen ersetzen; PDF.js-Reader beibehalten. | Prüfung des aktuellen Motero-Quellstands am 31. Oktober; keine neue PR-/Plugin-Recherche. | **C, native Android-Abhängigkeiten** | Separater nativer Build 300; PDF.js und Datenformate unverändert | Umgesetzt / Build 300 |
 
 „Kein passgenauer PR gefunden“ bezieht sich auf die durchsuchten öffentlichen Zotero-Android- und Reader-PRs samt Web-/Forensuche. Das ist keine Aussage, dass weltweit kein anderer Ansatz existiert. Desktop-Plugins sind Referenzen bzw. Desktop-Lösungen und nicht direkt in Android installierbar.
 

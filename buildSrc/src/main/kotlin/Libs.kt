@@ -2,10 +2,11 @@ object Libs {
 
     const val androidJUnitRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-    const val nutrient = "com.pspdfkit:pspdfkit:2024.4.0"
     const val googleServices = "com.google.gms:google-services:4.5.0"
     const val realmGradlePlugin = "io.realm:realm-gradle-plugin:10.19.0"
     const val materialDesign = "com.google.android.material:material:1.14.0"
+    // Previously supplied transitively by the removed PDF SDK; retain baseline versions.
+    const val webkit = "androidx.webkit:webkit:1.11.0"
     const val gson = "com.google.code.gson:gson:2.14.0"
     const val timber = "com.jakewharton.timber:timber:5.0.1"
     const val jodaTime = "joda-time:joda-time:2.14.3"
@@ -27,6 +28,7 @@ object Libs {
         const val constraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.1.1"
         const val navigation = "androidx.navigation:navigation-compose:2.9.8"
 
+        const val material = "androidx.compose.material:material:1.6.8"
         const val material3 = "androidx.compose.material3:material3:1.5.0-alpha02"
         const val material3WindowSize =
             "androidx.compose.material3:material3-window-size-class:1.5.0-alpha24"

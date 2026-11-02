@@ -28,7 +28,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import org.zotero.android.pdf.settings.data.MultiSelectorOption
+import org.zotero.android.screens.reader.settings.data.MultiSelectorOption
 import org.zotero.android.screens.reader.settings.data.ReaderSettingsOptions
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.foundation.safeStringResource

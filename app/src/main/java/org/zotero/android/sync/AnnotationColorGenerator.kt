@@ -3,10 +3,11 @@ package org.zotero.android.sync
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.graphics.toColorInt
-import com.pspdfkit.annotations.BlendMode
 import org.zotero.android.database.objects.AnnotationType
 import java.lang.Float.min
 
+
+enum class AnnotationBlendMode { LIGHTEN, MULTIPLY }
 
 class AnnotationColorGenerator {
     companion object {
@@ -20,7 +21,7 @@ class AnnotationColorGenerator {
             colorHex: String,
             type: AnnotationType?,
             isDarkMode: Boolean
-        ): Triple<Int, Float, BlendMode?> {
+        ): Triple<Int, Float, AnnotationBlendMode?> {
             val colorInt = colorHex.toColorInt()
 
             var opacity = 1F
@@ -83,7 +84,7 @@ class AnnotationColorGenerator {
             )
         }
 
-        fun blendMode(isDarkMode: Boolean, type: AnnotationType?): BlendMode? {
+        fun blendMode(isDarkMode: Boolean, type: AnnotationType?): AnnotationBlendMode? {
             when (type) {
                 AnnotationType.note,
                 AnnotationType.image,
@@ -94,7 +95,7 @@ class AnnotationColorGenerator {
 
                 AnnotationType.highlight,
                 AnnotationType.underline -> {
-                    return if (isDarkMode) BlendMode.LIGHTEN else BlendMode.MULTIPLY
+                    return if (isDarkMode) AnnotationBlendMode.LIGHTEN else AnnotationBlendMode.MULTIPLY
                 }
 
                 null -> {

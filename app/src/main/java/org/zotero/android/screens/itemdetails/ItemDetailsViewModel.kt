@@ -76,12 +76,10 @@ import org.zotero.android.helpers.formatter.fullDateWithDashes
 import org.zotero.android.helpers.formatter.iso8601DateFormatV2
 import org.zotero.android.helpers.formatter.sqlFormat
 import org.zotero.android.ktx.index
-import org.zotero.android.pdf.data.PdfReaderArgs
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.screens.addnote.data.SaveNoteAction
 import org.zotero.android.screens.collections.data.LibrariesAndCollectionsBackButtonActiveEvent
 import org.zotero.android.screens.creatoredit.data.CreatorEditArgs
-import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.NavigateToPdfScreen
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.OnBack
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.OpenFile
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.OpenWebpage
@@ -1690,18 +1688,6 @@ class ItemDetailsViewModel @Inject constructor(
         }
     }
 
-    private fun showPdf(file: File, parentKey: String?, attachment: Attachment) {
-        val pdfReaderArgs = PdfReaderArgs(
-            key = attachment.key,
-            parentKey = parentKey,
-            library = viewState.library!!,
-            page = null,
-            preselectedAnnotationKey = null,
-        )
-        val params = navigationParamsMarshaller.encodeObjectToBase64(pdfReaderArgs, StandardCharsets.UTF_8)
-        val encodedFilePath = Uri.encode(file.absolutePath)
-        triggerEffect(NavigateToPdfScreen(params, encodedFilePath))
-    }
 
     private fun openFile(file: File, mime: String) {
         triggerEffect(OpenFile(file, mime))
@@ -2120,7 +2106,6 @@ sealed class ItemDetailsViewEffect : ViewEffect {
     object ShowVideoPlayer : ItemDetailsViewEffect()
     object ShowImageViewer : ItemDetailsViewEffect()
     data class OpenFile(val file: File, val mimeType: String) : ItemDetailsViewEffect()
-    data class NavigateToPdfScreen(val params: String, val encodedFilePath: String) : ItemDetailsViewEffect()
     data class NavigateToReaderScreen(val params: String, val readerEncodedFilePathParam: String) : ItemDetailsViewEffect()
     data class OpenWebpage(val url: String) : ItemDetailsViewEffect()
     data class ShowZoteroWebView(val url: String) : ItemDetailsViewEffect()

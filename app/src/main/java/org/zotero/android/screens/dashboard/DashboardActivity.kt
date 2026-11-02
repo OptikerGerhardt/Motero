@@ -144,7 +144,6 @@ internal class DashboardActivity : BaseActivity() {
 
         val mainCoroutineScope = CoroutineScope(dispatchers.main)
         mainCoroutineScope.launch {
-            val wasPspdfkitInitialized = defaults.wasPspdfkitInitialized()
             val collectionDefaultValue = viewModel.getInitialCollectionArgs()
 
             setContent {
@@ -165,8 +164,6 @@ internal class DashboardActivity : BaseActivity() {
                                     viewEffect = viewEffect,
                                     onOpenFile = onOpenFile,
                                     onOpenWebpage = onOpenWebpage,
-                                    wasPspdfkitInitialized = wasPspdfkitInitialized,
-                                    onExportPdf = onExportPdf,
                                     onExportHtml = onExportHtml,
                                     onExitApp = { finish() }
                                 )
@@ -176,9 +173,7 @@ internal class DashboardActivity : BaseActivity() {
                                     onPickFile = onPickFile,
                                     onOpenFile = onOpenFile,
                                     onOpenWebpage = onOpenWebpage,
-                                    wasPspdfkitInitialized = wasPspdfkitInitialized,
                                     viewEffect = viewEffect,
-                                    onExportPdf = onExportPdf,
                                     onExportHtml = onExportHtml,
                                     onExitApp = { finish() }
                                 )
