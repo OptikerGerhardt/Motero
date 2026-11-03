@@ -9,6 +9,12 @@ import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import org.zotero.android.screens.reader.data.ReaderFileType
 import org.zotero.android.screens.reader.scrubber.ReaderPageHistoryArrowButton
@@ -100,7 +107,19 @@ internal fun ReaderBox(
                     )
                 }
         ) {
-            ReaderWebView(viewModel = viewModel)
+            // Reserve a stable reading viewport even when system bars are
+            // hidden. Fits, page turns and SmartScroll all use this same area.
+            val readingModifier = if (viewState.isPdfOrHtml()) {
+                val cutout = WindowInsets.displayCutout
+                val direction = LocalLayoutDirection.current
+                val hasCutout = cutout.getTop(density) > 0 || cutout.getBottom(density) > 0
+                    || cutout.getLeft(density, direction) > 0 || cutout.getRight(density, direction) > 0
+                val safeInsets = if (hasCutout) {
+                    WindowInsets.statusBarsIgnoringVisibility.only(WindowInsetsSides.Top).union(cutout)
+                } else WindowInsets(0, 0, 0, 0)
+                Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface).windowInsetsPadding(safeInsets)
+            } else Modifier
+            ReaderWebView(viewModel = viewModel, modifier = readingModifier)
             if (viewState.showCreationToolbar && viewState.isTopBarVisible) {
                 ReaderAnnotationCreationToolbar(
                     viewState = viewState,

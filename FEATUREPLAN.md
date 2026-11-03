@@ -1,6 +1,6 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 3. November 2026. Umsetzungsstand Build 302; die verlinkte Grundrecherche stammt vom 28. Oktober.
+Stand: 3. November 2026. Umsetzungsstand Build 303; die verlinkte Grundrecherche stammt vom 28. Oktober.
 
 ## Festgehaltene Entscheidungen
 
@@ -11,6 +11,34 @@ Am 29. Oktober wurden F01, F02, F05, F06, F16, F17, F18, F20 und F21 für die n�
 Die danach beauftragten Fit-Modi und F07 sind in Build 296 umgesetzt. Die weiteren Nachbesserungen sind im Abschnitt Build 297 erfasst; die übrigen Punkte bleiben im Backlog. Ein eigener Outline-Editor auf Android wird weiterhin nicht benötigt; die Outline soll am Desktop in die PDF geschrieben werden. F19 Tag-Autocomplete ist auch nicht Teil von Build 296.
 
 Build 292 war die zuvor ausgelieferte Basis. Der Nutzer hatte erfolgreiche Installation als Update, gutes direktes Markieren und funktionierendes SmartScroll bestätigt. Build 293 verwendet denselben Signierschlüssel, dieselbe Datenhaltung und die unveränderten weiteren Laufzeitpakete.
+
+## Umsetzung der drei Rückmeldungen in Build 303
+
+Der Nutzer hat F27/F28/F29 nach der zunächst ausdrücklich gewünschten Sammlung gemeinsam zur Umsetzung freigegeben. Build 303 ist als Update derselben App vorgesehen. Paketkennung, Signierschlüssel, Datenhaltung und PDF-Dateien bleiben erhalten. F19/F22/F23 bleiben offen.
+
+### F29: Absturz beim Teilen, zuerst bearbeitet
+
+Meldung: Share Document ließ die neueste Testversion bei PDF und EPUB abstürzen. Im Quellstand von Build 302 sammelte `setupFileObservers()` die Download-Ereignisse in einer IO-Coroutine. Der neue Teilen-Zweig rief dort direkt `triggerEffect()` bzw. bei Fehlern `updateState()` auf. `BaseViewModel2` prüft den ursprünglichen UI-Thread und wirft bei genau diesem Aufruf eine Ausnahme. Das liegt vor dem Fehlerfang für Androids Teilenansicht.
+
+Der echte Download-Collector läuft jetzt in `viewModelScope` auf dem UI-Thread, wie die bestehenden State-/Effect-Wege verlangen. Der Hintergrunddownload selbst bleibt unverändert. Sechs neue JVM-Regressionen verwenden das tatsächliche ItemDetailsViewModel mit aktivierter Thread-Prüfung und IO-Ereignissen: PDF, EPUB, fehlende Datei, fehlgeschlagener Download, gleiche Schlüssel in einer fremden Bibliothek und Abbruch mit verspätetem Ready-Ereignis. Die bisherigen MIME-/Intent-/Leseberechtigungstests bleiben bestehen. Dateiinhalte bleiben unverändert; separat gespeicherte Zotero-Markierungen werden weiterhin nicht eingebettet. Eine erfolgreiche reale Übergabe an eine zweite Android-App muss noch am Gerät bestätigt werden.
+
+### F28: Sporadischer Fit-Verlust, Fuchs-PDF als Originalfall
+
+Meldung: zeitweise nur oberer/unterer Zuschnitt oder ganz aussetzender Zuschnitt; Herauszoomen vermutet, Neustart und Include/Exclude ohne gesicherten Zusammenhang. Originaltestfall ist die [Fuchs-PDF von 2024](https://chatgpt.com/library?file_id=libfile_d3dc9d4475a08191ad96d382cd5d9ad3&account_id=personal). Die ursprüngliche freie Beobachtung war nicht vollständig reproduzierbar.
+
+Ein konkreter Zustandsfehler wurde mit dieser PDF nachgestellt: Beim Fit-eigenen Skalierungsereignis war der neue Fit-Snapshot noch nicht gespeichert, sodass die gemerkte Leseansicht fälschlich als manuell eingestuft wurde. Nach Herauszoomen über Zoomknöpfe und Rückkehr aus Wrapped wurde dann nur die alte Zoomstufe wiederhergestellt, ohne aktiven Fit und ohne Clipping. Ein Pinch, der im äußeren Seitenzwischenraum beginnt, besitzt außerdem keinen Pointerdown auf einer PDF-Seite und konnte deshalb denselben gespeicherten Ausgangszustand verlieren.
+
+Ab Build 303 werden abgeschlossene Fits ausdrücklich als Leseansicht gespeichert; eigene Fit-Skalierungen überschreiben diesen Zustand nicht als manuell. Der vorherige Fit wird auch ohne Pointerdown auf einer Seite vor dem ersten manuellen Skalieren festgehalten. Wrapped stellt Modus, Randgröße, Include/Exclude und Zuschnitt gemeinsam wieder her. Explizites Off verwirft den alten Fit, damit er beim nächsten Tippen nicht unerwartet zurückkommt.
+
+Neue Browserfälle verwenden echte Touch-Tipps und einen Pinch mit beiden Fingern außerhalb der PDF-Seite; der Zoom-Ausgangszustand wird nicht künstlich eingespeist. Die Original-Fuchs-Seiten 6/100/201/206/207/208/301/411 werden auf vierseitiges Clipping, Seitensprünge, Include/Exclude, Wiederherstellung und erneutes Öffnen geprüft. Die eigentliche Rahmen-/Paritäts-/Fußnotenlogik und Scrollmathematik bleiben bytegleich zu Build 302. Der belegte Zustandsfehler ist damit adressiert; die genaue ursprüngliche sporadische Gerätefolge und weitere unbekannte Varianten bleiben bei der Geräteprüfung zu beobachten.
+
+### F27: Sicherer oberer Leseanker bei Displaykameras
+
+Meldung: Beim Scrollen und Blättern konnte lesbarer Text unter der eingebauten Displaykamera liegen. Auf Geräten mit gemeldeter Displayaussparung erhält die PDF-/HTML-WebView nun einen festen Sicherheitsbereich aus der Statusleistenhöhe unabhängig von ihrer Sichtbarkeit und der tatsächlichen Aussparung auf allen Seiten. Geräte ohne Aussparung behalten die bisherige volle Lesefläche. Seitliche bzw. unten liegende Aussparungen bei Drehung werden ebenfalls berücksichtigt. Der Hintergrund dieses Bereichs entspricht der Material-Fläche des Themes.
+
+Die schwebenden Leisten verändern diesen Sicherheitsbereich nicht. Die eigentliche WebView-Lesefläche beginnt darunter; vorhandene Fits, Seitennavigation und SmartScroll verwenden dadurch dieselbe sichere Fenstergröße. Der PDF-Inhaltsrahmen und gespeicherte Annotationskoordinaten werden nicht verschoben. EPUB behält seine bisherige native Aufteilung. Eine simulierte obere Aussparungsfläche von 42 CSS-Pixeln wird im Browser zusammen mit Leistenwechseln und Hardware-Blättern in allen drei Scrollmodi geprüft. Die native Compose-Anbindung ist erfolgreich kompiliert; eine echte physische Kameraaussparung wird hier nicht als getestet behauptet.
+
+258 Reader-Tests, 89 Android-Tests in 20 Suiten sowie alle sieben Browserprüfungen sind bestanden. Die sechs neuen Thread-Tests lassen die Main-Thread-Prüfung des ViewModels aktiviert; lediglich die künstliche Coroutine-Debug-Umbenennung von JVM-Testthreads ist ausgeschaltet. APK-Identität und Nachweise stehen in BUILD_STATUS.md, BUILD_VERIFICATION.json und qa/. Die vorliegenden Original-PDFs und internen Screenshots werden nicht im Quellarchiv veröffentlicht.
 
 ## Neue Bedienwege in Build 302
 
@@ -169,8 +197,11 @@ Aufwand: S = überschaubare Codeänderung, M = mehrere Eingabe-/Layoutfälle und
 | F22 | **Manueller Zuschnitt:** Rechteck an Beispielseite wählen; All / Odd / Even, bei Bedarf zwei Beispielseiten. Pro PDF speichern, später in die gemeinsame Fit-Geometrie einspeisen. | Kein neuer PR recherchiert; aktueller Entwurf aus dem Nutzerauftrag. Eigenes Auswahlfenster erforderlich. | **C + Reader** | Nächster Ausbau nach automatischem Fit | Offen |
 | F23 | **Randtippen zum Blättern in allen Scrollmodi:** Links zurück, rechts vor; vorhandene Highlights/Links und obere Bookmark-Fläche berücksichtigen. | Vorhandenen Android-Randtipp-Pfad untersuchen und auf alle Modi erweitern; keine neue externe Recherche behauptet. | **Reader**, ggf. C für Einstellung | Nächster Schritt; aktuell zurückgestellt | Offen |
 | F24 | **PSPDFKit/Nutrient entfernen:** Alten Reader und Startinitialisierung abbauen, gemeinsame SDK-Typen und Hilfsfunktionen ersetzen; PDF.js-Reader beibehalten. | Prüfung des aktuellen Motero-Quellstands am 31. Oktober; keine neue PR-/Plugin-Recherche. | **C, native Android-Abhängigkeiten** | Separater nativer Build 300; PDF.js und Datenformate unverändert | Umgesetzt / Build 300 |
-| F25 | **Share Document im Anhangsmenü:** Originaldatei als PDF/EPUB/andere Datei über Android teilen; fehlenden Download zuvor laden. | [PR #205](https://github.com/zotero/zotero-android/pull/205), geprüft am 3. November; geschlossen, ungemergt. | **C, native Menü-/Intent-Anbindung** | Build 302; spätere PDF-Einbettung von Annotationen anschlussfähig | Umgesetzt / Build 302 |
+| F25 | **Share Document im Anhangsmenü:** Originaldatei als PDF/EPUB/andere Datei über Android teilen; fehlenden Download zuvor laden. | [PR #205](https://github.com/zotero/zotero-android/pull/205), geprüft am 3. November; geschlossen, ungemergt. | **C, native Menü-/Intent-Anbindung** | Build 303: UI-Thread-Korrektur aus F29; späterer PDF-Export mit Annotationen bleibt anschlussfähig | Umgesetzt / Build 303; reale Teilenübergabe noch zu prüfen |
 | F26 | **Lupe beim direkten Markieren:** Vergrößerter Bitmap-Ausschnitt mit Auswahlvorschau, ohne neue PDF-Analyse. | Eigene Prüfung der vorhandenen PDF.js-/Pointerwege. | **A, Reader** | Mit F16 und erneuter Schnellpalette gebündelt | Umgesetzt / Build 302 |
+| F27 | **Oberer Leseanker unter Kamera/Statusleistenbereich:** Beim Scrollen und Blättern darf lesbarer Text auch im Vollbild nicht hinter die Displaykamera geraten. | Nutzerrückmeldung vom 3. November nach Build 302; nur vorgemerkt. | **Reader + Android-Inset-Übergabe prüfen** | Build 303: feste sichere WebView-Fläche aus sichtbarkeitsunabhängiger Statusleiste und Displayaussparung | Umgesetzt / Build 303; physische Aussparung noch zu prüfen |
+| F28 | **Sporadisch unvollständiges Fit to Content:** Bei der Fuchs-PDF bleiben Seitenränder zeitweise stehen; teilweise setzt auch oberer/unterer Zuschnitt aus. | Nutzerrückmeldung und beigefügte Fuchs-PDF vom 3. November; derzeit nicht reproduzierbar, Ursache offen. | **Reader/Fit-Zustand prüfen, Ursache offen** | Build 303: gemerkten Fit nach Wrapped samt Zuschnitt wiederherstellen; Original-Fuchs-Regression ergänzt | Reproduzierter Zustandsfehler behoben / Build 303; weitere Sporadik beobachten |
+| F29 | **Kritisch: Share Document lässt die App abstürzen.** Laut Nutzer bei PDF und EPUB zuverlässig; Teilen funktioniert bei seinen Versuchen nicht. | Geräterückmeldung vom 3. November nach Build 302; Ursache und Crash-Log noch offen. | **Native Teilenfunktion F25** | Build 303: echten Download-Collector auf UI-Scope verlegt; sechs Thread-/Fehlerregressionen ergänzt | Behoben / Build 303; Empfang in zweiter Android-App noch zu prüfen |
 
 „Kein passgenauer PR gefunden“ bezieht sich auf die durchsuchten öffentlichen Zotero-Android- und Reader-PRs samt Web-/Forensuche. Das ist keine Aussage, dass weltweit kein anderer Ansatz existiert. Desktop-Plugins sind Referenzen bzw. Desktop-Lösungen und nicht direkt in Android installierbar.
 

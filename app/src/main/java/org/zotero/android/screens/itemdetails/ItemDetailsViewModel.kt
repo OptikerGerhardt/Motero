@@ -283,7 +283,9 @@ class ItemDetailsViewModel @Inject constructor(
                     else -> {}
                 }
             }
-            .launchIn(coroutineScope)
+            // Download events originate on IO. State and one-off UI effects
+            // must be delivered on the ViewModel's main-thread scope.
+            .launchIn(viewModelScope)
 
     }
 

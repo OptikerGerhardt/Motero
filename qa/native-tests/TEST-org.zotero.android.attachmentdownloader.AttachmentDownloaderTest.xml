@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.zotero.android.attachmentdownloader.AttachmentDownloaderTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-03T18:44:52.557Z" hostname="8c5f39114b68" time="0.295">
+<testsuite name="org.zotero.android.attachmentdownloader.AttachmentDownloaderTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-03T22:50:32.199Z" hostname="e2f32c94a7bd" time="0.365">
   <properties/>
-  <testcase name="failed re-download does not report ready when local copy is gone" classname="org.zotero.android.attachmentdownloader.AttachmentDownloaderTest" time="0.283"/>
+  <testcase name="failed re-download does not report ready when local copy is gone" classname="org.zotero.android.attachmentdownloader.AttachmentDownloaderTest" time="0.352"/>
   <testcase name="failed re-download of a remotely changed attachment reports local copy as ready and local copy is still there" classname="org.zotero.android.attachmentdownloader.AttachmentDownloaderTest" time="0.012"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>

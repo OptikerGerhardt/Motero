@@ -11,6 +11,7 @@ parser.add_argument('--base-source', type=Path, required=True)
 parser.add_argument('--output', type=Path)
 parser.add_argument('--reader-refinements', action='store_true', help='Permit only the reviewed Build 301 reader/label changes against Build 300')
 parser.add_argument('--annotation-tools', action='store_true', help='Permit reviewed Build 302 annotation controls and cutout changes against Build 301')
+parser.add_argument('--reader-recovery', action='store_true', help='Permit reviewed Build 303 safe viewport and fit recovery changes against Build 302')
 args = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
 base = args.base_source
@@ -30,6 +31,9 @@ if args.annotation_tools:
     exceptions = {'screens/reader/annotation/ReaderAnnotationScreen.kt'}
     allowed_reader = {'reader/src/common/view.js', 'reader/src/pdf/boox-reader.js', 'reader/src/pdf/direct-highlight.js',
                       'reader/src/pdf/pdf-view.js', 'reader/src/pdf/selection.js', 'reader/src/pdf/chrome-tap-guard.mjs'}
+if args.reader_recovery:
+    exceptions = {'screens/reader/ReaderBox.kt', 'screens/reader/ReaderWebView.kt'}
+    allowed_reader = {'reader/src/pdf/boox-reader.js', 'reader/src/pdf/android-page-fitting.js'}
 checked = []
 for group in ['database/objects', 'database/requests', 'database/migration', 'sync',
               'screens/reader', 'screens/tagpicker', 'files', 'documentworker', 'pdfworker']:
@@ -59,7 +63,7 @@ for old in sorted((base / 'app/src/main/assets').rglob('*')):
     if not old.is_file():
         continue
     relative = old.relative_to(base)
-    if (args.reader_refinements or args.annotation_tools) and relative.as_posix() in ['app/src/main/assets/reader/reader.zip', 'app/src/main/assets/reader/reader_hash.txt']:
+    if (args.reader_refinements or args.annotation_tools or args.reader_recovery) and relative.as_posix() in ['app/src/main/assets/reader/reader.zip', 'app/src/main/assets/reader/reader_hash.txt']:
         continue
     if 'pspdfkit' in relative.parts:
         continue
@@ -92,6 +96,7 @@ report = dict(verified=True, unchanged_active_native_files=len(checked),
               unchanged_reader_sources=len(reader_sources), unchanged_app_runtime_files=len(runtime),
               signing_key_unchanged=True, preferences_preserved=True, active_pdf_opening_uses_reader=True,
               production_vendor_references=0, reviewed_reader_refinements=args.reader_refinements, reviewed_annotation_tools=args.annotation_tools,
+              reviewed_reader_recovery=args.reader_recovery,
               reader_sha256=hashlib.sha256((root / 'app/src/main/assets/reader/reader.zip').read_bytes()).hexdigest(),
               future_features_preserved=['manual odd/even crop', 'edge taps', 'tag autocomplete',
                                          'stylus pressure/eraser', 'desktop PDF outline interoperability'])

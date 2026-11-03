@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.zotero.android.screens.reader.PdfEngineIndependenceTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-11-03T18:44:53.280Z" hostname="8c5f39114b68" time="0.18">
+<testsuite name="org.zotero.android.screens.reader.PdfEngineIndependenceTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-11-03T22:50:34.028Z" hostname="e2f32c94a7bd" time="0.17">
   <properties/>
-  <testcase name="existing sort indexes stay ASCII and sortable under Arabic locale" classname="org.zotero.android.screens.reader.PdfEngineIndependenceTest" time="0.001"/>
-  <testcase name="all six persisted annotation names remain available without vendor classes" classname="org.zotero.android.screens.reader.PdfEngineIndependenceTest" time="0.097"/>
+  <testcase name="existing sort indexes stay ASCII and sortable under Arabic locale" classname="org.zotero.android.screens.reader.PdfEngineIndependenceTest" time="0.002"/>
+  <testcase name="all six persisted annotation names remain available without vendor classes" classname="org.zotero.android.screens.reader.PdfEngineIndependenceTest" time="0.085"/>
   <testcase name="color alpha and light dark compositing retain their original values" classname="org.zotero.android.screens.reader.PdfEngineIndependenceTest" time="0.002"/>
   <testcase name="PDFjs annotations preserve identity content dates and raw geometry for every tool" classname="org.zotero.android.screens.reader.PdfEngineIndependenceTest" time="0.08"/>
   <system-out><![CDATA[]]></system-out>

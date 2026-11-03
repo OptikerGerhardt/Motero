@@ -1,5 +1,6 @@
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.6.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
 Daemon will be stopped at the end of the build
+Calculating task graph as configuration cache cannot be reused because system property 'https.proxyPort' has changed.
 > Task :buildSrc:checkKotlinGradlePluginConfigurationErrors SKIPPED
 > Task :buildSrc:compileKotlin UP-TO-DATE
 > Task :buildSrc:compileJava NO-SOURCE
@@ -49,81 +50,103 @@ For more information, see http://developer.android.com/build/r/new-dsl.
 
 To determine what is calling unitTestVariants, use -Pandroid.debug.obsoleteApi=true on the command line to display more information.
 Add android.sync.suppressAgpWarnings=DEPRECATED_DSL to the gradle.properties file to suppress this warning.
-w: ⚠️ Deprecated 'org.jetbrains.kotlin.android' plugin usage
+w: [33m[1m⚠️ Deprecated 'org.jetbrains.kotlin.android' plugin usage[0m[0m
 The 'org.jetbrains.kotlin.android' plugin in project ':app' is no longer required for Kotlin support since AGP 9.0.
-Solution: Remove both `android.builtInKotlin=true` and `android.newDsl=false` from `gradle.properties`, then migrate to built-in Kotlin.
-See https://kotl.in/gradle/agp-built-in-kotlin for more details.
+[32m[1mSolution:[0m[0m
+[32m[3mRemove both `android.builtInKotlin=true` and `android.newDsl=false` from `gradle.properties`, then migrate to built-in Kotlin.[0m[0m
+[36mSee [0m[34mhttps://kotl.in/gradle/agp-built-in-kotlin[0m[36m for more details.[0m
 
 
 > Task :app:preBuild UP-TO-DATE
-> Task :app:preDevDebugBuild UP-TO-DATE
 > Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
-> Task :app:dataBindingMergeDependencyArtifactsDevDebug UP-TO-DATE
-> Task :app:generateDevDebugResValues UP-TO-DATE
-> Task :app:generateDevDebugResources UP-TO-DATE
-> Task :app:injectCrashlyticsMappingFileIdDevDebug UP-TO-DATE
+> Task :app:preDevDebugBuild UP-TO-DATE
 > Task :app:injectCrashlyticsVersionControlInfoDevDebug UP-TO-DATE
+> Task :app:injectCrashlyticsMappingFileIdDevDebug UP-TO-DATE
 > Task :app:processDevDebugGoogleServices UP-TO-DATE
-> Task :app:mergeDevDebugResources UP-TO-DATE
-> Task :app:packageDevDebugResources UP-TO-DATE
-> Task :app:processDevDebugNavigationResources UP-TO-DATE
-> Task :app:parseDevDebugLocalResources UP-TO-DATE
-> Task :app:dataBindingGenBaseClassesDevDebug UP-TO-DATE
 > Task :app:generateDevDebugBuildConfig UP-TO-DATE
-> Task :app:generateDevDebugRFile UP-TO-DATE
-> Task :app:kspDevDebugKotlin UP-TO-DATE
-> Task :app:kaptGenerateStubsDevDebugKotlin UP-TO-DATE
-> Task :app:kaptDevDebugKotlin UP-TO-DATE
-> Task :app:compileDevDebugKotlin UP-TO-DATE
+> Task :app:generateDevDebugResValues UP-TO-DATE
 > Task :app:javaPreCompileDevDebug UP-TO-DATE
-> Task :app:compileDevDebugJavaWithJavac UP-TO-DATE
+> Task :app:generateDevDebugResources UP-TO-DATE
+> Task :app:processDevDebugNavigationResources UP-TO-DATE
 > Task :app:checkDevDebugAarMetadata UP-TO-DATE
-> Task :app:mapDevDebugSourceSetPaths UP-TO-DATE
-> Task :app:compileDevDebugNavigationResources UP-TO-DATE
+> Task :app:mergeDevDebugResources UP-TO-DATE
 > Task :app:createDevDebugCompatibleScreenManifests UP-TO-DATE
-> Task :app:extractDeepLinksDevDebug UP-TO-DATE
-> Task :app:processDevDebugMainManifest UP-TO-DATE
-> Task :app:processDevDebugManifest UP-TO-DATE
-> Task :app:processDevDebugManifestForPackage UP-TO-DATE
-> Task :app:processDevDebugResources UP-TO-DATE
-> Task :app:devDebugRealmAccessorsTransformer UP-TO-DATE
-> Task :app:transformDevDebugClassesWithAsm UP-TO-DATE
-> Task :app:bundleDevDebugClassesToRuntimeJar UP-TO-DATE
+> Task :app:mapDevDebugSourceSetPaths UP-TO-DATE
+> Task :app:dataBindingMergeDependencyArtifactsDevDebug UP-TO-DATE
+> Task :app:compileDevDebugNavigationResources UP-TO-DATE
 > Task :app:preDevDebugUnitTestBuild UP-TO-DATE
-> Task :app:processDevDebugJavaRes UP-TO-DATE
-> Task :app:bundleDevDebugClassesToCompileJar UP-TO-DATE
-> Task :app:kspDevDebugUnitTestKotlin SKIPPED
-> Task :app:kaptGenerateStubsDevDebugUnitTestKotlin UP-TO-DATE
-> Task :app:kaptDevDebugUnitTestKotlin UP-TO-DATE
-> Task :app:compileDevDebugUnitTestKotlin UP-TO-DATE
-> Task :app:javaPreCompileDevDebugUnitTest UP-TO-DATE
-> Task :app:compileDevDebugUnitTestJavaWithJavac NO-SOURCE
-> Task :app:processDevDebugUnitTestJavaRes UP-TO-DATE
-> Task :app:transformDevDebugUnitTestClassesWithAsm UP-TO-DATE
-> Task :app:testDevDebugUnitTest UP-TO-DATE
+> Task :app:extractDeepLinksDevDebug UP-TO-DATE
 > Task :app:mergeDevDebugNativeDebugMetadata NO-SOURCE
 > Task :app:generateDevDebugAssets UP-TO-DATE
-> Task :app:mergeDevDebugAssets UP-TO-DATE
-> Task :app:compressDevDebugAssets UP-TO-DATE
+> Task :app:javaPreCompileDevDebugUnitTest UP-TO-DATE
 > Task :app:generateDevDebugGlobalSynthetics UP-TO-DATE
-> Task :app:mergeDevDebugJavaResource UP-TO-DATE
-> Task :app:checkDevDebugDuplicateClasses UP-TO-DATE
+> Task :app:packageDevDebugResources UP-TO-DATE
+> Task :app:parseDevDebugLocalResources UP-TO-DATE
+> Task :app:mergeDevDebugAssets UP-TO-DATE
+> Task :app:generateDevDebugRFile UP-TO-DATE
+> Task :app:compressDevDebugAssets UP-TO-DATE
 > Task :app:desugarDevDebugFileDependencies UP-TO-DATE
-> Task :app:mergeExtDexDevDebug UP-TO-DATE
-> Task :app:mergeLibDexDevDebug UP-TO-DATE
-> Task :app:dexBuilderDevDebug UP-TO-DATE
-> Task :app:mergeProjectDexDevDebug UP-TO-DATE
 > Task :app:mergeDevDebugJniLibFolders UP-TO-DATE
+> Task :app:dataBindingGenBaseClassesDevDebug UP-TO-DATE
 > Task :app:mergeDevDebugNativeLibs UP-TO-DATE
 > Task :app:stripDevDebugDebugSymbols UP-TO-DATE
 > Task :app:validateSigningDevDebug UP-TO-DATE
 > Task :app:writeDevDebugAppMetadata UP-TO-DATE
 > Task :app:writeDevDebugSigningConfigVersions UP-TO-DATE
+> Task :app:kspDevDebugKotlin UP-TO-DATE
+> Task :app:kaptGenerateStubsDevDebugKotlin UP-TO-DATE
+> Task :app:kaptDevDebugKotlin UP-TO-DATE
+> Task :app:compileDevDebugKotlin UP-TO-DATE
+
+> Task :app:checkDevDebugDuplicateClasses UP-TO-DATE
+The contents of the immutable workspace '/workspace/scratch/68e174d26455/build303/tools/gradle-cache/caches/9.6.1/transforms/ef93d15ab00677cc491cfc2f9a4c7509' have been modified. These workspace directories are not supposed to be modified once they are created. The modification might have been caused by an external process, or could be the result of disk corruption.
+outputDirectory:
+ - transformed (Directory, 1c5d1451590e124333feac8b27cc1a76)
+   - .material-icons-extended-release-runtime.jar.H56J7F (RegularFile, 3de255aa7e9cfd47ce516498fd7825db)
+   - material-icons-extended-release-runtime.jar (RegularFile, 29e6c4dceaf8005e875ddfc2018591ef)
+
+resultsFile:
+ - results.bin (RegularFile, 52a47b75f2e890c9b4cdae892265bcca)
+
+The contents of the immutable workspace '/workspace/scratch/68e174d26455/build303/tools/gradle-cache/caches/9.6.1/transforms/ef93d15ab00677cc491cfc2f9a4c7509' have been modified. These workspace directories are not supposed to be modified once they are created. The modification might have been caused by an external process, or could be the result of disk corruption.
+outputDirectory:
+ - transformed (Directory, 1c5d1451590e124333feac8b27cc1a76)
+   - .material-icons-extended-release-runtime.jar.H56J7F (RegularFile, 3de255aa7e9cfd47ce516498fd7825db)
+   - material-icons-extended-release-runtime.jar (RegularFile, 29e6c4dceaf8005e875ddfc2018591ef)
+
+resultsFile:
+ - results.bin (RegularFile, 52a47b75f2e890c9b4cdae892265bcca)
+
+
+> Task :app:processDevDebugMainManifest UP-TO-DATE
+> Task :app:mergeLibDexDevDebug UP-TO-DATE
+> Task :app:processDevDebugManifest UP-TO-DATE
+> Task :app:processDevDebugManifestForPackage UP-TO-DATE
+> Task :app:compileDevDebugJavaWithJavac UP-TO-DATE
+> Task :app:processDevDebugJavaRes UP-TO-DATE
+> Task :app:mergeExtDexDevDebug UP-TO-DATE
+> Task :app:mergeDevDebugJavaResource UP-TO-DATE
+> Task :app:processDevDebugResources UP-TO-DATE
+> Task :app:bundleDevDebugClassesToCompileJar UP-TO-DATE
+> Task :app:kspDevDebugUnitTestKotlin SKIPPED
+> Task :app:devDebugRealmAccessorsTransformer UP-TO-DATE
+> Task :app:transformDevDebugClassesWithAsm UP-TO-DATE
+> Task :app:bundleDevDebugClassesToRuntimeJar UP-TO-DATE
+> Task :app:dexBuilderDevDebug UP-TO-DATE
+> Task :app:mergeProjectDexDevDebug UP-TO-DATE
+> Task :app:kaptGenerateStubsDevDebugUnitTestKotlin UP-TO-DATE
+> Task :app:kaptDevDebugUnitTestKotlin UP-TO-DATE
+> Task :app:compileDevDebugUnitTestKotlin UP-TO-DATE
+> Task :app:compileDevDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDevDebugUnitTestJavaRes UP-TO-DATE
+> Task :app:transformDevDebugUnitTestClassesWithAsm UP-TO-DATE
+> Task :app:testDevDebugUnitTest UP-TO-DATE
 > Task :app:packageDevDebug
-> Task :app:createDevDebugApkListingFileRedirect UP-TO-DATE
 > Task :app:assembleDevDebug
+> Task :app:createDevDebugApkListingFileRedirect UP-TO-DATE
 
-[Incubating] Problems report is available at: file:///workspace/scratch/68e174d26455/build302/source/zotero-android/build/reports/problems/problems-report.html
+[Incubating] Problems report is available at: file:///workspace/scratch/68e174d26455/build303/source/zotero-android/build/reports/problems/problems-report.html
 
-BUILD SUCCESSFUL in 16s
+BUILD SUCCESSFUL in 18s
 62 actionable tasks: 1 executed, 61 up-to-date
+Configuration cache entry stored.

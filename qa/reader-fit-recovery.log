@@ -1,0 +1,11 @@
+DIAG tapping visible overview page {"x":242,"y":265.5,"index":8,"area":254349}
+DIAG tapping visible overview page {"x":242,"y":275.5,"index":8,"area":263929}
+PASS native zoom buttons and real Wrapped taps restore the complete fit without a seeded zoom origin
+DIAG tapping visible overview page {"x":185,"y":346,"index":8,"area":53200}
+PASS a real pinch starting outside the PDF page restores fitting
+PASS explicit Off forgets the old fit instead of restoring it from the overview
+PASS simulated camera safe area stays constant through toolbar toggles and hardware page turns in all scroll modes
+DIAG tapping visible overview page {"x":300,"y":314.5,"index":410,"area":256632}
+DIAG tapping visible overview page {"x":300,"y":314.5,"index":206,"area":256632}
+PASS actual Fuchs PDF keeps all four crop edges across page changes, Include/Exclude, overview recovery and reopening [{"page":6,"bounds":[0.09999999999999998,0.030334728033472803,0.92,0.30962343096234307]},{"page":100,"bounds":[0.09999999999999998,0.030334728033472803,0.92,0.9299163179916318]},{"page":201,"bounds":[0.08083333333333331,0.032426778242677826,0.9008333333333334,0.9299163179916318]},{"page":206,"bounds":[0.09999999999999998,0.030334728033472803,0.92,0.9299163179916318]},{"page":207,"bounds":[0.08083333333333331,0.03138075313807531,0.9008333333333334,0.9341004184100419]},{"page":208,"bounds":[0.09999999999999998,0.030334728033472803,0.92,0.9299163179916318]},{"page":301,"bounds":[0.08083333333333331,0.030334728033472803,0.9008333333333334,0.9330543933054394]},{"page":411,"bounds":[0.08083333333333331,0.03138075313807531,0.9008333333333334,0.9341004184100419]}]
+PASS: fit recovery and safe viewport regressions

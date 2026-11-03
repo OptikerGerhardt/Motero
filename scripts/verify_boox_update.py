@@ -27,6 +27,7 @@ parser.add_argument('--without-pspdfkit', action='store_true', help='Require an 
 parser.add_argument('--roman-references', action='store_true', help='Require actual Kant Roman reference and adaptive native button regressions')
 parser.add_argument('--preserve-reader', action='store_true', help='Require the complete Reader bundle to remain byte-identical for this removal-only update')
 parser.add_argument('--annotation-tools', action='store_true', help='Require live magnifier, trailing punctuation, palette thirds, quick editing and native sharing')
+parser.add_argument('--reader-recovery', action='store_true', help='Require Build 303 share thread, overview fit recovery and safe reading viewport checks')
 args = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
 
@@ -143,6 +144,10 @@ with zipfile.ZipFile(args.apk) as apk:
             for name in previous.namelist():
                 if name.startswith('pdf/') and not name.endswith('/'):
                     assert bundle.read(name) == previous.read(name), name
+            if args.reader_recovery:
+                previous_mapping = json.loads(previous.read('view.js.map'))
+                for name in ['pdf/reading-layout.mjs', 'pdf/content-fit.mjs', 'pdf/hardware-navigation.mjs']:
+                    assert source(mapping, name) == source(previous_mapping, name), 'Preserve crop geometry and hardware scroll math: ' + name
         if args.preserve_fitting:
             with zipfile.ZipFile(io.BytesIO(previous_reader)) as previous:
                 previous_mapping = json.loads(previous.read('view.js.map'))
@@ -254,8 +259,35 @@ if args.qa_directory:
         screen = (root/'app/src/main/java/org/zotero/android/screens/reader/annotation/ReaderAnnotationScreen.kt').read_text()
         assert '.background(MaterialTheme.colorScheme.surface)\n            .windowInsetsPadding' in screen
         assert 'WindowInsets.displayCutout' in screen
+    if args.reader_recovery:
+        recovery = (args.qa_directory / 'reader-fit-recovery.log').read_text()
+        for check in [
+            'PASS native zoom buttons and real Wrapped taps restore the complete fit without a seeded zoom origin',
+            'PASS a real pinch starting outside the PDF page restores fitting',
+            'PASS explicit Off forgets the old fit instead of restoring it from the overview',
+            'PASS simulated camera safe area stays constant through toolbar toggles and hardware page turns in all scroll modes',
+            'PASS actual Fuchs PDF keeps all four crop edges across page changes, Include/Exclude, overview recovery and reopening',
+            'PASS: fit recovery and safe viewport regressions',
+        ]:
+            assert check in recovery, check
+        assert 'AssertionError' not in recovery and 'TimeoutError' not in recovery
+        thread_test = ET.parse(native_xml.parent / 'TEST-org.zotero.android.screens.reader.DocumentSharingThreadTest.xml').getroot()
+        assert thread_test.get('tests') == '6'
+        assert thread_test.get('failures') == thread_test.get('errors') == thread_test.get('skipped') == '0'
+        vm = (root / 'app/src/main/java/org/zotero/android/screens/itemdetails/ItemDetailsViewModel.kt').read_text()
+        observer = vm[vm.index('private fun setupFileObservers()'):vm.index('fun attachmentOpened(')]
+        assert '.launchIn(viewModelScope)' in observer and '.launchIn(coroutineScope)' not in observer
+        box = (root / 'app/src/main/java/org/zotero/android/screens/reader/ReaderBox.kt').read_text()
+        assert 'WindowInsets.statusBarsIgnoringVisibility.only(WindowInsetsSides.Top)' in box
+        assert 'val cutout = WindowInsets.displayCutout' in box
+        assert 'val safeInsets = if (hasCutout)' in box and '.union(cutout)' in box
+        assert 'else WindowInsets(0, 0, 0, 0)' in box
+        assert 'ReaderWebView(viewModel = viewModel, modifier = readingModifier)' in box
+        web = (root / 'app/src/main/java/org/zotero/android/screens/reader/ReaderWebView.kt').read_text()
+        assert 'modifier = modifier' in web
     qa = dict(reader_tests=reader_tests, native_logic_tests=int(native.get('tests')),
               native_tests_total=sum(int(s.get('tests', 0)) for s in native_suites),
+              native_test_suites=len(native_suites),
               native_tests_skipped=sum(int(s.get('skipped', 0)) for s in native_suites),
               browser_features_passed=True, browser_gestures_passed=True)
     if args.fitting_update:
@@ -271,6 +303,11 @@ if args.qa_directory:
             qa['adaptive_label_tests'] = 3
             qa['native_buttons_device_tested'] = False
 
+    if args.reader_recovery:
+        qa['native_sharing_thread_tests'] = 6
+        qa['browser_fit_recovery_passed'] = True
+        qa.setdefault('concrete_pdf_test_pages', {})['fuchs'] = [6, 100, 201, 206, 207, 208, 301, 411]
+
 report = dict(new, previous_version_code=old['version_code'], sha256=sha(args.apk.read_bytes()),
               size_bytes=args.apk.stat().st_size, reader_sha256=reader_hash, dex_count=len(dex),
               reader_sources_verified=verified,
@@ -283,7 +320,10 @@ report = dict(new, previous_version_code=old['version_code'], sha256=sha(args.ap
               sdk_removed=args.without_pspdfkit,
               removed_sdk_runtime_files=len(removed_sdk_runtime) if args.without_pspdfkit else 0,
               complete_reader_unchanged=(reader == previous_reader),
-              annotation_tools_verified=args.annotation_tools, document_sharing_verified=args.annotation_tools, cutout_background_source_verified=args.annotation_tools, **qa, verified=True,
+              annotation_tools_verified=args.annotation_tools, document_sharing_verified=args.annotation_tools, cutout_background_source_verified=args.annotation_tools,
+              share_main_thread_regressions_verified=args.reader_recovery, fit_recovery_verified=args.reader_recovery,
+              safe_reading_viewport_source_verified=args.reader_recovery, crop_geometry_unchanged=args.reader_recovery,
+              **qa, verified=True,
               physical_device_tested=False,
               motero_icon_verified=args.motero_refinement,
               fullscreen_hooks_verified=args.motero_refinement,

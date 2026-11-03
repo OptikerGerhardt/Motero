@@ -186,3 +186,9 @@ kapt {
 hilt {
     enableAggregatingTask = false
 }
+
+tasks.withType<org.gradle.api.tasks.testing.Test>().configureEach {
+    // Keep real thread names stable for BaseViewModel2's main-thread guard;
+    // coroutine debug IDs would rename the same test thread per coroutine.
+    systemProperty("kotlinx.coroutines.debug", "off")
+}

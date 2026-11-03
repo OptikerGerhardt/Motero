@@ -1,36 +1,38 @@
-# Motero Build 302: geprüfter Stand
+# Motero Build 303: geprüfter Stand
 
 | Eigenschaft | Ergebnis |
 |---|---|
 | App / Paket | Motero / org.zotero.android.debug |
-| Version | 1.0.0-302 / Code 302; Basis Build 301 |
-| APK-Größe | 105615050 Bytes |
-| APK SHA-256 | ef83a50cb8f58b2a7725252ee3cfa80083c73d3ffc92794c496068e147d0256d |
+| Version | 1.0.0-303 / Code 303; Basis Build 302 |
+| APK-Größe | 105615950 Bytes |
+| APK SHA-256 | 16ea5d9837c89f3121031077e403ade58cf7f9cad557593abcc8d7e5dfb4edfa |
 | Zertifikat SHA-256 | c4e70a6935d239246540532b6d3ea514eb2a428e1e8eaacbf94c8a9a01989299 |
-| Reader SHA-256 | 79428fde1b43ebc314dc1c4d1803e9a9c8dfaa84d402dace62103e4dae072f0f |
-| Reader-Tests | 258 bestanden, 0 Fehler, 0 übersprungen |
-| Native Tests | 83 bestanden, 0 Fehler, 0 übersprungen; 19 Suiten |
-| Browser | Alle sechs Prüfungen bestanden: Funktionen, Gesten, Fits, Stabilität, Reader-Bedienelemente, neue Annotationswerkzeuge |
-| Neue Annotationsfälle | Satzende in Text und Geometrie, tatsächliche Lupenpixel mit Auswahl, gleich breite Palettendrittel, reguläres Löschen, langer Druck in beiden Auswahlmodi, Notizfarben/Bewegung, Mehrfinger-Abbruch |
-| Teilen | MIME-Typen und Intent mit Datei-URI, ClipData und ausschließlich temporärer Leseberechtigung geprüft; native Integration kompiliert |
-| Aussparungsfläche | Deckender Material-Hintergrund vor Inset-Polsterung einschließlich Displayaussparung; Quellprüfung und Kompilierung |
-| Original-PDF-Fälle | Höffe 26/27, 191/192; Kant 369/370, 380/381 und römische Referenzen 133/134/140 erneut bestanden |
-| Bestehende Fits | Zuschnitt-, Randreferenz- und PDF.js-Quellen unverändert zu Build 301; Regressionen bestanden |
-| Weitere Laufzeitdateien | 57 bytegleich zu Build 301, PDF.js vollständig unverändert |
-| Quellenvergleich | 406 aktive native Dateien, 206 Reader-Dateien und 45 weitere Quell-Assets unverändert |
-| SDK | PSPDFKit/Nutrient bleibt vollständig abwesend; keine Herstellerklassen, -Bibliotheken oder Manifest-Komponenten |
+| Reader SHA-256 | 85dcfaf338698821799f3710422887d0e00a8c9214239a3fd83a43258da65bcf |
+| Reader-Tests | 258 bestanden, 0 Fehler/Abbruch/übersprungen |
+| Native Tests | 89 bestanden in 20 Suiten, 0 Fehler/übersprungen |
+| Neue Teilen-Regressionen | Sechs Fälle mit tatsächlichem ItemDetailsViewModel, eingeschalteter Thread-Prüfung und IO-Ereignissen: PDF, EPUB, fehlende Datei, Downloadfehler, fremde Bibliothek und Abbruch |
+| Browser | Alle sieben Prüfungen bestanden: Funktionen, Gesten, Fits, Stabilität, Reader-Bedienelemente, Annotationswerkzeuge, Fit-Wiederherstellung/sichere Fensterfläche |
+| Fit-Wiederherstellung | Echte Wrapped-Tipps nach Zoomknöpfen, Pinch im Seitenzwischenraum, Include/Exclude und explizites Off geprüft |
+| Fuchs-Originalfälle | PDF-Seiten 6/100/201/206/207/208/301/411: vierseitiges Clipping, Navigation, Übersichtsrückkehr und Wiederöffnen |
+| Bisherige Originalfälle | Höffe 26/27, 191/192; Kant 369/370, 380/381 und 133/134/140 erneut bestanden |
+| Sicherer Lesebereich | Native Compose-Anbindung kompiliert; nur auf Geräten mit gemeldeter Displayaussparung reserviert, einschließlich gedrehter Aussparungen |
+| Kamera-Simulation | 42 CSS-Pixel oberer Sicherheitsbereich, stabile Leistenwechsel und Hardware-Blättern in allen drei Scrollmodi geprüft |
+| Rahmen und Scrollen | reading-layout.mjs, content-fit.mjs und hardware-navigation.mjs bytegleich zu Build 302 |
+| Weitere Laufzeitdateien | 57 bytegleich zu Build 302, PDF.js vollständig unverändert |
+| Quellenvergleich | 405 aktive native Dateien, 212 Reader-Dateien und 45 weitere Quell-Assets unverändert |
+| SDK | PSPDFKit/Nutrient weiterhin vollständig abwesend |
 | APK-Struktur | Identische APK-Dateinamen zur Basis; 7 DEX-Dateien; 14 eingebettete Reader-Quellen geprüft |
-| Motero-M / Vollbild | Vektorgeometrie, fünf Rasterdichten und Vollbild-Hooks geprüft und erhalten |
-| Update | Gleiches Paket und Zertifikat, höherer Code, v2-Signatur und 16-KiB-ZIP-Ausrichtung geprüft |
+| Motero-M / Vollbild | Bestehende Symbolgeometrie, fünf Rasterdichten und Vollbild-Hooks erhalten und geprüft |
+| Update | Gleiches Paket und Zertifikat, höherer Code, v2-Signatur, ZIP-CRC und 16-KiB-Ausrichtung geprüft |
 
-Die APK ist technisch als Update derselben App geprüft. Über die bestehende Motero-Testversion installieren, vorher nicht deinstallieren. Speicherpfade, Realm-/Syncformat und gespeicherte Einstellungen bleiben erhalten. Ein echter Installationsvorgang mit Kontositzung auf dem BOOX wurde hier nicht ausgeführt.
+Über die vorhandene Motero-Testversion installieren, vorher nicht deinstallieren. Speicherpfade, Realm-/Syncformat und Einstellungen bleiben erhalten. Ein echter Installationsvorgang mit Kontositzung am BOOX wurde hier nicht ausgeführt.
 
-Direktes Wortmarkieren schließt angehängte Schlusszeichen ein, ohne echte Leerzeichen oder andere Textflüsse zu überschreiten. Die Lupe kopiert den bereits gerenderten Canvas. Die Palette verwendet drei volle gleich breite Touchflächen: Highlight, Löschen, Underline. Das Löschen und die Farbänderung verwenden den vorhandenen Annotationsmanager. Langer Druck öffnet die Schnellpalette auch im Android-Auswahlmodus; bestehende native Größen-/Auswahlgriffe und Transformationen ausgewählter Objekte behalten Vorrang.
+F29: Download-Ereignisse werden auf dem UI-Scope verarbeitet, damit Teilen und Fehlerzustände die unveränderte Main-Thread-Prüfung einhalten. Die JVM-Testkonfiguration schaltet ausschließlich künstliche Coroutine-Debug-Erweiterungen der Threadnamen aus; die Guard-Prüfung bleibt aktiv. Geteilt wird die Originaldatei, ohne zusätzliches Einbetten separat gespeicherter Zotero-Markierungen. FileProvider, MIME-Typen und temporäre Leseberechtigung bleiben erhalten. Empfang in einer zweiten Android-App muss am Gerät bestätigt werden.
 
-Share Document ist im langen Druck auf Dateianhänge der Eintragsdetails verfügbar und lädt fehlende Dateien über den bestehenden Downloader. Geteilt wird die gespeicherte Originaldatei. Separat gespeicherte Zotero-Annotationen werden nicht zusätzlich in die PDF eingebettet. Der Teilen-Endpunkt kann später einen erzeugten PDF-Export übernehmen. Ein tatsächliches Empfangen in einer zweiten Android-App wurde hier nicht getestet.
+F28: Der an der Fuchs-PDF konkret nachgestellte Verlust des Fit-Zustands nach Herauszoomen/Wrapped ist behoben. Eigene Skalierungsereignisse überschreiben den gemerkten Fit nicht mehr als manuelle Ansicht; Pinch-Gesten im äußeren Seitenzwischenraum erhalten ebenfalls ihren Ausgangszustand. Explizites Off verwirft ihn. Die genaue ursprüngliche sporadische Gerätefolge war nicht vollständig reproduzierbar; unbekannte Varianten sind bei der Geräteprüfung weiter zu beobachten. Rahmen-/Paritäts-/Fußnotenlogik wurde hierfür nicht verändert.
 
-Das Annotationsfenster füllt seine obere Aussparungs-/Systemleistenfläche mit der aktuellen Material-Fläche, auch während des Ladens. Die physische Darstellung auf einem Gerät mit Notch sowie Androids Teilenansicht müssen am Gerät geprüft werden. Kein physischer BOOX-/E-Ink-/Kontosync-Test wird behauptet.
+F27: Bei gemeldeter Displayaussparung liegt die tatsächliche WebView-Lesefläche außerhalb der Aussparung und unter der theoretischen Statusleistenhöhe. Ohne Aussparung bleibt die bisherige volle Lesefläche erhalten. Der Abstand hängt nicht von der Sichtbarkeit der schwebenden Leisten ab. Fits und SmartScroll verwenden die echte sichere Fenstergröße; PDF-/Annotationskoordinaten bleiben erhalten. Eine physische Displaykamera wurde hier nicht getestet.
 
-Fit-Referenzen, Margins, SmartScroll, Wrapped, Kommentare/Tags, Quick Tags, Bookmarks, Lesekante, Leisten und Vollbild behalten ihre bestehenden Prüfungen. F19/F22/F23 und optionale Stifterweiterungen bleiben offen und anschlussfähig. Keine neue OCR und keine Veränderung der Original-PDFs. Original-Mul liegt weiterhin nicht vor; dafür wird kein neuer konkreter Test behauptet. Unbekannte PDFs können für die heuristische Randerkennung mehrdeutig bleiben.
+Die übrigen Funktionen behalten ihre Regressionen. F19/F22/F23 und optionale Stifterweiterungen bleiben offen und anschlussfähig. Keine neue OCR, keine Änderung der Original-PDFs. Kein neuer Original-Mul-Test behauptet. Keine physische BOOX-/E-Ink-/Kontosyncprüfung und keine öffentliche Veröffentlichung.
 
-Details: BUILD_BOOX.md, BUILD_VERIFICATION.json und qa/. SDK_REMOVAL.md dokumentiert den historischen Build-300-Schritt. Keine öffentliche Veröffentlichung beauftragt.
+Details: BUILD_BOOX.md, BUILD_VERIFICATION.json und qa/. SDK_REMOVAL.md bleibt die historische Dokumentation zu Build 300.

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.zotero.android.screens.reader.DocumentSharingTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-03T18:44:52.856Z" hostname="8c5f39114b68" time="0.42">
+<testsuite name="org.zotero.android.screens.reader.DocumentSharingTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-03T22:50:32.571Z" hostname="e2f32c94a7bd" time="0.435">
   <properties/>
-  <testcase name="share grants temporary read access to one content URI and never write access" classname="org.zotero.android.screens.reader.DocumentSharingTest" time="0.418"/>
-  <testcase name="PDF and EPUB use document MIME types and other files keep their type" classname="org.zotero.android.screens.reader.DocumentSharingTest" time="0.001"/>
+  <testcase name="share grants temporary read access to one content URI and never write access" classname="org.zotero.android.screens.reader.DocumentSharingTest" time="0.435"/>
+  <testcase name="PDF and EPUB use document MIME types and other files keep their type" classname="org.zotero.android.screens.reader.DocumentSharingTest" time="0.0"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

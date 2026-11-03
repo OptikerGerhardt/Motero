@@ -39,12 +39,12 @@ android:
   Assets:
     view.js (4.7 MiB)
     903.view.js (1.51 MiB)
-    pdf/build/pdf.mjs (821 KiB)
-    pdf/web/viewer.mjs (631 KiB)
-    pdf/build/pdf.worker.mjs (2.13 MiB)
     pdf/web/wasm/openjpeg.wasm (246 KiB)
     pdf/web/wasm/openjpeg_nowasm_fallback.js (441 KiB)
     pdf/web/wasm/quickjs-eval.wasm (422 KiB)
+    pdf/web/viewer.mjs (631 KiB)
+    pdf/build/pdf.mjs (821 KiB)
+    pdf/build/pdf.worker.mjs (2.13 MiB)
 
   WARNING in entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.
   Entrypoints:
@@ -52,4 +52,4 @@ android:
         view.css
         view.js
 
-  android (webpack 5.99.9) compiled with 2 warnings in 13403 ms
+  android (webpack 5.99.9) compiled with 2 warnings in 9619 ms
