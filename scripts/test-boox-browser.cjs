@@ -89,7 +89,7 @@ const types = {'.html':'text/html','.js':'text/javascript','.mjs':'text/javascri
   await cdp.send('Input.dispatchMouseEvent',{type:'mouseMoved',...penB,button:'left',buttons:1,pointerType:'pen'});
   await cdp.send('Input.dispatchMouseEvent',{type:'mouseReleased',...penB,button:'left',buttons:0,pointerType:'pen'});await page.waitForTimeout(250);
   let penSaved=await page.evaluate(()=>window.testMessages.filter(x=>x.message?.event==='onSaveAnnotations').flatMap(x=>x.message.params.annotations));
-  assert.equal(penSaved.length,2);assert.equal(penSaved[1].text,'Alpha beta gamma delta');console.log('Pen highlight',penSaved[1].text);
+  assert.equal(penSaved.length,2);assert.equal(penSaved[1].text,'Alpha beta gamma delta.');console.log('Pen highlight',penSaved[1].text);
   await page.setViewportSize({width:800,height:800});await page.waitForTimeout(500);
   let resized=await page.evaluate(()=>{let v=window._view._view._iframeWindow.PDFViewerApplication.pdfViewer;return {width:v.getPageView(0).div.clientWidth,viewport:v.container.clientWidth,scale:v.currentScaleValue};});
   assert.equal(resized.scale,'page-width');assert.ok(resized.width>stats.width+150);assert.ok(resized.viewport-resized.width<=42);console.log('Width after resize',resized);

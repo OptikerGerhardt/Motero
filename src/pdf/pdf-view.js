@@ -149,6 +149,7 @@ class PDFView {
 		this._onUpdateAnnotations = options.onUpdateAnnotations;
 		this._onConvertAnnotations = options.onConvertAnnotations;
 		this._onDeleteAnnotations = options.onDeleteAnnotations;
+		this._onDeleteAnnotationsFromPalette = options.onDeleteAnnotationsFromPalette;
 		this._onOpenLink = options.onOpenLink;
 		this._onSelectAnnotations = options.onSelectAnnotations;
 		this._onSetSelectionPopup = options.onSetSelectionPopup;

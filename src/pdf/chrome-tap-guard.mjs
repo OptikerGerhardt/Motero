@@ -35,7 +35,7 @@ export class PDFChromeTapGuard {
 			|| event.isPrimary === false || event.button !== 0
 			|| !event.target.closest?.('#viewerContainer')
 			|| event.target.closest?.('input, textarea, [contenteditable="true"], .boox-highlight-palette')
-			|| view._directHighlight?.enabled && view._directHighlight.canStart(event)) return false;
+			|| view._directHighlight?.canStart(event)) return false;
 		this.reset();
 		this.pending = event;
 		view._suppressCompatibilityMouseUntil = Date.now() + 1500;

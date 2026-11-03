@@ -1,3 +1,4 @@
+import { PDFSelectionMagnifier } from './selection-magnifier';
 import { HoldToHighlight } from './hold-to-highlight.mjs';
 import { getWordSelectionRanges } from './selection';
 import { ANNOTATION_COLORS } from '../common/defines';
@@ -6,6 +7,7 @@ import { ANNOTATION_COLORS } from '../common/defines';
 export class PDFDirectHighlight {
 	constructor(view) {
 		this.view = view;
+		this.magnifier = new PDFSelectionMagnifier(view);
 		this.handledUps = new WeakSet();
 		this.gesture = new HoldToHighlight({
 			canStart: event => this.canStart(event),
@@ -35,15 +37,23 @@ export class PDFDirectHighlight {
 			&& ['pointer', 'highlight', 'underline'].includes(this.view._tool.type);
 	}
 
+	quickAnnotation(event) {
+		let view = this.view;
+		if (view._options.platform !== 'android' || view._readOnly || !['pointer','highlight','underline'].includes(view._tool.type)) return null;
+		let position = view.pointerEventToPosition(event);
+		if (!position || view._getSelectableOverlay(position)) return null;
+		let selected = view.getSelectedAnnotations();
+		let action = selected.length === 1 && view.getSelectedAnnotationAction(selected[0], position);
+		if (action && action.type !== 'drag') return null;
+		return (view.getSelectableAnnotations(position) || []).find(a => !a.readOnly && !a.isExternal) || null;
+	}
+
 	canStart(event) {
-		if (!this.enabled || !event.target.closest?.('.page')
-				|| event.target.closest?.('textarea, input, [contenteditable="true"], .textAnnotation')) {
-			return false;
-		}
+		if ((!this.enabled && !this.quickAnnotation(event)) || !event.target.closest?.('.page')
+				|| event.target.closest?.('textarea, input, [contenteditable="true"], .textAnnotation')) return false;
 		let position = this.view.pointerEventToPosition(event);
-		// Existing notes, links, and selected annotation resize handles keep their gestures.
 		return !!position && !this.view._getSelectableOverlay(position)
-			&& !this.view.getSelectableAnnotations(position)?.length;
+			&& (!this.view.getSelectableAnnotations(position)?.length || !!this.quickAnnotation(event));
 	}
 
 	async prepare(event) {
@@ -52,6 +62,8 @@ export class PDFDirectHighlight {
 		if (!position) {
 			return null;
 		}
+		let annotation = this.quickAnnotation(event);
+		if (annotation) return { position, annotations: [annotation] };
 		await view._ensureBasicPageData(position.pageIndex);
 		if (view._destroyed || !this.enabled) {
 			return null;
@@ -65,11 +77,11 @@ export class PDFDirectHighlight {
 				&& y >= rect[1] - tolerance && y <= rect[3] + tolerance)) {
 			return null;
 		}
-		let ranges = getWordSelectionRanges(view._pdfPages, position, position);
+		let ranges = getWordSelectionRanges(view._pdfPages, position, position, { includeTrailingPunctuation: true });
 		return ranges.length && !ranges[0].collapsed ? { position, ranges } : null;
 	}
 
-	start({ position, ranges }) {
+	start({ position, ranges, annotations }, event) {
 		let view = this.view;
 		view._clearPointerAction();
 		view._clearPendingBackdropTap();
@@ -77,12 +89,19 @@ export class PDFDirectHighlight {
 		view._onSelectAnnotations([]);
 		view._onSetAnnotationPopup(null);
 		view._onSetSelectionPopup(null);
+		if (annotations) {
+			this.quickHold = true;
+			view._booxReader?.showPalette(annotations);
+			return;
+		}
 		this.anchor = position;
 		view._selectionRanges = ranges;
 		view._render();
+		this.magnifier.show(event, position);
 	}
 
 	update(event) {
+		if (this.quickHold) return;
 		let view = this.view;
 		let position = view.pointerEventToPosition(event);
 		if (!position || !view._pdfPages[position.pageIndex]?.chars?.length) {
@@ -92,14 +111,16 @@ export class PDFDirectHighlight {
 			i <= Math.max(this.anchor.pageIndex, position.pageIndex); i++) {
 			if (!view._pdfPages[i]?.chars) return;
 		}
-		let ranges = getWordSelectionRanges(view._pdfPages, this.anchor, position);
+		let ranges = getWordSelectionRanges(view._pdfPages, this.anchor, position, { includeTrailingPunctuation: true });
 		if (ranges.length && !ranges[0].collapsed) {
 			view._selectionRanges = ranges;
 			view._render();
+			this.magnifier.show(event, position);
 		}
 	}
 
 	finish() {
+		if (this.quickHold) { this.quickHold = false; this.clear(); this.suppressUntil = Date.now() + 800; return; }
 		let view = this.view;
 		if (!this.enabled || view._destroyed) {
 			this.clear();
@@ -129,6 +150,7 @@ export class PDFDirectHighlight {
 	}
 
 	clear() {
+		this.magnifier.hide(); this.pressAnnotation = null; this.quickHold = false;
 		this.anchor = null;
 		this.view._selectionRanges = [];
 		this.view._onSetSelectionPopup(null);
@@ -137,9 +159,10 @@ export class PDFDirectHighlight {
 	}
 
 	down(event) {
-		if (this.bypass || !this.enabled) {
+		if (this.bypass || !this.enabled && !this.quickAnnotation(event)) {
 			return false;
 		}
+		this.pressAnnotation = this.quickAnnotation(event);
 		let handled = this.gesture.down(event);
 		if (handled) {
 			this.view._suppressCompatibilityMouseUntil = Date.now() + 1500;
@@ -150,6 +173,15 @@ export class PDFDirectHighlight {
 	}
 
 	move(event) {
+		let state = this.gesture.state;
+		// Existing notes/ink remain draggable: replay their original down when
+		// movement starts before the long-press timer, then let native drag run.
+		if (!this.bypass && this.pressAnnotation && state && !state.active
+			&& Math.hypot(event.clientX-state.event.clientX,event.clientY-state.event.clientY)>this.gesture.slop) {
+			this.gesture.abort(); this.pressAnnotation = null; this.bypass = true;
+			try { this.view._handlePointerDown(state.event); } finally { this.bypass = false; }
+			return false;
+		}
 		return !this.bypass && this.gesture.move(event);
 	}
 
@@ -197,6 +229,7 @@ export class PDFDirectHighlight {
 	}
 
 	reset() {
+		this.magnifier.hide(); this.pressAnnotation = null; this.quickHold = false;
 		this.gesture.reset();
 	}
 }

@@ -1,3 +1,4 @@
+import { extendTrailingPunctuation } from './direct-selection.mjs';
 import { getPositionBoundingRect } from './lib/utilities';
 import {
 	isolateCharsToAnchorFlow,
@@ -515,7 +516,7 @@ export function getModifiedSelectionRanges(pdfPages, selectionRanges, modifier) 
 	return getSelectionRanges(pdfPages, anchor, head);
 }
 
-export function getWordSelectionRanges(pdfPages, anchorPosition, headPosition) {
+export function getWordSelectionRanges(pdfPages, anchorPosition, headPosition, { includeTrailingPunctuation = false } = {}) {
 	if (!pdfPages[anchorPosition.pageIndex]) {
 		return [];
 	}
@@ -525,6 +526,10 @@ export function getWordSelectionRanges(pdfPages, anchorPosition, headPosition) {
 	let headWord = getClosestWord(chars, headPosition.rects[0]);
 	if (!anchorWord || !headWord) {
 		return [];
+	}
+	if (includeTrailingPunctuation) {
+		anchorWord.headOffset = extendTrailingPunctuation(pdfPages[anchorPosition.pageIndex].chars, anchorWord.headOffset);
+		headWord.headOffset = extendTrailingPunctuation(pdfPages[headPosition.pageIndex].chars, headWord.headOffset);
 	}
 	let anchor = { pageIndex: anchorPosition.pageIndex };
 	let head = { pageIndex: headPosition.pageIndex };

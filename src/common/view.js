@@ -144,6 +144,7 @@ class View {
 			fontFamily: this._options.fontFamily,
 			onAddAnnotation,
 			onUpdateAnnotations,
+			onDeleteAnnotationsFromPalette: ids => this._annotationManager.deleteAnnotations(ids),
 			onConvertAnnotations: (ids, type) => {
 				let before = new Set(this._annotationManager._annotations.map(a => a.id));
 				this._annotationManager.convertAnnotations(ids, type);

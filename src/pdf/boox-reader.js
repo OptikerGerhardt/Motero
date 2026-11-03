@@ -200,6 +200,7 @@ export class PDFBooxReader {
 
 	showPalette(annotations) {
 		this.closePalette();
+		annotations = annotations.filter(a => !a.readOnly && !a.isExternal);
 		if (!annotations.length || this.view._readOnly) return;
 		let box = this.doc.createElement('div');
 		box.className = 'boox-highlight-palette';
@@ -237,17 +238,27 @@ export class PDFBooxReader {
 		box.append(colors);
 		let tools = this.doc.createElement('div');
 		tools.style.cssText = 'display:flex;align-items:stretch;width:100%;border-top:1px solid var(--color-border,#ddd);box-sizing:border-box;';
-		for (let [type, icon, label] of [['highlight', highlightIcon, this.de ? 'Hervorheben' : 'Highlight'], ['underline', underlineIcon, this.de ? 'Unterstreichen' : 'Underline']]) {
+		for (let [type, icon, label] of [['highlight', highlightIcon, this.de ? 'Hervorheben' : 'Highlight'], ['delete', '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2.5" y="2.5" width="15" height="15" rx="3"/><path d="M7 7l6 6m0-6l-6 6"/></svg>', this.de ? 'Markierung löschen' : 'Delete annotation'], ['underline', underlineIcon, this.de ? 'Unterstreichen' : 'Underline']]) {
 			let button = this.doc.createElement('button'); button.type = 'button'; button.dataset.type = type;
-			button.setAttribute('aria-label', label); button.setAttribute('aria-pressed', String(annotations[0].type === type));
+			button.setAttribute('aria-label', label);
+			if (type !== 'delete') button.setAttribute('aria-pressed', String(annotations[0].type === type));
+			button.disabled = type !== 'delete' && !annotations.every(a => ['highlight','underline'].includes(a.type));
 			button.style.cssText = `display:flex;align-items:center;justify-content:center;flex:1 1 0;min-width:0;height:44px;padding:0;border:0;color:inherit;background:${annotations[0].type === type ? 'var(--fill-quinary,#0001)' : 'transparent'};`;
-			button.style.borderRadius = type === 'highlight' ? '0 0 0 6px' : '0 0 6px 0';
+			button.style.borderRadius = type === 'highlight' ? '0 0 0 6px' : type === 'underline' ? '0 0 6px 0' : '0';
+			if (button.disabled) button.style.opacity = '0.4';
 			button.innerHTML = icon; let svg = button.querySelector('svg'); svg.style.width = svg.style.height = '20px';
 			button.addEventListener('click', event => {
 				event.preventDefault(); event.stopPropagation();
 				if (this.view._readOnly) return;
-				let ids = annotations.filter(a => !a.readOnly && this.view._annotations.some(x => x.id === a.id)).map(a => a.id);
+				let ids = annotations.filter(a => !a.readOnly && !a.isExternal && this.view._annotations.some(x => x.id === a.id && !x.readOnly && !x.isExternal)).map(a => a.id);
 				if (!ids.length) return;
+				if (type === 'delete') {
+					this.closePalette();
+					this.view._onSelectAnnotations([]); this.view._onSetAnnotationPopup(null);
+					this.view._directHighlight?.reset();
+					this.view._onDeleteAnnotationsFromPalette(ids);
+					return;
+				}
 				this.view._directHighlightType = type;
 				let converted = this.view._onConvertAnnotations(ids, type);
 				this.showPalette(converted);
