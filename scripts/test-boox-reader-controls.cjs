@@ -83,6 +83,46 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
    }
    console.log('PASS actual '+pdf+' header crop and reference toggle',JSON.stringify(summaries));
   }
+  if(fixtures['/kant.pdf']){
+   await page.setViewportSize({width:692,height:1536});
+   await open('/kant.pdf',132,{mode:'content',reference:'content',margin:.04,includeMarginalia:false});
+   const configure=async(includeMarginalia,mode='content')=>{await page.evaluate(o=>window.setPageFitting(o),{mode,reference:'content',margin:.08,includeMarginalia,revision:301});await page.waitForTimeout(180);};
+   const inspect=index=>page.evaluate(async index=>{let f=window._view._view._pageFitting,p=await f.readPage(index);return{lines:p.lines,masks:f.maskRectsFor(index),bounds:f.applied.bounds,dom:f.viewer.getPageView(index).div.querySelectorAll('.boox-marginalia-mask').length};},index);
+   const covered=(m,r)=>m[0]<=r[0]+1e-6&&m[1]<=r[1]+1e-6&&m[2]>=r[2]-1e-6&&m[3]>=r[3]-1e-6;
+   const overlaps=(a,b)=>a[0]<b[2]&&a[2]>b[0]&&a[1]<b[3]&&a[3]>b[1];
+   let summaries=[];
+   for(const [index,names] of [[132,['BXLI']],[133,['B XLII']],[139,['B XLIX','B L']]]){
+    await page.evaluate(i=>window._view._view._navigateToPage({pageIndex:i}),index);await configure(false);
+    let state=await inspect(index),refs=state.lines.filter(l=>names.includes(l.text));assert.equal(refs.length,names.length);
+    for(const ref of refs){assert.equal(ref.sideCandidate,true);assert.ok(state.masks.some(m=>covered(m,ref.rect)),JSON.stringify({ref,masks:state.masks}));}
+    assert.ok(state.dom>=refs.length,'actual overlay covers each reference');
+    const footnotes=state.lines.filter(l=>l.rect[1]>.89&&l.text.length>15);
+    if(index===132)assert.ok(footnotes.length>=2,'the screenshot footnotes are present');
+    assert.ok(footnotes.every(l=>state.masks.every(m=>!overlaps(m,l.rect))),'complete footnote text remains uncovered');
+    let without=state.bounds;
+    if(index===132&&process.env.BOOX_QA_IMAGES){fs.mkdirSync(process.env.BOOX_QA_IMAGES,{recursive:true});await page.screenshot({path:path.join(process.env.BOOX_QA_IMAGES,'kant-roman-exclude.png')});}
+    await configure(true);let included=await inspect(index);assert.equal(included.masks.length,0);assert.equal(included.dom,0);
+    assert.ok(included.bounds[2]-included.bounds[0]>without[2]-without[0]+.005,'Include restores the outer column');
+    if(index===132&&process.env.BOOX_QA_IMAGES)await page.screenshot({path:path.join(process.env.BOOX_QA_IMAGES,'kant-roman-include.png')});
+    summaries.push({page:index+1,references:names,exclude:without,include:included.bounds});
+   }
+   console.log('PASS actual Kant Roman folios B XLI B XLII B XLIX B L, Include/Exclude, masks and complete footnotes',JSON.stringify(summaries));
+   await page.evaluate(()=>window._view._view._navigateToPage({pageIndex:132}));await configure(false);
+   await page.waitForFunction(()=>window._view._view._pageFitting.maskRectsFor(133).length>0);
+   let neighbor=await inspect(133),neighborRef=neighbor.lines.find(l=>l.text==='B XLII');assert.ok(neighbor.masks.some(m=>covered(m,neighborRef.rect)));
+   await configure(true);assert.equal((await inspect(133)).masks.length,0);
+   console.log('PASS analyzed neighboring pages share Exclude and Include');
+   for(const scroll of [0,1,2]){
+    await page.evaluate(m=>window._view._view.setScrollMode(m),scroll);
+    for(const mode of ['content','width','height']){await configure(false,mode);assert.ok((await inspect(132)).dom>0);await configure(true,mode);assert.equal((await inspect(132)).dom,0);}
+   }
+   console.log('PASS Roman references across three scroll modes and content width height fitting');
+   for(const rotation of [90,180,270,0]){
+    await page.evaluate(r=>{window._view._view._pageFitting.viewer.pagesRotation=r;},rotation);
+    await page.waitForTimeout(240);await page.evaluate(()=>window._view._view._navigateToPage({pageIndex:132}));await configure(false);assert.ok((await inspect(132)).dom>0);await configure(true);assert.equal((await inspect(132)).dom,0);
+   }
+   console.log('PASS Roman reference masks follow all display rotations');
+  }
   assert.deepEqual(errors,[]);console.log('PASS: all new Android reader controls');
  }finally{if(browser)await browser.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);process.exitCode=1;});

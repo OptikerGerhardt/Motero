@@ -14,6 +14,7 @@ export class AndroidPageFitting {
 		this.inputEpoch = 0;
 		this.pointers = new Set();
 		this.cache = new Map();
+		this.marginaliaByPage = new Map();
 		this.clipped = new Map();
 		this.onDown = event => {
 			if (event.target?.closest?.('.boox-highlight-palette')) return;
@@ -135,6 +136,7 @@ export class AndroidPageFitting {
 				let model = buildReadingModel(pages);
 				for (let page of pages) {
 					page.marginalia = this.readMarginalia(page, model);
+					this.marginaliaByPage.set(page.index, page.marginalia);
 					page.bounds = getReadingBounds(page.image, page.lines, model, page.index);
 					page.withMarginalia = getReadingBounds(page.image, page.lines, model, page.index, { includeMarginalia: true });
 					delete page.image; delete page.lines;
@@ -154,12 +156,19 @@ export class AndroidPageFitting {
 		if (!model) return [0, 0, 1, 1];
 		if (!this.cache.has(index)) {
 			let rotation = this.viewer.pagesRotation;
-			this.cache.set(index, this.readPage(index, rotation).then(page => ({
-				index, aspect: page.aspect, bounds: getReadingBounds(page.image, page.lines, model, page.index),
-				marginalia: this.readMarginalia(page, model),
-				withMarginalia: getReadingBounds(page.image, page.lines, model, page.index, { includeMarginalia: true }),
-			})).catch(error => { console.error(error); return { bounds: null }; }));
-			if (this.cache.size > 32) this.cache.delete(this.cache.keys().next().value);
+			this.cache.set(index, this.readPage(index, rotation).then(page => {
+				let marginalia = this.readMarginalia(page, model);
+				// Keep a synchronous mask lookup beside the existing bounded promise
+				// cache, so visible neighboring pages share the Exclude setting.
+				if (this.cache.has(index)) this.marginaliaByPage.set(index, marginalia);
+				return { index, aspect: page.aspect, bounds: getReadingBounds(page.image, page.lines, model, page.index),
+					marginalia,
+					withMarginalia: getReadingBounds(page.image, page.lines, model, page.index, { includeMarginalia: true }) };
+			}).catch(error => { console.error(error); return { bounds: null }; }));
+			if (this.cache.size > 32) {
+				let oldest = this.cache.keys().next().value;
+				this.cache.delete(oldest); this.marginaliaByPage.delete(oldest);
+			}
 		}
 		let page = await this.cache.get(index);
 		let actual = includeMarginalia ? page.withMarginalia : page.bounds;
@@ -177,10 +186,10 @@ export class AndroidPageFitting {
 	}
 
 	maskRectsFor(index) {
-		return this.active && !this.options.includeMarginalia
-			&& (this.options.mode === 'content' || this.options.reference !== 'page')
-			&& this.masks?.index === index && this.masks.rotation === this.viewer.pagesRotation
-			? this.masks.rects : [];
+		if (!this.active || this.options.includeMarginalia
+			|| this.options.mode !== 'content' && this.options.reference === 'page') return [];
+		if (this.masks?.index === index && this.masks.rotation === this.viewer.pagesRotation) return this.masks.rects;
+		return (this.marginaliaByPage.get(index) || []).map(r => rotateReadingBounds(r, this.viewer.pagesRotation));
 	}
 
 
@@ -245,7 +254,9 @@ export class AndroidPageFitting {
 		this.prefetchTimer = this.win.setTimeout(() => {
 			if (!this.active || this.view._destroyed) return;
 			for (let neighbor of [index - 1, index + 1]) {
-				if (neighbor >= 0 && neighbor < v.pdfDocument.numPages) this.boundsFor(neighbor).catch(console.error);
+				if (neighbor >= 0 && neighbor < v.pdfDocument.numPages) this.boundsFor(neighbor).then(() => {
+					if (this.active && !this.view._destroyed) this.view._render();
+				}).catch(console.error);
 			}
 		}, 180);
 		return true;
@@ -276,7 +287,7 @@ export class AndroidPageFitting {
 	}
 
 	destroy() {
-		this.suspend(); this.cache.clear(); this.win.clearTimeout(this.prefetchTimer);
+		this.suspend(); this.cache.clear(); this.marginaliaByPage.clear(); this.win.clearTimeout(this.prefetchTimer);
 		this.win.removeEventListener('pointerdown', this.onDown, true);
 		this.win.removeEventListener('pointerup', this.onUp, true);
 		this.win.removeEventListener('pointercancel', this.onUp, true);

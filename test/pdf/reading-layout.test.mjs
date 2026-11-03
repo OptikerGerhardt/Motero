@@ -32,6 +32,53 @@ test('optional edition and line columns are independent of footnotes and running
 	for(let b of [without,withRefs]) assert.ok(b[1]>.19 && b[3]>=.938,JSON.stringify(b));
 });
 
+test('Roman A/B folios in either margin are optional while body and footnotes stay', () => {
+	for (let text of ['BXLI', 'B XLII', 'A XIX / B XX', 'B XLIX', 'B L', 'A i']) {
+		for (let rect of [[.01,.3,.075,.315],[.91,.3,.98,.315]]) {
+			let reference = { ...line(text, rect), sideCandidate: true };
+			let note = line('2 See Kant, B XLI, for the complete footnote.', [.2,.92,.8,.94]);
+			let lines = [...body, reference, note], model = buildReadingModel([]);
+			assert.deepEqual(getReadingMarginalia(lines,model,132), [rect], text);
+			assert.deepEqual(getReadingExclusions(lines,model,132,{includeMarginalia:true}), [], text);
+			let without = getReadingBounds(image(lines.map(l=>l.rect)),lines,model,132);
+			let included = getReadingBounds(image(lines.map(l=>l.rect)),lines,model,132,{includeMarginalia:true});
+			assert.ok(without[0]>.19 && without[2]<.81, text);
+			assert.ok(included[2]-included[0] > without[2]-without[0]+.1,text);
+			assert.ok(without[3]>=.938,'complete footnote remains');
+		}
+	}
+});
+
+test('a Roman marginal item is separated before the adjacent body line is merged', () => {
+	let viewport={width:500,height:700,scale:1,transform:[1,0,0,-1,0,700]};
+	let items=[{str:'BXLI',width:28.6,transform:[10,0,0,10,-.3,300]},
+		{str:'man uns vorhersagte, daß bei der mindesten Nachforschung',width:400,transform:[14,0,0,14,38,300]}];
+	let lines=getReadingTextLines({items},viewport);
+	assert.equal(lines.length,2);
+	let reference=lines.find(l=>l.text==='BXLI');assert.equal(reference.sideCandidate,true);
+	assert.deepEqual(getReadingMarginalia(lines,buildReadingModel([]),132),[reference.rect]);
+});
+
+test('Roman folios joined into one OCR item split only at a detached same-baseline margin', () => {
+	let ref=[...'BXLI'].map((c,i)=>({c,u:c,rect:[5+i*6,495,10+i*6,505],fontSize:10,baseline:500}));
+	let chars=[...ref,...[...'alpha'].map((c,i)=>({c,u:c,rect:[100+i*60,495,150+i*60,510],fontSize:14,baseline:500}))];
+	let item={str:'BXLI alpha',width:395,transform:[14,0,0,14,5,500],chars};
+	let viewport={width:500,height:700,scale:1,transform:[1,0,0,-1,0,700]};
+	let lines=getReadingTextLines({items:[item]},viewport);
+	assert.equal(lines.length,2);assert.equal(lines.find(l=>l.text==='BXLI').sideCandidate,true);
+	ref.forEach(c=>{c.baseline=508;});
+	assert.equal(getReadingTextLines({items:[item]},viewport).length,1,'raised markers are not marginal folios');
+});
+
+test('ordinary Roman numerals and words resembling numerals are not edition references', () => {
+	for (let text of ['IV','bill','B ILL','B VX','B IL','B', 'See B XLI']) {
+		let candidate=line(text,[.01,.3,.08,.315]);
+		assert.deepEqual(getReadingMarginalia([...body,candidate],buildReadingModel([]),132),[],text);
+	}
+	let inside=line('B XLI',[.4,.3,.48,.315]);
+	assert.deepEqual(getReadingMarginalia([...body,inside],buildReadingModel([]),132),[]);
+});
+
 test('a smaller line number inside one OCR item is split by glyph geometry; superscripts stay', () => {
 	let chars = [...'alpha'].map((c,i)=>({c,u:c,rect:[100+i*60,495,150+i*60,510],fontSize:14,baseline:500}));
 	chars.push({c:'5',u:'5',rect:[465,498,472,508],fontSize:10,baseline:500});

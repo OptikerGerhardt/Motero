@@ -18,13 +18,21 @@ const clamp = n => Math.max(0, Math.min(1, n));
 const normalize = text => text.toLowerCase().replace(/\d+/g, '#').replace(/\s+/g, ' ').trim();
 const pageNumber = text => /^(?:[-–—]?\s*)?(?:\d{1,5}|[ivxlcdm]{1,8})(?:\s*[-–—]?)$/i.test(text.trim());
 const downloadStamp = text => /^(?:(?:this content )?downloaded\s+(?:from|by|on)|(?:accessed|retrieved)\s+(?:on|from)|all use subject to)/i.test(text.trim());
-const editionReference = text => /^(?:(?:AA|Ak\.?)\s*)?(?:[IVXLC]+|\d{1,3})\s*[:,.]\s*\d{1,4}$|^[AB]\s*\d{1,4}(?:\s*[/–-]\s*[AB]?\s*\d{1,4})?$|^\[\s*\d{1,4}\s*\]$/i.test(text.trim());
+// A/B folios can be Roman in introductions (Kant: B XLI) and Arabic in
+// the main text. Require canonical Roman numerals so ordinary words such as
+// 'bill' do not become references. Geometry below still requires a margin column.
+const romanFolio = '(?=[MDCLXVI])M{0,3}(?:CM|CD|D?C{0,3})(?:XC|XL|L?X{0,3})(?:IX|IV|V?I{0,3})';
+const editionFolio = '(?:\\d{1,4}|' + romanFolio + ')';
+const abReference = '[AB]\\s*' + editionFolio + '(?:\\s*[/–-]\\s*[AB]?\\s*' + editionFolio + ')?';
+const editionPattern = new RegExp('^(?:(?:(?:AA|Ak\\.?)\\s*)?(?:[IVXLC]+|\\d{1,3})\\s*[:,.]\\s*\\d{1,4}|'
+	+ abReference + '|\\[\\s*\\d{1,4}\\s*\\])$', 'i');
+const editionReference = text => editionPattern.test(text.trim());
 
 function splitOuterReference(item, viewport) {
 	if (!item.chars?.length) return null;
-	let text = item.str.trim(), pattern = '(?:[AB]\\s*\\d{1,4}|\\d{1,3}|\\[\\d{1,4}\\])';
-	let tail = text.match(new RegExp('^(.*\\S)\\s+(' + pattern + ')$'));
-	let head = !tail && text.match(new RegExp('^(' + pattern + ')\\s+(\\S.*)$'));
+	let text = item.str.trim(), pattern = '(?:' + abReference + '|\\d{1,3}|\\[\\d{1,4}\\])';
+	let tail = text.match(new RegExp('^(.*\\S)\\s+(' + pattern + ')$', 'i'));
+	let head = !tail && text.match(new RegExp('^(' + pattern + ')\\s+(\\S.*)$', 'i'));
 	if (!tail && !head) return null;
 	let refText = tail ? tail[2] : head[1], bodyText = tail ? tail[1] : head[2];
 	let count = [...refText.replace(/\s/g, '')].length;
