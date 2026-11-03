@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.zotero.android.screens.reader.ReaderPageFittingSettingsTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-11-02T19:35:02.218Z" hostname="f08c36d9893e" time="0.019">
+<testsuite name="org.zotero.android.screens.reader.ReaderPageFittingSettingsTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-11-03T11:52:16.298Z" hostname="0604240221b9" time="0.016">
   <properties/>
-  <testcase name="new fitting settings survive persistence including revision and text reference" classname="org.zotero.android.screens.reader.ReaderPageFittingSettingsTest" time="0.017"/>
+  <testcase name="new fitting settings survive persistence including revision and text reference" classname="org.zotero.android.screens.reader.ReaderPageFittingSettingsTest" time="0.015"/>
   <testcase name="older settings keep their fitting mode and default to paper reference" classname="org.zotero.android.screens.reader.ReaderPageFittingSettingsTest" time="0.001"/>
   <testcase name="every fitting choice clears the other modes" classname="org.zotero.android.screens.reader.ReaderPageFittingSettingsTest" time="0.0"/>
   <testcase name="cropped width is distinct and never changes height or existing text width" classname="org.zotero.android.screens.reader.ReaderPageFittingSettingsTest" time="0.0"/>

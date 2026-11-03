@@ -1,13 +1,14 @@
 {
   "verified": true,
-  "unchanged_active_native_files": 396,
-  "unchanged_reader_sources": 212,
-  "unchanged_app_runtime_files": 47,
+  "unchanged_active_native_files": 405,
+  "unchanged_reader_sources": 210,
+  "unchanged_app_runtime_files": 45,
   "signing_key_unchanged": true,
   "preferences_preserved": true,
   "active_pdf_opening_uses_reader": true,
   "production_vendor_references": 0,
-  "reader_sha256": "70b48326c574f85535f393454f8d70c68d9de9df42ac35bda82e26aa5e181fd1",
+  "reviewed_reader_refinements": true,
+  "reader_sha256": "ad8bdc829dc23c71c45190455341f6254ff4aff939cd5207f5bec1c242da9dd1",
   "future_features_preserved": [
     "manual odd/even crop",
     "edge taps",

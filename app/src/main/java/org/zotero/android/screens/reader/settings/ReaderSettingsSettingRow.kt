@@ -1,6 +1,8 @@
 package org.zotero.android.screens.reader.settings
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,6 +22,12 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -56,6 +64,10 @@ internal fun LazyListScope.readerSettingsSettingRow(
                     optionString = safeStringResource(id = opt.optionStringId)
                 )
             }
+            val compactLabels = remember(optionsList) { compactReaderOptionLabels(optionsList.map { it.optionString }) }
+            val textMeasurer = rememberTextMeasurer()
+            val labelStyle = MaterialTheme.typography.labelLarge
+            val density = LocalDensity.current
             optionsList.chunked(columns).forEachIndexed { rowIndex, rowOptions ->
                 if (rowIndex > 0) Spacer(Modifier.height(6.dp))
                 Row(
@@ -69,7 +81,10 @@ internal fun LazyListScope.readerSettingsSettingRow(
                             modifier = Modifier
                                 .weight(1f)
                                 .heightIn(min = 48.dp)
-                                .semantics { role = Role.RadioButton },
+                                .semantics {
+                                    role = Role.RadioButton
+                                    contentDescription = opt.optionString
+                                },
                             shapes = when (index) {
                                 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
                                 rowOptions.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
@@ -82,19 +97,40 @@ internal fun LazyListScope.readerSettingsSettingRow(
                                 containerColor = MaterialTheme.colorScheme.secondaryContainer
                             ),
                         ) {
-                            if (isSelected) {
-                                Icon(
-                                    painter = painterResource(id = Drawables.check_24px),
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSecondary
-                                )
-                                Spacer(Modifier.size(6.dp))
+                            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                                val compact = compactLabels[optionsList.indexOf(opt)]
+                                val fullWidth = textMeasurer.measure(opt.optionString, labelStyle, softWrap = false, maxLines = 1).size.width
+                                val compactWidth = textMeasurer.measure(compact, labelStyle, softWrap = false, maxLines = 1).size.width
+                                val iconWidth = with(density) { 30.dp.roundToPx() }
+                                // Reserve the real checkmark width. At extreme font scales the
+                                // checked colors/semantics remain while the icon yields to text.
+                                val showCheck = isSelected && compactWidth + iconWidth <= constraints.maxWidth
+                                val available = constraints.maxWidth - if (showCheck) iconWidth else 0
+                                val label = readerOptionLabel(opt.optionString, compact, fullWidth, available)
+                                Row(
+                                    modifier = Modifier.align(Alignment.Center),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center,
+                                ) {
+                                    if (showCheck) {
+                                        Icon(
+                                            modifier = Modifier.size(24.dp),
+                                            painter = painterResource(id = Drawables.check_24px),
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onSecondary,
+                                        )
+                                        Spacer(Modifier.width(6.dp))
+                                    }
+                                    Text(
+                                        text = label,
+                                        style = labelStyle,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.clearAndSetSemantics { },
+                                    )
+                                }
                             }
-                            Text(
-                                text = opt.optionString,
-                                style = MaterialTheme.typography.labelLarge,
-                                maxLines = 2
-                            )
                         }
                     }
                 }

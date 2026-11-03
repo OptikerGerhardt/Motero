@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.zotero.android.api.mappers.FieldSchemaMapperTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-02T19:35:00.275Z" hostname="f08c36d9893e" time="0.003">
+<testsuite name="org.zotero.android.api.mappers.FieldSchemaMapperTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-03T11:52:14.292Z" hostname="0604240221b9" time="0.002">
   <properties/>
-  <testcase name="testFieldSchemaWithFieldParsesSuccessfully" classname="org.zotero.android.api.mappers.FieldSchemaMapperTest" time="0.002"/>
+  <testcase name="testFieldSchemaWithFieldParsesSuccessfully" classname="org.zotero.android.api.mappers.FieldSchemaMapperTest" time="0.001"/>
   <testcase name="testFieldSchemaWithoutFieldReturnsNull" classname="org.zotero.android.api.mappers.FieldSchemaMapperTest" time="0.001"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>

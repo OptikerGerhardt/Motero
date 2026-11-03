@@ -1,6 +1,5 @@
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.6.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
 Daemon will be stopped at the end of the build
-Calculating task graph as no cached configuration is available for tasks: :app:dependencies --configuration devDebugRuntimeClasspath
 > Task :buildSrc:checkKotlinGradlePluginConfigurationErrors SKIPPED
 > Task :buildSrc:compileKotlin UP-TO-DATE
 > Task :buildSrc:compileJava NO-SOURCE
@@ -9,6 +8,30 @@ Calculating task graph as no cached configuration is available for tasks: :app:d
 > Task :buildSrc:processResources UP-TO-DATE
 > Task :buildSrc:classes UP-TO-DATE
 > Task :buildSrc:jar UP-TO-DATE
+The contents of the immutable workspace '/workspace/scratch/68e174d26455/build301/tools/gradle-cache/caches/9.6.1/transforms/ab8a67664ee8cd38923b76f31ac495fc' have been modified. These workspace directories are not supposed to be modified once they are created. The modification might have been caused by an external process, or could be the result of disk corruption.
+outputDirectory:
+ - transformed (Directory, ac72fad997dcbf5acc40388f996c74a1)
+   - .gradle-agent-instrumented.marker (RegularFile, f571933bb948577b1f9f3076fb8fc7c6)
+   - .gradle-instrumented-classpath.marker (RegularFile, f571933bb948577b1f9f3076fb8fc7c6)
+   - instrumented (Directory, b7da030165509cdc2d66e21dedb13ddc)
+     - .instrumented-protos-32.3.1.jar.cJSMZh (RegularFile, 8c25d65f9b28899377931a40da4e9fa1)
+     - instrumented-protos-32.3.1.jar (RegularFile, 5e52ccc6a37c2a6d377c5259909f1b1f)
+
+resultsFile:
+ - results.bin (RegularFile, 78c84244efb5f5df3b5a6b453ee58b98)
+
+The contents of the immutable workspace '/workspace/scratch/68e174d26455/build301/tools/gradle-cache/caches/9.6.1/transforms/ab8a67664ee8cd38923b76f31ac495fc' have been modified. These workspace directories are not supposed to be modified once they are created. The modification might have been caused by an external process, or could be the result of disk corruption.
+outputDirectory:
+ - transformed (Directory, ac72fad997dcbf5acc40388f996c74a1)
+   - .gradle-agent-instrumented.marker (RegularFile, f571933bb948577b1f9f3076fb8fc7c6)
+   - .gradle-instrumented-classpath.marker (RegularFile, f571933bb948577b1f9f3076fb8fc7c6)
+   - instrumented (Directory, b7da030165509cdc2d66e21dedb13ddc)
+     - .instrumented-protos-32.3.1.jar.cJSMZh (RegularFile, 8c25d65f9b28899377931a40da4e9fa1)
+     - instrumented-protos-32.3.1.jar (RegularFile, 5e52ccc6a37c2a6d377c5259909f1b1f)
+
+resultsFile:
+ - results.bin (RegularFile, 78c84244efb5f5df3b5a6b453ee58b98)
+
 
 > Configure project :app
 WARNING: The option setting 'android.builtInKotlin=false' is deprecated.
@@ -55,7 +78,6 @@ The 'org.jetbrains.kotlin.android' plugin in project ':app' is no longer require
 Solution: Remove both `android.builtInKotlin=true` and `android.newDsl=false` from `gradle.properties`, then migrate to built-in Kotlin.
 See https://kotl.in/gradle/agp-built-in-kotlin for more details.
 
-w: Detected multiple Kotlin daemon sessions at
 
 > Task :app:dependencies
 
@@ -1611,8 +1633,7 @@ devDebugRuntimeClasspath - Runtime classpath of '/devDebug'.
 
 A web-based, searchable dependency report is available by adding the --scan option.
 
-[Incubating] Problems report is available at: file:///workspace/scratch/68e174d26455/build300/source/zotero-android/build/reports/problems/problems-report.html
+[Incubating] Problems report is available at: file:///workspace/scratch/68e174d26455/build301/source/zotero-android/build/reports/problems/problems-report.html
 
-BUILD SUCCESSFUL in 12s
+BUILD SUCCESSFUL in 14s
 5 actionable tasks: 1 executed, 4 up-to-date
-Configuration cache entry stored.

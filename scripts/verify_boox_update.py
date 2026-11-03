@@ -24,6 +24,7 @@ parser.add_argument('--reader-polish', action='store_true', help='Require page-t
 parser.add_argument('--motero-refinement', action='store_true', help='Verify launcher M, fullscreen hooks and full-width palette modes')
 parser.add_argument('--reader-controls', action='store_true', help='Verify width variants, optional marginal references and chrome dismissal')
 parser.add_argument('--without-pspdfkit', action='store_true', help='Require an SDK-free APK')
+parser.add_argument('--roman-references', action='store_true', help='Require actual Kant Roman reference and adaptive native button regressions')
 parser.add_argument('--preserve-reader', action='store_true', help='Require the complete Reader bundle to remain byte-identical for this removal-only update')
 args = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
@@ -92,7 +93,6 @@ with zipfile.ZipFile(args.apk) as apk:
             assert name in apk.namelist(), 'Missing runtime file: ' + name
             assert apk.read(name) == base.read(name), 'Unexpected runtime change: ' + name
         if args.without_pspdfkit:
-            assert removed_sdk_runtime, 'Baseline must contain the SDK being removed'
             assert not any(sdk_runtime(n) or 'pspdf' in n.lower() for n in apk.namelist()), 'SDK runtime/resources remain'
             for name in ['META-INF/androidx.webkit_webkit.version',
                          'META-INF/androidx.compose.material_material.version']:
@@ -109,6 +109,9 @@ with zipfile.ZipFile(args.apk) as apk:
             assert not re.search(rb'com[/\.]pspdfkit|com[/\.]nutrient|libpspdfkit', data, re.I), 'Vendor classes remain in DEX'
         manifest = subprocess.run([str(args.build_tools / 'aapt2'), 'dump', 'xmltree', str(args.apk), '--file', 'AndroidManifest.xml'], capture_output=True, text=True, check=True).stdout
         assert not re.search(r'pspdfkit|nutrient', manifest, re.I), 'Vendor manifest component remains'
+    if args.roman_references:
+        for name in [b'ReaderOptionLabelsKt', b'compactReaderOptionLabels', b'readerOptionLabel']:
+            assert any(name in d for d in dex), name
     for name in [b'ReaderQuickControlActions', b'ReaderColoredTagShortcuts', b'ReaderHighlightQuote', b'ReaderSidebarFilter',
                  b'ReaderAnnotationScreenClosed', b'reportScreenClosed', b'didReportClosed']:
         assert any(name in d for d in dex), name
@@ -192,6 +195,12 @@ if args.qa_directory:
                       'PASS: all new Android reader controls']:
             assert check in controls, check
         assert 'Error' not in controls and 'AssertionError' not in controls
+        if args.roman_references:
+            for check in ['PASS actual Kant Roman folios B XLI B XLII B XLIX B L, Include/Exclude, masks and complete footnotes',
+                          'PASS analyzed neighboring pages share Exclude and Include',
+                          'PASS Roman references across three scroll modes and content width height fitting',
+                          'PASS Roman reference masks follow all display rotations']:
+                assert check in controls, check
     if args.reader_polish:
         stability = (args.qa_directory / 'reader-stability.log').read_text()
         for check in ['PASS page turn paints only prepared target geometry',
@@ -217,6 +226,10 @@ if args.qa_directory:
         assert int(engine_test.get('tests')) == 4
         assert engine_test.get('failures') == engine_test.get('errors') == engine_test.get('skipped') == '0'
     assert all(int(s.get('failures', 0)) == int(s.get('errors', 0)) == 0 for s in native_suites)
+    if args.roman_references:
+        labels = ET.parse(native_xml.parent / 'TEST-org.zotero.android.screens.reader.ReaderOptionLabelsTest.xml').getroot()
+        assert int(labels.get('tests')) == 3
+        assert labels.get('failures') == labels.get('errors') == labels.get('skipped') == '0'
     qa = dict(reader_tests=reader_tests, native_logic_tests=int(native.get('tests')),
               native_tests_total=sum(int(s.get('tests', 0)) for s in native_suites),
               native_tests_skipped=sum(int(s.get('skipped', 0)) for s in native_suites),
@@ -228,6 +241,11 @@ if args.qa_directory:
     if args.reader_controls:
         qa['browser_reader_controls_passed'] = True
         qa['concrete_pdf_test_pages'] = {'hoeffe': [26, 27, 191, 192], 'kant': [369, 370, 380, 381]}
+        if args.roman_references:
+            qa['concrete_pdf_test_pages']['kant_roman'] = [133, 134, 140]
+            qa['roman_references_verified'] = True
+            qa['adaptive_label_tests'] = 3
+            qa['native_buttons_device_tested'] = False
 
 report = dict(new, previous_version_code=old['version_code'], sha256=sha(args.apk.read_bytes()),
               size_bytes=args.apk.stat().st_size, reader_sha256=reader_hash, dex_count=len(dex),

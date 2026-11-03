@@ -8,8 +8,8 @@ HTTP /pdf/web/viewer.css
 HTTP /pdf/web/viewer.mjs
 HTTP /pdf/build/pdf.worker.mjs
 HTTP /gesture-test.pdf
-HTTP /pdf/web/images/loading-icon.gif
 HTTP /pdf/web/standard_fonts/LiberationSans-Regular.ttf
+HTTP /pdf/web/images/loading-icon.gif
 Initial reader {
   scale: 'page-width',
   width: 560,
@@ -34,15 +34,15 @@ Highlight result {
       text: 'Alpha beta gamma delta',
       comment: '',
       tags: [],
-      id: 'HTVRBI7K',
-      dateCreated: '2026-11-02T19:15:21.127Z',
-      dateModified: '2026-11-02T19:15:21.127Z'
+      id: 'TDZ63Q9S',
+      dateCreated: '2026-11-03T11:45:34.378Z',
+      dateModified: '2026-11-03T11:45:34.378Z'
     }
   ],
   selection: '',
   scroll: 18
 }
-Quick swipe scroll 279
+Quick swipe scroll 256
 Pinch abort { active: false, saves: 1, scale: 0.7058823529411765 }
 Pinch mode false {
   calls: [

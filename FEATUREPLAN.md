@@ -1,6 +1,6 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 2. November 2026. Umsetzungsstand Build 300; die verlinkte Grundrecherche stammt vom 28. Oktober.
+Stand: 3. November 2026. Umsetzungsstand Build 301; die verlinkte Grundrecherche stammt vom 28. Oktober.
 
 ## Festgehaltene Entscheidungen
 
@@ -11,6 +11,16 @@ Am 29. Oktober wurden F01, F02, F05, F06, F16, F17, F18, F20 und F21 für die n�
 Die danach beauftragten Fit-Modi und F07 sind in Build 296 umgesetzt. Die weiteren Nachbesserungen sind im Abschnitt Build 297 erfasst; die übrigen Punkte bleiben im Backlog. Ein eigener Outline-Editor auf Android wird weiterhin nicht benötigt; die Outline soll am Desktop in die PDF geschrieben werden. F19 Tag-Autocomplete ist auch nicht Teil von Build 296.
 
 Build 292 war die zuvor ausgelieferte Basis. Der Nutzer hatte erfolgreiche Installation als Update, gutes direktes Markieren und funktionierendes SmartScroll bestätigt. Build 293 verwendet denselben Signierschlüssel, dieselbe Datenhaltung und die unveränderten weiteren Laufzeitpakete.
+
+## Nachbesserungen in Build 301
+
+**F07 römische Editionsreferenzen:** Die konkrete Screenshot-Stelle liegt auf PDF-Seite 133 der gelieferten Kant-Datei. Bisher erkannte der A-/B-Referenzzweig nur arabische Zahlen; `BXLI` blieb stehen, während `B XLII`/`B XLIX` in einzelnen OCR-Objekten mit dem Haupttext verbunden wurden. Kanonische römische Folioangaben werden jetzt vor dem Zusammenführen von Textspannen als Randreferenzen behandelt. Auch das Auftrennen eines kombinierten OCR-Objekts verwendet denselben A-/B-Erkenner und weiterhin Zeichenposition, Grundlinie und die getrennte Randspalte. Bloße römische Zahlen, gewöhnliche Wörter wie `bill`, Fließtext und Fußnoten werden dadurch nicht pauschal entfernt.
+
+**Exclude/Include auf Nachbarseiten:** Bereits analysierte Seiten erhalten ihre Anzeige-Masken über denselben auf 32 Seiten begrenzten Inhaltscache. So werden Randreferenzen auch auf gleichzeitig sichtbaren Nachbarseiten ausgeblendet. Einschließen entfernt die Masken sofort wieder; Drehungen verwenden dieselben normalisierten PDF-Rahmen. PDF-Datei, gespeicherte Markierungen und Fußnoten werden nicht verändert.
+
+**Ansichtsknöpfe:** Die volle lokalisierte Beschriftung wird mit aktueller Schrift, Schriftgröße und verfügbarer Breite gemessen, einschließlich des Platzes für das Häkchen. Passt sie nicht einzeilig, erscheinen Initialen, etwa `M` statt `Medium` oder `FTC` statt `Fit to Content`. Bei gleichen Initialen werden unterscheidbare kurze Präfixe verwendet, etwa `Ke`/`Kl` für `Keine`/`Klein`. Keine Verkleinerung der Schrift und kein zweizeiliges Anwachsen beim Auswählen. Die Mindest-Touchhöhe bleibt 48 dp; der vollständige Name bleibt als Bedienungshilfe erhalten. Nur bei extrem knapper Breite darf das Häkchen zugunsten des Textes entfallen; die ausgewählte Material-Fläche und der Auswahlzustand bleiben bestehen.
+
+**Prüfung:** Neue Regressionen prüfen die Original-Kant-Seiten 133/134/140 einschließlich `BXLI`, `B XLII`, `B XLIX`, `B L`, Include/Exclude, beider vollständiger Fußnoten der Screenshot-Seite, Nachbarseiten, drei Scrollmodi und alle Bildschirmdrehungen. 254 Reader-Tests, 81 Android-Tests und alle fünf Browserprüfungen sind bestanden. Die bisherigen Original-PDF-Fälle wurden erneut geprüft; Nachweise stehen in BUILD_STATUS.md und BUILD_VERIFICATION.json. Die native Knopfdarstellung ist kompiliert und in der Label-Logik geprüft, aber nicht auf einem physischen BOOX visuell getestet. SDK-Freiheit und Update-Identität bleiben erforderlich. F19/F22/F23 und die übrigen offenen Erweiterungen bleiben unverändert im Backlog.
 
 ## SDK-Entfernung in Build 300
 

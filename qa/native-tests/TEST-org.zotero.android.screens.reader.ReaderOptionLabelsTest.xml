@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.zotero.android.screens.reader.ReaderOptionLabelsTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-03T11:52:16.284Z" hostname="0604240221b9" time="0.011">
+  <properties/>
+  <testcase name="localized collisions stay distinguishable without changing full labels" classname="org.zotero.android.screens.reader.ReaderOptionLabelsTest" time="0.009"/>
+  <testcase name="reported narrow selected Medium uses M while the wide button keeps Medium" classname="org.zotero.android.screens.reader.ReaderOptionLabelsTest" time="0.0"/>
+  <testcase name="multiword options have distinct initials" classname="org.zotero.android.screens.reader.ReaderOptionLabelsTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

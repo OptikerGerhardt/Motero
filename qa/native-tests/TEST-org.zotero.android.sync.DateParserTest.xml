@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.zotero.android.sync.DateParserTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-11-02T19:35:02.640Z" hostname="f08c36d9893e" time="0.063">
+<testsuite name="org.zotero.android.sync.DateParserTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-11-03T11:52:16.832Z" hostname="0604240221b9" time="0.072">
   <properties/>
-  <testcase name="should parse day with suffix" classname="org.zotero.android.sync.DateParserTest" time="0.042"/>
+  <testcase name="should parse day with suffix" classname="org.zotero.android.sync.DateParserTest" time="0.055"/>
   <testcase name="returns null for blank string" classname="org.zotero.android.sync.DateParserTest" time="0.0"/>
   <testcase name="should parse three- and four-digit dates with leading zeros" classname="org.zotero.android.sync.DateParserTest" time="0.005"/>
-  <testcase name="returns null for empty string" classname="org.zotero.android.sync.DateParserTest" time="0.001"/>
-  <testcase name="should parse month written as word" classname="org.zotero.android.sync.DateParserTest" time="0.001"/>
-  <testcase name="should parse string with just number g 12 and le 31 as day" classname="org.zotero.android.sync.DateParserTest" time="0.003"/>
+  <testcase name="returns null for empty string" classname="org.zotero.android.sync.DateParserTest" time="0.0"/>
+  <testcase name="should parse month written as word" classname="org.zotero.android.sync.DateParserTest" time="0.002"/>
+  <testcase name="should parse string with just number g 12 and le 31 as day" classname="org.zotero.android.sync.DateParserTest" time="0.001"/>
   <testcase name="should parse string with just number g 100 as year" classname="org.zotero.android.sync.DateParserTest" time="0.001"/>
   <testcase name="should parse string with just number le 12 as month" classname="org.zotero.android.sync.DateParserTest" time="0.001"/>
   <testcase name="should parse two-digit month with leading zero and four-digit year" classname="org.zotero.android.sync.DateParserTest" time="0.001"/>
