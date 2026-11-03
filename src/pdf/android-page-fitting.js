@@ -74,6 +74,7 @@ export class AndroidPageFitting {
 		this.masks = null;
 		this.active = this.options.mode !== 'none';
 		this.applied = null;
+		if (!this.active) this.view._booxReader?.rememberReadingView();
 		this.view._render();
 		return this.active ? this.apply({ alignTop: true }) : Promise.resolve(true);
 	}
@@ -246,6 +247,7 @@ export class AndroidPageFitting {
 				d.style.clipPath = `inset(${Math.max(0, b[1] * d.clientHeight - fit.pad)}px ${Math.max(0, (1 - b[2]) * d.clientWidth - fit.pad)}px ${Math.max(0, (1 - b[3]) * d.clientHeight - fit.pad)}px ${Math.max(0, b[0] * d.clientWidth - fit.pad)}px)`;
 			}
 			this.applied = { scale: v.currentScale, bounds, pageIndex: index, left: c.scrollLeft, top: c.scrollTop };
+			this.view._booxReader?.rememberReadingView();
 		}
 		finally { this.applying = false; }
 		this.view._render();

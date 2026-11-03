@@ -35,6 +35,17 @@ export class PDFBooxReader {
 		this.onScale = () => {
 			this.clearNavigation();
 			let scale = this.viewer.currentScale;
+			let fitting = this.view._pageFitting;
+			// Its own scale event precedes the new applied snapshot. Remember
+			// that completed state in commit(), rather than calling it manual.
+			if (fitting?.applying) return;
+			// Native zoom buttons and a pinch starting in the page gutter have
+			// no page pointerdown. Preserve the fit before its scale listener
+			// suspends it, just as a pinch starting on the page does.
+			if (!this.zoomOrigin && fitting?.active && fitting.applied
+					&& Math.abs(scale - fitting.applied.scale) > 0.002) {
+				this.zoomOrigin = { scale: fitting.applied.scale, mode: 'pageFit', fit: fitting.snapshot() };
+			}
 			if (this.isOverview()) {
 				let origin = this.zoomOrigin || { scale: this.readingScale,
 					mode: this.readingModeForScale(this.readingScale), fit: this.readingFit };
@@ -71,6 +82,13 @@ export class PDFBooxReader {
 	}
 
 	get viewer() { return this.win.PDFViewerApplication.pdfViewer; }
+
+	rememberReadingView() {
+		this.readingScale = this.viewer.currentScale;
+		this.readingMode = this.readingModeForScale(this.readingScale);
+		this.readingFit = this.view._pageFitting?.snapshot();
+		this.zoomOrigin = null;
+	}
 
 	readingModeForScale(scale) {
 		if (this.view._pageFitting?.active && Math.abs((this.view._pageFitting.applied?.scale || 0) - scale) < 0.002) return 'pageFit';
