@@ -1,6 +1,6 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 3. November 2026. Umsetzungsstand Build 301; die verlinkte Grundrecherche stammt vom 28. Oktober.
+Stand: 3. November 2026. Umsetzungsstand Build 302; die verlinkte Grundrecherche stammt vom 28. Oktober.
 
 ## Festgehaltene Entscheidungen
 
@@ -11,6 +11,22 @@ Am 29. Oktober wurden F01, F02, F05, F06, F16, F17, F18, F20 und F21 für die n�
 Die danach beauftragten Fit-Modi und F07 sind in Build 296 umgesetzt. Die weiteren Nachbesserungen sind im Abschnitt Build 297 erfasst; die übrigen Punkte bleiben im Backlog. Ein eigener Outline-Editor auf Android wird weiterhin nicht benötigt; die Outline soll am Desktop in die PDF geschrieben werden. F19 Tag-Autocomplete ist auch nicht Teil von Build 296.
 
 Build 292 war die zuvor ausgelieferte Basis. Der Nutzer hatte erfolgreiche Installation als Update, gutes direktes Markieren und funktionierendes SmartScroll bestätigt. Build 293 verwendet denselben Signierschlüssel, dieselbe Datenhaltung und die unveränderten weiteren Laufzeitpakete.
+
+## Neue Bedienwege in Build 302
+
+**F16 Satzende und Schnellpalette:** Direktes Wortmarkieren schließt angehängte Satzzeichen einschließlich Punkt und schließender Anführungszeichen ein. Die Erweiterung überschreitet weder echte Leerzeichen noch Zeilen-, Fluss- oder Rotationsgrenzen; normale Android-/Desktop-Auswahl bleibt unverändert. Die Palette hat drei gleich breite, vollständig antippbare Bereiche: Highlight, mittiges abgerundetes X zum Löschen, Underline. Das Löschen verwendet den vorhandenen Annotationsmanager einschließlich normalem Speichern/Sync; Auswahl und Pointerzustand werden bereinigt. Kommentare/Tags bleiben beim Moduswechsel erhalten.
+
+**Langer Druck:** Langes Drücken auf eine editierbare Annotation öffnet dieselbe Schnellpalette erneut, ohne ein Duplikat anzulegen oder sofort das native Bearbeitungsfenster zu öffnen. Farben und Löschen funktionieren auch für Notizen; Highlight/Underline sind bei ungeeigneten Annotationsarten deaktiviert. Native Größen-/Auswahlgriffe und das Verschieben bereits ausgewählter Notizen/Ink/Text behalten Vorrang. Schreibgeschützte und externe Annotationen werden nicht verändert. Der Weg funktioniert auch mit Android-Auswahlmodus und sichtbaren Leisten.
+
+**F26 Lupe:** Während des direkten Ziehens erscheint eine kleine, abgerundete Lupe mit vergrößertem Seiteninhalt, Auswahlvorschau und Positionsstrich. Sie kopiert einen kleinen Ausschnitt des bereits gerenderten PDF-Canvas, ohne erneute PDF-Analyse oder permanente Animationsschleife. Loslassen, Mehrfinger-Geste, Abbruch, Fenster-/Dokumentwechsel und Größenänderung entfernen sie wieder. Sie fängt keine Eingaben ab.
+
+**F25 Share Document:** Im Info-/Eintragsdetailfenster erscheint beim langen Drücken auf einen Dateianhang zusätzlich `Share Document`/`Dokument teilen`. Ein fehlender Download wird über den vorhandenen Dateidownloader geholt; danach öffnet sich die Android-Teilenansicht. PDF, EPUB und andere Dateianhänge verwenden ihren passenden MIME-Typ, `content://`-URI und vorübergehenden Lesezugriff. Es wird kein Schreibzugriff erteilt. Die gespeicherte Originaldatei bleibt unverändert. Separat gespeicherte Zotero-Annotationen werden in diesem Schritt nicht zusätzlich eingebettet; eine spätere PDF-Exportoption mit Annotationen kann denselben Teilen-Endpunkt nutzen. Kein zusätzlicher Knopf in der Floating Toolbar.
+
+**Aussparung/Statusleistenbereich:** Das Annotationsfenster malt seine Material-Hintergrundfläche vor der Insets-Polsterung und berücksichtigt zusätzlich Displayaussparungen. Auch während des Ladens wird die Fläche gefüllt, sodass der PDF-Hintergrund nicht im oberen freien Bereich durchscheint. Farbe entspricht der Oberfläche des aktuellen Annotationsfensters.
+
+**Recherche:** [Zotero Android PR #205](https://github.com/zotero/zotero-android/pull/205), „Add the ability to share downloaded attachments“, beschreibt genau den langen Druck in den Eintragsdetails. Am 3. November geschlossen und nicht gemergt. Die eigene Umsetzung nutzt den aktuellen Downloader und AndroidX FileProvider und hängt nicht vom entfernten PDF-SDK ab. Auch EPUB ist als normale Datei teilbar. Die Android-Teilenansicht und die Aussparungsdarstellung müssen zusätzlich am physischen Gerät überprüft werden; keine Geräteprüfung behauptet.
+
+Die bisherigen Zuschnitt-, Randreferenz-, Wrapped-, Scroll-, Bookmark-, Tag- und Vollbildpfade bleiben erhalten. F19 Autocomplete, F22 manueller Zuschnitt All/Odd/Even und F23 Randtippen bleiben offen. 258 Reader-Tests und 83 Android-Tests in 19 Suiten sowie alle sechs Browserprüfungen sind bestanden. Nachweise stehen in BUILD_STATUS.md, BUILD_VERIFICATION.json und qa/. Androids tatsächliche Teilenansicht und die Aussparungsfläche müssen noch am physischen Gerät geprüft werden.
 
 ## Nachbesserungen in Build 301
 
@@ -153,6 +169,8 @@ Aufwand: S = überschaubare Codeänderung, M = mehrere Eingabe-/Layoutfälle und
 | F22 | **Manueller Zuschnitt:** Rechteck an Beispielseite wählen; All / Odd / Even, bei Bedarf zwei Beispielseiten. Pro PDF speichern, später in die gemeinsame Fit-Geometrie einspeisen. | Kein neuer PR recherchiert; aktueller Entwurf aus dem Nutzerauftrag. Eigenes Auswahlfenster erforderlich. | **C + Reader** | Nächster Ausbau nach automatischem Fit | Offen |
 | F23 | **Randtippen zum Blättern in allen Scrollmodi:** Links zurück, rechts vor; vorhandene Highlights/Links und obere Bookmark-Fläche berücksichtigen. | Vorhandenen Android-Randtipp-Pfad untersuchen und auf alle Modi erweitern; keine neue externe Recherche behauptet. | **Reader**, ggf. C für Einstellung | Nächster Schritt; aktuell zurückgestellt | Offen |
 | F24 | **PSPDFKit/Nutrient entfernen:** Alten Reader und Startinitialisierung abbauen, gemeinsame SDK-Typen und Hilfsfunktionen ersetzen; PDF.js-Reader beibehalten. | Prüfung des aktuellen Motero-Quellstands am 31. Oktober; keine neue PR-/Plugin-Recherche. | **C, native Android-Abhängigkeiten** | Separater nativer Build 300; PDF.js und Datenformate unverändert | Umgesetzt / Build 300 |
+| F25 | **Share Document im Anhangsmenü:** Originaldatei als PDF/EPUB/andere Datei über Android teilen; fehlenden Download zuvor laden. | [PR #205](https://github.com/zotero/zotero-android/pull/205), geprüft am 3. November; geschlossen, ungemergt. | **C, native Menü-/Intent-Anbindung** | Build 302; spätere PDF-Einbettung von Annotationen anschlussfähig | Umgesetzt / Build 302 |
+| F26 | **Lupe beim direkten Markieren:** Vergrößerter Bitmap-Ausschnitt mit Auswahlvorschau, ohne neue PDF-Analyse. | Eigene Prüfung der vorhandenen PDF.js-/Pointerwege. | **A, Reader** | Mit F16 und erneuter Schnellpalette gebündelt | Umgesetzt / Build 302 |
 
 „Kein passgenauer PR gefunden“ bezieht sich auf die durchsuchten öffentlichen Zotero-Android- und Reader-PRs samt Web-/Forensuche. Das ist keine Aussage, dass weltweit kein anderer Ansatz existiert. Desktop-Plugins sind Referenzen bzw. Desktop-Lösungen und nicht direkt in Android installierbar.
 

@@ -1,0 +1,4 @@
+<resources>
+    <string name="boox_share_document">Share Document</string>
+    <string name="boox_share_document_failed">The document could not be shared. Download it and try again.</string>
+</resources>

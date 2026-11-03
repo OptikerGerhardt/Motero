@@ -1,35 +1,43 @@
-# Motero auf BOOX: Build 301
+# Motero auf BOOX: Build 302
 
 ## Als Update installieren
 
-Die APK über die vorhandene Motero-Testversion installieren, vorher nicht deinstallieren. Paketkennung `org.zotero.android.debug`, Version `1.0.0-301`, Versionscode 301. Der bisherige Debug-Schlüssel, Dateipfade, Realm-/Syncformat und gespeicherte Einstellungen bleiben erhalten. Die technische Update-Prüfung vergleicht Paket, Zertifikat, Versionsanstieg, v2-Signatur und ZIP-Ausrichtung mit Build 300. Tatsächliche Installation und Kontositzung am physischen BOOX sind hier nicht geprüft.
+Die APK über die vorhandene Motero-Testversion installieren, vorher nicht deinstallieren. Paketkennung `org.zotero.android.debug`, Version `1.0.0-302`, Versionscode 302. Debug-Schlüssel, Speicherpfade, Kontodaten, Realm-/Syncformat und Einstellungen bleiben erhalten. Die technische APK-Prüfung vergleicht Identität, Signatur, Versionsanstieg und ZIP-Ausrichtung gegen Build 301.
 
-## Korrekturen
+## Neue Funktionen
 
-Bei `Line and edition references → Exclude` werden auch A-/B-Referenzen mit römischen Folios erkannt. Die Screenshot-Stelle `BXLI` liegt auf PDF-Seite 133 der bereitgestellten Kant-Datei. `B XLII`, `B XLIX` und `B L` werden auch dann getrennt behandelt, wenn der OCR-Text sie mit einer benachbarten Textzeile verbunden hat. Zeichenpositionen, Grundlinie und die getrennte Randspalte bleiben für die Entscheidung erforderlich. Normale Wörter, bloße römische Zahlen im Inhalt sowie Fußnoten bleiben erhalten. Include zeigt die Referenzen wieder an.
+Direktes Wortmarkieren schließt physisch angehängte Schlusszeichen ein. Die Auswahl überschreitet dabei keine echten Leerzeichen, Zeilen-, Rotations- oder Textflussgrenzen. Nur der direkte Markiermodus nutzt diese Ergänzung; die normale Android-/Desktop-Auswahl bleibt unverändert.
 
-Die Anzeige-Masken verwenden den vorhandenen begrenzten Seitencache auch für bereits analysierte Nachbarseiten. Beim Scrollen mit mehreren sichtbaren Seiten gilt dieselbe Einstellung. Drehung und Zoom verwenden die normalisierten PDF-Koordinaten. Das ist ausschließlich eine Ansichtskorrektur; PDF-Datei, Textschicht, Annotationskoordinaten und gespeicherte Inhalte bleiben unverändert.
+Eine kleine Lupe zeigt während des Ziehens den Inhalt unter dem Finger, die Auswahl und einen Positionsstrich. Sie verwendet einen Ausschnitt des bereits gerenderten Canvas, höchstens einen Paint je Eingabeframe und keine neue PDF-Analyse. Sie liegt normalerweise über dem Finger; nahe der oberen Bildschirmkante weicht sie nach unten aus. Loslassen und Abbrechen entfernen sie, ebenso Mehrfinger-Gesten und Fenster-/Dokumentwechsel.
 
-Ansichtsknöpfe messen ihre volle lokalisierte Beschriftung mit aktueller Schrift, Schriftgröße und verbleibender Breite einschließlich Häkchen. Bei Platzmangel werden Initialen angezeigt, etwa M statt Medium oder FTC statt Fit to Content. Gleiche Initialen werden durch unterscheidbare kurze Präfixe ersetzt. Alle Beschriftungen bleiben einzeilig; beim Auswählen entsteht keine zusätzliche Textzeile. Die Schrift wird nicht verkleinert. Die Mindest-Touchhöhe bleibt 48 dp und die volle Beschriftung bleibt für Bedienungshilfen vorhanden. Nur bei extrem knapper Breite weicht das Häkchen dem Text; die ausgewählte Material-Fläche bleibt erkennbar.
+Die Schnellpalette hat drei gleich breite Touchflächen: Highlight, mittiges abgerundetes X zum Löschen, Underline. Farben, Themen, Symbole und die übrige zurückhaltende Zotero-Gestaltung bleiben erhalten. Das Löschen geht durch den normalen Annotationsmanager und dessen Sync-/Undo-Wege. Pointer- und Auswahlzustand werden bereinigt.
 
-## Erhaltener Funktionsumfang und Grenzen
+Langes Drücken auf eine bearbeitbare Annotation öffnet die Palette erneut. Notizen können ebenfalls schnell umgefärbt/gelöscht werden; ungeeignete Typwechsel sind deaktiviert. Native Größen-/Auswahlgriffe und Transformationen bereits ausgewählter Notizen, Ink- und Textobjekte haben Vorrang. Normales Antippen behält das ausführliche Annotationsfenster; schreibgeschützte oder externe Annotationen bleiben geschützt.
 
-PSPDFKit/Nutrient bleibt vollständig entfernt. PDF.js selbst und alle Laufzeitdateien außerhalb des Reader-ZIP bleiben bytegleich zu Build 300. Vier Hauptfits, drei Breitenbezüge, Ränder, getrennte gerade/ungerade Profile, SmartScroll, Wrapped-Seitenauswahl, direktes Markieren, Highlight/Underline-Palette, Kommentar-/Tagwege, Quick Tags, graue Bookmark-Notizen, Lesekante mit 50 % Deckkraft, Vollbild, schwebende Leisten und Motero-M bleiben erhalten.
+Im Info-/Eintragsdetailfenster öffnet langes Drücken auf einen Dateianhang zusätzlich `Share Document` / `Dokument teilen`. Fehlende Downloads werden über den vorhandenen Downloader nachgeladen. Anschließend öffnet die Android-Teilenansicht mit passendem MIME-Typ, einem FileProvider-URI in EXTRA_STREAM und ClipData sowie vorübergehender Leseberechtigung. Es wird kein Schreibzugriff erteilt. PDF und EPUB sind ausdrücklich abgedeckt; andere Dateien behalten ihren Dateityp. Kein neuer Knopf in der Floating Toolbar.
 
-F19 Autocomplete, F22 manueller Zuschnitt All/Odd/Even, F23 Randtippen und optionale Stifterweiterungen bleiben offen. Die Änderungen führen keine neue Engine-Abhängigkeit ein. Die betreffende PDF-Erkennung wurde mit Höffe 26/27 und 191/192 sowie Kant 369/370, 380/381 und neu 133/134/140 geprüft. Frühere Original-Mul-Prüfungen werden nicht erneut behauptet, da die Datei hier nicht vorliegt. Heuristische Erkennung kann bei unbekannten PDFs weiterhin mehrdeutig sein. Keine neue OCR.
+Geteilt wird die gespeicherte Originaldatei. Separat gespeicherte Zotero-Markierungen werden nicht zusätzlich eingebettet. Eine spätere Exportoption mit eingebetteten PDF-Annotationen kann ihren erzeugten Export an denselben Teilen-Endpunkt übergeben. Die Originaldatei und die Datenbank werden durch das Teilen nicht verändert.
 
-Die neuen Ansichtsknöpfe sind regulär kompiliert und ihre Label-Logik ist geprüft. Ihre native Darstellung wurde nicht an einem physischen BOOX visuell kontrolliert; ebenso wenig echter Kontosync oder E-Ink-Reaktion. Endgültige Testzahlen und Hashwerte stehen in BUILD_STATUS.md und BUILD_VERIFICATION.json, Protokolle in qa/.
+Das Annotationsfenster malt seine Material-Fläche vor der Systemleisten-/Aussparungs-Polsterung und auch während des Ladens. Die obere Fläche entspricht dadurch dem Hintergrund des Fensters, statt die PDF durchscheinen zu lassen. Die tatsächliche Displayaussparung und Teilenansicht müssen am physischen Gerät geprüft werden; beides wird hier nicht als Gerätetest behauptet.
 
-## Neubau und Prüfung
+## Recherche, Erhalt und Prüfung
 
-Das Quellarchiv enthält aktuelle Android-/Reader-Quellen, Git-Bundles, die erforderlichen Laufzeitpakete und den bisherigen Debug-Schlüssel. SDK/JDK, node_modules, Build-Caches, APK, private Release-Schlüssel, Original-PDFs und interne Screenshots sind ausgeschlossen.
+[Zotero Android PR #205](https://github.com/zotero/zotero-android/pull/205) beschreibt das Teilen heruntergeladener Anhänge per langem Druck in den Eintragsdetails. Am 3. November 2026 war er geschlossen und ungemergt. Die aktuelle eigene Implementierung nutzt den vorhandenen Downloader und AndroidX FileProvider und führt keine PDF-SDK-Abhängigkeit ein.
 
-JDK 17, Android Platform 37.0 Revision 2, Build Tools 36.0.0, Gradle 9.6.1 und Node/npm verwenden. Reader-Submodule auf ihren festgelegten Ständen initialisieren. Das unveränderte Verzeichnis `pdf` aus `app/src/main/assets/reader/reader.zip` nach `reader/build/mobile/pdf` und `reader/build/android/pdf` übernehmen. Im Reader `npm ci`, `npx webpack --config-name android` und `npm test` ausführen; danach im Android-Projekt `python3 scripts/package_reader_assets.py`. PDF.js nicht unnötig neu bauen.
+PSPDFKit/Nutrient bleibt vollständig entfernt. PDF.js selbst und die übrigen Laufzeitpakete bleiben bytegleich zu Build 301. Die Zuschnitt-/Randreferenzlogik, vier Fits, Wrapped, SmartScroll, Bookmarks, Kommentare/Tags, Quick Tags, Lesekante, schwebende Leisten und Vollbild behalten ihre Regressionstests. F19 Autocomplete, F22 manuelles Zuschneiden All/Odd/Even und F23 Randtippen bleiben offen.
 
-Die fünf Skripte `scripts/test-boox-{browser,features,fitting,stability,reader-controls}.cjs` verwenden Playwright. `BOOX_TEST_BROWSER` kann einen Chromium-Pfad angeben, `BOOX_HOEFFE_PDF` und `BOOX_KANT_PDF` verweisen auf die konkreten Test-PDFs. Der letzte Test enthält auch die römischen Referenzen und Nachbarseiten. `BOOX_QA_IMAGES` ist ein optionaler lokaler Pfad für interne Vergleichsbilder; diese sind keine Auslieferungsartefakte.
+BUILD_STATUS.md, BUILD_VERIFICATION.json und qa/ enthalten die abschließenden Testzahlen und Hashwerte. Die neuen Browserfälle prüfen Punkt/Satzende, tatsächliche Canvas-Lupenpixel einschließlich Auswahl, drei gleich breite Touchflächen, reguläres Löschen, langes Drücken in beiden Auswahlmodi, Notizfarben, erhaltene Notizbewegung und Abbruch mit mehreren Fingern. Native JVM-Tests ergänzen MIME-Typen und die Beschränkung auf Leseberechtigung. Keine physische BOOX-/E-Ink-/Kontosyncprüfung.
 
-Android: `./gradlew :app:testDevDebugUnitTest :app:assembleDevDebug --no-build-cache`. In Umgebungen ohne Java-Attach kann `--init-script scripts/test_jvm_agent.gradle` den ByteBuddy-Agent ausschließlich in der Test-JVM vorladen. Das ändert keine APK-Startoptionen.
+## Neubau
 
-Quellenvergleich: `python3 scripts/audit_pdf_engine_removal.py --base-source <entpackte-300-Quellen> --reader-refinements --output qa/sdk-removal-audit.json`. Nur die beiden geprüften Reader-Dateien und die native Beschriftungszeile sind als bestehende Produktionsänderungen erlaubt.
+Das Quellarchiv enthält Android-/Reader-Quellen, beide Git-Bundles, Laufzeitpakete und den bisherigen Debug-Schlüssel. SDK/JDK, node_modules, Build-Caches, APK, private Release-Schlüssel, Original-PDFs und interne Screenshots sind ausgeschlossen.
 
-Updateprüfung: `python3 scripts/verify_boox_update.py --base <300.apk> --apk <301.apk> --build-tools <SDK/build-tools/36.0.0> --qa-directory qa --label Motero --fitting-update --reader-polish --motero-refinement --reader-controls --without-pspdfkit --roman-references`. `--preserve-reader` ist bei diesem Reader-Update nicht vorgesehen. SDK-Freiheit wird unabhängig davon geprüft, auch wenn bereits die Basis-APK SDK-frei war.
+JDK 17, Android Platform 37.0 Revision 2, Build Tools 36.0.0, Gradle 9.6.1 und Node/npm verwenden. Reader-Submodule initialisieren. Den unveränderten `pdf`-Ordner aus `app/src/main/assets/reader/reader.zip` nach `reader/build/mobile/pdf` und `reader/build/android/pdf` übernehmen. Im Reader `npm ci`, `npx webpack --config-name android`, `npm test`; anschließend im Android-Projekt `python3 scripts/package_reader_assets.py`. PDF.js nicht unnötig neu bauen.
+
+Die sechs Browserprüfungen liegen unter `reader/scripts/test-boox-{browser,features,fitting,stability,reader-controls,annotation-tools}.cjs`. Playwright und ein Chromium verwenden. `BOOX_TEST_BROWSER` gibt optional den Browserpfad an; `BOOX_HOEFFE_PDF` und `BOOX_KANT_PDF` verweisen auf die Original-Testdateien. Optionale interne Bilder werden nur bei `BOOX_QA_IMAGES` erzeugt und nicht ausgeliefert.
+
+Android: `./gradlew :app:testDevDebugUnitTest :app:assembleDevDebug --no-build-cache`. Bei Umgebungen ohne Attach: `--init-script scripts/test_jvm_agent.gradle` lädt ByteBuddy nur in der Test-JVM vor, nicht in der App.
+
+Audit: `python3 scripts/audit_pdf_engine_removal.py --base-source <entpackte-301-Quellen> --annotation-tools --output qa/sdk-removal-audit.json`.
+
+APK: `python3 scripts/verify_boox_update.py --base <301.apk> --apk <302.apk> --build-tools <SDK/build-tools/36.0.0> --qa-directory qa --label Motero --fitting-update --reader-polish --motero-refinement --reader-controls --roman-references --without-pspdfkit --annotation-tools`. Eingebettete Quellen/CSS, übrige Laufzeitdateien/PDF.js, SDK-Freiheit, neue Prüfungen und Update-Identität werden gemeinsam geprüft.

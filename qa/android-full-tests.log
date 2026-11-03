@@ -1,3 +1,13 @@
+
+Welcome to Gradle 9.6.1!
+
+Here are the highlights of this release:
+ - Improved Configuration Cache hit rates
+ - Additional CLI rendering options
+ - Important project hierarchy lookup deprecations
+
+For more details see https://docs.gradle.org/9.6.1/release-notes.html
+
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.6.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
 Daemon will be stopped at the end of the build
 > Task :buildSrc:checkKotlinGradlePluginConfigurationErrors SKIPPED
@@ -49,18 +59,18 @@ For more information, see http://developer.android.com/build/r/new-dsl.
 
 To determine what is calling unitTestVariants, use -Pandroid.debug.obsoleteApi=true on the command line to display more information.
 Add android.sync.suppressAgpWarnings=DEPRECATED_DSL to the gradle.properties file to suppress this warning.
-w: file:///workspace/scratch/68e174d26455/build301/source/zotero-android/app/build.gradle.kts:29:1: 'fun Project.android(configure: Action<BaseAppModuleExtension>): Unit' is deprecated. Replaced by com.android.build.api.dsl.ApplicationExtension.
+w: file:///workspace/scratch/68e174d26455/build302/source/zotero-android/app/build.gradle.kts:29:1: 'fun Project.android(configure: Action<BaseAppModuleExtension>): Unit' is deprecated. Replaced by com.android.build.api.dsl.ApplicationExtension.
 This class is not used for the public extensions in AGP when android.newDsl=true, which is the default in AGP 9.0, and will be removed in AGP 10.0.
 w: ⚠️ Deprecated 'org.jetbrains.kotlin.android' plugin usage
 The 'org.jetbrains.kotlin.android' plugin in project ':app' is no longer required for Kotlin support since AGP 9.0.
 Solution: Remove both `android.builtInKotlin=true` and `android.newDsl=false` from `gradle.properties`, then migrate to built-in Kotlin.
 See https://kotl.in/gradle/agp-built-in-kotlin for more details.
 
-Checking the license for package Android SDK Platform-Tools in /workspace/scratch/68e174d26455/build301/tools/android-sdk/licenses
+Checking the license for package Android SDK Platform-Tools in /workspace/scratch/68e174d26455/build302/tools/android-sdk/licenses
 License for package Android SDK Platform-Tools accepted.
 Preparing "Install Android SDK Platform-Tools v.37.0.1".
 "Install Android SDK Platform-Tools v.37.0.1" ready.
-Installing Android SDK Platform-Tools in /workspace/scratch/68e174d26455/build301/tools/android-sdk/platform-tools
+Installing Android SDK Platform-Tools in /workspace/scratch/68e174d26455/build302/tools/android-sdk/platform-tools
 "Install Android SDK Platform-Tools v.37.0.1" complete.
 "Install Android SDK Platform-Tools v.37.0.1" finished.
 
@@ -75,67 +85,67 @@ Installing Android SDK Platform-Tools in /workspace/scratch/68e174d26455/build30
 > Task :app:processDevDebugGoogleServices
 
 > Task :app:mergeDevDebugResources
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-hu/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values/imported_strings.xml:281:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-hr/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-ig/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-af/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-it/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-is/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-ro/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-ru/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-jv/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-br/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-sl/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-kk/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-sr/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-sv/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-de/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-ta/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-uk/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-mn/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-lt/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-vi/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-en/imported_strings.xml:281:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-nl/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-eu/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values/imported_strings.xml:281:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-hu/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-hr/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-ig/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-af/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-it/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-is/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-ru/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-ro/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-jv/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-br/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-sl/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-sr/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-kk/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-sv/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-ta/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-de/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-lt/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-uk/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-en/imported_strings.xml:281:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-mn/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
 
 > Task :app:packageDevDebugResources
 > Task :app:processDevDebugNavigationResources
+> Task :app:generateDevDebugBuildConfig
 
 > Task :app:mergeDevDebugResources
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-fr/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-fa/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-pl/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-ja/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-oc/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-bn/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-gl/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-ka/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-sk/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-sq/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-kn/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-hy/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-id/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-cs/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-am/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-cy/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-ar/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-tr/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-mk/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-bg/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-ca/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-et/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-km/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-ko/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-fi/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-th/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-da/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-el/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-es/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/res/values-he/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-eu/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-ja/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-vi/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-fa/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-bn/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-oc/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-nl/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-gl/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-fr/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-ka/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-sk/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-pl/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-sq/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-kn/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-cs/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-cy/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-tr/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-mk/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-hy/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-et/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-id/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-am/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-fi/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-ar/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-bg/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-ca/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-km/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-ko/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-th/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-da/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-el/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-es/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/res/values-he/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
 
-> Task :app:generateDevDebugBuildConfig
 > Task :app:parseDevDebugLocalResources
 > Task :app:javaPreCompileDevDebug
 > Task :app:dataBindingGenBaseClassesDevDebug
@@ -147,17 +157,17 @@ Installing Android SDK Platform-Tools in /workspace/scratch/68e174d26455/build30
 > Task :app:extractDeepLinksDevDebug
 
 > Task :app:processDevDebugMainManifest
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/AndroidManifest.xml:7:5-9:31 Warning:
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/AndroidManifest.xml:7:5-9:31 Warning:
 	uses-permission#android.permission.READ_EXTERNAL_STORAGE was tagged at AndroidManifest.xml:7 to remove other declarations but no other declaration present
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/AndroidManifest.xml:11:5-13:31 Warning:
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/AndroidManifest.xml:11:5-13:31 Warning:
 	uses-permission#android.permission.WRITE_EXTERNAL_STORAGE was tagged at AndroidManifest.xml:11 to remove other declarations but no other declaration present
-/workspace/scratch/68e174d26455/build301/source/zotero-android/app/src/main/AndroidManifest.xml:15:5-108:19 Warning:
+/workspace/scratch/68e174d26455/build302/source/zotero-android/app/src/main/AndroidManifest.xml:15:5-108:19 Warning:
 	application@android:requestLegacyExternalStorage was tagged at AndroidManifest.xml:15 to replace other declarations but no other declaration present
 
 > Task :app:processDevDebugManifest
 > Task :app:preDevDebugUnitTestBuild UP-TO-DATE
-> Task :app:mergeDevDebugNativeDebugMetadata NO-SOURCE
 > Task :app:javaPreCompileDevDebugUnitTest
+> Task :app:mergeDevDebugNativeDebugMetadata NO-SOURCE
 > Task :app:generateDevDebugAssets UP-TO-DATE
 > Task :app:mergeDevDebugAssets
 > Task :app:processDevDebugManifestForPackage
@@ -165,14 +175,16 @@ Installing Android SDK Platform-Tools in /workspace/scratch/68e174d26455/build30
 > Task :app:processDevDebugResources
 > Task :app:generateDevDebugGlobalSynthetics
 > Task :app:checkDevDebugDuplicateClasses
+> Task :app:kspDevDebugKotlin
 > Task :app:desugarDevDebugFileDependencies
+
 > Task :app:kspDevDebugKotlin
 w: [ksp] No dependencies reported for generated source org.zotero.android.ZoteroApplication_ComponentTreeDeps.java which willprevent incremental compilation.
 Please file a bug at https://issuetracker.google.com/issues/new?component=413107.
 
 > Task :app:mergeExtDexDevDebug
-> Task :app:mergeLibDexDevDebug
 > Task :app:mergeDevDebugJniLibFolders
+> Task :app:mergeLibDexDevDebug
 > Task :app:validateSigningDevDebug
 > Task :app:writeDevDebugAppMetadata
 > Task :app:writeDevDebugSigningConfigVersions
@@ -184,32 +196,32 @@ Unable to strip the following libraries, packaging them as they are: libandroidx
 > Task :app:kaptGenerateStubsDevDebugKotlin
 
 > Task :app:kaptDevDebugKotlin
-Note: Processing module BundledDataConfigurationDbModule
 Note: Processing module MainConfigurationDbModule
-Note: Processing class RCollection
-Note: Processing class AllItemsDbRow
-Note: Processing class RUser
-Note: Processing class RItem
-Note: Processing class RTypedTag
-Note: Processing class RCondition
-Note: Processing class RVersions
-Note: Processing class RStyle
-Note: Processing class RLastReadDate
-Note: Processing class RRelation
-Note: Processing class RTranslatorMetadata
-Note: Processing class RItemField
-Note: Processing class RPath
+Note: Processing module BundledDataConfigurationDbModule
 Note: Processing class RObjectChange
+Note: Processing class RGroup
+Note: Processing class RCreator
+Note: Processing class RCollection
+Note: Processing class RRect
 Note: Processing class RWebDavDeletion
 Note: Processing class RPageIndex
-Note: Processing class RCreator
-Note: Processing class RLink
-Note: Processing class RGroup
-Note: Processing class RCustomLibrary
-Note: Processing class RPathCoordinate
-Note: Processing class RRect
-Note: Processing class RTag
 Note: Processing class RSearch
+Note: Processing class RStyle
+Note: Processing class RLink
+Note: Processing class RTypedTag
+Note: Processing class AllItemsDbRow
+Note: Processing class RTag
+Note: Processing class RItem
+Note: Processing class RUser
+Note: Processing class RPath
+Note: Processing class RCustomLibrary
+Note: Processing class RVersions
+Note: Processing class RRelation
+Note: Processing class RLastReadDate
+Note: Processing class RTranslatorMetadata
+Note: Processing class RPathCoordinate
+Note: Processing class RItemField
+Note: Processing class RCondition
 Note: Creating DefaultRealmModule
 warning: The following options were not recognized by any processor: '[dagger.fastInit, dagger.hilt.android.internal.disableAndroidSuperclassValidation, dagger.hilt.android.internal.projectType, kapt.kotlin.generated]'
 
@@ -244,7 +256,7 @@ OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader clas
 > Task :app:createDevDebugApkListingFileRedirect
 > Task :app:assembleDevDebug
 
-[Incubating] Problems report is available at: file:///workspace/scratch/68e174d26455/build301/source/zotero-android/build/reports/problems/problems-report.html
+[Incubating] Problems report is available at: file:///workspace/scratch/68e174d26455/build302/source/zotero-android/build/reports/problems/problems-report.html
 
-BUILD SUCCESSFUL in 11m 19s
+BUILD SUCCESSFUL in 12m 58s
 62 actionable tasks: 62 executed

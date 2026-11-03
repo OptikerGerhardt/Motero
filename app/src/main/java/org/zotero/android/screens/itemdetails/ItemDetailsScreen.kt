@@ -9,6 +9,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import org.zotero.android.helpers.shareDocument
+import org.zotero.android.uicomponents.Strings
+import org.zotero.android.androidx.content.longToast
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.screens.itemdetails.topbars.ItemDetailsEditingTopBar
 import org.zotero.android.screens.itemdetails.topbars.ItemDetailsTopBar
@@ -34,6 +38,7 @@ internal fun ItemDetailsScreen(
     onOpenWebpage: (url: String) -> Unit,
     onPickFile: () -> Unit,
 ) {
+    val context = LocalContext.current
     AppThemeM3 {
 
         val viewState by viewModel.viewStates.observeAsState(ItemDetailsViewState())
@@ -71,6 +76,10 @@ internal fun ItemDetailsScreen(
                     navigateToAddOrEditNote(consumedEffect.screenArgs)
                 }
 
+                is ItemDetailsViewEffect.ShareDocument -> {
+                    try { shareDocument(context, consumedEffect.file, consumedEffect.mimeType) }
+                    catch (error: Exception) { context.longToast(context.getString(Strings.boox_share_document_failed)) }
+                }
                 is ItemDetailsViewEffect.OpenFile -> {
                     onOpenFile(consumedEffect.file, consumedEffect.mimeType)
                 }

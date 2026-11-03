@@ -36,6 +36,11 @@ sealed class LongPressOptionItem(
         resIcon = Drawables.delete_24px
     )
 
+    data class ShareDocument(val attachment: Attachment): LongPressOptionItem(
+        titleId = Strings.boox_share_document,
+        resIcon = Drawables.share_24
+    )
+
     data class DeleteAttachmentFile(val attachment: Attachment): LongPressOptionItem(
         titleId = Strings.item_detail_delete_attachment_file,
         resIcon = Drawables.file_download_off_24px

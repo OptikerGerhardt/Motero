@@ -1,13 +1,13 @@
 {
   "package": "org.zotero.android.debug",
-  "version_code": 301,
-  "version_name": "1.0.0-301",
+  "version_code": 302,
+  "version_name": "1.0.0-302",
   "certificate_sha256": "c4e70a6935d239246540532b6d3ea514eb2a428e1e8eaacbf94c8a9a01989299",
   "application_label": "Motero",
-  "previous_version_code": 300,
-  "sha256": "f0932633f30617e994af643f5708c192f9f44c44e605d217a8e95e48bb4c9d13",
-  "size_bytes": 105604242,
-  "reader_sha256": "ad8bdc829dc23c71c45190455341f6254ff4aff939cd5207f5bec1c242da9dd1",
+  "previous_version_code": 301,
+  "sha256": "ef83a50cb8f58b2a7725252ee3cfa80083c73d3ffc92794c496068e147d0256d",
+  "size_bytes": 105615050,
+  "reader_sha256": "79428fde1b43ebc314dc1c4d1803e9a9c8dfaa84d402dace62103e4dae072f0f",
   "dex_count": 7,
   "reader_sources_verified": [
     "pdf/boox-reader.js",
@@ -20,7 +20,10 @@
     "pdf/reading-layout.mjs",
     "pdf/android-page-fitting.js",
     "pdf/chrome-tap-guard.mjs",
-    "pdf/page.js"
+    "pdf/page.js",
+    "pdf/direct-selection.mjs",
+    "pdf/selection-magnifier.js",
+    "pdf/selection.js"
   ],
   "unchanged_runtime_files_verified": 57,
   "selected_features": [
@@ -34,16 +37,19 @@
     20,
     21
   ],
-  "fitting_unchanged": false,
+  "fitting_unchanged": true,
   "pdfjs_unchanged": true,
   "zip_alignment_verified": true,
   "apk_entry_names_unchanged": true,
   "sdk_removed": true,
   "removed_sdk_runtime_files": 0,
   "complete_reader_unchanged": false,
-  "reader_tests": 254,
+  "annotation_tools_verified": true,
+  "document_sharing_verified": true,
+  "cutout_background_source_verified": true,
+  "reader_tests": 258,
   "native_logic_tests": 6,
-  "native_tests_total": 81,
+  "native_tests_total": 83,
   "native_tests_skipped": 0,
   "browser_features_passed": true,
   "browser_gestures_passed": true,
@@ -76,5 +82,8 @@
   "physical_device_tested": false,
   "motero_icon_verified": true,
   "fullscreen_hooks_verified": true,
-  "palette_halves_verified": true
+  "palette_halves_verified": false,
+  "palette_thirds_verified": true,
+  "physical_sharing_tested": false,
+  "physical_cutout_tested": false
 }

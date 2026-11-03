@@ -19,6 +19,14 @@ internal fun ItemDetailsErrorDialogs(
     deleteOrRestoreItem: (isDelete: Boolean) -> Unit,
 ) {
     when (itemDetailError) {
+        ItemDetailError.cantShareDocument -> {
+            CustomAlertDialogM3(
+                title = stringResource(Strings.error),
+                description = stringResource(Strings.boox_share_document_failed),
+                confirmButton = CustomAlertDialogM3ActionConfig(text = stringResource(Strings.ok)),
+                onDismiss = onDismissErrorDialog
+            )
+        }
         is ItemDetailError.cantAddAttachments -> {
             when (itemDetailError.attachmentError) {
                 ItemDetailError.AttachmentAddError.allFailedCreation -> TODO()

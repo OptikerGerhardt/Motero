@@ -3,6 +3,9 @@ package org.zotero.android.screens.reader.annotation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -69,6 +72,7 @@ internal fun ReaderAnnotationScreen(
         }
         val stateAnnotation = viewState.annotation
         val selectedColor = viewState.color
+        Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
         ReaderAnnotationPart(
             stateAnnotation = stateAnnotation,
             onDone = viewModel::onDone,
@@ -89,6 +93,7 @@ internal fun ReaderAnnotationScreen(
             onFontSizeDecrease = viewModel::onFontSizeDecrease,
             onFontSizeIncrease = viewModel::onFontSizeIncrease
         )
+        }
     }
 }
 
@@ -118,8 +123,8 @@ internal fun ReaderAnnotationPart(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .windowInsetsPadding(TopAppBarDefaults.windowInsets)
             .background(MaterialTheme.colorScheme.surface)
+            .windowInsetsPadding(TopAppBarDefaults.windowInsets.union(WindowInsets.displayCutout))
     ) {
         val annotationColor =
             Color(annotation.displayColor.toColorInt())

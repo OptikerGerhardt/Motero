@@ -237,11 +237,35 @@ class ItemDetailsViewModel @Inject constructor(
         loadInitialData()
     }
 
+    private var attachmentToShare: Pair<String, LibraryIdentifier>? = null
+
+    private fun shareAttachment(attachment: Attachment) {
+        if (attachment.type !is Attachment.Kind.file) return
+        dismissBottomSheet()
+        attachmentToShare = attachment.key to attachment.libraryId
+        updateState { copy(attachmentToOpen = null) }
+        fileDownloader.downloadIfNeeded(attachment = attachment, parentKey = viewState.key)
+    }
+
+    private fun shareDownloadedAttachment(key: String, libraryId: LibraryIdentifier) {
+        val attachment = viewState.attachments.firstOrNull { it.key == key && it.libraryId == libraryId } ?: return
+        val type = attachment.type as? Attachment.Kind.file ?: return
+        val file = fileStore.attachmentFile(libraryId = libraryId, key = key, filename = type.filename)
+        if (file.isFile) triggerEffect(ItemDetailsViewEffect.ShareDocument(file, type.contentType))
+        else updateState { copy(error = ItemDetailError.cantShareDocument) }
+    }
+
     private fun setupFileObservers() {
         attachmentDownloaderEventStream.flow()
             .onEach { update ->
                 process(update)
                 if (update.kind is AttachmentDownloader.Update.Kind.progress) {
+                    return@onEach
+                }
+                if (attachmentToShare == (update.key to update.libraryId)) {
+                    attachmentToShare = null
+                    if (update.kind is AttachmentDownloader.Update.Kind.ready) shareDownloadedAttachment(update.key, update.libraryId)
+                    else if (update.kind is AttachmentDownloader.Update.Kind.failed) updateState { copy(error = ItemDetailError.cantShareDocument) }
                     return@onEach
                 }
                 if (viewState.attachmentToOpen != update.key) {
@@ -1200,6 +1224,7 @@ class ItemDetailsViewModel @Inject constructor(
     }
 
     fun openAttachment(attachment: Attachment) {
+        attachmentToShare = null
         val key = attachment.key
         val (progress, _) = this.fileDownloader.data(
             key = key,
@@ -1420,6 +1445,9 @@ class ItemDetailsViewModel @Inject constructor(
                 is LongPressOptionItem.MoveToTrashAttachment -> {
                     delete(longPressOptionItem.attachment)
                 }
+                is LongPressOptionItem.ShareDocument -> {
+                    shareAttachment(longPressOptionItem.attachment)
+                }
                 is LongPressOptionItem.DeleteAttachmentFile -> {
                     deleteFile(longPressOptionItem.attachment)
                 }
@@ -1466,6 +1494,7 @@ class ItemDetailsViewModel @Inject constructor(
     fun onAttachmentLongClick(attachment: Attachment) {
         val actions = mutableListOf<LongPressOptionItem>()
         val attachmentType = attachment.type
+        if (attachmentType is Attachment.Kind.file) actions.add(LongPressOptionItem.ShareDocument(attachment))
         if (attachmentType is Attachment.Kind.file && attachmentType.location == Attachment.FileLocation.local) {
             actions.add(LongPressOptionItem.DeleteAttachmentFile(attachment))
         }
@@ -2105,6 +2134,7 @@ sealed class ItemDetailsViewEffect : ViewEffect {
     data class ShowAddOrEditNoteEffect(val screenArgs: String) : ItemDetailsViewEffect()
     object ShowVideoPlayer : ItemDetailsViewEffect()
     object ShowImageViewer : ItemDetailsViewEffect()
+    data class ShareDocument(val file: File, val mimeType: String) : ItemDetailsViewEffect()
     data class OpenFile(val file: File, val mimeType: String) : ItemDetailsViewEffect()
     data class NavigateToReaderScreen(val params: String, val readerEncodedFilePathParam: String) : ItemDetailsViewEffect()
     data class OpenWebpage(val url: String) : ItemDetailsViewEffect()

@@ -1,0 +1,4 @@
+<resources>
+    <string name="boox_share_document">Dokument teilen</string>
+    <string name="boox_share_document_failed">Das Dokument konnte nicht geteilt werden. Lade es herunter und versuche es erneut.</string>
+</resources>

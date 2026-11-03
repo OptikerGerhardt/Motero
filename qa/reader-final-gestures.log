@@ -8,8 +8,8 @@ HTTP /pdf/web/viewer.css
 HTTP /pdf/web/viewer.mjs
 HTTP /pdf/build/pdf.worker.mjs
 HTTP /gesture-test.pdf
-HTTP /pdf/web/standard_fonts/LiberationSans-Regular.ttf
 HTTP /pdf/web/images/loading-icon.gif
+HTTP /pdf/web/standard_fonts/LiberationSans-Regular.ttf
 Initial reader {
   scale: 'page-width',
   width: 560,
@@ -31,18 +31,18 @@ Highlight result {
       sortIndex: '00000|000000|00088',
       pageLabel: '1',
       position: [Object],
-      text: 'Alpha beta gamma delta',
+      text: 'Alpha beta gamma delta.',
       comment: '',
       tags: [],
-      id: 'TDZ63Q9S',
-      dateCreated: '2026-11-03T11:45:34.378Z',
-      dateModified: '2026-11-03T11:45:34.378Z'
+      id: 'TTCX6QXU',
+      dateCreated: '2026-11-03T18:45:33.232Z',
+      dateModified: '2026-11-03T18:45:33.232Z'
     }
   ],
   selection: '',
   scroll: 18
 }
-Quick swipe scroll 256
+Quick swipe scroll 267
 Pinch abort { active: false, saves: 1, scale: 0.7058823529411765 }
 Pinch mode false {
   calls: [
@@ -75,6 +75,6 @@ Pinch mode true {
   ],
   scale: 0.7058823529411765
 }
-Pen highlight Alpha beta gamma delta
+Pen highlight Alpha beta gamma delta.
 Width after resize { width: 760, viewport: 800, scale: 'page-width' }
 PASS: width and resize, selection fallback, finger and pen highlighting, scrolling, pinch interruption and PDF.js handoff

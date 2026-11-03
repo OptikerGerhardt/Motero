@@ -26,6 +26,7 @@ parser.add_argument('--reader-controls', action='store_true', help='Verify width
 parser.add_argument('--without-pspdfkit', action='store_true', help='Require an SDK-free APK')
 parser.add_argument('--roman-references', action='store_true', help='Require actual Kant Roman reference and adaptive native button regressions')
 parser.add_argument('--preserve-reader', action='store_true', help='Require the complete Reader bundle to remain byte-identical for this removal-only update')
+parser.add_argument('--annotation-tools', action='store_true', help='Require live magnifier, trailing punctuation, palette thirds, quick editing and native sharing')
 args = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
 
@@ -112,6 +113,9 @@ with zipfile.ZipFile(args.apk) as apk:
     if args.roman_references:
         for name in [b'ReaderOptionLabelsKt', b'compactReaderOptionLabels', b'readerOptionLabel']:
             assert any(name in d for d in dex), name
+    if args.annotation_tools:
+        for name in [b'DocumentSharingKt', b'ShareDocument', b'setClipData']:
+            assert any(name in d for d in dex), name
     for name in [b'ReaderQuickControlActions', b'ReaderColoredTagShortcuts', b'ReaderHighlightQuote', b'ReaderSidebarFilter',
                  b'ReaderAnnotationScreenClosed', b'reportScreenClosed', b'didReportClosed']:
         assert any(name in d for d in dex), name
@@ -132,7 +136,7 @@ with zipfile.ZipFile(args.apk) as apk:
         verified = []
         for name in ['pdf/boox-reader.js', 'pdf/pdf-view.js', 'pdf/content-fit.mjs', 'pdf/direct-highlight.js',
                      'pdf/hardware-navigation.mjs', 'index.android.js', 'common/view.js',
-                     'pdf/reading-layout.mjs', 'pdf/android-page-fitting.js', 'pdf/chrome-tap-guard.mjs', 'pdf/page.js']:
+                     'pdf/reading-layout.mjs', 'pdf/android-page-fitting.js', 'pdf/chrome-tap-guard.mjs', 'pdf/page.js'] + (['pdf/direct-selection.mjs', 'pdf/selection-magnifier.js', 'pdf/selection.js'] if args.annotation_tools else []):
             assert source(mapping, name) == (root / 'reader/src' / name).read_text(), name
             verified.append(name)
         with zipfile.ZipFile(io.BytesIO(previous_reader)) as previous:
@@ -215,7 +219,7 @@ if args.qa_directory:
             assert check in stability, check
         assert 'Error' not in stability and 'AssertionError' not in stability
         if args.motero_refinement:
-            assert 'PASS palette mode buttons fill equal halves with centered icons and edge touch targets' in stability
+            assert ('PASS palette mode buttons fill equal thirds with centered icons and edge touch targets' if args.annotation_tools else 'PASS palette mode buttons fill equal halves with centered icons and edge touch targets') in stability
     native_xml = root / 'app/build/test-results/testDevDebugUnitTest/TEST-org.zotero.android.screens.reader.ReaderQuickControlActionsTest.xml'
     native = ET.parse(native_xml).getroot()
     assert native.get('failures') == native.get('errors') == native.get('skipped') == '0'
@@ -230,6 +234,26 @@ if args.qa_directory:
         labels = ET.parse(native_xml.parent / 'TEST-org.zotero.android.screens.reader.ReaderOptionLabelsTest.xml').getroot()
         assert int(labels.get('tests')) == 3
         assert labels.get('failures') == labels.get('errors') == labels.get('skipped') == '0'
+    if args.annotation_tools:
+        tools = (args.qa_directory / 'reader-annotation-tools.log').read_text()
+        for check in ['PASS attached final punctuation is persisted in text and geometry; live magnifier disappears on release',
+                      'PASS equal palette thirds and normal synced deletion clear selection and pointer state',
+                      'PASS long press reopens the same annotation quick palette and color updates preserve identity',
+                      'PASS long press works with Android selection mode and visible chrome',
+                      'PASS note quick colors preserve content and early movement retains native dragging',
+                      'PASS multitouch cancellation removes the magnifier without creating an annotation',
+                      'PASS: all annotation tool regressions']:
+            assert check in tools, check
+        assert 'Error' not in tools and 'AssertionError' not in tools
+        share_test = ET.parse(native_xml.parent / 'TEST-org.zotero.android.screens.reader.DocumentSharingTest.xml').getroot()
+        assert share_test.get('tests') == '2'
+        assert share_test.get('failures') == share_test.get('errors') == share_test.get('skipped') == '0'
+        share = (root/'app/src/main/java/org/zotero/android/helpers/DocumentSharing.kt').read_text()
+        assert 'FLAG_GRANT_READ_URI_PERMISSION' in share and 'FLAG_GRANT_WRITE_URI_PERMISSION' not in share
+        assert 'ClipData.newRawUri' in share and 'ACTION_SEND' in share
+        screen = (root/'app/src/main/java/org/zotero/android/screens/reader/annotation/ReaderAnnotationScreen.kt').read_text()
+        assert '.background(MaterialTheme.colorScheme.surface)\n            .windowInsetsPadding' in screen
+        assert 'WindowInsets.displayCutout' in screen
     qa = dict(reader_tests=reader_tests, native_logic_tests=int(native.get('tests')),
               native_tests_total=sum(int(s.get('tests', 0)) for s in native_suites),
               native_tests_skipped=sum(int(s.get('skipped', 0)) for s in native_suites),
@@ -259,10 +283,11 @@ report = dict(new, previous_version_code=old['version_code'], sha256=sha(args.ap
               sdk_removed=args.without_pspdfkit,
               removed_sdk_runtime_files=len(removed_sdk_runtime) if args.without_pspdfkit else 0,
               complete_reader_unchanged=(reader == previous_reader),
-              **qa, verified=True,
+              annotation_tools_verified=args.annotation_tools, document_sharing_verified=args.annotation_tools, cutout_background_source_verified=args.annotation_tools, **qa, verified=True,
               physical_device_tested=False,
               motero_icon_verified=args.motero_refinement,
               fullscreen_hooks_verified=args.motero_refinement,
-              palette_halves_verified=args.motero_refinement)
+              palette_halves_verified=args.motero_refinement and not args.annotation_tools,
+              palette_thirds_verified=args.annotation_tools, physical_sharing_tested=False, physical_cutout_tested=False)
 (root / 'BUILD_VERIFICATION.json').write_text(json.dumps(report, indent=2) + '\n')
 print(json.dumps(report, indent=2))

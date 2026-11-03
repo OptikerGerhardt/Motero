@@ -8,6 +8,7 @@ sealed class ItemDetailError: Exception() {
     }
 
     data class typeNotSupported(val type: String) : ItemDetailError()
+    object cantShareDocument : ItemDetailError()
     object cantStoreChanges : ItemDetailError()
     data class droppedFields(val fields: List<String>) : ItemDetailError()
     object cantCreateData : ItemDetailError()
