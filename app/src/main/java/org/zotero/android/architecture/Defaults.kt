@@ -11,6 +11,7 @@ import org.zotero.android.screens.citbibexport.data.CitBibExportOutputMethod
 import org.zotero.android.screens.citbibexport.data.CitBibExportOutputMode
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
 import org.zotero.android.screens.reader.data.ReaderPdfViewState
+import org.zotero.android.screens.reader.data.ReaderEpubViewState
 import org.zotero.android.screens.reader.settings.data.PageContentMargin
 import org.zotero.android.screens.reader.settings.data.PageScrollMode
 import org.zotero.android.screens.reader.settings.data.ReaderSettings
@@ -87,6 +88,7 @@ open class Defaults @Inject constructor(
 
     private val doNotShowAppUpdateBannerBeforeTime = "doNotShowAppUpdateBannerBeforeTime"
     private val pdfViewStatePrefix = "pdfViewState_"
+    private val epubViewStatePrefix = "epubViewState_"
 
     private val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences(
@@ -628,6 +630,22 @@ open class Defaults @Inject constructor(
         }
     }
 
+    fun getEpubViewState(libraryId: LibraryIdentifier, key: String): ReaderEpubViewState? {
+        val json = sharedPreferences.getString("$epubViewStatePrefix${libraryId.folderName}_$key", null) ?: return null
+        return runCatching { dataMarshaller.unmarshal<ReaderEpubViewState>(json) }.getOrNull()
+    }
+
+    fun setEpubViewState(libraryId: LibraryIdentifier, key: String, state: ReaderEpubViewState) {
+        sharedPreferences.edit {
+            putString("$epubViewStatePrefix${libraryId.folderName}_$key", dataMarshaller.marshal(state))
+        }
+    }
+
+    private fun clearEpubViewStates() {
+        val keys = sharedPreferences.all.keys.filter { it.startsWith(epubViewStatePrefix) }
+        sharedPreferences.edit { keys.forEach { remove(it) } }
+    }
+
     fun setReaderSettings(
         readerSettings: ReaderSettings,
     ) {
@@ -668,6 +686,7 @@ open class Defaults @Inject constructor(
         setExportOutputMethod(CitBibExportOutputMethod.copy)
         setExportOutputMode(CitBibExportOutputMode.bibliography)
         clearPdfViewStates()
+        clearEpubViewStates()
         setButtonPageTurning(false)
         setKeepZoom(false)
         setPageTurningReversed(false)

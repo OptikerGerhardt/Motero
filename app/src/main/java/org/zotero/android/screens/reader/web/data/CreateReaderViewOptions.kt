@@ -6,6 +6,7 @@ data class CreateReaderViewOptions(
     val type: String,
     val url: String,
     val annotations: JsonArray,
+    var readOnly: Boolean? = null,
     var location: CreateReaderLocation? = null,
     var viewState: CreateReaderViewState = CreateReaderViewState(),
     var contentFit: CreateReaderContentFit? = null,
@@ -32,6 +33,8 @@ data class CreateReaderViewState(
     var scale: Double? = null,
     //epub
     var cfi: String? = null,
+    var cfiElementOffset: Double? = null,
+    var appearance: CreateReaderReflowableAppearance? = null,
 
     //pdf
     var pageIndex: Int? = null,
@@ -47,3 +50,9 @@ data class CreateReaderViewState(
 // Four Android fitting modes share the same detected content geometry.
 data class CreateReaderPageFitting(val mode: String, val reference: String, val margin: Double,
     val revision: Long = 0, val includeMarginalia: Boolean = false)
+
+// Apply EPUB layout before restoring the CFI.
+data class CreateReaderReflowableAppearance(
+    val lineHeight: Double, val wordSpacing: Double, val letterSpacing: Double,
+    val pageWidth: Int, val useOriginalFont: Boolean = false,
+)

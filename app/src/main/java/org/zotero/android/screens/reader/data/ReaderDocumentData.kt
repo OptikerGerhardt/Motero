@@ -10,6 +10,8 @@ data class ReaderDocumentData(
     val page: ReaderPage?,
     val selectedAnnotationKey: String?,
     val savedPdfViewState: ReaderPdfViewState? = null,
+    val savedEpubViewState: ReaderEpubViewState? = null,
+    val readOnly: Boolean = false,
     // Fit to Content margin, null when it's off
     val contentFitMargin: Double? = null,
     // False when a zoom the user chose is restored instead of fitting

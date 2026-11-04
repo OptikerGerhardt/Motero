@@ -500,6 +500,22 @@ class ReaderWebCallChainExecutor @Inject constructor(
             }
         }
 
+        // Apply typography before navigation, including first open and annotation links.
+        if (data.type == "epub") {
+            createReaderViewOptions.readOnly = data.readOnly
+            val settings = defaults.getReaderSettings()
+            createReaderViewOptions.viewState.apply {
+                flowMode = flowModeString
+                spreadMode = spreadsModeInt
+                cfi = (data.page as? ReaderPage.epub)?.cfi
+                appearance = org.zotero.android.screens.reader.web.data.CreateReaderReflowableAppearance(
+                    settings.lineHeight.toDouble(), settings.wordSpacing.toDouble(),
+                    settings.letterSpacing.toDouble(), settings.pageWidth,
+                )
+            }
+            data.savedEpubViewState?.restoreInto(createReaderViewOptions.viewState)
+        }
+
         val key = data.selectedAnnotationKey
         val page = data.page
         if (key != null) {

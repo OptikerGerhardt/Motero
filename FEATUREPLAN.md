@@ -1,6 +1,6 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 3. November 2026. Umsetzungsstand Build 303; die verlinkte Grundrecherche stammt vom 28. Oktober.
+Stand: 4. November 2026. Letzte ausgelieferte APK Build 303; EPUB-Update 304 in Prüfung; die verlinkte Grundrecherche stammt vom 28. Oktober.
 
 ## Festgehaltene Entscheidungen
 
@@ -11,6 +11,12 @@ Am 29. Oktober wurden F01, F02, F05, F06, F16, F17, F18, F20 und F21 für die n�
 Die danach beauftragten Fit-Modi und F07 sind in Build 296 umgesetzt. Die weiteren Nachbesserungen sind im Abschnitt Build 297 erfasst; die übrigen Punkte bleiben im Backlog. Ein eigener Outline-Editor auf Android wird weiterhin nicht benötigt; die Outline soll am Desktop in die PDF geschrieben werden. F19 Tag-Autocomplete ist auch nicht Teil von Build 296.
 
 Build 292 war die zuvor ausgelieferte Basis. Der Nutzer hatte erfolgreiche Installation als Update, gutes direktes Markieren und funktionierendes SmartScroll bestätigt. Build 293 verwendet denselben Signierschlüssel, dieselbe Datenhaltung und die unveränderten weiteren Laufzeitpakete.
+
+## EPUB-Update 304: Arbeitsstand
+
+Die Änderungen sind rekonstruiert, der abschließende Neubau und die nativen Tests stehen aus. Diese Quellversion ist ein gesicherter Arbeitsstand, keine fertig geprüfte APK. Die letzte ausgelieferte APK bleibt Build 303.
+
+F30: Schriftgröße, genauer lokaler CFI-Versatz, Anwendung von Breite/Abständen und sichere EPUB-/HTML-Initialisierung. F31: EPUB-Lesezeichen als graue datierte Standardnotizen. F32: Lautstärketasten in beiden EPUB-Ansichten einschließlich Kapitelgrenzen prüfen. Paketkennung, bisherige Einstellungen und Signierschlüssel beibehalten. F19/F22/F23 bleiben offen. Die vollständige recherchierte Liste folgt am Dateiende.
 
 ## Umsetzung der drei Rückmeldungen in Build 303
 
@@ -323,3 +329,45 @@ Basis der ursprünglichen Recherche: Android-Commit `96e5a56745f3fb0201fb3a81adf
 
 Dieser Featureplan dokumentiert Build 299, die bisherigen automatischen Fit-Modi und die noch offenen nächsten Schritte. Die vorhergehende APK und ihre Quellversion bleiben über die Versionshistorie erhalten. Eine physische Prüfung am BOOX und eine Verbesserung der Stiftlatenz werden nicht behauptet.
 
+
+
+---
+
+# EPUB-Reader: Recherche und Umsetzung für Motero 304
+
+Recherche: 4. November 2026; Basis Motero 303. Die priorisierte Liste wurde vor Beginn der Änderungen im Gespräch vorgelegt. Öffentliche Android-/EPUB-Forenbeiträge und passende GitHub-Issues wurden mit unserem Code verglichen. Die Liste deckt die gefundenen Meldungen ab, ohne Vollständigkeit für jede Forumserwähnung zu behaupten. Historisch behobene Meldungen sind als solche gekennzeichnet.
+
+| Problem oder Wunsch | Befund und Einordnung | Primärquelle |
+|---|---|---|
+| Schriftgröße nach Neustart vergessen | Native EPUB-Skalierung wurde verworfen. Lokale Speicherung pro Bibliothek/Anhang und Wiederherstellung ergänzt. | [Schriftgröße und Position](https://forums.zotero.org/discussion/132645/android-epub-reader-not-remembering-font-size-and-exact-position) |
+| Öffnen landet vor der Lesestelle | Native Übergabe ließ `cfiElementOffset` weg. Lokaler Versatz wird ergänzt; gilt nur bei gleichem CFI. Ein neuer synchronisierter CFI hat Vorrang. Keine Garantie gegen jede Layoutabweichung. | [Position](https://forums.zotero.org/discussion/132524/android-epub-not-remembering-exact-reading-position), [Schriftgröße/Position](https://forums.zotero.org/discussion/132645/android-epub-reader-not-remembering-font-size-and-exact-position) |
+| Große Ränder auf BOOX | Gespeicherte Textbreite und Zeilen-/Wort-/Zeichenabstände wurden beim Öffnen nicht übergeben. Die Initialisierung erhält diese Werte jetzt vor der Navigation, auch beim ersten Öffnen und bei Annotationen. | [Android EPUB-Beta, BOOX-Ränder](https://forums.zotero.org/discussion/132371/available-for-beta-testing-on-android-epub-snapshot-support) |
+| Leeres EPUB-Fenster beim Start | Eigener Startfehler reproduziert: AnnotationManager setzte synchron eine Auswahl, bevor das EPUB-/HTML-Iframe existierte. DOM-Nebenwirkungen werden bis zur Initialisierung zurückgestellt. Andere problematische Dateien bleiben separat zu prüfen. | [Blank EPUB / Spinner](https://forums.zotero.org/discussion/132373/android-beta-some-epub-files-fail-to-open-display-a-blank-page) |
+| EPUB-Lesezeichen | Normale graue, datierte Zotero-Notizen mit Standard-CFI-Textanker ergänzen. Tippzone: rechte Hälfte des obersten Elftels. Gleiche Stelle nicht duplizieren; normale Annotationsliste, Navigation und Löschung. | Nutzerwunsch; [Temporary bookmark](https://forums.zotero.org/discussion/116501/android-add-a-temporary-bookmark-option) |
+| Lautstärketasten zum Blättern | Bereits vorhandene gemeinsame Anbindung für EPUB verifizieren. Leiser vorwärts, lauter zurück; bestehende Richtungsumkehr gilt. Beide Flows, Kapitelgrenzen, RTL und Texteingabe prüfen. | Nutzerwunsch; DashboardActivity, ReaderHardwareButtons, index.android.js und hardware-navigation.mjs |
+| Paginated/Scrolled startet falsch | Historische Meldung wurde für 255 als gelöst bestätigt. Regression prüfen, kein unnötiger Engine-Austausch. | [Flow switching](https://forums.zotero.org/discussion/132444/android-beta-buggy-epub-paginated-scrollable-switching) |
+| Helle Balken im Dark Mode | Im Forum für 255 als behoben bestätigt. Vorhandene Themes erhalten. | [Dark mode, fixed 255](https://forums.zotero.org/discussion/132374/android-epub-dark-mode-top-and-bottom-bar-uses-bright-color-fixed-in-1-0-0-255) |
+| Große EPUBs langsam / manche leer | Konkrete Dateien wurden upstream repariert; größere Bücher teils weiter langsam. Dateispezifische Fälle offen. Unsere Startabsicherung ist keine allgemeine Lösung aller Ladeprobleme. | [Laden / große Bücher](https://forums.zotero.org/discussion/132373/android-beta-some-epub-files-fail-to-open-display-a-blank-page) |
+| Spinner verschwindet nicht | Dedizierter `onViewContentInitialized`-Callback bereits vorhanden. Erfolgreichen Start prüfen; kaputte Dateien nicht pauschal als repariert ausgeben. | [Forum](https://forums.zotero.org/discussion/132373/android-beta-some-epub-files-fail-to-open-display-a-blank-page), [Reader #225](https://github.com/zotero/reader/issues/225) |
+| Highlight-Größe ändern / Absturz | Android #300 war bei Recherche offen. Ohne reproduzierte Ursache kein pauschaler Patch der Auswahl. Eigenes nächstes Arbeitspaket. | [Android #300](https://github.com/zotero/zotero-android/issues/300) |
+| Mehrfaches langes Drücken / Swipe-Auswahl | Reader-Issue geschlossen. Bookmark-Geste muss langen Druck, Drag und aktive Auswahl respektieren. | [Reader #206](https://github.com/zotero/reader/issues/206) |
+| Swipe-Indikator bleibt hängen | Historisches geschlossenes Issue; vorhandene Bereinigung erhalten. Bookmark wird erst nach Beendigung des Swipe-Zustands verarbeitet. | [Android #305](https://github.com/zotero/zotero-android/issues/305) |
+| Positionsdrift bei Drehung / Sidebar | Reader #205 geschlossen. Bestehende Reflow-Ankerlogik erhalten; Wiederöffnen und Bookmark-Auflösung nach Schriftänderung ergänzend prüfen. | [Reader #205](https://github.com/zotero/reader/issues/205) |
+| Erster Aufruf mit CFI `0` | Geschlossenes Issue. Normalen Startanker erhalten; kein neues CFI-Format einführen. | [Android #304](https://github.com/zotero/zotero-android/issues/304) |
+| Lesefortschritt / Restlesezeit | Native Prozent-/Positionsanzeige bei versteckter Toolbar vorhanden. Kapitelstatistik und Restlesezeit wären zusätzliche Funktionen. | [Reading progress](https://forums.zotero.org/discussion/132443/feature-request-epub-reading-progress) |
+| EPUB öffnet extern statt intern | Historische Stable-/Beta-Unterscheidung, kein Beleg eines aktuellen Motero-Fehlers. Motero verwendet den eingebauten Reader. | [External apps](https://forums.zotero.org/discussion/132885/android-zotero-opens-pdfs-epubs-with-external-apps-instead-of-the-built-in-reader) |
+| NeoReader-Annotationen nicht in Zotero | Externe Markierungen synchronisieren nicht automatisch. Unsere Bookmarks verwenden den normalen Zotero-Annotationspfad, keinen NeoReader-Import. | [BOOX EPUB combo](https://forums.zotero.org/discussion/131521/either-a-bug-or-not-supported-action-android-boox-epub-combo) |
+| Vorlesen / TTS | Größeres Folgepaket mit Audio-, Fokus-, Positions- und Android-Systemanbindung. | [Beta-Thread](https://forums.zotero.org/discussion/132371/available-for-beta-testing-on-android-epub-snapshot-support) |
+| Eigene Schriften / Buchprofile | Desktop-Diskussionen sind Referenzen, kein fertiges Android-Plugin. Eigene Auswahl/Ressourcenverwaltung nötig. | [Reader font](https://forums.zotero.org/discussion/116354/zotero-7-beta-reader-font), [Buchschriften](https://forums.zotero.org/discussion/107944/fr-use-fonts-specified-by-epubs) |
+| Vertikale CJK-Bücher / Speziallayout | Eigenes Interoperabilitätspaket mit echten Büchern. Desktop-Meldungen nicht automatisch zu Android-Defekten erklären. | [Vertical EPUB](https://forums.zotero.org/discussion/116927/add-support-for-the-vertical-layout-epub-format-books) |
+| CFI nach Pagebreak-Spans | Spezielle Generator-/Resolver-Abweichung. Nicht blind ändern, weil alte Annotationen davon betroffen wären. | [Reader #244](https://github.com/zotero/reader/issues/244), [epub.js PR #4](https://github.com/zotero/epub.js/pull/4) |
+
+## Grenzen und Bündelung
+
+304 umfasst lokale Zustandsübergabe, Startabsicherung, Standard-Notiz-Lesezeichen und die Prüfung der bestehenden Tastenanbindung. Danach sinnvoll getrennt: EPUB-Auswahl/Highlight-Größenänderung; Schriften/Buchprofile/Kapitelstatistik; Vorlesen als größeres Paket. Kein ungeprüfter Komplettaustausch von Reader oder epub.js und kein direkt übernehmbares Android-Plugin aus diesen Quellen.
+
+Lesezeichen ändern die EPUB-Datei nicht. Sie sind graue Zotero-Notizen mit Datum und Uhrzeit an der ersten sichtbaren Textzeile. Über die Annotationsliste anspringen und normal löschen. Links, vorhandene Annotationen, aktive Auswahl, langer Druck, Drag und Schreibschutz haben Vorrang. Kein erfundener Textanker in einem nicht erreichbaren Bildabschnitt. Desktop-Kontosync und physischer BOOX-Test müssen am Gerät bestätigt werden.
+
+Schriftgröße wird pro Anhang lokal gespeichert. Der synchronisierte Lesestand bleibt ein CFI. Zusätzliche lokale Zustände sind bibliotheksgetrennt und werden bei Abmeldung gelöscht. Für schmalere Ränder die vorhandene breite Textbreite speichern; die Korrektur sorgt für deren Anwendung beim Öffnen. Im gescrollten EPUB verwenden die Tasten den bestehenden Schritt mit leichter Überlappung; der PDF-SmartScroll-Prozentwert verändert diesen EPUB-Schritt nicht.
+
+PDF-Fitting, PDF.js, vorhandene Markierungswerkzeuge, Tags und Sync-/Datenformate bleiben erhalten. F19 Tag-Autocomplete, F22 manuelles All/Odd/Even-Cropping, F23 Randtippen und Stifterweiterungen bleiben anschlussfähig. Kein physischer Test und keine öffentliche Veröffentlichung behauptet.

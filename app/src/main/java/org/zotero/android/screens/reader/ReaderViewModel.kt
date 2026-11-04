@@ -1540,6 +1540,10 @@ class ReaderViewModel @Inject constructor(
                     page = page,
                     selectedAnnotationKey = viewState.selectedAnnotationKey,
                     savedPdfViewState = savedPdfViewState,
+                    readOnly = !this@ReaderViewModel.library.metadataEditable,
+                    savedEpubViewState = if (type == "epub") defaults.getEpubViewState(
+                        this@ReaderViewModel.library.identifier, this@ReaderViewModel.key
+                    ) else null,
                     contentFitMargin = contentFitMargin,
                     // A zoom the user chose for this document takes precedence over fitting
                     fitToContentOnOpen = savedPdfViewState == null,
@@ -1790,6 +1794,12 @@ class ReaderViewModel @Inject constructor(
                 ReaderViewEffect.OnPageChanged(page.toInt())
             )
             storePdfViewState(pageIndex = page.toInt(), state = state)
+        }
+
+        if (viewState.fileType == ReaderFileType.EPUB) {
+            org.zotero.android.screens.reader.data.ReaderEpubViewState.fromJson(state)?.let {
+                defaults.setEpubViewState(this.library.identifier, this.key, it)
+            }
         }
 
         val request = StorePageForItemDbRequest(key = this.key, libraryId = this.library.identifier, page = page)
