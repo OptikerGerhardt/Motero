@@ -1020,6 +1020,9 @@ export class PaginatedFlow extends AbstractFlow {
 		this._swipeIndicators.style.setProperty('--swipe-amount', '0');
 		this._touchDown = false;
 
+        // Resolve the Android bookmark zone before ordinary edge taps.
+        if (target && this._view.tryCreateAndroidBookmark(clientX, clientY, target)) return true;
+
 		// Switch pages after swiping
 		let swipeAmount = (clientX - this._touchStartX) / PAGE_TURN_SWIPE_LENGTH_PX;
 		if (swipeAmount <= -1) {

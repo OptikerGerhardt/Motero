@@ -2188,7 +2188,7 @@ abstract class DOMView<State extends DOMViewState, Data> {
 		}
 	}
 
-	private _preventNextClickEvent() {
+	protected _preventNextClickEvent() {
 		let clickListener = (event: Event) => {
 			event.stopImmediatePropagation();
 			event.preventDefault();
@@ -2289,6 +2289,9 @@ abstract class DOMView<State extends DOMViewState, Data> {
 
 	setSelectedAnnotationIDs(ids: string[]) {
 		this._selectedAnnotationIDs = ids;
+        // AnnotationManager renders before the EPUB/HTML iframe exists.
+        // Retain the selection but defer DOM effects until initialization.
+        if (!this.initialized) return;
 		// Close annotation popup each time when any annotation is selected, because the click is what opens the popup
 		this._options.onSetAnnotationPopup();
 		this._renderAnnotations();

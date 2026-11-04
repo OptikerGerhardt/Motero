@@ -81,6 +81,81 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 
 	private _lastNavigationTime = 0;
 
+    private _bookmarkPointer: { x: number, y: number, time: number } | null = null;
+
+    // Android uses the PDF reader's upper-right shortcut, with a reflow-safe text anchor.
+    tryCreateAndroidBookmark(x: number, y: number, target: Element): boolean {
+        let start = this._bookmarkPointer;
+        this._bookmarkPointer = null;
+        if (!start || this._options.platform !== 'android' || this._options.readOnly
+                || this._tool.type !== 'pointer' || this._hadSelectionOnPointerDown
+                || this._selectionChangedWhilePointerDown || this._pointerMovementWhileDown > 8
+                || Date.now() - start.time > 400 || Math.hypot(x - start.x, y - start.y) > 8
+                || x < this._iframeWindow.innerWidth / 2 || y > this._iframeWindow.innerHeight / 11
+                || start.x < this._iframeWindow.innerWidth / 2 || start.y > this._iframeWindow.innerHeight / 11
+                || target.closest('a, .clickable-image, [data-annotation-id], .annotation-container')
+                || !this._iframeWindow.getSelection()?.isCollapsed) return false;
+        return this.addAndroidBookmark();
+    }
+
+    addAndroidBookmark(): boolean {
+        if (this._options.platform !== 'android' || this._options.readOnly || !this.initialized || !this.flow) return false;
+        let range = this.flow.startRange?.cloneRange();
+        if (!range) return false;
+        range = moveRangeEndsIntoTextNodes(range);
+        // A paragraph may end below the screen. Resolve its first visible line.
+        if (range.startContainer.nodeType === Node.TEXT_NODE) {
+            let text = range.cloneRange();
+            text.selectNodeContents(range.startContainer);
+            let line = Array.from(text.getClientRects()).find(rect => rect.bottom > 0 && rect.top < this._iframeWindow.innerHeight
+                && rect.right > 0 && rect.left < this._iframeWindow.innerWidth);
+            if (line) {
+                let x = this.pageProgressionRTL ? Math.min(line.right, this._iframeWindow.innerWidth) - 1 : Math.max(line.left, 0) + 1;
+                let y = (Math.max(line.top, 0) + Math.min(line.bottom, this._iframeWindow.innerHeight)) / 2;
+                let caret = this._getCaretRangeAtPoint(x, y);
+                if (caret) range = caret.toRange();
+            }
+        }
+        // Standard EPUB notes use a nonempty FragmentSelector, like desktop.
+        if (range.collapsed) {
+            let node = range.startContainer;
+            if (node.nodeType !== Node.TEXT_NODE || !node.textContent?.length) return false;
+            let offset = Math.min(range.startOffset, node.textContent.length - 1);
+            let code = node.textContent.charCodeAt(offset);
+            if (offset > 0 && code >= 0xDC00 && code <= 0xDFFF) offset--;
+            let length = node.textContent.codePointAt(offset)! > 0xFFFF ? 2 : 1;
+            range.setStart(node, offset);
+            range.setEnd(node, offset + length);
+        }
+        let annotation = this.getAnnotationFromRange(range, 'note', '#aaaaaa');
+        if (!annotation) return false;
+        if (this._annotations.some(a => a.type === 'note' && a.sortIndex === annotation!.sortIndex
+                && /^(Lesezeichen|Bookmark) · /.test(a.comment || ''))) return true;
+        let label = this._iframeWindow.navigator.language.startsWith('de') ? 'Lesezeichen' : 'Bookmark';
+        annotation.comment = label + ' · ' + new Intl.DateTimeFormat(
+            this._iframeWindow.navigator.language, { dateStyle: 'short', timeStyle: 'short' }
+        ).format(new Date());
+        return !!this._options.onAddAnnotation(annotation);
+    }
+
+    protected override _handlePointerDown(event: PointerEvent) {
+        this._bookmarkPointer = event.isPrimary && event.button === 0
+            ? { x: event.clientX, y: event.clientY, time: Date.now() } : null;
+        super._handlePointerDown(event);
+    }
+
+    protected override _handlePointerUp(event: PointerEvent) {
+        if (event.type === 'pointerup' && event.isPrimary && !event.defaultPrevented
+                && this.flowMode === 'scrolled'
+                && this.tryCreateAndroidBookmark(event.clientX, event.clientY, event.target as Element)) {
+            event.preventDefault();
+            this._preventNextClickEvent();
+        }
+        this._bookmarkPointer = null;
+        super._handlePointerUp(event);
+    }
+
+
 	constructor(options: DOMViewOptions<EPUBViewState, EPUBViewData>) {
 		super(options);
 		if (options.data.buf) {
