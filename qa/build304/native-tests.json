@@ -1,0 +1,179 @@
+{
+  "suite_count": 21,
+  "totals": {
+    "tests": 91,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "suites": [
+    {
+      "suite": "org.zotero.android.api.mappers.CreatorResponseMapperTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-11-06T21:05:32.629Z"
+    },
+    {
+      "suite": "org.zotero.android.api.mappers.CreatorSchemaMapperTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-11-06T21:05:32.676Z"
+    },
+    {
+      "suite": "org.zotero.android.api.mappers.FieldSchemaMapperTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-11-06T21:05:32.685Z"
+    },
+    {
+      "suite": "org.zotero.android.api.mappers.ItemSchemaMapperTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-11-06T21:05:32.688Z"
+    },
+    {
+      "suite": "org.zotero.android.api.mappers.LibraryResponseMapperTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-11-06T21:05:32.695Z"
+    },
+    {
+      "suite": "org.zotero.android.api.mappers.LinkResponseMapperTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-11-06T21:05:32.697Z"
+    },
+    {
+      "suite": "org.zotero.android.api.mappers.LinksResponseMapperTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-11-06T21:05:32.702Z"
+    },
+    {
+      "suite": "org.zotero.android.attachmentdownloader.AttachmentDownloadOperationTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-11-06T21:05:32.725Z"
+    },
+    {
+      "suite": "org.zotero.android.attachmentdownloader.AttachmentDownloaderTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-11-06T21:05:33.763Z"
+    },
+    {
+      "suite": "org.zotero.android.screens.reader.DocumentSharingTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-11-06T21:05:34.082Z"
+    },
+    {
+      "suite": "org.zotero.android.screens.reader.DocumentSharingThreadTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-11-06T21:05:34.426Z"
+    },
+    {
+      "suite": "org.zotero.android.screens.reader.PdfEngineIndependenceTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-11-06T21:05:36.061Z"
+    },
+    {
+      "suite": "org.zotero.android.screens.reader.ReaderClipboardTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-11-06T21:05:36.240Z"
+    },
+    {
+      "suite": "org.zotero.android.screens.reader.ReaderOptionLabelsTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-11-06T21:05:36.447Z"
+    },
+    {
+      "suite": "org.zotero.android.screens.reader.ReaderPageFittingSettingsTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-11-06T21:05:36.457Z"
+    },
+    {
+      "suite": "org.zotero.android.screens.reader.ReaderQuickControlActionsTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-11-06T21:05:36.473Z"
+    },
+    {
+      "suite": "org.zotero.android.sync.ActionsCreatorTest",
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-11-06T21:05:36.525Z"
+    },
+    {
+      "suite": "org.zotero.android.sync.CreatorSummaryFormatterTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-11-06T21:05:36.587Z"
+    },
+    {
+      "suite": "org.zotero.android.sync.DateParserTest",
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-11-06T21:05:36.772Z"
+    },
+    {
+      "suite": "org.zotero.android.sync.NotePreviewGeneratorTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-11-06T21:05:36.822Z"
+    },
+    {
+      "suite": "org.zotero.android.sync.UrlDetectorTest",
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": "2026-11-06T21:05:36.830Z"
+    }
+  ]
+}

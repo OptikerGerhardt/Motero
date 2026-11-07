@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.zotero.android.screens.reader.DocumentSharingThreadTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-11-06T21:05:34.426Z" hostname="c61665e7a7a3" time="1.626">
+  <properties/>
+  <testcase name="EPUB ready event from IO reaches the main-thread share effect" classname="org.zotero.android.screens.reader.DocumentSharingThreadTest" time="1.452"/>
+  <testcase name="failed download reports a share error on main instead of crashing" classname="org.zotero.android.screens.reader.DocumentSharingThreadTest" time="0.058"/>
+  <testcase name="cancelled share cannot launch later when a ready event arrives" classname="org.zotero.android.screens.reader.DocumentSharingThreadTest" time="0.015"/>
+  <testcase name="missing downloaded file reports a share error on main instead of crashing" classname="org.zotero.android.screens.reader.DocumentSharingThreadTest" time="0.028"/>
+  <testcase name="same key in another library cannot consume the pending share" classname="org.zotero.android.screens.reader.DocumentSharingThreadTest" time="0.044"/>
+  <testcase name="PDF ready event from IO reaches the main-thread share effect" classname="org.zotero.android.screens.reader.DocumentSharingThreadTest" time="0.028"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

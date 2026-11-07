@@ -1,5 +1,8 @@
 package org.zotero.android.screens.reader
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -91,12 +94,14 @@ internal fun ReaderColoredTagShortcuts(
 @Composable
 internal fun ReaderHighlightQuote(text: String) {
     if (text.isBlank()) return
+    val context = LocalContext.current
     val maxHeight = (LocalConfiguration.current.screenHeightDp * 0.20f).coerceIn(64f, 220f).dp
     val quoteLineColor = MaterialTheme.colorScheme.outline
     Column(Modifier.fillMaxWidth()) {
         NewSettingsDivider()
         SelectionContainer(Modifier.padding(horizontal = 16.dp)) {
             Text(text, Modifier.fillMaxWidth().heightIn(max = maxHeight)
+                .clickable { copyReaderAnnotationQuote(context, text) }
                 .verticalScroll(rememberScrollState())
                 .drawBehind {
                     drawLine(quoteLineColor, Offset.Zero, Offset(0f, size.height), strokeWidth = 2.dp.toPx())
@@ -106,4 +111,10 @@ internal fun ReaderHighlightQuote(text: String) {
         }
         NewSettingsDivider()
     }
+}
+
+internal fun copyReaderAnnotationQuote(context: Context, text: String) {
+    if (text.isBlank()) return
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    clipboard.setPrimaryClip(ClipData.newPlainText("", text))
 }

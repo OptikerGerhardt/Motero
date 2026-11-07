@@ -1,6 +1,6 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 4. November 2026. Letzte ausgelieferte APK Build 303; EPUB-Update 304 in Prüfung; die verlinkte Grundrecherche stammt vom 28. Oktober.
+Stand: 6. November 2026. Aktueller automatisch geprüfter Testbuild: 304, als Update zu Build 303. Der wiederhergestellte EPUB-Arbeitsstand wurde um die unten aufgeführten Reader-Korrekturen ergänzt und nativ neu gebaut. Die verlinkte Grundrecherche stammt vom 28. Oktober.
 
 ## Festgehaltene Entscheidungen
 
@@ -12,9 +12,22 @@ Die danach beauftragten Fit-Modi und F07 sind in Build 296 umgesetzt. Die weiter
 
 Build 292 war die zuvor ausgelieferte Basis. Der Nutzer hatte erfolgreiche Installation als Update, gutes direktes Markieren und funktionierendes SmartScroll bestätigt. Build 293 verwendet denselben Signierschlüssel, dieselbe Datenhaltung und die unveränderten weiteren Laufzeitpakete.
 
-## EPUB-Update 304: Arbeitsstand
+## Reader-Auftrag vom 6. November: zusätzliche Änderungen für Build 304
 
-Die Änderungen sind rekonstruiert, der abschließende Neubau und die nativen Tests stehen aus. Diese Quellversion ist ein gesicherter Arbeitsstand, keine fertig geprüfte APK. Die letzte ausgelieferte APK bleibt Build 303.
+Die ersten drei Punkte des wiederaufgenommenen Auftrags sowie Bookmark-Umschaltung, Nachbarzuschnitt und dauerhafte Fit-Einstellungen sind implementiert. Die breitere neue EPUB-Recherche aus Punkt 4 ist nicht Teil dieses Folgeauftrags. Die bereits rekonstruierten EPUB-Änderungen bleiben enthalten.
+
+- **PDF-Footer:** Kleine, unten abgesetzte Beschriftungen werden durch eine stabile, über Stichprobenseiten bestätigte Footerposition und eine getrennte Seitenzahl derselben Grundlinie erkannt. Auch die dünne zugehörige Trennlinie wird aus der Zuschnittanalyse entfernt. `PDF` oder `PDF-Seite` ist kein pauschales Ausschlusswort. Anmerkungen und ihre Quellenzuordnungen bleiben Inhalt. Die originale Plessner-Datei wurde auf allen 116 Seiten geprüft; ihre 19 Quellenlabels im Anmerkungsbereich bleiben erhalten. Normale, wiederholte oder sehr tief liegende Fußnoten sind weiterhin durch Regressionen geschützt.
+- **Originaltext kopieren:** Ein Tipp auf den Originaltext im großen Annotationsfenster kopiert den vollständigen Text einschließlich Zeilenumbrüchen und Unicode in die Android-Zwischenablage. Die begrenzte, scrollbar bleibende Zitatfläche und das getrennte Kommentarfeld bleiben erhalten. Ziehen zum Scrollen ist keine Kopieraktion.
+- **EPUB-Lautstärketasten:** Die bestehende gemeinsame native Tastenanbindung bleibt erhalten: leiser vorwärts, lauter zurück, Richtungsumkehr aus den Einstellungen genau einmal. Eingabefelder, Such-/Annotationsfenster und nicht aktive Reader werden weiterhin geschützt. Der gescrollte Reader erlaubt jetzt auch den letzten unvollständigen Scrollschritt am Anfang oder Ende, damit keine Schlusszeile unerreichbar bleibt. Die gemeinsame Brücke meldet am Dokumentende keinen erfolgreichen Seitenwechsel mehr. Browserfälle prüfen beide Flows, beide Leserichtungen, vorwärts/rückwärts über Kapitelgrenzen und Texteingabe.
+- **Bookmark-Tipp schaltet um:** Ein weiterer kurzer Tipp in dieselbe obere rechte Bookmark-Zone löscht das dortige datierte Lesezeichen über den normalen Annotationsmanager. Das gilt für PDF und EPUB. Ein nachfolgender Tipp legt wieder eines an. Andere Notizen und schreibgeschützte Lesezeichen werden nicht gelöscht. PDF-Tipps werden pro Seite geordnet, damit schnelle wiederholte Eingaben keine konkurrierenden Neuanlagen erzeugen. Links, normale Annotationseingaben, Auswahl und langer Druck behalten ihre vorhandenen Schutzregeln.
+- **Vorbereitete Nachbarseiten:** Vor dem Fit-Abschluss werden aktuelle Seite, Vorgänger und Nachfolger analysiert. Zuschnitt und horizontale Inhaltsausrichtung aller drei Seiten werden gemeinsam gesetzt. Damit erscheinen bereits sichtbare kurze Nachbarseiten nicht zuerst mit Papier-/Fußzeilenrändern und versetztem Textblock. Die vorhandene 32-Seiten-Begrenzung bleibt erhalten. Beim Ausschalten werden die zusätzlichen Darstellungsstile wieder entfernt; PDF- und Annotationskoordinaten ändern sich nicht.
+- **Fingerzoom ohne Verlust des Fits:** Bei aktivem Fit ist Fingerzoom vorübergehend frei; erst nach dem letzten losgelassenen Finger wird die gewählte Einstellung wieder angewendet. `Off` während einer Geste bleibt `Off`. Die Menüeinstellung wird durch Zoom nicht mehr als `none` zurückgespeichert. Einfingriges Verschieben darf die aktuellen Seitenränder zum Nachsehen freigeben, ohne den Fit abzuschalten oder sofort zurückzuzentrieren; Nachbarseiten behalten ihren Zuschnitt. Markier-/Annotationsgesten haben Vorrang. Die expliziten Zoomknöpfe lassen weiterhin den Zugang zur Wrapped-Übersicht zu; ein Seitentipp dort stellt den gemerkten Fit wieder her.
+
+Frisch geprüft: 268 Reader-Tests, 91 native Tests in 21 Suiten und acht Browserprüfungen ohne Fehler oder übersprungene Tests. Dazu gehören 116 Original-PDF-Seiten, alle 19 Anmerkungs-Quellenlabels, EPUB-Navigation und echte Bookmark-Tipps in vier Flow-/Leserichtungsvarianten sowie die bisherigen Browser-Regressionen. APK-Paketkennung, gleiches Signierzertifikat, Versionsanstieg 303 → 304, v2-Signatur, ZIP-Ausrichtung, eingebettete Quellen, unveränderte PDF.js-Dateien und weitere Laufzeitdateien sind geprüft. Nachweise stehen in `BUILD_STATUS.md`, `BUILD_VERIFICATION.json` und `qa/build304/`. Kein physischer BOOX-/Smartphone-Test und kein echter Kontosync behauptet. Die älteren Original-Kant-/Höffe-/Fuchs-/Mul-Dateien lagen in dieser Sitzung nicht vor; dafür werden keine neuen Originaldatei-Prüfungen behauptet.
+
+## EPUB-Update 304: wiederhergestellter Ausgangsstand
+
+Die Änderungen wurden aus dem gesicherten Quellarchiv und dessen Git-Bundles wiederhergestellt und zusammen mit den zusätzlichen Änderungen oben nativ neu gebaut. Die neue Test-APK hat Versionscode 304. Die folgenden historischen Abschnitte beschreiben den damaligen Ausgangsstand; die aktuellen Nachweise stehen oben und in den Build-Berichten. Die lokale Speicherung und Wiederherstellung des EPUB-Lesestands bleibt zusätzlich am Gerät zu erproben.
 
 F30: Schriftgröße, genauer lokaler CFI-Versatz, Anwendung von Breite/Abständen und sichere EPUB-/HTML-Initialisierung. F31: EPUB-Lesezeichen als graue datierte Standardnotizen. F32: Lautstärketasten in beiden EPUB-Ansichten einschließlich Kapitelgrenzen prüfen. Paketkennung, bisherige Einstellungen und Signierschlüssel beibehalten. F19/F22/F23 bleiben offen. Die vollständige recherchierte Liste folgt am Dateiende.
 

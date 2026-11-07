@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.zotero.android.api.mappers.CreatorResponseMapperTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-06T21:05:32.629Z" hostname="c61665e7a7a3" time="0.046">
+  <properties/>
+  <testcase name="testMapperParsesSuccessfully" classname="org.zotero.android.api.mappers.CreatorResponseMapperTest" time="0.044"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

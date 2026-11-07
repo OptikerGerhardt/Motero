@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.zotero.android.sync.UrlDetectorTest" tests="14" skipped="0" failures="0" errors="0" timestamp="2026-11-06T21:05:36.830Z" hostname="c61665e7a7a3" time="0.004">
+  <properties/>
+  <testcase name="returns false for invalid domain and path separator" classname="org.zotero.android.sync.UrlDetectorTest" time="0.001"/>
+  <testcase name="returns true for valid http domain" classname="org.zotero.android.sync.UrlDetectorTest" time="0.0"/>
+  <testcase name="returns true for valid http domain, port and path" classname="org.zotero.android.sync.UrlDetectorTest" time="0.0"/>
+  <testcase name="returns true for valid https domain" classname="org.zotero.android.sync.UrlDetectorTest" time="0.001"/>
+  <testcase name="returns true for valid https domain, port, path, params and anchor" classname="org.zotero.android.sync.UrlDetectorTest" time="0.0"/>
+  <testcase name="returns true for valid https domain, port and path" classname="org.zotero.android.sync.UrlDetectorTest" time="0.0"/>
+  <testcase name="returns true for valid http domain, port, path, params and anchor" classname="org.zotero.android.sync.UrlDetectorTest" time="0.0"/>
+  <testcase name="returns true for valid http domain and port" classname="org.zotero.android.sync.UrlDetectorTest" time="0.001"/>
+  <testcase name="returns true for valid https domain and port" classname="org.zotero.android.sync.UrlDetectorTest" time="0.0"/>
+  <testcase name="returns true for valid https subdomain, port, path, params and anchor" classname="org.zotero.android.sync.UrlDetectorTest" time="0.0"/>
+  <testcase name="returns false for the url with an no schema" classname="org.zotero.android.sync.UrlDetectorTest" time="0.0"/>
+  <testcase name="returns true for valid http subdomain, port, path, params and anchor" classname="org.zotero.android.sync.UrlDetectorTest" time="0.001"/>
+  <testcase name="returns true for valid https domain, port, path and params" classname="org.zotero.android.sync.UrlDetectorTest" time="0.0"/>
+  <testcase name="returns true for valid http domain, port, path and params" classname="org.zotero.android.sync.UrlDetectorTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

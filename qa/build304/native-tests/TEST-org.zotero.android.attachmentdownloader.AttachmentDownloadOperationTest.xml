@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.zotero.android.attachmentdownloader.AttachmentDownloadOperationTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-11-06T21:05:32.725Z" hostname="c61665e7a7a3" time="1.034">
+  <properties/>
+  <testcase name="interrupted download keeps the existing local file and removes partial download" classname="org.zotero.android.attachmentdownloader.AttachmentDownloadOperationTest" time="1.002"/>
+  <testcase name="successful download replaces the existing local file" classname="org.zotero.android.attachmentdownloader.AttachmentDownloadOperationTest" time="0.009"/>
+  <testcase name="failed request keeps the existing local file" classname="org.zotero.android.attachmentdownloader.AttachmentDownloadOperationTest" time="0.008"/>
+  <testcase name="cancelled download keeps the existing local file and removes partial download" classname="org.zotero.android.attachmentdownloader.AttachmentDownloadOperationTest" time="0.01"/>
+  <testcase name="failed request does not leave anything behind for a file that was never downloaded" classname="org.zotero.android.attachmentdownloader.AttachmentDownloadOperationTest" time="0.004"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
