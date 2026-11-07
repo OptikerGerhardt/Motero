@@ -1,8 +1,12 @@
 # Motero 308: Reader-Überarbeitung
 
-Lokal erfolgreich gebaut und mit dem bestehenden privaten Motero-Schlüssel signiert. 282 Reader-Tests, 113 native Tests in 26 Suiten, zehn Browserprüfungen und elf Veröffentlichungs-/Signierprüfungen bestanden. Die APK-Prüfung bestätigt Version 308, V3-Rotation, neue Receiver-Berechtigung, Android 9+, 93 aktuelle eingebettete Reader-Quellen, 207 unveränderte PDF.js-Dateien und 45 Runtime-Dateien. Nachweise: `qa/build308/`.
+**Veröffentlicht:** [Build 308](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.0-308). GitHub-Lauf [42413319376](https://github.com/OptikerGerhardt/Motero/actions/runs/42413319376) hat Build, 282 Reader-Tests, 113 native Tests in 26 Suiten, zehn Browserprüfungen sowie Veröffentlichungs-/Signierprüfungen erfolgreich abgeschlossen. Vor dem Release bestanden zusätzlich die echten Updateprüfungen auf Android API 31 und 35 mit privatem Testdatensatz, unveränderter UID, App-Start und Abweisung des alten Schlüssels.
 
-Der GitHub-Release wird erst nach zusätzlichen Installationsprüfungen auf Android API 31 und 35 veröffentlicht. Die lokale APK-SHA-256 lautet `88c61d92fa90fb6e70e42f41e28a9d079412e803b0d1fcd844688f3145ab3eae`; die auf GitHub gebaute APK erhält einen eigenen Nachweis. Neue physische Bedienprüfungen sind nicht behauptet. Der Nutzer hat die erfolgreiche Installation von Build 307 auf Pixel 8/GrapheneOS bestätigt.
+Die tatsächlich hochgeladene APK wurde erneut heruntergeladen. Signatur, V3-Rotation, Receiver-Berechtigung, Android 9+, 93 aktuelle eingebettete Reader-Quellen, 207 unveränderte PDF.js-Dateien und 45 Runtime-Dateien sind geprüft. Ihre SHA-256 ist `31867947aa6784689ab0a34329a30bda703b8d840391a5909192f27d22b51f4e`; sie stimmt mit `SHA256SUMS.txt` und beiden Android-Migrationsberichten überein. Die anonyme GitHub-API bietet genau diese APK als neueste Version an. Nachweise: `BUILD_VERIFICATION.json` und `qa/build308/github-*.json`.
+
+Der lokale Build bestand dieselben Reader-/Android-/Browserprüfungen sowie elf Veröffentlichungs-/Signierprüfungen. Seine separate SHA-256 steht in `qa/build308/local-apk-verification.json`. Ein anfänglich zu früher Zugriff im Browsertest auf die asynchrone Crop-Brückenmeldung ist durch explizites Warten korrigiert; zusätzlich mit 750 ms verzögerter Zustellung geprüft. Der Produktcode war davon unverändert.
+
+Physische Bedienprüfungen für die neuen Reader-Funktionen und echter Kontosync stehen aus. Die erfolgreiche Installation von Build 307 auf Pixel 8/GrapheneOS wurde vom Nutzer bestätigt. Der historische Build-305-Nachweis liegt jetzt unter `qa/build305/BUILD_VERIFICATION.json`.
 
 ## Vorheriger Stand: Build 307
 
@@ -61,6 +65,6 @@ Zertifikat-SHA-256: c4e70a6935d239246540532b6d3ea514eb2a428e1e8eaacbf94c8a9a0198
 
 Zuschnitt: PDF-Einstellungen → „Manueller Zuschnitt…“. Rahmen ändern, Seitenbereich wählen und übernehmen. PDF-Seite 1 zählt als ungerade. Zuschnitt ist lokal pro Bibliothek/Anhang; die PDF-Datei und Annotationskoordinaten werden nicht verändert. „Automatisch“ löscht alle manuellen Rahmen.
 
-Nachweise: BUILD_VERIFICATION.json und qa/build305/. android-final-packaging.log dokumentiert denselben letzten Aufruf mit erfolgreichen nativen Tests und assembleDevDebug; danach wurde kein Produktcode mehr geändert.
+Nachweise: qa/build305/BUILD_VERIFICATION.json und qa/build305/. android-final-packaging.log dokumentiert denselben letzten Aufruf mit erfolgreichen nativen Tests und assembleDevDebug; danach wurde kein Produktcode mehr geändert.
 
 Nicht durchgeführt: physischer BOOX-/Smartphone-Test, echte BOOX-Tastaturprüfung, tatsächliche Update-Installation, native visuelle Prüfung und Kontosynchronisation. Der Paket-/Signaturvergleich belegt die technische Update-Identität. Dieser Bericht dokumentiert die lokale APK-Prüfung; die private GitHub-Bereitstellung und der Release-Ablauf sind in README.md beschrieben.
