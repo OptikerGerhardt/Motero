@@ -1,0 +1,50 @@
+{
+  "passed": true,
+  "refs": [
+    "HEAD",
+    "refs/audit/heads/reader"
+  ],
+  "git_objects": 35481,
+  "git_blobs": 13691,
+  "git_bytes": 235300386,
+  "archive_entries": 22822,
+  "archive_bytes": 1156890004,
+  "unreviewed_findings": 0,
+  "findings": [
+    {
+      "path": "debug.keystore",
+      "kinds": [
+        "sensitive_filename"
+      ],
+      "sha256": "0cac96b95ee3a56de27e30bb92dc49e4dd319a26d47da172d5e41a34388b29bf",
+      "allowed_public_fixture": true,
+      "object": "37ff3cacd04a4617c9a6e56b650a401e365bbb9b"
+    },
+    {
+      "path": "app/zotero.temp.keystore",
+      "kinds": [
+        "sensitive_filename"
+      ],
+      "sha256": "dcd741d20decfd7af9a36dbda568879447eb1ffe9ceac3743c4d2e01168101af",
+      "allowed_public_fixture": true,
+      "object": "3c6c0917273cc383ea36c20a6bf404a99d3661a0"
+    },
+    {
+      "path": "Zotero_Boox_SmartScroll_Source.recovered.zip!zotero-android/debug.keystore",
+      "kinds": [
+        "sensitive_filename"
+      ],
+      "sha256": "0cac96b95ee3a56de27e30bb92dc49e4dd319a26d47da172d5e41a34388b29bf",
+      "allowed_public_fixture": true
+    },
+    {
+      "path": "Motero_Build305_Source.zip!debug.keystore",
+      "kinds": [
+        "sensitive_filename"
+      ],
+      "sha256": "0cac96b95ee3a56de27e30bb92dc49e4dd319a26d47da172d5e41a34388b29bf",
+      "allowed_public_fixture": true
+    }
+  ],
+  "scope": "High-confidence formats, sensitive filenames and known personal document names; not a guarantee that no other secrets exist."
+}

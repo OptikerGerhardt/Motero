@@ -1,0 +1,12 @@
+{
+  "verified": true,
+  "package": "org.zotero.android.debug",
+  "version_code": 306,
+  "certificate_sha256": "f6b9547e9644f44e23bcceac94ec32cfd6576b5f732af7e12094699307de778d",
+  "signing_policy": "public",
+  "legacy_rotation_verified": true,
+  "apk_sha256": "020de010574fd67644f0f307d2c59bfc13c2b112e25bbc0f9548b7e4186b13fd",
+  "runtime_files": 45,
+  "pdfjs_files": 207,
+  "reader_sources": 92
+}

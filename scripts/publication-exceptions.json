@@ -1,0 +1,10 @@
+{
+  "0cac96b95ee3a56de27e30bb92dc49e4dd319a26d47da172d5e41a34388b29bf": {
+    "reason": "Public upstream development key; forbidden for public APK signing",
+    "source": "https://api.github.com/repos/zotero/zotero-android/git/blobs/37ff3cacd04a4617c9a6e56b650a401e365bbb9b"
+  },
+  "dcd741d20decfd7af9a36dbda568879447eb1ffe9ceac3743c4d2e01168101af": {
+    "reason": "Historical public upstream test keystore; not a private Motero credential",
+    "source": "https://api.github.com/repos/zotero/zotero-android/git/blobs/3c6c0917273cc383ea36c20a6bf404a99d3661a0"
+  }
+}
