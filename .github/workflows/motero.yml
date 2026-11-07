@@ -1,0 +1,132 @@
+name: Motero build, test and release
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: motero-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    outputs:
+      publish: ${{ steps.meta.outputs.publish }}
+      tag: ${{ steps.meta.outputs.tag }}
+      version: ${{ steps.meta.outputs.version }}
+      version_code: ${{ steps.meta.outputs.version_code }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          persist-credentials: false
+      - name: Check version and existing releases
+        id: meta
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MOTERO_BEFORE: ${{ github.event.before }}
+        run: python3 scripts/release_metadata.py --github-output "$GITHUB_OUTPUT"
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: reader/package-lock.json
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - name: Install pinned Android SDK packages
+        run: |
+          python3 - <<'PY'
+          import shutil,subprocess
+          sdk=shutil.which('sdkmanager')
+          assert sdk, 'The Android SDK command-line tools must be installed on the runner'
+          subprocess.run([sdk,'--licenses'],input='y\n'*200,text=True,check=True,stdout=subprocess.DEVNULL)
+          subprocess.run([sdk,'platforms;android-37.0','build-tools;36.0.0'],check=True)
+          PY
+      - name: Validate runtime assets and restore PDF.js
+        run: python3 scripts/prepare_reader_assets.py
+      - name: Build and test the reader
+        shell: bash
+        run: |
+          mkdir -p qa-ci
+          cd reader
+          npm ci --no-audit --no-fund
+          npm test 2>&1 | tee ../qa-ci/reader-full-tests.log
+          npx webpack --config-name android 2>&1 | tee ../qa-ci/reader-build.log
+      - name: Package reader and build Android APK
+        shell: bash
+        run: |
+          python3 scripts/package_reader_assets.py
+          ./gradlew :app:testDevDebugUnitTest :app:assembleDevDebug --init-script scripts/test_jvm_agent.gradle --no-build-cache --no-daemon --max-workers=4 2>&1 | tee qa-ci/android-build.log
+          python3 scripts/collect_test_results.py --output qa-ci/native-tests.json
+          python3 scripts/verify_release.py --apk app/build/outputs/apk/dev/debug/app-dev-debug.apk --build-tools "$ANDROID_HOME/build-tools/36.0.0" --output qa-ci/apk-verification.json
+      - name: Install isolated browser test tools
+        run: npm install --prefix .browser-tools --no-audit --no-fund playwright@1.56.1
+      - name: Run browser regressions
+        env:
+          NODE_PATH: ${{ github.workspace }}/.browser-tools/node_modules
+        run: |
+          python3 scripts/run_browser_checks.py --browser "$(command -v google-chrome || command -v chromium)" --output qa-ci
+      - name: Prepare release artifacts
+        run: |
+          python3 scripts/prepare_release.py --apk app/build/outputs/apk/dev/debug/app-dev-debug.apk --output dist
+          python3 - <<'PY'
+          import hashlib,shutil
+          from pathlib import Path
+          shutil.make_archive('dist/Motero_TestReports','zip','qa-ci')
+          files=sorted(p for p in Path('dist').iterdir() if p.is_file() and p.name!='SHA256SUMS.txt')
+          Path('dist/SHA256SUMS.txt').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name+'\n' for p in files))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: motero-build-${{ steps.meta.outputs.version_code }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload test reports on failure
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: failed-test-reports
+          path: |
+            qa-ci/
+            app/build/reports/tests/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  release:
+    needs: build
+    if: needs.build.outputs.publish == 'true' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: motero-build-${{ needs.build.outputs.version_code }}
+          path: dist
+      - name: Recheck immutable version and publish APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.build.outputs.tag }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          python3 scripts/release_metadata.py
+          gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "Motero $VERSION" --notes-file dist/RELEASE_NOTES.md --latest
