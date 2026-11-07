@@ -15,6 +15,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--apk', type=Path)
 parser.add_argument('--output', type=Path, default=root / 'dist')
 parser.add_argument('--metadata-only', action='store_true')
+parser.add_argument('--unsigned-ci', action='store_true', help='Prepare non-installable CI input; signing must happen in the protected release job')
+parser.add_argument('--build-tools', type=Path)
 args = parser.parse_args()
 config = (root / 'buildSrc/src/main/kotlin/BuildConfig.kt').read_text()
 code = int(re.search(r'const val versionCode = (\d+)', config).group(1))
@@ -25,7 +27,11 @@ if args.metadata_only:
     raise SystemExit()
 assert args.apk and args.apk.is_file(), 'A built and tested APK is required'
 args.output.mkdir(parents=True, exist_ok=True)
-apk = args.output / metadata['apk']
+if not args.unsigned_ci:
+    tools = args.build_tools or Path(os.environ.get('ANDROID_HOME', '')) / 'build-tools/36.0.0'
+    subprocess.run(['python3', str(root / 'scripts/verify_release.py'), '--apk', str(args.apk), '--build-tools', str(tools)], check=True)
+metadata['unsigned'] = args.unsigned_ci
+apk = args.output / (f'Motero_Build{code}-unsigned.apk' if args.unsigned_ci else metadata['apk'])
 if args.apk.resolve() != apk.resolve():
     shutil.copyfile(args.apk, apk)
 sha = lambda data: hashlib.sha256(data).hexdigest()
@@ -50,9 +56,9 @@ with zipfile.ZipFile(source, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as arch
         else:
             raise SystemExit('Submodule or tracked source is not initialized: ' + name)
         files[name] = sha(data)
-    snapshot = {**metadata, 'android_commit': git('rev-parse', 'HEAD'),
+    snapshot = {**{k:v for k,v in metadata.items() if k != 'unsigned'}, 'android_commit': git('rev-parse', 'HEAD'),
         'reader_commit': subprocess.check_output(['git', '-C', str(root / 'reader'), 'rev-parse', 'HEAD'], text=True).strip(),
-        'apk_sha256': sha(apk.read_bytes()), 'files': files,
+        'apk_binding': 'The final signed APK is identified separately in SHA256SUMS.txt.', 'files': files,
         'restoration': 'Complete tracked source tree including initialized submodules. No Git metadata or local credentials. See README.md for building.'}
     archive.writestr('SOURCE_SNAPSHOT.json', json.dumps(snapshot, indent=2) + '\n')
 with zipfile.ZipFile(source) as archive:
@@ -63,7 +69,7 @@ with zipfile.ZipFile(source) as archive:
 changelog = (root / 'CHANGELOG.md').read_text()
 match = re.search(r'^## ' + re.escape(version) + r'[^\n]*\n(.*?)(?=^## |\Z)', changelog, re.M | re.S)
 changes = match.group(1).strip() if match else 'Änderungen stehen im Changelog und in den Commits dieses Tags.'
-notes = f"Motero {version}\n\n{changes}\n\nAPK als Update über die bestehende Motero-Testversion installieren. Paket org.zotero.android.debug; gleicher öffentlicher Zotero-Testsignierer.\n\nDie vollständigen Quellen einschließlich Submodulen sind beigefügt. Automatische Tests und Build-Prüfungen ersetzen keinen physischen Geräte-/BOOX-Tastatur- oder Kontosync-Test.\n"
+notes = f"Motero {version}\n\n{changes}\n\nAPK als Update über die bestehende Motero-Testversion installieren. Paket org.zotero.android.debug; eigener privater Motero-Signierer mit V3-Zertifikatsrotation, Android 9+. Die tatsächliche Installation und Datenübernahme auf einem Gerät müssen gesondert geprüft werden.\n\nDie vollständigen Quellen einschließlich Submodulen sind beigefügt. Automatische Tests und Build-Prüfungen ersetzen keinen physischen Geräte-/BOOX-Tastatur- oder Kontosync-Test.\n"
 (args.output / 'RELEASE_NOTES.md').write_text(notes)
 (args.output / 'release-metadata.json').write_text(json.dumps(metadata, indent=2) + '\n')
 (args.output / 'SHA256SUMS.txt').write_text(''.join(sha(path.read_bytes()) + '  ' + path.name + '\n'

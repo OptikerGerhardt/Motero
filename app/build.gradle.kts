@@ -1,4 +1,3 @@
-import com.github.triplet.gradle.androidpublisher.ResolutionStrategy
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
@@ -7,7 +6,6 @@ plugins {
     kotlin("kapt")
     kotlin("plugin.serialization")
     id("com.google.devtools.ksp")
-    id("com.github.triplet.play") version "4.0.0"
     id("realm-android")
     id("kotlin-parcelize")
     id("com.google.gms.google-services")
@@ -26,13 +24,15 @@ plugins {
     kotlin("plugin.compose")
 }
 
+val moteroPublicRelease = providers.gradleProperty("moteroPublicRelease").orNull == "true"
+
 android {
     compileSdk = BuildConfig.compileSdkVersion
     namespace = "org.zotero.android"
 
     defaultConfig {
         applicationId = BuildConfig.appId
-        minSdk = BuildConfig.minSdkVersion
+        minSdk = if (moteroPublicRelease) 28 else BuildConfig.minSdkVersion
         targetSdk = BuildConfig.targetSdk
         versionCode = BuildConfig.versionCode
         versionName = BuildConfig.version.name
@@ -97,10 +97,12 @@ android {
         getByName("release") {
             isDebuggable = false
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getAt("release")
-
-            buildConfigField("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", "true")
-            manifestPlaceholders["enableCrashReporting"] = true
+            // The public APK is signed separately with the protected Motero key.
+            // Never fall back to the public upstream test key when that key is absent.
+            signingConfig = if (moteroPublicRelease) null else signingConfigs.getAt("release")
+            buildConfigField("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", if (moteroPublicRelease) "false" else "true")
+            manifestPlaceholders["enableCrashReporting"] = !moteroPublicRelease
+            if (moteroPublicRelease) extra.set("enableCrashlytics", false)
         }
     }
     setDefaultProductFlavors()
@@ -134,14 +136,15 @@ android {
     }
 
     androidComponents {
-        beforeVariants { it.ignoreUnusedVariants() }
+        beforeVariants {
+            if (moteroPublicRelease && it.name == "devRelease") {
+                it.enable = true
+                (it as com.android.build.api.variant.HasHostTestsBuilder)
+                    .hostTests[com.android.build.api.variant.HostTestBuilder.UNIT_TEST_TYPE]?.enable = true
+            }
+            else it.ignoreUnusedVariants()
+        }
     }
-}
-
-play {
-    track.set("internal")
-    defaultToAppBundles.set(true)
-    resolutionStrategy.set(ResolutionStrategy.AUTO)
 }
 
 dependencies {

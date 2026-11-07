@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "application_id": "org.zotero.android.debug",
+  "certificate_sha256": "f6b9547e9644f44e23bcceac94ec32cfd6576b5f732af7e12094699307de778d",
+  "legacy_certificate_sha256": "c4e70a6935d239246540532b6d3ea514eb2a428e1e8eaacbf94c8a9a01989299",
+  "minimum_android_api": 28,
+  "signature_scheme": "v3",
+  "rotation_minimum_api": 28,
+  "legacy_rollback_allowed": false,
+  "release_secret": "MOTERO_RELEASE_SIGNING"
+}

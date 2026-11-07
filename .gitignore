@@ -99,3 +99,8 @@ qa-ci/
 !/debug.keystore
 .env
 .env.*
+
+# Private production signing setup must never be committed
+MOTERO_RELEASE_SIGNING*.json
+*Private_Signing_Backup*.zip
+/signing/private/

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify public test identity, version, pinned assets and current reader source in an APK."""
+"""Verify the pinned release identity, rotation, assets and embedded reader source."""
 import argparse
 import hashlib
 import io
@@ -14,16 +14,38 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--apk', type=Path, required=True)
 parser.add_argument('--build-tools', type=Path, required=True)
 parser.add_argument('--output', type=Path)
+parser.add_argument('--development', action='store_true', help='Validate a private development test artifact, never a public release')
 args = parser.parse_args()
 signature = subprocess.check_output([str(args.build_tools / 'apksigner'), 'verify', '--verbose', '--print-certs', str(args.apk)], text=True)
-assert 'Verified using v2 scheme (APK Signature Scheme v2): true' in signature
 certificate = re.search(r'certificate SHA-256 digest: ([0-9a-f]+)', signature).group(1)
-assert certificate == 'c4e70a6935d239246540532b6d3ea514eb2a428e1e8eaacbf94c8a9a01989299', 'Unexpected test signing key'
+policy = json.loads((root / 'signing/release-policy.json').read_text())
+expected = policy['legacy_certificate_sha256'] if args.development else policy['certificate_sha256']
+assert certificate == expected, 'APK signer does not match the selected signing policy'
+if args.development:
+    assert 'Verified using v2 scheme (APK Signature Scheme v2): true' in signature
+else:
+    assert 'Verified using v3 scheme (APK Signature Scheme v3): true' in signature
+    assert 'Verified using v1 scheme (JAR signing): false' in signature
+    assert 'Verified using v2 scheme (APK Signature Scheme v2): false' in signature
+    lineage = subprocess.check_output([str(args.build_tools / 'apksigner'), 'lineage', '--in', str(args.apk), '--print-certs'], text=True)
+    signers = re.split(r'Signer #\d+ in lineage certificate DN:', lineage)[1:]
+    assert len(signers) == 2, 'Expected exactly the legacy and Motero signing identities'
+    assert 'certificate SHA-256 digest: ' + policy['legacy_certificate_sha256'] in signers[0]
+    assert 'certificate SHA-256 digest: ' + expected in signers[1]
+    capabilities = dict(re.findall(r'Has (.+?) capability\s*:\s*(true|false)', signers[0]))
+    assert capabilities == {'installed data': 'true', 'shared UID': 'false', 'permission': 'false', 'rollback': 'false', 'auth': 'false'}, 'Unsafe capabilities granted to the public legacy key'
+    for api in [28, 32, 33, 36]:
+        check = subprocess.check_output([str(args.build_tools / 'apksigner'), 'verify', '--verbose', '--print-certs',
+            '--min-sdk-version', str(api), '--max-sdk-version', str(api), str(args.apk)], text=True)
+        assert 'certificate SHA-256 digest: ' + expected in check, 'Rotated signer is not accepted at API ' + str(api)
 badging = subprocess.check_output([str(args.build_tools / 'aapt2'), 'dump', 'badging', str(args.apk)], text=True)
 package, code = re.search(r"package: name='([^']+)' versionCode='(\d+)'", badging).groups()
 assert package == 'org.zotero.android.debug'
 assert int(code) == int(re.search(r'const val versionCode = (\d+)', (root / 'buildSrc/src/main/kotlin/BuildConfig.kt').read_text()).group(1))
 assert "application-label:'Motero'" in badging
+if not args.development:
+    assert 'application-debuggable' not in badging, 'Public APK must not be debuggable'
+    assert int(re.search(r"(?:minSdkVersion|sdkVersion):'(\d+)'", badging).group(1)) >= policy['minimum_android_api']
 subprocess.run([str(args.build_tools / 'zipalign'), '-c', '-P', '16', '4', str(args.apk)], check=True, stdout=subprocess.DEVNULL)
 sha = lambda data: hashlib.sha256(data).hexdigest()
 assets = json.loads((root / 'vendor/runtime-assets.json').read_text())
@@ -50,6 +72,8 @@ with zipfile.ZipFile(args.apk) as apk:
                 matched.append(relative)
         assert 'pdf/manual-crop-editor.js' in matched and 'pdf/pdf-view.js' in matched
 report = dict(verified=True, package=package, version_code=int(code), certificate_sha256=certificate,
+    signing_policy="development" if args.development else "public",
+    legacy_rotation_verified=not args.development,
     apk_sha256=sha(args.apk.read_bytes()), runtime_files=len(assets['files']), pdfjs_files=len(engine['files']), reader_sources=len(matched))
 if args.output:
     args.output.parent.mkdir(parents=True, exist_ok=True)
