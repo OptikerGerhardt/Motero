@@ -14,3 +14,5 @@ The tracked `debug.keystore` and `app/google-services.json` are unchanged public
 All Motero-specific changes and their integration were programmed using ChatGPT / OpenAI Codex. Original Zotero code and incorporated community contributions retain their authorship and notices. See [UPSTREAM_CHANGES.md](UPSTREAM_CHANGES.md) for incorporated pull requests.
 
 Zotero is a registered trademark of the Corporation for Digital Scholarship. Use of the source code does not grant trademark rights. Motero is an independent fork, not an official Zotero product.
+
+AndroidX Core (Apache-2.0) receives a packaging-time change to its internal receiver-permission suffix for the Motero release variant. The transform source is `buildSrc/src/main/kotlin/MoteroReceiverPermissionTransform.kt`; original AndroidX authorship and licensing remain applicable.

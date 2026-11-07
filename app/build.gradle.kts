@@ -144,6 +144,14 @@ android {
             }
             else it.ignoreUnusedVariants()
         }
+        onVariants { variant ->
+            if (moteroPublicRelease && variant.name == "devRelease") {
+                variant.instrumentation.transformClassesWith(
+                    MoteroReceiverPermissionTransform::class.java,
+                    com.android.build.api.instrumentation.InstrumentationScope.ALL
+                ) {}
+            }
+        }
     }
 }
 

@@ -33,3 +33,9 @@ This is a disclosure and release-configuration review, not a comprehensive appli
 Physical-device installation, data migration, BOOX keyboard behavior, and live account synchronization remain outside the automated evidence. Back up app data before migrating from the earlier signing key.
 
 Keep the private signing backup secure. Do not re-publish legacy development-signed APKs. Review new files, dependencies, tags and release attachments before future distribution. See [SECURITY.md](../SECURITY.md) and [RELEASING.md](RELEASING.md).
+
+## Follow-up: initial update failure and Build 307
+
+After this disclosure review, real devices rejected the update from 303 to 306 on GrapheneOS/Pixel 8 and BOOX Go Color 7. The source/publication findings above do not constitute an installation test. Android rejects re-declaring the legacy signature permission after its signing capability has been revoked, despite accepting the cryptographic rotation proof.
+
+Build 307 gives AndroidX's internal receiver permission a fresh namespace in the manifest and compiled lookup. It retains the private signing identity and revokes trust in the old key. Publication now additionally requires real emulator migration, data/UID retention and old-key refusal tests on API 31 and 35. Physical-device confirmation of the corrected update is still required.

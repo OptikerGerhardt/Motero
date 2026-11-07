@@ -14,7 +14,8 @@ This signing setup was verified by the successful Build 306 release. Generating 
 2. For app changes, increase `BuildConfig.versionCode` and update the changelog and feature plan. Use focused commits.
 3. The build job receives no signing secret. It checks source history, builds and tests the reader and Android app, runs browser and publication checks, and prepares an unsigned APK with a complete source archive including submodules.
 4. Only the release job for `main` receives the signing secret. It signs and verifies the APK against the pinned certificate, Android 9+ requirement, non-debuggable manifest, V3 rotation, restricted legacy signing capabilities, and runtime/reader content hashes.
-5. The unsigned input is removed from the release files. GitHub publishes `v1.0.0-<build>` with `Motero_Build<build>.apk`, complete sources, verification reports, and `SHA256SUMS.txt`.
+5. Before publishing, Android emulators on APIs 31 and 35 install the original 303 APK, reproduce the known 306 permission conflict, update to the candidate while retaining a private test marker and UID, and reject updates/permission requests signed with the old public key. Fixtures remain under ignored build directories and are never published.
+6. The unsigned input is removed from the release files. GitHub publishes `v1.0.0-<build>` with `Motero_Build<build>.apk`, complete sources, verification reports, and `SHA256SUMS.txt`.
 
 A missing or incorrect signing secret stops publication. There is no fallback to the public development key. Pull requests cannot publish releases and receive no signing secret. Existing tags and assets must not be overwritten. App changes cannot reuse a published build number; documentation updates do not replace existing releases.
 
@@ -37,3 +38,5 @@ Adjust the build number to the current version. `--secret-file` is for local sig
 `debug.keystore` is the verified public Zotero development key, retained for development and negative signing tests. It is not an acceptable release identity. Earlier development-signed releases remain archived as drafts and must not be re-published as production downloads.
 
 The release APK's Android-9+ rotation proof has been checked with signing tools. Actual installation and data migration on BOOX/GrapheneOS devices still need verification. Back up data before the first migration. The old key has no rollback capability after the transition. Historical same-key update reports through Build 305 do not verify this new rotation.
+
+The Build 307 receiver namespace must match between the release manifest and AndroidX Core. `scripts/verify_receiver_permission.py` checks both. The release job uses rooted AOSP emulators; `scripts/check_android_update.py` refuses physical devices. Historical Build 306 signing checks did not cover this PackageManager permission gate and are not sufficient migration evidence.

@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "android_api": 35,
+  "emulator_only": true,
+  "version_code": 307,
+  "candidate_sha256": "95af895ea91a0ae9135b7ce482346247a86a918949f0aac0b5598b3592a7a43b",
+  "legacy_duplicate_permission_failure_reproduced": true,
+  "private_data_marker_preserved": true,
+  "application_uid_preserved": true,
+  "old_key_update_rejected": true,
+  "old_key_client_permission_denied": true,
+  "receiver_permission": "org.zotero.android.debug.MOTERO_DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+}

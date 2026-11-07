@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+"""Exercise real PackageManager migration and data retention on an owned emulator only."""
+import argparse
+import hashlib
+import json
+from pathlib import Path
+import re
+import subprocess
+import time
+import uuid
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--adb', type=Path, required=True)
+parser.add_argument('--serial', default='emulator-5554')
+parser.add_argument('--baseline-apk', type=Path, required=True)
+parser.add_argument('--candidate-apk', type=Path, required=True)
+parser.add_argument('--rejected-apk', type=Path)
+parser.add_argument('--rollback-probe-apk', type=Path, required=True)
+parser.add_argument('--legacy-client-apk', type=Path, required=True)
+parser.add_argument('--output', type=Path, required=True)
+parser.add_argument('--boot-timeout', type=int, default=600)
+args = parser.parse_args()
+assert args.serial.startswith('emulator-'), 'Refusing to modify a physical device'
+package = 'org.zotero.android.debug'
+permission = package + '.MOTERO_DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION'
+
+
+def adb(*values, check=True, input=None, timeout=50):
+    result = subprocess.run([str(args.adb), '-s', args.serial, *map(str, values)],
+        input=input, capture_output=True, text=True, timeout=timeout)
+    if check and result.returncode:
+        raise RuntimeError('adb command failed: ' + result.stdout + result.stderr)
+    return result
+
+
+deadline = time.monotonic() + args.boot_timeout
+while time.monotonic() < deadline:
+    result = adb('shell', 'getprop', 'sys.boot_completed', check=False, timeout=10)
+    if result.returncode == 0 and result.stdout.strip() == '1':
+        break
+    time.sleep(3)
+else:
+    raise SystemExit('Emulator did not finish booting within the test deadline')
+assert adb('shell', 'getprop', 'ro.kernel.qemu').stdout.strip() == '1', 'Emulator identity check failed'
+adb('root')
+adb('wait-for-device')
+assert adb('shell', 'id', '-u').stdout.strip() == '0', 'A rooted AOSP test image is required'
+
+
+def install(path, expected_error=None):
+    result = adb('install', '--no-streaming', '-r', '-t', path, check=False, timeout=300)
+    text = result.stdout + result.stderr
+    if expected_error:
+        assert result.returncode and expected_error in text, text
+        print('Expected refusal:', expected_error, flush=True)
+    else:
+        assert result.returncode == 0 and 'Success' in text, text
+        print('Installed:', Path(path).name, flush=True)
+    return text
+
+
+install(args.baseline_apk)
+data = '/data/user/0/' + package
+owner_before = adb('shell', 'stat', '-c', '%u', data).stdout.strip()
+marker = 'motero-migration-' + uuid.uuid4().hex
+adb('shell', 'run-as', package, 'mkdir', '-p', 'files')
+adb('shell', '-T', 'run-as', package, 'tee', 'files/motero-update-probe.txt', input=marker)
+marker_path = data + '/files/motero-update-probe.txt'
+assert adb('shell', 'cat', marker_path).stdout == marker
+rejection = None
+if args.rejected_apk:
+    rejection = install(args.rejected_apk, 'INSTALL_FAILED_DUPLICATE_PERMISSION')
+    assert adb('shell', 'cat', marker_path).stdout == marker
+
+install(args.candidate_apk)
+assert adb('shell', 'cat', marker_path).stdout == marker, 'Existing private app data was lost'
+owner_after = adb('shell', 'stat', '-c', '%u', data).stdout.strip()
+assert owner_before == owner_after, 'Application UID changed during the update'
+candidate_dump = adb('shell', 'dumpsys', 'package', package).stdout
+version = int(re.search(r'versionCode=(\d+)', candidate_dump).group(1))
+assert re.search(re.escape(permission) + r': granted=true', candidate_dump), 'New internal permission was not granted'
+launch = adb('shell', 'am', 'start', '-W', '-n', package + '/org.zotero.android.screens.root.RootActivity', timeout=90)
+assert 'Status: ok' in launch.stdout, launch.stdout
+time.sleep(3)
+assert adb('shell', 'pidof', package).stdout.strip(), 'Updated app crashed during startup'
+install(args.rollback_probe_apk, 'INSTALL_FAILED_UPDATE_INCOMPATIBLE')
+assert adb('shell', 'cat', marker_path).stdout == marker
+install(args.legacy_client_apk)
+client_dump = adb('shell', 'dumpsys', 'package', 'org.motero.test.legacyclient').stdout
+assert permission in client_dump, 'Probe did not request the internal permission'
+assert not re.search(re.escape(permission) + r': granted=true', client_dump), 'The public old key gained the private receiver permission'
+
+report = {'passed': True, 'android_api': int(adb('shell', 'getprop', 'ro.build.version.sdk').stdout),
+    'emulator_only': True, 'version_code': version, 'candidate_sha256': hashlib.sha256(args.candidate_apk.read_bytes()).hexdigest(),
+    'legacy_duplicate_permission_failure_reproduced': rejection is not None,
+    'private_data_marker_preserved': True, 'application_uid_preserved': True,
+    'updated_app_started': True,
+    'old_key_update_rejected': True, 'old_key_client_permission_denied': True,
+    'receiver_permission': permission}
+args.output.parent.mkdir(parents=True, exist_ok=True)
+args.output.write_text(json.dumps(report, indent=2) + '\n')
+print(json.dumps(report), flush=True)

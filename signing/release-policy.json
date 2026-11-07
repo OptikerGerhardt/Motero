@@ -7,5 +7,7 @@
   "signature_scheme": "v3",
   "rotation_minimum_api": 28,
   "legacy_rollback_allowed": false,
-  "release_secret": "MOTERO_RELEASE_SIGNING"
+  "release_secret": "MOTERO_RELEASE_SIGNING",
+  "receiver_permission": "org.zotero.android.debug.MOTERO_DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION",
+  "legacy_receiver_permission": "org.zotero.android.debug.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
 }

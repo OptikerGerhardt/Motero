@@ -1,4 +1,18 @@
-# Motero 306: öffentliche Paketierung
+# Motero 307: Update-Kompatibilität
+
+Die Meldung `failureConflict` wurde bei Updates von 303 auf 306 auf GrapheneOS/Pixel 8 und BOOX Go Color 7 beobachtet. Android prüft beim erneuten Deklarieren der bisherigen AndroidX-Signaturberechtigung die bewusst widerrufene `PERMISSION`-Fähigkeit des alten Schlüssels. Die kryptografische Signaturprüfung allein hatte diese Installationshürde nicht erkannt.
+
+Build 307 verwendet eine neue eigene Receiver-Berechtigung. Ein gezielter AndroidX-Core-Transform stellt auch den Lookup auf Android 9–12 darauf um. Alte Schlüssel behalten keine Permission-/Rollback-Rechte. Die Release-APK-Prüfung kontrolliert Manifest, Schutzstufe und tatsächliche DEX-Strings gemeinsam.
+
+Lokal bestanden: 109 native Tests in 25 Suiten und sieben Veröffentlichungs-/Signierprüfungen. APK-Signatur, Version 307, neue Berechtigung, Android 9+, V3-Rotation, ZIP-Ausrichtung sowie 45 Runtime-, 207 PDF.js- und 92 Reader-Quellen sind geprüft. Nachweise: `qa/build307/`.
+
+Der lokale Android-15-/API-35-Emulator hat den ursprünglichen 306-Konflikt reproduziert und das korrigierte Update 303 → 307 erfolgreich installiert. Der private Testdatensatz und die App-UID blieben erhalten. Ein höher versioniertes Update mit dem alten öffentlichen Schlüssel wurde zurückgewiesen; ein anders benanntes, altsigniertes Testprogramm erhielt die neue interne Berechtigung nicht. Nachweis: `qa/build307/local-migration-api35.json`.
+
+Der Release-Job installiert vor Veröffentlichung auf Android API 31 und 35 die originale 303-APK, reproduziert den 306-Konflikt, prüft Datenerhalt/UID beim korrigierten Update und weist Updates sowie interne Berechtigungsanfragen mit dem öffentlichen alten Schlüssel zurück. Physische Bestätigung des korrigierten Updates und echter Kontosync stehen noch aus.
+
+---
+
+## Historischer Stand Build 306
 
 Stand: 7. November 2026. Lokaler nicht debuggbarer Release-Build mit privater Motero-Signierung erfolgreich. Paket `org.zotero.android.debug`, Version `1.0.0-306`, mindestens Android 9/API 28. Crash-/Event-Reporting ist in dieser Variante ausgeschaltet.
 

@@ -25,3 +25,11 @@ The tracked `debug.keystore` and a historical temporary keystore are byte-identi
 ## Scope of publication checks
 
 [The publication review](docs/PUBLICATION_READINESS.md) records checks for accidental credential or document disclosure, licensing notices, and release configuration. These checks do not constitute a comprehensive application vulnerability assessment.
+
+## Receiver-permission migration fix in Build 307
+
+Build 306 had a valid cryptographic rotation proof but could not update the earlier app: Android also checks permission compatibility when a package re-declares its existing signature permission. The deliberately revoked legacy `PERMISSION` capability caused `INSTALL_FAILED_DUPLICATE_PERMISSION` for the AndroidX receiver permission. This was reported on GrapheneOS and BOOX.
+
+Build 307 introduces `org.zotero.android.debug.MOTERO_DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`, protected by the new signer. A packaging-time AndroidX Core transform updates the pre-Android-13 receiver permission lookup to the same namespace. The former permission is neither declared nor requested. Legacy signature-permission, rollback, shared-UID and authenticator trust remain disabled.
+
+Release verification checks the manifest and actual DEX strings together. Real emulator tests gate publication on APIs 31 and 35 and exercise the original 303 APK, known 306 failure, data/UID retention, and refusal of old-key updates and permission requests. These checks do not establish physical-device or live-account compatibility.

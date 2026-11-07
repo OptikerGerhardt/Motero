@@ -2,6 +2,10 @@
 
 Stand: 7. November 2026. Aktueller Paketierungsstand: 306 mit privater Signierung und Android 9+. Funktionsreferenz: Build 305. F19, F22 und F23 sind umgesetzt. Die verlinkte Grundrecherche stammt vom 28. Oktober; ältere Build-Abschnitte dokumentieren den damaligen Stand.
 
+## Update-Korrektur: Build 307
+
+Der Nutzer meldete den Installationskonflikt von 303 auf 306 sowohl auf GrapheneOS/Pixel 8 als auch BOOX Go Color 7. Ursache: Androids Prüfung bestehender Signaturberechtigungen benötigt das alte `PERMISSION`-Vertrauen, das bewusst widerrufen wurde. Die AndroidX-Receiver-Berechtigung bekommt deshalb einen neuen Motero-Namen; Manifest und AndroidX-Lookup werden gemeinsam angepasst. Paketkennung, Signierschlüssel und App-Datenpfade bleiben erhalten. Alte Schlüssel behalten keine Permission-/Rollback-Berechtigung. Der Release-Job muss die Migration auf Android API 31/35 samt Datenerhalt und Negativproben tatsächlich installieren, bevor eine APK veröffentlicht wird. Neue Funktionen gegenüber 306 sind nicht Bestandteil dieser Korrektur.
+
 ## Vorbereitung zur öffentlichen Freigabe: Build 306
 
 Eigene Motero-Anpassungen als vollständig mit ChatGPT/Codex programmiert ausgewiesen; Zotero, Android, Reader und Community-Beiträge bleiben korrekt zugeordnet. Historie/Anhänge geprüft, alte Debug-Releases als Entwürfe archiviert, neues privates Zertifikat und eingeschränkte V3-Rotation vorbereitet. Öffentliche Builds benötigen Android 9+ und sind nicht debuggbar. Das ersetzt für öffentliche APKs die ältere Entscheidung zum unveränderten Testschlüssel; Paketkennung und Datenpfade bleiben erhalten. Der Workflow veröffentlicht ohne das private Secret keine APK. Das private Actions-Secret ist eingerichtet und der signierte GitHub-Release 306 mit sämtlichen Prüfungen erfolgreich. Stand, Prüfumfang und verbleibende Gerätetests: `docs/PUBLICATION_READINESS.md`.

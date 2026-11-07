@@ -1,5 +1,13 @@
 # Änderungen
 
+## 1.0.0-307 — 7. November 2026
+
+- Update-Konflikt beim Wechsel vom öffentlichen Testschlüssel zum privaten Motero-Schlüssel behoben: eigene neue Receiver-Berechtigung statt erneuter Deklaration der alten Signaturberechtigung.
+- AndroidX-Receiver prüfen dieselbe neue Berechtigung auch auf Android 9–12. Der alte Schlüssel erhält weiterhin keine Signaturberechtigungs- oder Rollback-Rechte.
+- APK-Prüfung kontrolliert gemeinsam Manifest, Schutzstufe und tatsächliche AndroidX-Strings im DEX-Code.
+- Veröffentlichung setzt jetzt echte Android-Updateprüfungen auf API 31 und 35 voraus: ursprüngliches 303 installieren, 306-Konflikt reproduzieren, Update samt privatem Testdatensatz/UID prüfen und Updates/Berechtigungszugriff mit dem alten Schlüssel zurückweisen.
+- 109 native Tests und sieben Veröffentlichungs-/Signierprüfungen lokal bestanden. Physische Bestätigung auf GrapheneOS/BOOX steht aus.
+
 ## 1.0.0-306 — 7. November 2026
 
 - Öffentliche Variante mit privatem Motero-Signierer, V3-Zertifikatsrotation, Android 9+ und deaktiviertem Debugging/Crash-Reporting; alter Testschlüssel ohne Rollback-Recht.

@@ -24,7 +24,7 @@ View cropping does not modify the PDF file or annotation coordinates. Manual cro
 
 Release APKs are signed with a dedicated Motero key. The public certificate and signing policy are available in [signing/](signing/). The application ID is `org.zotero.android.debug`; this is retained for compatibility with earlier Motero installations. Release APKs are not debuggable.
 
-For earlier Motero test builds, the release includes Android signing-key rotation. Back up your data before the first update: the rotation has been checked with Android signing tools, but installation and data migration on a physical device have not yet been verified. See [SECURITY.md](SECURITY.md) for details.
+Use **Build 307 or later** when updating an earlier Motero test build. Build 306 has a receiver-permission conflict that prevents this migration. The corrected update retains the application ID and uses a new internal permission alongside signing-key rotation. Back up your data before updating. Physical-device migration still needs confirmation; see [SECURITY.md](SECURITY.md).
 
 You can also track this repository with [Obtainium](https://github.com/ImranR98/Obtainium). Use the APK filename filter `^Motero_Build[0-9]+\.apk$`.
 
@@ -65,7 +65,7 @@ The customized reader is pinned as a submodule from this repository's [`reader` 
 
 ## Tests and project status
 
-Build 306 passed 276 reader tests, 109 Android tests across 25 suites, ten browser checks, and five publication and signing checks. The [release](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.0-306) includes test reports. Physical-device updates, BOOX keyboard behavior, and synchronization with a live Zotero account are not covered by that automated run.
+The release workflow runs reader and Android unit tests, browser checks, and publication/signing checks. Before publishing, it also exercises a real update from Build 303 on Android API 31 and 35, verifies private test-data and UID retention, and rejects updates or internal-permission access using the old public key. Versioned reports accompany each release. Physical-device migration, BOOX keyboard behavior, and synchronization with a live Zotero account require separate testing.
 
 Browser checks use Playwright 1.56.1 and Chromium. With Playwright installed and available through `NODE_PATH`, run:
 

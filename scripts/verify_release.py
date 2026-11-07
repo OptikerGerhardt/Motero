@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import subprocess
 import zipfile
+from verify_receiver_permission import verify_receiver_permission
 
 root = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser()
@@ -46,6 +47,7 @@ assert "application-label:'Motero'" in badging
 if not args.development:
     assert 'application-debuggable' not in badging, 'Public APK must not be debuggable'
     assert int(re.search(r"(?:minSdkVersion|sdkVersion):'(\d+)'", badging).group(1)) >= policy['minimum_android_api']
+    receiver_report = verify_receiver_permission(args.apk, args.build_tools, policy)
 subprocess.run([str(args.build_tools / 'zipalign'), '-c', '-P', '16', '4', str(args.apk)], check=True, stdout=subprocess.DEVNULL)
 sha = lambda data: hashlib.sha256(data).hexdigest()
 assets = json.loads((root / 'vendor/runtime-assets.json').read_text())
@@ -75,6 +77,8 @@ report = dict(verified=True, package=package, version_code=int(code), certificat
     signing_policy="development" if args.development else "public",
     legacy_rotation_verified=not args.development,
     apk_sha256=sha(args.apk.read_bytes()), runtime_files=len(assets['files']), pdfjs_files=len(engine['files']), reader_sources=len(matched))
+if not args.development:
+    report.update(receiver_report)
 if args.output:
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + '\n')
