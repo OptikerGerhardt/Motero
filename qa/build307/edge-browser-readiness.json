@@ -1,0 +1,26 @@
+{
+  "original_failure": "Input during initial fitting/scroll transition or assertion before async navigation completion",
+  "product_reader_sources_changed": false,
+  "runs": {
+    "normal": {
+      "passed": true,
+      "cpu_throttle": 1,
+      "checks": [
+        "right and left navigation in modes 0/1/2",
+        "long-press and swipe suppression",
+        "bookmark creation/deletion priority",
+        "read-only navigation"
+      ]
+    },
+    "slow": {
+      "passed": true,
+      "cpu_throttle": 2,
+      "checks": [
+        "right and left navigation in modes 0/1/2",
+        "long-press and swipe suppression",
+        "bookmark creation/deletion priority",
+        "read-only navigation"
+      ]
+    }
+  }
+}

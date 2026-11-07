@@ -6,6 +6,7 @@
 - AndroidX-Receiver prüfen dieselbe neue Berechtigung auch auf Android 9–12. Der alte Schlüssel erhält weiterhin keine Signaturberechtigungs- oder Rollback-Rechte.
 - APK-Prüfung kontrolliert gemeinsam Manifest, Schutzstufe und tatsächliche AndroidX-Strings im DEX-Code.
 - Veröffentlichung setzt jetzt echte Android-Updateprüfungen auf API 31 und 35 voraus: ursprüngliches 303 installieren, 306-Konflikt reproduzieren, Update samt privatem Testdatensatz/UID prüfen und Updates/Berechtigungszugriff mit dem alten Schlüssel zurückweisen.
+- Browser-Randtap-Prüfung wartet auf stabilen Readerzustand und abgeschlossene Navigation; Gesten- und Bookmark-Prüfungen bleiben erhalten. Lokal normal und mit zweifach gedrosselter CPU bestanden.
 - 109 native Tests und sieben Veröffentlichungs-/Signierprüfungen lokal bestanden. Physische Bestätigung auf GrapheneOS/BOOX steht aus.
 
 ## 1.0.0-306 — 7. November 2026
