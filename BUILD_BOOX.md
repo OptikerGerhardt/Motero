@@ -1,8 +1,10 @@
-# Motero auf BOOX: Build 305
+# Motero auf BOOX: Build 306
 
 ## Installation
 
-Über die vorhandene Motero-Testversion installieren, vorher nicht deinstallieren. Paket `org.zotero.android.debug`, Version `1.0.0-305`, Versionscode 305. Gleiches Signierzertifikat wie die vorherige Version 304. Datenpfade, Datenbank-/Syncformate und bisheriger Debug-Schlüssel bleiben erhalten. Eine tatsächliche Geräteinstallation ist noch nicht durchgeführt.
+Die öffentliche Variante ab Build 306 erfordert Android 9+, ist nicht debuggbar und verwendet den privaten Motero-Signierer. Paketkennung `org.zotero.android.debug`, Name Motero und vorhandene Datenpfade bleiben erhalten. Für den Wechsel von bisherigen Test-APKs wird V3-Zertifikatsrotation mit Datenübernahme vorbereitet; der alte öffentliche Testschlüssel darf keine Updates nach dem Wechsel oder Rollbacks autorisieren. Eine tatsächliche Geräteinstallation ist noch nicht durchgeführt. Vor dem ersten Wechsel eigene Daten sichern.
+
+Die alten Test-Releases bleiben als Entwürfe archiviert. Der reguläre GitHub-Release benötigt das einmalige Actions-Secret; Einrichtung und öffentlicher Build: [docs/RELEASING.md](docs/RELEASING.md). Lokale `devDebug`-Builds in den folgenden Entwicklungsschritten sind ausschließlich private Testartefakte.
 
 ## Quellstand und Wiederherstellung
 
@@ -34,7 +36,7 @@ Playwright getrennt vom Projekt-Lockfile installieren und vorhandenes Chromium v
 
 EPUB-Fixtures: `python3 reader/scripts/make-navigation-epub.py <Pfad>/navigation.epub`. BOOX_NAVIGATION_EPUB und BOOX_NAVIGATION_RTL_EPUB auf die erzeugten Dateien setzen. BOOX_PLESSNER_PDF muss auf die gelieferte Original-PDF zeigen. Originaldateien und interne Screenshots sind nicht im Quellarchiv. Optionale BOOX_KANT_PDF, BOOX_HOEFFE_PDF, BOOX_FUCHS_PDF und BOOX_PROBLEM_PDF benötigen die jeweiligen Originaldateien.
 
-Abschließend `python3 scripts/verify_reader_update.py --base <304.apk> --apk <305.apk> --build-tools <SDK/build-tools/36.0.0> --checks <frische-Berichte> --output BUILD_VERIFICATION.json`. Das prüft Update-Identität, Signatur/Ausrichtung, Laufzeit-/PDF.js-Erhalt, aktuelle eingebettete Quellen und neue Testnachweise. Das historische verify_boox_update.py prüft ältere Updates mit teils ausdrücklich unveränderter Zuschnittgeometrie und ersetzt die neue Prüfung nicht.
+Historischer Build-305-Nachweis: `python3 scripts/verify_reader_update.py --base <304.apk> --apk <305.apk> --build-tools <SDK/build-tools/36.0.0> --checks <frische-Berichte> --output BUILD_VERIFICATION.json`. Das prüft Update-Identität, Signatur/Ausrichtung, Laufzeit-/PDF.js-Erhalt, aktuelle eingebettete Quellen und neue Testnachweise. Für Build 306 gilt stattdessen die öffentliche Prüfung mit `scripts/verify_release.py`, einschließlich Signierer und Rotation. Das historische verify_boox_update.py prüft ältere Updates mit teils ausdrücklich unveränderter Zuschnittgeometrie und ersetzt die neue Prüfung nicht.
 
 ## Bedienung der neuen Funktionen
 

@@ -1,4 +1,21 @@
-# Motero 305: Build und Prüfung
+# Motero 306: öffentliche Paketierung
+
+Stand: 7. November 2026. Lokaler nicht debuggbarer Release-Build mit privater Motero-Signierung erfolgreich. Paket `org.zotero.android.debug`, Version `1.0.0-306`, mindestens Android 9/API 28. Crash-/Event-Reporting ist in dieser Variante ausgeschaltet.
+
+Die APK wurde mit `apksigner` für API 28, 32, 33 und 36 geprüft: neuer festgeschriebener Signierer, V3-Signatur, signierte Rotation vom alten Testschlüssel. Die alte Identität erhält nur Datenübernahme, keine Rollback-, Shared-UID-, Signature-Permission- oder Authenticator-Berechtigung. ZIP-Ausrichtung, 45 Runtime-Dateien, 207 PDF.js-Dateien und 92 aktuelle eingebettete Reader-Quellen sind geprüft.
+
+Lokale APK-SHA-256: `020de010574fd67644f0f307d2c59bfc13c2b112e25bbc0f9548b7e4186b13fd`.
+Neuer Zertifikat-SHA-256: `f6b9547e9644f44e23bcceac94ec32cfd6576b5f732af7e12094699307de778d`.
+
+109 native Tests in 25 Suiten der Release-Variante und fünf Veröffentlichungs-/Signiertests bestanden. Signier-Negativtests prüfen fehlendes Secret, Verwendung des öffentlichen Testschlüssels und die Zurückweisung einer altsignierten APK. Veröffentlichungstests prüfen auch gelöschte Geheimnisse in der Historie, verschachtelte Archive und bytegenaue öffentliche Testschlüssel-Ausnahmen. Der GitHub-Workflow testet die native Release-Variante sowie Reader und Browser erneut.
+
+Der private Schlüssel bleibt außerhalb von Git. Automatisierte GitHub-Releases benötigen noch die einmalige Secret-Einrichtung durch den Besitzer; siehe `docs/RELEASING.md`. Historische Test-Releases bleiben Entwürfe. Die Sichtbarkeit wurde nicht geändert. Prüfumfang und Grenzen: `docs/PUBLICATION_READINESS.md`.
+
+Nicht durchgeführt: physischer BOOX-/GrapheneOS-Update-Test, tatsächliche Datenübernahme und Kontosync. Die kryptografische Rotation ersetzt diesen Gerätetest nicht. Keine neue Reader-Funktion in Build 306; nachfolgend der historische Funktionsnachweis.
+
+---
+
+## Historischer Funktionsstand Build 305
 
 Stand: 7. November 2026. Die neue APK ist nativ gebaut und als Update von Build 304 technisch geprüft.
 

@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.0.0-306 — 7. November 2026
+
+- Öffentliche Variante mit privatem Motero-Signierer, V3-Zertifikatsrotation, Android 9+ und deaktiviertem Debugging/Crash-Reporting; alter Testschlüssel ohne Rollback-Recht.
+- GitHub baut ohne Signiersecret, prüft Quellen und veröffentlicht nur nach geschützter Signierung. Fehlende oder falsche Schlüssel stoppen den Release.
+- Alte Test-Releases als private Entwürfe archiviert und das alte CI-Test-APK-Artefakt entfernt.
+- Historie und Release-Anhänge auf bekannte Geheimnisse/persönliche Dateien geprüft; wiederholbare Veröffentlichungskontrolle ergänzt.
+- ChatGPT-/Codex-Unterstützung offengelegt, übernommene Original-PRs eingeordnet und Zotero/Community ausdrücklich gewürdigt.
+- Erstmalige GitHub-Signierkonfiguration und physischer Update-Test sind gesondert im Freigabebericht gekennzeichnet.
+
 ## 1.0.0-305 — 7. November 2026
 
 - Tag-Vorschläge nach Häufigkeit im Dokument und in der Bibliothek; graue Ergänzung, einheitliches Bestätigen und ausdrückliche Neuanlage.

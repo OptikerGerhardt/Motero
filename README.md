@@ -4,15 +4,31 @@
 
 **Motero ist ein inoffizieller Fork von Zotero für Android**, angepasst für PDF-Lektüre auf BOOX-E-Readern und auf dem Smartphone. Das Projekt wird unabhängig von Zotero entwickelt und ist nicht mit der Corporation for Digital Scholarship verbunden.
 
-Aktueller Entwicklungsbuild: **1.0.0-305**. Das Repository bleibt vorerst privat. Code und Dokumentation sind für eine spätere öffentliche Bereitstellung vorbereitet; eine tatsächliche Veröffentlichung des Repositorys erfolgt separat.
+Die Veröffentlichung wird gerade abgesichert. Das Repository bleibt währenddessen privat. Öffentliche APKs sind nur mit dem eigenen, privaten Motero-Signierschlüssel zulässig; die früheren Test-APKs werden als private Entwürfe archiviert. Der genaue Freigabestand steht in [PUBLICATION_READINESS.md](docs/PUBLICATION_READINESS.md).
+
+## Entwicklung mit ChatGPT und übernommene Beiträge
+
+**Die eigenen Motero-Anpassungen und ihre Integration wurden vollständig mithilfe von ChatGPT / OpenAI Codex programmiert.** Anforderungen, Entscheidungen und die praktische Erprobung werden vom Projektbetreiber verantwortet. Auch Tests und Build-/Repository-Konfiguration wurden mit dieser Unterstützung erstellt. Das ist keine unabhängige Sicherheitsprüfung und keine Garantie für fehlerfreie Software.
+
+Die zugrunde liegende Zotero-Software und übernommene Community-Beiträge behalten ihre ursprüngliche Urheberschaft. In diesem Fork wurden außerdem ausgewählte Pull Requests aus den Originalprojekten zusammengeführt bzw. deren bereits gemergte Änderungen übernommen. Beispiele sind die Lautstärketasten-Steuerung, „Fit to Content“ und Korrekturen der Reader-Navigation. **„In Motero übernommen“ bedeutet nicht automatisch „im Zotero-Original gemergt“.** Verifizierte Links und die jeweilige Einordnung stehen in [UPSTREAM_CHANGES.md](UPSTREAM_CHANGES.md).
+
+## Danke an Zotero und die Community
+
+Motero wäre ohne die langjährige Arbeit der Entwicklerinnen und Entwickler von **[Zotero](https://www.zotero.org/)**, **[Zotero für Android](https://www.zotero.org/support/android)** und **[Zotero Reader](https://github.com/zotero/reader)** nicht möglich. Die Grundlage dieser App ist ihre Arbeit an Literaturverwaltung, Synchronisation, PDF-/EPUB-Lektüre, Annotationen, Übersetzungen und Dokumentation.
+
+Vielen Dank an die Corporation for Digital Scholarship sowie an die Maintainer, Beitragenden, Übersetzenden und Testenden für ihre Zeit, ihre Mühe und die offene Bereitstellung ihrer Arbeit. Die Motero-spezifischen Anpassungen bauen darauf auf. Hinweise und Anerkennung gelten ausdrücklich auch den ursprünglichen Autorinnen und Autoren der übernommenen Pull Requests.
+
+Quellen: [Zotero auf GitHub](https://github.com/zotero/zotero), [Zotero für Android auf GitHub](https://github.com/zotero/zotero-android), [Zotero Reader auf GitHub](https://github.com/zotero/reader). Motero ist ein unabhängiger Fork und kein offizielles Zotero-Produkt.
 
 ## Herunterladen und aktualisieren
 
-Die installierbare APK liegt immer unter **[Releases](https://github.com/OptikerGerhardt/Motero/releases)**. Lade dort `Motero_Build<Nummer>.apk` herunter und installiere sie als Update über die bestehende Motero-App. Paketkennung und bisheriger Test-Signierer bleiben erhalten.
+Künftige öffentliche APKs erscheinen unter **[Releases](https://github.com/OptikerGerhardt/Motero/releases)** als `Motero_Build<Nummer>.apk`. Die öffentliche Variante benötigt **Android 9 oder neuer**, ist nicht debuggbar und wird mit einem privaten Motero-Schlüssel signiert. Der öffentliche Prüf-Schlüssel und die Update-Rotation sind in [signing/](signing/) dokumentiert.
 
-Bei einem privaten Repository musst du auf GitHub angemeldet sein. Obtainium kann dieses Repository als GitHub-Quelle mit Leseberechtigung für das private Repository verwenden; als APK-Dateifilter passt `Motero_Build.*\.apk`. API-Schlüssel oder GitHub-Tokens gehören in die lokale App-Konfiguration, nicht in Issues oder dieses Repository.
+Die Paketkennung bleibt `org.zotero.android.debug`. Für bestehende Motero-Testinstallationen wird der Übergang vom alten Testschlüssel durch Androids signierte Zertifikatsrotation vorbereitet. Rückwechsel auf den bekannten Testschlüssel werden nicht erlaubt. Die Rotation erhält die Berechtigung zum Übernehmen vorhandener App-Daten; eine tatsächliche Update-Installation auf BOOX/GrapheneOS muss gesondert geprüft werden. Vor dem ersten Wechsel eigene Daten sichern.
 
-Diese APKs sind Entwicklungsbuilds: `org.zotero.android.debug`, mit dem öffentlich mitgelieferten Zotero-Debug-Schlüssel signiert. Die Signatur erhält die Update-Kompatibilität zur bisherigen Testversion; sie ist kein geheimer Produktionsschlüssel. Siehe [Sicherheit und Signierung](SECURITY.md).
+Die bisherigen APKs 303/305 verwenden einen öffentlich bekannten Debug-Schlüssel. Sie sind keine sicheren öffentlichen Installationspakete und werden nicht als reguläre öffentliche Releases angeboten. Entwicklungsbuilds dürfen nicht als Ersatz für produktionssignierte Updates verwendet werden. Details: [SECURITY.md](SECURITY.md).
+
+Bei einem privaten Repository musst du auf GitHub angemeldet sein. Obtainium kann das Repository mit Leseberechtigung als GitHub-Quelle verwenden; der APK-Dateifilter ist `Motero_Build.*\.apk`. Zugangsdaten gehören ausschließlich in die lokale App-Konfiguration.
 
 ## Funktionen
 
@@ -55,9 +71,9 @@ python3 scripts/run_browser_checks.py --browser /usr/bin/chromium
 
 Die Browserprüfungen benötigen Playwright 1.56.1 für Node. Installiere es getrennt vom Projekt-Lockfile und setze `NODE_PATH` auf dessen `node_modules`. Eine zusätzliche Prüfung der privaten Original-Plessner-PDF läuft nur, wenn `BOOX_PLESSNER_PDF` gesetzt ist. Die mitgelieferten synthetischen PDF-/EPUB-Fixtures werden immer geprüft.
 
-Bei Änderungen an der App oder am eingebundenen Reader wird `BuildConfig.versionCode` erhöht. Der GitHub-Workflow baut und testet `main` und Pull Requests. Ein neuer Build auf `main` wird nach erfolgreichen Prüfungen automatisch als neuer Release mit APK, vollständigem Quellarchiv, Prüfberichten und SHA-256-Summen angelegt. Bereits vorhandene Releases werden nicht überschrieben. Details: [Release-Ablauf](docs/RELEASING.md).
+Bei Änderungen an der App oder am eingebundenen Reader wird `BuildConfig.versionCode` erhöht. Der GitHub-Workflow baut und testet `main` und Pull Requests. Ein neuer Build auf `main` wird nach erfolgreichen Prüfungen und ausschließlich mit vorhandenem privaten Signierschlüssel als Release mit APK, vollständigem Quellarchiv, Prüfberichten und SHA-256-Summen angelegt. Fehlt die sichere Signierung, stoppt die Veröffentlichung; es gibt keinen Rückfall auf den Debug-Schlüssel. Bereits vorhandene Releases werden nicht überschrieben. Details: [Release-Ablauf](docs/RELEASING.md).
 
-Build 305: **276 Reader-Tests, 109 Android-Tests in 25 Suiten und zehn Browserprüfungen bestanden**. Die Original-Plessner-Prüfung wurde lokal ebenfalls durchgeführt. Physische BOOX-/Smartphone-Tests, die tatsächliche BOOX-Tastatur und echter Kontosync sind im automatisierten Testlauf nicht enthalten.
+Referenzstand Build 305: **276 Reader-Tests, 109 Android-Tests in 25 Suiten und zehn Browserprüfungen bestanden**. Build 306 ergänzt die abgesicherte öffentliche Paketierung und Zertifikatsrotation. Die Original-Plessner-Prüfung wurde lokal ebenfalls durchgeführt. Physische BOOX-/Smartphone-Tests, die tatsächliche BOOX-Tastatur und echter Kontosync sind im automatisierten Testlauf nicht enthalten.
 
 ## Herkunft und Lizenz
 

@@ -76,6 +76,11 @@ jobs:
           cache: gradle
       - name: Validate runtime assets and restore PDF.js
         run: python3 scripts/prepare_reader_assets.py
+      - name: Audit source history and publication guards
+        run: |
+          mkdir -p qa-ci
+          python3 scripts/audit_publication.py --ref HEAD --ref refs/remotes/origin/reader --output qa-ci/publication-audit.json
+          python3 -m unittest discover -s scripts/tests -p test_publication_audit.py -v
       - name: Build and test the reader
         shell: bash
         run: |
@@ -88,9 +93,13 @@ jobs:
         shell: bash
         run: |
           python3 scripts/package_reader_assets.py
-          ./gradlew :app:testDevDebugUnitTest :app:assembleDevDebug --init-script scripts/test_jvm_agent.gradle --no-build-cache --no-daemon --max-workers=4 2>&1 | tee qa-ci/android-build.log
-          python3 scripts/collect_test_results.py --output qa-ci/native-tests.json
-          python3 scripts/verify_release.py --apk app/build/outputs/apk/dev/debug/app-dev-debug.apk --build-tools "$ANDROID_HOME/build-tools/36.0.0" --output qa-ci/apk-verification.json
+          ./gradlew :app:testDevReleaseUnitTest :app:assembleDevRelease -PmoteroPublicRelease=true --init-script scripts/test_jvm_agent.gradle --no-build-cache --no-daemon --max-workers=4 2>&1 | tee qa-ci/android-build.log
+          python3 scripts/collect_test_results.py --directory app/build/test-results/testDevReleaseUnitTest --output qa-ci/native-tests.json
+      - name: Check publication refuses missing or development keys
+        shell: bash
+        env:
+          MOTERO_TEST_UNSIGNED_APK: ${{ github.workspace }}/app/build/outputs/apk/dev/release/app-dev-release-unsigned.apk
+        run: MOTERO_TEST_BUILD_TOOLS="$ANDROID_HOME/build-tools/36.0.0" python3 -m unittest discover -s scripts/tests -p test_signing_guards.py -v 2>&1 | tee qa-ci/signing-guards.log
       - name: Install isolated browser test tools
         run: npm install --prefix .browser-tools --no-audit --no-fund playwright@1.56.1
       - name: Run browser regressions
@@ -100,7 +109,8 @@ jobs:
           python3 scripts/run_browser_checks.py --browser "$(command -v google-chrome || command -v chromium)" --output qa-ci
       - name: Prepare release artifacts
         run: |
-          python3 scripts/prepare_release.py --apk app/build/outputs/apk/dev/debug/app-dev-debug.apk --output dist
+          python3 scripts/prepare_release.py --unsigned-ci --apk app/build/outputs/apk/dev/release/app-dev-release-unsigned.apk --output dist
+          python3 scripts/audit_publication.py --ref HEAD --archive dist/Motero_Build${{ steps.meta.outputs.version_code }}_Source.zip --archive dist/Motero_Build${{ steps.meta.outputs.version_code }}-unsigned.apk --output qa-ci/release-source-audit.json
           python3 - <<'PY'
           import hashlib,shutil
           from pathlib import Path
@@ -110,7 +120,7 @@ jobs:
           PY
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: motero-build-${{ steps.meta.outputs.version_code }}
+          name: motero-unsigned-build-${{ steps.meta.outputs.version_code }}
           path: dist/
           if-no-files-found: error
           retention-days: 14
@@ -145,11 +155,35 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
+          submodules: recursive
           persist-credentials: false
+      - name: Require private production signing
+        env:
+          MOTERO_RELEASE_SIGNING: ${{ secrets.MOTERO_RELEASE_SIGNING }}
+        run: |
+          if [ -z "$MOTERO_RELEASE_SIGNING" ]; then
+            echo '::error::Add repository Actions secret MOTERO_RELEASE_SIGNING using your private signing backup. No APK will be published with the public development key.'
+            exit 1
+          fi
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Locate release verification tools
+        run: |
+          sdkmanager_path="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          "$sdkmanager_path" 'build-tools;36.0.0'
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: motero-build-${{ needs.build.outputs.version_code }}
+          name: motero-unsigned-build-${{ needs.build.outputs.version_code }}
           path: dist
+      - name: Sign and verify the public release
+        env:
+          MOTERO_RELEASE_SIGNING: ${{ secrets.MOTERO_RELEASE_SIGNING }}
+          VERSION_CODE: ${{ needs.build.outputs.version_code }}
+        run: |
+          python3 scripts/sign_release.py --apk "dist/Motero_Build${VERSION_CODE}-unsigned.apk" --output "dist/Motero_Build${VERSION_CODE}.apk" --build-tools "$ANDROID_HOME/build-tools/36.0.0"
+          python3 scripts/finalize_release.py --directory dist --build-tools "$ANDROID_HOME/build-tools/36.0.0"
       - name: Recheck immutable version and publish APK
         env:
           GH_TOKEN: ${{ github.token }}
