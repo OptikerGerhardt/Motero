@@ -2328,6 +2328,10 @@ abstract class DOMView<State extends DOMViewState, Data> {
 			...partialAppearance
 		};
 		this.appearance = appearance;
+		if (Number.isFinite(appearance.textScale) && appearance.textScale! >= this.MIN_SCALE && appearance.textScale! <= this.MAX_SCALE
+				&& Math.abs((this.scale || 1) - appearance.textScale!) > 0.001) {
+			this._setScale(appearance.textScale!);
+		}
 		this._iframeDocument.documentElement.style.setProperty('--content-line-height-adjust', String(appearance.lineHeight));
 		this._iframeDocument.documentElement.style.setProperty('--content-word-spacing-adjust', String(appearance.wordSpacing));
 		this._iframeDocument.documentElement.style.setProperty('--content-letter-spacing-adjust', String(appearance.letterSpacing));

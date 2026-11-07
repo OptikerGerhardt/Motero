@@ -20,23 +20,50 @@ export class ManualCropEditor {
 		this.root.setAttribute('role', 'dialog');
 		this.root.setAttribute('aria-modal', 'true');
 		this.root.setAttribute('aria-label', 'Manueller Zuschnitt');
+		const de = (doc.documentElement.lang || navigator.language || '').startsWith('de');
+		const t = de ? {
+			title: 'Manueller Zuschnitt', scope: 'Seitenbereich', all: 'Alle Seiten', odd: 'Ungerade Seiten', even: 'Gerade Seiten',
+			previous: 'Vorherige Vorschauseite', next: 'Nächste Vorschauseite', cancel: 'Abbrechen', save: 'Übernehmen',
+			help: 'Ecken ziehen oder den Rahmen verschieben. Gerade/ungerade zählt ab PDF-Seite 1.',
+			reset: 'Automatischen Zuschnitt verwenden', loading: 'Vorschau wird geladen…',
+			status: 'Gilt nur für die Ansicht dieses Dokuments.', error: 'Vorschau konnte nicht geladen werden. Bitte erneut versuchen.', page: 'PDF-Seite'
+		} : {
+			title: 'Manual crop', scope: 'Page range', all: 'All pages', odd: 'Odd pages', even: 'Even pages',
+			previous: 'Previous preview page', next: 'Next preview page', cancel: 'Cancel', save: 'Apply',
+			help: 'Drag a corner or move the frame. Odd/even counts from PDF page 1.',
+			reset: 'Use automatic crop', loading: 'Loading preview…', status: 'Changes only the view of this document.',
+			error: 'Could not load the preview. Please try again.', page: 'PDF page'
+		};
+		this.labels = t;
+		this.root.setAttribute('aria-label', t.title);
+		const theme = this.win.parent.getComputedStyle(this.win.parent.document.documentElement);
+		for (const name of ['--color-background', '--fill-primary', '--fill-secondary', '--fill-quinary', '--color-border', '--accent-blue']) {
+			const value = theme.getPropertyValue(name); if (value) this.root.style.setProperty(name, value);
+		}
 		this.root.innerHTML = `<style>
-.boox-manual-crop{position:fixed;inset:0;z-index:2147483647;background:#fff;color:#111;display:flex;flex-direction:column;font:16px sans-serif;overflow:auto;box-sizing:border-box;padding:12px;gap:8px}
-.boox-manual-crop *{box-sizing:border-box}.boox-manual-crop .crop-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
-.boox-manual-crop button,.boox-manual-crop select{font:inherit;color:#111;background:#fff;border:1px solid #444;border-radius:4px;min-height:44px;padding:8px}
-.boox-manual-crop button:focus-visible,.boox-manual-crop select:focus-visible{outline:3px solid #111}
-.boox-manual-crop button:disabled{color:#777}.boox-manual-crop .crop-preview{flex:1;min-height:160px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#ddd}
-.boox-manual-crop .crop-sheet{position:relative;max-width:100%;max-height:100%;touch-action:none;user-select:none}
-.boox-manual-crop canvas{display:block;width:100%;height:100%}.boox-manual-crop .crop-selection{position:absolute;border:2px solid #111;box-shadow:0 0 0 2000px #0005;touch-action:none;cursor:move}
-.boox-manual-crop .crop-handle{position:absolute;width:30px;height:30px;background:#fff;border:2px solid #111;border-radius:50%;touch-action:none}
-.boox-manual-crop [data-handle=nw]{left:-15px;top:-15px;cursor:nw-resize}.boox-manual-crop [data-handle=ne]{right:-15px;top:-15px;cursor:ne-resize}
-.boox-manual-crop [data-handle=sw]{left:-15px;bottom:-15px;cursor:sw-resize}.boox-manual-crop [data-handle=se]{right:-15px;bottom:-15px;cursor:se-resize}
-</style><strong>Manueller Zuschnitt</strong><div class="crop-toolbar"><label>Gilt für <select aria-label="Seitenbereich"><option value="all">Alle Seiten</option><option value="odd">Ungerade Seiten</option><option value="even">Gerade Seiten</option></select></label><button data-action="previous" aria-label="Vorherige Vorschauseite">‹</button><span class="crop-page"></span><button data-action="next" aria-label="Nächste Vorschauseite">›</button></div>
-<div>Rahmen an den Ecken ziehen oder innen verschieben. Gerade/ungerade bezieht sich auf die PDF-Seite ab 1.</div>
+.boox-manual-crop{position:fixed;inset:0;z-index:2147483647;background:var(--color-background,#fff);color:var(--fill-primary,#222);display:flex;flex-direction:column;font:15px system-ui,sans-serif;overflow:hidden;box-sizing:border-box;padding:12px;gap:12px}
+.boox-manual-crop *{box-sizing:border-box}.boox-manual-crop .crop-toolbar{display:flex;align-items:center;gap:8px;flex-shrink:0}.boox-manual-crop .crop-heading{flex:1;font-size:17px;font-weight:600;margin:0}
+.boox-manual-crop button,.boox-manual-crop select{font:inherit;color:var(--accent-blue,#3468d3);background:transparent;border:0;border-radius:8px;min-height:44px;padding:8px 12px;touch-action:manipulation}
+.boox-manual-crop button:focus-visible,.boox-manual-crop select:focus-visible{outline:2px solid var(--accent-blue,#3468d3);outline-offset:2px}
+.boox-manual-crop button:disabled{opacity:.4}.boox-manual-crop button[data-action=save]{background:var(--accent-blue,#3468d3);color:#fff;font-weight:600}.boox-manual-crop select{color:inherit;background:var(--fill-quinary,#eee);min-width:0;max-width:100%}
+.boox-manual-crop .crop-range{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.boox-manual-crop .crop-pages{display:flex;align-items:center;gap:4px}.boox-manual-crop .crop-page{font-variant-numeric:tabular-nums;font-size:13px;white-space:nowrap}
+.boox-manual-crop .crop-help,.boox-manual-crop .crop-status{font-size:13px;color:var(--fill-secondary,#666);line-height:1.35;flex-shrink:0}.boox-manual-crop .crop-preview{flex:1;min-height:100px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--fill-quinary,#eee);border-radius:10px}
+.boox-manual-crop .crop-sheet{position:relative;max-width:100%;max-height:100%;touch-action:none;user-select:none}.boox-manual-crop canvas{display:block;width:100%;height:100%}
+.boox-manual-crop .crop-selection{position:absolute;border:2px solid var(--accent-blue,#3468d3);box-shadow:0 0 0 2000px #0005;touch-action:none;cursor:move}
+.boox-manual-crop .crop-handle{position:absolute;width:28px;height:28px;background:#fff;border:2px solid var(--accent-blue,#3468d3);border-radius:50%;touch-action:none}
+.boox-manual-crop [data-handle=nw]{left:-14px;top:-14px;cursor:nw-resize}.boox-manual-crop [data-handle=ne]{right:-14px;top:-14px;cursor:ne-resize}.boox-manual-crop [data-handle=sw]{left:-14px;bottom:-14px;cursor:sw-resize}.boox-manual-crop [data-handle=se]{right:-14px;bottom:-14px;cursor:se-resize}
+.boox-manual-crop .crop-footer{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(max-height:450px){.boox-manual-crop{gap:4px;padding:6px 12px}.boox-manual-crop .crop-help,.boox-manual-crop .crop-status{display:none}.boox-manual-crop .crop-footer{position:absolute;bottom:8px;right:12px}.boox-manual-crop .crop-footer button{background:var(--color-background,#fff)}}
+</style>
+<div class="crop-toolbar"><button data-action="cancel">${t.cancel}</button><h1 class="crop-heading">${t.title}</h1><button data-action="save">${t.save}</button></div>
+<div class="crop-range"><select aria-label="${t.scope}"><option value="all">${t.all}</option><option value="odd">${t.odd}</option><option value="even">${t.even}</option></select><div class="crop-pages"><button data-action="previous" aria-label="${t.previous}">‹</button><span class="crop-page"></span><button data-action="next" aria-label="${t.next}">›</button></div></div>
+<div class="crop-help">${t.help}</div>
 <div class="crop-preview"><div class="crop-sheet"><canvas></canvas><div class="crop-selection" data-handle="move"><i class="crop-handle" data-handle="nw"></i><i class="crop-handle" data-handle="ne"></i><i class="crop-handle" data-handle="sw"></i><i class="crop-handle" data-handle="se"></i></div></div></div>
-<div class="crop-status" role="status"></div><div class="crop-toolbar"><button data-action="automatic">Automatisch (alle zurücksetzen)</button><button data-action="cancel">Abbrechen</button><button data-action="save">Zuschnitt übernehmen</button></div>`;
+<div class="crop-footer"><div class="crop-status" role="status"></div><button data-action="automatic">${t.reset}</button></div>`;
 		doc.body.append(this.root);
 		this.beforeFocus = doc.activeElement;
+		this.view._options.onCropEditorChanged?.(true);
+		this.view._clearPointerAction?.();
 		this.sheet = this.root.querySelector('.crop-sheet');
 		this.canvas = this.root.querySelector('canvas');
 		this.selection = this.root.querySelector('.crop-selection');
@@ -82,8 +109,8 @@ export class ManualCropEditor {
 		let step = this.scope === 'all' ? 1 : 2;
 		this.root.querySelector('[data-action=previous]').disabled = this.index - step < 0;
 		this.root.querySelector('[data-action=next]').disabled = this.index + step >= this.viewer.pdfDocument.numPages;
-		this.root.querySelector('.crop-page').textContent = `PDF-Seite ${this.index + 1} / ${this.viewer.pdfDocument.numPages}`;
-		this.root.querySelector('.crop-status').textContent = 'Vorschau wird geladen…';
+		this.root.querySelector('.crop-page').textContent = `${this.labels.page} ${this.index + 1} / ${this.viewer.pdfDocument.numPages}`;
+		this.root.querySelector('.crop-status').textContent = this.labels.loading;
 		try {
 			// A new canvas prevents a cancelled PDF.js render from competing with a newer one.
 			let page = await this.viewer.pdfDocument.getPage(this.index + 1);
@@ -107,11 +134,11 @@ export class ManualCropEditor {
 			if (token !== this.token || this.closed) return;
 			this.rect = rotateReadingBounds(bounds, this.rotation);
 			this.sizePreview(); this.draw(); this.setBusy(false);
-			this.root.querySelector('.crop-status').textContent = 'Nur die Ansicht dieses Dokuments wird geändert.';
+			this.root.querySelector('.crop-status').textContent = this.labels.status;
 		}
 		catch (error) {
 			if (token !== this.token || this.closed || error.name === 'RenderingCancelledException') return;
-			this.root.querySelector('.crop-status').textContent = 'Vorschau konnte nicht geladen werden. Bitte erneut versuchen.';
+			this.root.querySelector('.crop-status').textContent = this.labels.error;
 			console.error(error);
 		}
 	}
@@ -150,8 +177,16 @@ export class ManualCropEditor {
 	async save(automatic) {
 		if (this.saving || this.busy && !automatic) return;
 		this.saving = true;
+		let crops = this.crops;
+		if (!automatic) {
+			// Preserve edits to both parity tabs made during the same session.
+			for (const scope of ['all', 'odd', 'even']) {
+				if (this.drafts[scope]) crops = updateCrop(crops, scope, this.drafts[scope]);
+			}
+			crops = updateCrop(crops, this.scope, rotateReadingBounds(this.rect, -this.rotation));
+		}
 		let options = { ...this.fitting.options,
-			manualCrop: automatic ? {} : updateCrop(this.crops, this.scope, rotateReadingBounds(this.rect, -this.rotation)),
+			manualCrop: automatic ? {} : crops,
 			revision: (this.fitting.options.revision || 0) + 1 };
 		if (!automatic) { options.mode = 'content'; options.reference = 'content'; }
 		// Notify Android before the asynchronous fit, so navigation/reopen cannot lose the crop.
@@ -165,6 +200,7 @@ export class ManualCropEditor {
 		this.closed = true; ++this.token; this.renderTask?.cancel(); this.resize.disconnect();
 		this.canvas.width = this.canvas.height = 0;
 		this.root.remove();
+		this.view._options.onCropEditorChanged?.(false);
 		this.beforeFocus?.focus?.();
 		if (this.fitting.editor === this) this.fitting.editor = null;
 	}

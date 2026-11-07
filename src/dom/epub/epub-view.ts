@@ -127,7 +127,7 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
             range.setStart(node, offset);
             range.setEnd(node, offset + length);
         }
-        let annotation = this.getAnnotationFromRange(range, 'note', '#aaaaaa');
+        let annotation = this.getAnnotationFromRange(range, 'note', '#2ea8e5');
         if (!annotation) return false;
         let existing = this._annotations.find(a => a.type === 'note' && a.sortIndex === annotation!.sortIndex
                 && /^(Lesezeichen|Bookmark) · /.test(a.comment || ''));

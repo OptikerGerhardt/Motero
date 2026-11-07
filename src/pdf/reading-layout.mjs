@@ -17,7 +17,7 @@ export function getReadingSamples(count) {
 const clamp = n => Math.max(0, Math.min(1, n));
 const normalize = text => text.toLowerCase().replace(/\d+/g, '#').replace(/\s+/g, ' ').trim();
 const pageNumber = text => /^(?:[-–—]?\s*)?(?:\d{1,5}|[ivxlcdm]{1,8})(?:\s*[-–—]?)$/i.test(text.trim());
-const downloadStamp = text => /^(?:(?:this content )?downloaded\s+(?:from|by|on)|(?:accessed|retrieved)\s+(?:on|from)|all use subject to)/i.test(text.trim());
+const downloadStamp = text => /^(?:(?:this content )?downloaded\s+(?:from|by|on)|(?:accessed|retrieved)\s+(?:on|from)|all use subject to|generated for\b|for private use only\b|ausschlie(?:ß|ss)lich zum privaten gebrauch\b)/i.test(text.trim());
 // A/B folios can be Roman in introductions (Kant: B XLI) and Arabic in
 // the main text. Require canonical Roman numerals so ordinary words such as
 // 'bill' do not become references. Geometry below still requires a margin column.
@@ -27,6 +27,9 @@ const abReference = '[AB]\\s*' + editionFolio + '(?:\\s*[/–-]\\s*[AB]?\\s*' + 
 const editionPattern = new RegExp('^(?:(?:(?:AA|Ak\\.?)\\s*)?(?:[IVXLC]+|\\d{1,3})\\s*[:,.]\\s*\\d{1,4}|'
 	+ abReference + '|\\[\\s*\\d{1,4}\\s*\\])$', 'i');
 const editionReference = text => editionPattern.test(text.trim());
+const romanReference = text => /^[IVXLCDM]{3,9}$/.test(text.trim())
+    && new RegExp('^' + romanFolio + '$').test(text.trim());
+const marginalReference = text => editionReference(text) || romanReference(text);
 
 function splitOuterReference(item, viewport) {
 	if (!item.chars?.length) return null;
@@ -54,7 +57,7 @@ function splitOuterReference(item, viewport) {
 	// from superscript footnote markers, even in a single merged OCR item.
 	if (!(r[2] < 0.14 || r[0] > 0.86) || r[2] - r[0] > 0.1
 		|| !Number.isFinite(baseline) || !ref.every(c => Math.abs(c.baseline - baseline) < height * 0.2)
-		|| !editionReference(refText) && !ref.every(c => c.fontSize < height * 0.9)
+		|| !editionReference(refText) && !romanReference(refText) && !ref.every(c => c.fontSize < height * 0.9)
 		|| Math.max(r[0] - b[2], b[0] - r[2]) < 0.005) return null;
 	return [{ text: bodyText, rect: b, vertical: false, sideCandidate: false },
 		{ text: refText, rect: r, vertical: false, sideCandidate: true }];
@@ -85,8 +88,8 @@ export function getReadingTextLines(content, viewport) {
 		let text = item.str.trim();
 		// OCR often places a line number directly against the final word's text
 		// box. Keep outer reference spans separate before merging body words.
-		let sideCandidate = (rect[2] < 0.14 || rect[0] > 0.86)
-			&& rect[2] - rect[0] < 0.1 && (/^\d{1,3}$/.test(text) || editionReference(text));
+		let sideCandidate = (rect[2] < 0.20 || rect[0] > 0.80)
+			&& rect[2] - rect[0] < 0.1 && (/^\d{1,3}$/.test(text) || marginalReference(text));
 		spans.push({ text, rect, vertical: Math.abs(dy) > Math.abs(dx), sideCandidate });
 	}
 	spans.sort((a, b) => a.rect[1] - b.rect[1] || a.rect[0] - b.rect[0]);
@@ -219,7 +222,15 @@ export function getReadingExclusions(lines, model = { repeated: new Set() }, pag
 		let adjacentText = lines.some(other => other !== line && other.text.length > 2
 			&& other.rect[1] < y1 && other.rect[3] > y0
 			&& Math.min(Math.abs(other.rect[0] - x1), Math.abs(x0 - other.rect[2])) < 0.05);
-		if (pageNumber(line.text) && !adjacentText && (y1 < 0.10 || y0 > 0.94)) excluded.add(line);
+		if (pageNumber(line.text) && !adjacentText && !(line.sideCandidate && romanReference(line.text))) {
+            const above = lines.filter(other => other !== line && other.text.length > 3 && other.rect[3] <= y0);
+            const detached = above.length && y0 - Math.max(...above.map(other => other.rect[3])) > Math.max(0.012, (y1 - y0) * 1.2);
+            const peer = lines.some(other => other !== line && other.text.length > 3
+                && other.rect[1] < y1 && other.rect[3] > y0 && !downloadStamp(other.text)
+                && !(model.footerBands?.some(band => sameHeaderBand(band, { y0: other.rect[1], y1: other.rect[3] }))
+                    && footerCandidatesFor(lines, model.bodyHeight).includes(other)));
+            if (y1 < 0.10 || y0 > 0.94 && !peer || y0 > 0.85 && detached && !peer) excluded.add(line);
+        }
 	}
 	let bodyHeight = bodyLineHeight(lines);
 	for (let line of footerCandidatesFor(lines, model.bodyHeight)) {
@@ -229,7 +240,7 @@ export function getReadingExclusions(lines, model = { repeated: new Set() }, pag
 	}
 	let headers = lines.filter(line => {
 		let [ , y0, , y1] = line.rect;
-		if (line.sideCandidate && editionReference(line.text)) return false;
+		if (line.sideCandidate && marginalReference(line.text)) return false;
 		if (line.vertical || y1 >= 0.18 || bodyHeight && y1 - y0 > bodyHeight * 1.1) return false;
 		let knownBand = model.headerBands?.some(band => (band.parity === undefined
 			|| pageIndex !== null && band.parity === pageIndex % 2) && sameHeaderBand(band, { y0, y1 }));
@@ -258,9 +269,8 @@ export function getReadingExclusions(lines, model = { repeated: new Set() }, pag
 	// when they are attached to an identified download/terms block.
 	let stamps = [...excluded].filter(line => downloadStamp(line.text));
 	for (let line of lines) {
-		if (!/^(?:https?:\/\/|terms\s*(?:and|&)\s*conditions)/i.test(line.text.trim())) continue;
-		if (stamps.some(stamp => line.rect[1] >= stamp.rect[1] - 0.005
-			&& line.rect[1] - stamp.rect[3] < 0.05)) excluded.add(line);
+		if (!/^(?:https?:\/\/|doi\s*:?\s*https?:\/\/|terms\s*(?:and|&)\s*conditions)/i.test(line.text.trim())) continue;
+		if (stamps.some(stamp => Math.max(line.rect[1] - stamp.rect[3], stamp.rect[1] - line.rect[3]) < 0.04)) excluded.add(line);
 	}
 	if (includeMarginalia) return [...excluded].map(line => line.rect);
 	let numbers = lines.filter(line => /^\d{1,3}$/.test(line.text) && line.rect[2] - line.rect[0] < 0.045);
@@ -279,7 +289,7 @@ export function getReadingExclusions(lines, model = { repeated: new Set() }, pag
 	// Edition references occupy a separate narrow outer column, never an
 	// arbitrary number inside an equation or a footnote citation.
 	for (let line of lines) {
-		if (!editionReference(line.text)) continue;
+		if (!marginalReference(line.text)) continue;
 		let [x0, y0, x1, y1] = line.rect;
 		if (x1 - x0 > 0.10) continue;
 		let body = lines.filter(other => !other.sideCandidate && other.text.length > 20 && other.rect[1] < y1 + 0.03 && other.rect[3] > y0 - 0.03);

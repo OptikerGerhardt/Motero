@@ -47,15 +47,24 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
     await touch('touchEnd',[]);
    }
   }
-  async function action(name) { await modal().locator('[data-action='+name+']').click(); }
+  async function action(name) { await modal().locator('[data-action='+name+']').tap(); }
   async function settled() {await page.waitForFunction(()=>{let f=window._view._view._pageFitting;return !f.editor&&f.applied&&!f.applying;});}
   const close=(a,b)=>a.forEach((x,i)=>assert.ok(Math.abs(x-b[i])<.004,JSON.stringify({a,b})));
+  await page.setViewportSize({width:360,height:740});
   await open('pdf','/fixture.pdf',{viewState:{pageIndex:2,scale:'page-width',scrollMode:0,spreadMode:0},pageFitting:fit});
   let before=await read();await editor();
+  await page.waitForFunction(()=>window.messages.some(x=>x.message?.event==='onCropEditorChanged' && x.message.params.open===true));
+  const editorFrame=modal();
+  for(const action of ['cancel','save','previous','next','automatic']) {
+   const box=await editorFrame.locator('[data-action='+action+']').boundingBox();
+   assert.ok(box.x>=0 && box.y>=0 && box.x+box.width<=360 && box.y+box.height<=740,JSON.stringify({action,box}));
+  }
+  if(process.env.BOOX_CROP_SCREENSHOT) await page.screenshot({path:process.env.BOOX_CROP_SCREENSHOT});
   assert.equal(await page.evaluate(()=>window.turnPageWithHardwareButton(true,0)),'ignored');
   assert.equal((await read()).page,before.page);
   await setRect([.12,.14,.82,.84]);
   await action('cancel');
+  await page.waitForFunction(()=>window.messages.some(x=>x.message?.event==='onCropEditorChanged' && x.message.params.open===false));
   assert.deepEqual((await read()).options,before.options);
   assert.equal(await page.evaluate(()=>window.messages.filter(x=>x.message?.event==='onManualCropChanged').length),0);
   console.log('PASS cancelling manual crop preserves document settings; hardware navigation is blocked inside the editor');

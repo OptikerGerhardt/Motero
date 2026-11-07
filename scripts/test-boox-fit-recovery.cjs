@@ -51,17 +51,18 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
    await page.waitForTimeout(160);
   }
   await open('/fixture.pdf',8);fitted(await state());
-  for(const include of [false,true]){
+  for(const mode of [0,1,2]) for(const include of [false,true]){
+   await page.evaluate(mode=>window._view._view.setScrollMode(mode),mode);
    const before=await configure('content',include);
    await overview();await tapCurrentPage();const restored=await state();fitted(restored);
    assert.equal(restored.mode,'content');assert.equal(restored.includeMarginalia,include);
    assert.equal(restored.margin,before.margin);
   }
-  console.log('PASS native zoom buttons and real Wrapped taps restore the complete fit without a seeded zoom origin');
+  console.log('PASS overview taps in Vertical, Horizontal and Wrapped restore the target page and complete fit');
   // Both fingers start in the viewer gutters, outside the PDF page. No page
   // pointerdown may be assumed when remembering the previous fitted view.
   await page.setViewportSize({width:1000,height:700});await configure();
-  const targets=await page.evaluate(()=>{const w=window._view._view,v=w._pageFitting.viewer,r=v.getPageView(v.currentPageNumber-1).div.getBoundingClientRect();return{left:r.left,right:r.right};});
+  const targets=await page.evaluate(()=>{const w=window._view._view,v=w._pageFitting.viewer,d=v.getPageView(v.currentPageNumber-1).div,r=d.getBoundingClientRect(),b=w._pageFitting.applied.bounds;return{left:r.left+b[0]*d.clientWidth,right:r.left+b[2]*d.clientWidth};});
   assert.ok(targets.left>25&&targets.right<975,JSON.stringify(targets));
   await touch('touchStart',[{x:10,y:350},{x:990,y:350}]);
   for(let i=1;i<=9;i++){await touch('touchMove',[{x:10+i*40,y:350},{x:990-i*40,y:350}]);await page.waitForTimeout(25);}
@@ -81,7 +82,8 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
    await page.setViewportSize({width:600,height:800});await open('/fuchs.pdf',205);fitted(await state());
    const cases=[];
    for(const index of [5,99,200,205,206,207,300,410]){await page.evaluate(i=>window._view._view._navigateToPage({pageIndex:i}),index);await page.waitForTimeout(100);let s=await state();fitted(s);cases.push({page:index+1,bounds:s.bounds});}
-   for(const include of [false,true]){
+   for(const mode of [0,1,2]) for(const include of [false,true]){
+   await page.evaluate(mode=>window._view._view.setScrollMode(mode),mode);
     await configure('content',include);await overview();await tapCurrentPage();let restored=await state();fitted(restored);assert.equal(restored.includeMarginalia,include);
     await page.evaluate(()=>window._view._view._navigateToPage({pageIndex:206}));fitted(await state());
    }

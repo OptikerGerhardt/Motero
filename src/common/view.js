@@ -169,6 +169,7 @@ class View {
 			onDismissReaderChrome: this._options.onDismissReaderChrome,
 			onEdgePageTurnTap: this._options.onEdgePageTurnTap,
 			onManualCropChanged: this._options.onManualCropChanged,
+			onCropEditorChanged: this._options.onCropEditorChanged,
 		};
 		return common;
 	}
@@ -264,7 +265,8 @@ class View {
 			}
 		}
 		if (stats) {
-			this._emitViewStats(stats);
+			let textScale = this._type === 'epub' || this._sdtView ? this._activeView?.scale : undefined;
+			this._emitViewStats({ ...stats, ...(textScale ? { textScale } : {}) });
 		}
 	}
 
@@ -613,6 +615,7 @@ class View {
 			wordSpacing: appearance.wordSpacing,
 			letterSpacing: appearance.letterSpacing,
 			pageWidth: appearance.pageWidth,
+			textScale: appearance.textScale,
 		};
 		this._view?.setAppearance?.(this._appearance);
 		this._sdtView?.setAppearance?.(this._appearance);

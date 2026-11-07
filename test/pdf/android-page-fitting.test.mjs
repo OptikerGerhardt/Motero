@@ -4,11 +4,19 @@ import { AndroidPageFitting } from '../../src/pdf/android-page-fitting.js';
 
 function fixture() {
 	let timers = new Map(), serial = 0;
-	let pages = Array.from({length:4},(_,index)=>({pdfPage:{getViewport:()=>({width:600,height:800})},
-		div:{offsetLeft:0,offsetTop:index*800,clientLeft:0,clientTop:0,clientWidth:600,clientHeight:800,style:{clipPath:'',translate:''}}}));
-	let container={clientWidth:600,clientHeight:800,scrollLeft:0,scrollTop:0};
-	let viewer={container,currentPageNumber:2,currentScale:1,pagesRotation:0,spreadMode:0,
-		pdfDocument:{numPages:4,getPage:async n=>pages[n-1].pdfPage},getPageView:i=>pages[i],scrollPageIntoView(){}};
+    let viewer;
+    const container = {clientWidth:600,clientHeight:800,scrollLeft:0,scrollTop:0,addEventListener(){},removeEventListener(){}};
+    const pages = Array.from({length:4},(_,index)=>{
+        const div = {clientLeft:0,clientTop:0,style:{clipPath:'',translate:''},
+            get offsetLeft(){return parseFloat(this.style.left)||0;}, get offsetTop(){return parseFloat(this.style.top)||index*800;},
+            get clientWidth(){return 600*viewer.currentScale;},get clientHeight(){return 800*viewer.currentScale;},
+            getBoundingClientRect(){return {left:this.offsetLeft-container.scrollLeft,top:this.offsetTop-container.scrollTop};}};
+        return {id:index+1,pdfPage:{getViewport:()=>({width:600,height:800})}, div,
+            get viewport(){return {width:div.clientWidth,height:div.clientHeight};}};
+    });
+    viewer={container,viewer:{style:{}},_pages:pages,pagesCount:4,currentPageNumber:2,currentScale:1,pagesRotation:0,spreadMode:0,scrollMode:0,
+        pdfDocument:{numPages:4,getPage:async n=>pages[n-1].pdfPage},getPageView:i=>pages[i],scrollPageIntoView(){},
+        _getVisiblePages(){return {views:[]};},_setCurrentPageNumber(n){this.currentPageNumber=n;}};
 	let win={PDFViewerApplication:{pdfViewer:viewer,eventBus:{on(){},off(){}}},addEventListener(){},removeEventListener(){},
 		setTimeout:f=>{timers.set(++serial,f);return serial;},clearTimeout:id=>timers.delete(id)};
 	let view={_iframeWindow:win,_tool:{type:'pointer'},_render(){},_updateViewStats(){}};
@@ -18,13 +26,13 @@ function fixture() {
 	return {fitting,viewer,pages,container,flush,timers};
 }
 
-test('current and both neighboring pages are cropped and aligned in the same commit',async()=>{
+test('all buffered pages have compact, centered crops in the same commit',async()=>{
 	let {fitting,pages}=fixture();
 	assert.equal(await fitting.configure({mode:'content',reference:'content',margin:0}),true);
-	for(let i of [0,1,2]) assert.match(pages[i].div.style.clipPath,/^inset\(/);
-	assert.equal(pages[3].div.style.clipPath,'');
-	let middle=pages[1].div.clientWidth*.4;
-	for(let i of [0,2]) assert.ok(Math.abs(pages[i].div.clientWidth*.5+parseFloat(pages[i].div.style.translate)-middle)<1e-6);
+    for (const page of pages) assert.match(page.div.style.clipPath,/^inset\(/);
+    const boxes = fitting.layout.boxes;
+    for (let i=1;i<boxes.length;i++) assert.equal(boxes[i].y-boxes[i-1].y-boxes[i-1].height,12);
+    assert.ok(boxes.every(b=>Math.abs(b.x+b.width/2-300)<0.001));
 	fitting.configure({mode:'none'});
 	for(let p of pages) {assert.equal(p.div.style.clipPath,'');assert.equal(p.div.style.translate,'');}
 });
@@ -44,24 +52,28 @@ test('finger zoom keeps the selected mode and refits only after the final touch 
 	assert.match(pages[1].div.style.clipPath,/^inset\(/);
 });
 
-test('panning can reveal the current margin without disabling the fit or uncropping neighbors',async()=>{
-	let {fitting,pages,container,flush}=fixture();
-	await fitting.configure({mode:'content',reference:'content',margin:0});
-	fitting.onDown({pointerId:1,clientX:100,clientY:100});
-	fitting.onMove({pointerId:1,pointerType:'touch',clientX:130,clientY:150});
-	container.scrollTop=137;fitting.onUp({pointerId:1});await flush();
-	assert.equal(container.scrollTop,137);assert.equal(fitting.active,true);
-	assert.equal(fitting.state().pageFitMode,'content');assert.equal(pages[1].div.style.clipPath,'');
-	for(let i of [0,2]) assert.match(pages[i].div.style.clipPath,/^inset\(/);
+test('one-finger scrolling keeps every crop and never recenters the scroll',async()=>{
+    const {fitting,pages,container,flush}=fixture();
+    await fitting.configure({mode:'content',reference:'content',margin:0});
+    const clips=pages.map(p=>p.div.style.clipPath);
+    fitting.onDown({pointerId:1,clientX:100,clientY:100});
+    container.scrollTop=137; fitting.onUp({pointerId:1}); await flush();
+    assert.equal(container.scrollTop,137); assert.equal(fitting.active,true);
+    assert.deepEqual(pages.map(p=>p.div.style.clipPath),clips);
 });
 
-test('a highlight drag keeps the crop and takes precedence over temporary margin peeking',async()=>{
-	let {fitting,pages}=fixture();
-	await fitting.configure({mode:'content',reference:'content',margin:0});
-	fitting.view._directHighlight={gesture:{active:true}};
-	fitting.onDown({pointerId:1,clientX:100,clientY:100});
-	fitting.onMove({pointerId:1,pointerType:'touch',clientX:150,clientY:100});
-	assert.equal(fitting.peekPageIndex,null);assert.match(pages[1].div.style.clipPath,/^inset\(/);
+test('a second finger reveals the original page even without changing zoom',async()=>{
+    const {fitting,pages,viewer,flush}=fixture();
+    await fitting.configure({mode:'content',reference:'content',margin:0});
+    const scale=viewer.currentScale;
+    fitting.onDown({pointerId:1,clientX:100,clientY:100});
+    assert.match(pages[1].div.style.clipPath,/^inset\(/);
+    fitting.onDown({pointerId:2,clientX:150,clientY:100});
+    assert.equal(pages[1].div.style.clipPath,'');
+    fitting.onUp({pointerId:2});await flush();assert.equal(fitting.zooming,true);
+    fitting.onUp({pointerId:1});await flush();
+    assert.equal(fitting.zooming,false);assert.equal(viewer.currentScale,scale);
+    assert.match(pages[1].div.style.clipPath,/^inset\(/);
 });
 
 test('Off during a zoom cancels the pending fit and is never undone on release',async()=>{

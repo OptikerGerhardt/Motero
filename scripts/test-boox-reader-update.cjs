@@ -44,25 +44,38 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   assert.equal((await neighborhood()).index,original.index);
   console.log('PASS current and previous/next pages are cropped before hardware navigation completes');
 
-  // Real two-finger input: the fit is temporarily free and returns on release.
+  for(const mode of [0,1,2]) {
+  await open('pdf','/fixture.pdf',{viewState:{pageIndex:8,scale:'page-width',scrollMode:mode,spreadMode:0},pageFitting:fit});
   original=await neighborhood();
   await touch('touchStart',[{x:210,y:350},{x:390,y:530}]);
+  assert.equal(await page.evaluate(()=>window._view._view._pageFitting.layout.boxes),null);
+  assert.equal((await neighborhood()).pages.find(p=>p.i===original.index).clip,'');
   for(let i=1;i<=8;i++){await touch('touchMove',[{x:210-i*8,y:350-i*8},{x:390+i*8,y:530+i*8}]);await page.waitForTimeout(25);}
   assert.equal((await neighborhood()).mode,'content');
   await touch('touchEnd',[]);
-  await page.waitForFunction(scale=>{const f=window._view._view._pageFitting;return f.active&&!f.zooming&&Math.abs(f.viewer.currentScale-scale)<.003;},original.scale);
+  await page.waitForFunction(scale=>{const f=window._view._view._pageFitting;return f.active&&!f.zooming&&f.layout.boxes&&Math.abs(f.viewer.currentScale-scale)<.003;},original.scale);
   assert.ok(cropped((await neighborhood()).pages));
-  console.log('PASS real finger zoom returns to the selected fit after release');
+  assert.equal((await neighborhood()).index,original.index);
+  console.log('PASS mode '+mode+': two fingers reveal the full PDF and restore page, crop and zoom on release');
 
-  const panBefore=await page.evaluate(()=>window._view._view._pageFitting.viewer.container.scrollLeft);
-  await touch('touchStart',[{x:350,y:400}]);
-  for(let i=1;i<=6;i++){await touch('touchMove',[{x:350-i*12,y:400}]);await page.waitForTimeout(20);}
+  await touch('touchStart',[{x:350,y:600}]);
+  for(let i=1;i<=8;i++){
+   await touch('touchMove',[{x:mode===1?350-i*25:350,y:mode===1?600:600-i*35}]);
+   assert.ok(cropped((await neighborhood()).pages));
+   await page.waitForTimeout(20);
+  }
   await touch('touchEnd',[]);await page.waitForTimeout(250);
-  const pan=await page.evaluate(()=>{let f=window._view._view._pageFitting;return {x:f.viewer.container.scrollLeft,active:f.active,mode:f.state().pageFitMode,peek:f.peekPageIndex,index:f.viewer.currentPageNumber-1};});
-  assert.equal(pan.active,true);assert.equal(pan.mode,'content');assert.equal(pan.peek,pan.index);assert.ok(Math.abs(pan.x-panBefore)>8,JSON.stringify({pan,panBefore}));
-  assert.equal((await neighborhood()).pages.find(p=>p.i===pan.index).clip,'');
-  assert.ok((await neighborhood()).pages.filter(p=>p.i!==pan.index).every(p=>p.clip.startsWith('inset(')));
-  console.log('PASS real one-finger panning reveals margins without resetting the chosen fit or uncropping neighbors');
+  const after=await neighborhood();
+  assert.equal(after.active,true);assert.equal(after.mode,'content');assert.ok(cropped(after.pages));
+  assert.ok(Math.abs(after.scale-original.scale)<.003);
+  // Consecutive content frames are adjacent: the physical paper margins no longer take layout space.
+  const boxes=await page.evaluate(()=>window._view._view._pageFitting.layout.boxes.slice(6,12));
+  for(let i=1;i<boxes.length;i++) {
+   if(mode===1) assert.ok(Math.abs(boxes[i].x-boxes[i-1].x-boxes[i-1].width-12)<1);
+   else assert.ok(Math.abs(boxes[i].y-boxes[i-1].y-boxes[i-1].height-12)<1);
+  }
+  console.log('PASS mode '+mode+': one-finger scrolling keeps every buffered crop and compact page spacing');
+  }
 
   // The user's complete PDF is checked independently of the synthetic fixtures.
   if(fixtures['/plessner.pdf']) {
@@ -88,6 +101,12 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
 
   for(const rtl of [false,true]) for(const flowMode of ['paginated','scrolled']){
    await open('epub',rtl?'/navigation-rtl.epub':'/navigation.epub',{viewState:{scale:1},flowMode});
+   await page.evaluate(()=>window.setAppearance({lineHeight:1.2,wordSpacing:0,letterSpacing:0,pageWidth:0,textScale:1.6}));
+   await page.waitForFunction(()=>Math.abs(window._view._activeView.scale-1.6)<.001);
+   await page.evaluate(()=>window._view.zoomOut());
+   await page.waitForFunction(()=>window.messages.some(x=>Math.abs((x.message?.params?.stats?.textScale||0)-1.5)<.001));
+   await page.evaluate(()=>window.setAppearance({lineHeight:1.2,wordSpacing:0,letterSpacing:0,pageWidth:0,textScale:1}));
+   console.log('PASS EPUB font size uses the displayed percentage and reports subsequent pinch/button zoom');
    await page.evaluate(flowMode=>window._view._view.setFlowMode(flowMode),flowMode);
    await page.waitForTimeout(150);
    const epubState=()=>page.evaluate(()=>{const v=window._view._view;return {cfi:v.flow.startCFI?.toString(),chapter:v.flow.startSection?.index,y:v._iframeWindow.scrollY,max:v._iframeDocument.documentElement.scrollHeight-v._iframe.clientHeight};});
@@ -114,7 +133,7 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
    const bookmarkTap=await page.evaluate(()=>{let r=window._view._view._iframe.getBoundingClientRect();return {x:r.left+r.width*.9,y:r.top+r.height*.04};});
    await touch('touchStart',[bookmarkTap]);await touch('touchEnd',[]);
    await page.waitForFunction(()=>window._view._view._annotations.length===1);
-   const bookmark=await page.evaluate(()=>window._view._view._annotations[0]);assert.equal(bookmark.type,'note');assert.equal(bookmark.color,'#aaaaaa');
+   const bookmark=await page.evaluate(()=>window._view._view._annotations[0]);assert.equal(bookmark.type,'note');assert.equal(bookmark.color,'#2ea8e5');
    await touch('touchStart',[bookmarkTap]);await touch('touchEnd',[]);
    await page.waitForFunction(()=>window._view._view._annotations.length===0);
    await page.waitForFunction(id=>window.messages.some(m=>m.message?.event==='onDeleteAnnotations'&&m.message.params.ids.includes(id)),bookmark.id);

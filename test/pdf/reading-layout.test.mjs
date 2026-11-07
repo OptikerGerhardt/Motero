@@ -370,3 +370,39 @@ test('header separation tolerates body-font boxes that overlap adjacent text lin
  assert.ok(excluded.includes(p.lines[0].rect));assert.ok(!excluded.includes(p.lines[2].rect));
  const b=getReadingBounds(image(p.lines.map(l=>l.rect)),p.lines,model,2);assert.ok(b[1]>.097&&b[1]<.102,JSON.stringify(b));
 });
+
+test('Kant standalone Roman margin folios are separated before body-word merging', () => {
+    const viewport={width:500,height:700,scale:1,transform:[1,0,0,-1,0,700]};
+    const content={items:[
+        {str:'XVIII',width:28,transform:[9,0,0,9,2,300]},
+        {str:'Erfahrungsbegriffe haben also zwar ihren Boden in der Natur',width:430,transform:[14,0,0,14,42,300]}
+    ]};
+    const lines=getReadingTextLines(content,viewport);
+    assert.equal(lines.length,2);
+    const reference=lines.find(l=>l.text==='XVIII');
+    assert.equal(reference.sideCandidate,true);
+    assert.ok(getReadingMarginalia(lines,buildReadingModel([]),10).includes(reference.rect));
+    assert.equal(getReadingMarginalia(lines,buildReadingModel([]),10).length,1);
+});
+
+test('publisher download-watermark blocks and attached DOI are excluded, real DOI footnotes remain', () => {
+    const watermark=[line('DOI https://doi.org/10.1234/book',[.3,.935,.7,.948]),
+        line('Generated for Universitätsbibliothek on 2026-11-07',[.1,.951,.9,.964]),
+        line('FOR PRIVATE USE ONLY | AUSSCHLIESSLICH ZUM PRIVATEN GEBRAUCH',[.1,.967,.9,.98])];
+    const note=line('15 See DOI https://doi.org/10.1234/paper for the source.',[.2,.86,.8,.88]);
+    const lines=[...body,note,...watermark];
+    const exclusions=getReadingExclusions(lines,buildReadingModel([]),2);
+    assert.ok(watermark.every(l=>exclusions.includes(l.rect)));
+    assert.ok(!exclusions.includes(note.rect));
+    const bounds=getReadingBounds(image(lines.map(l=>l.rect)),lines,buildReadingModel([]),2);
+    assert.ok(bounds[3]>=.878 && bounds[3]<.89,JSON.stringify(bounds));
+});
+
+
+test('a detached numerical label beside a genuine footnote at the extreme bottom remains content',()=>{
+    const label=line('3',[.1,.952,.12,.969]);
+    const note=line('A complete final footnote line beside the detached label.',[.2,.952,.8,.974]);
+    const exclusions=getReadingExclusions([...body,label,note],buildReadingModel([]),3);
+    assert.ok(!exclusions.includes(label.rect));
+    assert.ok(!exclusions.includes(note.rect));
+});

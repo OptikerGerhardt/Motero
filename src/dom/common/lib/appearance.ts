@@ -4,6 +4,7 @@ export interface ReflowableAppearance {
 	letterSpacing: number;
 	pageWidth: PageWidth;
 	useOriginalFont: boolean;
+	textScale?: number;
 }
 
 export const enum PageWidth {

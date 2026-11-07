@@ -12,6 +12,11 @@ export function getHardwareScrollLimits(view, viewer, page) {
 		- container.getBoundingClientRect().top - container.clientTop;
 	let fullMax = Math.max(0, div.clientHeight - height);
 	let pageFit = view._pageFitting;
+	let box = pageFit?.active && pageFit.layout?.boxes?.[viewer.currentPageNumber - 1];
+	if (box) {
+		const min = Math.max(0, box.height <= height ? box.y + (box.height - height) / 2 : box.y);
+		return { min, max: Math.max(min, box.y + box.height - height), viewportHeight: height };
+	}
 	if (pageFit?.active && pageFit.options.mode !== 'width'
 			&& pageFit.applied?.pageIndex === viewer.currentPageNumber - 1
 			&& pageFit.applied.scale === viewer.currentScale) {

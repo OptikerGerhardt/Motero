@@ -3807,6 +3807,7 @@ class PDFView {
 	}
 
 	_handleTouchMove(event) {
+		if (this._pageFitting?.editor) return;
 		if (this._directHighlight?.touchMove(event)) {
 			return;
 		}
@@ -3826,6 +3827,8 @@ class PDFView {
 	}
 
 	_handleTouchEnd(event) {
+		// Native touch clicks must reach the crop editor's buttons and select.
+		if (this._pageFitting?.editor || event.target?.closest?.('.boox-manual-crop')) return;
 		this._nativeTextSelection?.handlePointerUp();
 		// Don't let another finger's native-touch handoff abort a transform in progress
 		if (!this._touchTransform && this._nativeTextSelection?.shouldAllowNativeTouch(event)) {
@@ -3841,6 +3844,7 @@ class PDFView {
 	}
 
 	_handlePointerMove = throttle((event) => {
+		if (this._pageFitting?.editor) return;
 		if (this._chromeTapGuard?.move(event)) return;
 		if (this._directHighlight?.move(event)) {
 			return;

@@ -98,7 +98,7 @@ export class PDFBooxReader {
 
 	isOverview(page = this.viewer.getPageView(this.viewer.currentPageNumber - 1)) {
 		let v = this.viewer, c = v.container;
-		if (v.scrollMode !== 2 || !page?.pdfPage || !(v.currentScale > 0)) return false;
+		if (!page?.pdfPage || !(v.currentScale > 0)) return false;
 		let width = page.viewport.width, height = page.viewport.height;
 		let reading = this.readingScale || v.currentScale * (c.clientWidth - 32) / width;
 		return width < c.clientWidth * 0.86 && height < c.clientHeight * 0.94
@@ -161,7 +161,7 @@ export class PDFBooxReader {
 		let p1 = viewport.convertToPdfPoint(right, top + size);
 		let position = { pageIndex, rects: [[Math.min(p0[0], p1[0]), Math.min(p0[1], p1[1]),
 			Math.max(p0[0], p1[0]), Math.max(p0[1], p1[1])]] };
-		view._onAddAnnotation({ type: 'note', color: '#aaaaaa', position,
+		view._onAddAnnotation({ type: 'note', color: '#2ea8e5', position,
 			pageLabel: view._getPageLabel(pageIndex, true), sortIndex: getSortIndex(view._pdfPages, position),
 			comment: (this.de ? 'Lesezeichen' : 'Bookmark') + ' · '
 				+ new Intl.DateTimeFormat(this.de ? 'de-DE' : undefined,
@@ -181,7 +181,7 @@ export class PDFBooxReader {
 		try {
 			if (restoreFit) {
 				let prepared = await view._pageFitting.prepare(pageIndex, restoreFit);
-				if (view._destroyed || this.entering !== request || v.scrollMode !== 2) return;
+				if (view._destroyed || this.entering !== request) return;
 				await view._pageFitting.configure(restoreFit, false);
 				view._pageFitting.active = true;
 				view._pageFitting.commit(prepared, { alignTop: true,
@@ -195,7 +195,7 @@ export class PDFBooxReader {
 			else v.currentScaleValue = this.readingMode === 'width' ? 'page-width'
 				: this.readingScale || 'page-width';
 			await new Promise(resolve => this.win.requestAnimationFrame(() => this.win.requestAnimationFrame(resolve)));
-			if (view._destroyed || v.scrollMode !== 2 || this.entering !== request) return;
+			if (view._destroyed || this.entering !== request) return;
 			let page = v.getPageView(pageIndex), c = v.container;
 			// Changing the scale reflows Wrapped rows. Resolve the same target again.
 			v.scrollPageIntoView({ pageNumber: pageIndex + 1 });
