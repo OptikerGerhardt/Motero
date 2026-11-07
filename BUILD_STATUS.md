@@ -1,5 +1,9 @@
 # Motero 307: Update-Kompatibilität
 
+**Als GitHub-Release verfügbar:** [Build 307](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.0-307). Die tatsächlich veröffentlichte APK wurde erneut heruntergeladen und geprüft. Beide Android-Updateprüfungen auf API 31 und 35 sind erfolgreich: ursprünglichen 306-Konflikt reproduziert, 303 → 307 installiert, privaten Testdatensatz und UID erhalten, App gestartet, altsigniertes Update und Berechtigungsanfrage abgewiesen. Die SHA-256 der APK lautet `1bcc4e7a816a12f295b01b89ab29ae067d446dd46625d09ca2e859e34b7a805c`. Nachweise: `qa/build307/github-migration-api31.json`, `github-migration-api35.json` und `github-apk-verification.json`.
+
+Der vollständige Build mit 276 Reader-Tests, 109 nativen Tests, zehn Browserprüfungen und sieben Veröffentlichungs-/Signierprüfungen bestand in Lauf 42397300252. Nach Reparatur der CI-Emulatorregistrierung wurde derselbe nachweislich unveränderte App-Build in Lauf 42407694627 signiert, auf beiden Android-Versionen geprüft und veröffentlicht. Die Quellen enthalten die aktualisierte Release-Infrastruktur; `github-build-provenance.json` bindet sie an den geprüften Build. Vier zusätzliche Wiederverwendungsprüfungen weisen geänderte App-/Reader-Quellen, fehlende Build-Erfolge und falsche Quellbindung zurück.
+
 Die Meldung `failureConflict` wurde bei Updates von 303 auf 306 auf GrapheneOS/Pixel 8 und BOOX Go Color 7 beobachtet. Android prüft beim erneuten Deklarieren der bisherigen AndroidX-Signaturberechtigung die bewusst widerrufene `PERMISSION`-Fähigkeit des alten Schlüssels. Die kryptografische Signaturprüfung allein hatte diese Installationshürde nicht erkannt.
 
 Build 307 verwendet eine neue eigene Receiver-Berechtigung. Ein gezielter AndroidX-Core-Transform stellt auch den Lookup auf Android 9–12 darauf um. Alte Schlüssel behalten keine Permission-/Rollback-Rechte. Die Release-APK-Prüfung kontrolliert Manifest, Schutzstufe und tatsächliche DEX-Strings gemeinsam.

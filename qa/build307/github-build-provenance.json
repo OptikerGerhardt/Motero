@@ -1,0 +1,13 @@
+{
+  "tested_run": 42397300252,
+  "tested_commit": "58545ee134f45b0de3ef7ec557cbad815b476ef7",
+  "release_source_commit": "7f9b3a41a338c1badb7b72d1b1bab4b0035f7358",
+  "infrastructure_only_changes": [
+    ".github/workflows/motero.yml",
+    "scripts/check_android_update.py",
+    "scripts/reuse_tested_build.py",
+    "scripts/tests/test_build_reuse.py"
+  ],
+  "application_inputs_unchanged": true,
+  "unsigned_apk_sha256": "e67cf04151a2d6935ac363e28e3100656a41f1ab6092653689cfd614f0712cbd"
+}

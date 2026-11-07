@@ -7,7 +7,7 @@
 - APK-Prüfung kontrolliert gemeinsam Manifest, Schutzstufe und tatsächliche AndroidX-Strings im DEX-Code.
 - Veröffentlichung setzt jetzt echte Android-Updateprüfungen auf API 31 und 35 voraus: ursprüngliches 303 installieren, 306-Konflikt reproduzieren, Update samt privatem Testdatensatz/UID prüfen und Updates/Berechtigungszugriff mit dem alten Schlüssel zurückweisen.
 - Browser-Randtap-Prüfung wartet auf stabilen Readerzustand und abgeschlossene Navigation; Gesten- und Bookmark-Prüfungen bleiben erhalten. Lokal normal und mit zweifach gedrosselter CPU bestanden.
-- 109 native Tests und sieben Veröffentlichungs-/Signierprüfungen lokal bestanden. Physische Bestätigung auf GrapheneOS/BOOX steht aus.
+- Build 307 mit erfolgreichen echten Updateprüfungen auf Android API 31 und 35 veröffentlicht; Datenerhalt, unveränderte UID, App-Start und Abweisung alter Schlüssel geprüft. 276 Reader-Tests, 109 native Tests, zehn Browserprüfungen und sieben Veröffentlichungs-/Signierprüfungen bestanden. Physische Bestätigung auf GrapheneOS/BOOX steht aus.
 
 ## 1.0.0-306 — 7. November 2026
 
