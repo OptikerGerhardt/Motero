@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     outputs:
       publish: ${{ steps.meta.outputs.publish }}
@@ -38,8 +38,7 @@ jobs:
       - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
         with:
           distribution: temurin
-          java-version: '17'
-          cache: gradle
+          java-version: '21'
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: '24'
@@ -51,12 +50,23 @@ jobs:
       - name: Install pinned Android SDK packages
         run: |
           python3 - <<'PY'
-          import shutil,subprocess
+          import shutil,subprocess,sys
           sdk=shutil.which('sdkmanager')
           assert sdk, 'The Android SDK command-line tools must be installed on the runner'
-          subprocess.run([sdk,'--licenses'],input='y\n'*200,text=True,check=True,stdout=subprocess.DEVNULL)
-          subprocess.run([sdk,'platforms;android-37.0','build-tools;36.0.0'],check=True)
+          for command,input_text in [([sdk,'--licenses'],'y\n'*200),([sdk,'platforms;android-37.0','build-tools;36.0.0'],None)]:
+              result=subprocess.run(command,input=input_text,text=True,capture_output=True)
+              if result.returncode:
+                  detail=(result.stderr+'\n'+result.stdout)[-3000:].replace('%','%25').replace('\r','%0D').replace('\n','%0A')
+                  print('::error title=Android SDK installation::'+detail)
+                  sys.exit(result.returncode)
+              print('SDK command completed: '+' '.join(command[1:]))
           PY
+      - name: Use JDK 17 for the Android build
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
       - name: Validate runtime assets and restore PDF.js
         run: python3 scripts/prepare_reader_assets.py
       - name: Build and test the reader
@@ -111,7 +121,7 @@ jobs:
   release:
     needs: build
     if: needs.build.outputs.publish == 'true' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:

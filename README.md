@@ -41,7 +41,7 @@ python3 scripts/package_reader_assets.py
 ./gradlew :app:testDevDebugUnitTest :app:assembleDevDebug --init-script scripts/test_jvm_agent.gradle --no-build-cache
 ```
 
-Voraussetzungen: **JDK 17**, **Node 24**, Python 3, Android SDK **Platform 37.0** und **Build Tools 36.0.0**. Gradle 9.6.1 wird vom Wrapper mit SHA-256-Prüfung geladen. Die APK entsteht unter `app/build/outputs/apk/dev/debug/app-dev-debug.apk`.
+Voraussetzungen: **JDK 17**, **Node 24**, Python 3, Android SDK **Platform 37.0** und **Build Tools 36.0.0**. Gradle 9.6.1 wird vom Wrapper mit SHA-256-Prüfung geladen. Der Workflow verwendet Java 21 für aktuelle SDK-Werkzeuge und danach JDK 17 für den App-Build. Die APK entsteht unter `app/build/outputs/apk/dev/debug/app-dev-debug.apk`.
 
 Der angepasste Reader liegt im Branch [`reader`](https://github.com/OptikerGerhardt/Motero/tree/reader) **desselben Repositorys** und wird auf `main` als Submodul festgeschrieben. Damit enthält ein rekursiver Klon den tatsächlichen Motero-Reader statt eines nicht verfügbaren Upstream-Commits. Reader-Änderungen zuerst im Branch `reader` committen/pushen, danach den Submodulstand auf `main` aktualisieren.
 
