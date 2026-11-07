@@ -86,3 +86,16 @@ app/src/main/assets/document-worker/
 # Kotlin/compiler and Python local caches
 .kotlin/
 __pycache__/
+
+# Release output and local test/browser tools
+dist/
+qa-ci/
+.browser-tools/
+# Private signing material. The upstream Android test key is intentionally public.
+*.jks
+*.p12
+*.pfx
+*.keystore
+!/debug.keystore
+.env
+.env.*

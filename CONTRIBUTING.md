@@ -1,11 +1,9 @@
-# Contributing to Zotero
+# Zu Motero beitragen
 
-## Bug Reports and Feature Requests
+Fehler und Funktionswünsche zu diesem Fork gehören in die Issues dieses Repositorys. Bitte Buildnummer, Gerät, Android-/BOOX-Version und Schritte zum Nachstellen angeben. Private PDFs, Kontodaten und Tokens weglassen; nach Möglichkeit ein kleines anonymes Beispiel verwenden.
 
-Zotero does not use GitHub Issues for bug reports or feature requests. Please post all such requests to the [Zotero Forums](https://forums.zotero.org), where Zotero developers and many others can help. See [How Zotero Support Works](https://www.zotero.org/support/zotero_support) for more information.
+Vor Änderungen `README.md`, `AGENTS.md` und den aktuellen `FEATUREPLAN.md` lesen. Relevante Tests ausführen und zusammenhängende Änderungen in nachvollziehbaren Commits festhalten. Lizenz- und Copyright-Hinweise der übernommenen Projekte erhalten. Keine neue Lizenzvereinbarung oder Rechteübertragung wird für Beiträge zu diesem Fork vorausgesetzt.
 
-For confirmed bugs or agreed-upon changes, Zotero developers will create new issues in the relevant repositories.
+Der Reader liegt als Submodul im Branch `reader` desselben Repositorys. Reader-Commits zuerst dort veröffentlichen, anschließend den festgeschriebenen Stand auf `main` aktualisieren. Bei App-Änderungen die Buildnummer erhöhen; der erfolgreiche Workflow erstellt den zugehörigen Release.
 
-## Working with Zotero Code
-
-See [Zotero Source Code](https://www.zotero.org/support/dev/source_code).
+Meldungen zum unveränderten offiziellen Zotero-Programm richten sich nach den [Zotero-Supportregeln](https://www.zotero.org/support/zotero_support). Die Maintainer dieses Forks sprechen nicht für das Zotero-Team.

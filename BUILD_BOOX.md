@@ -4,20 +4,24 @@
 
 Über die vorhandene Motero-Testversion installieren, vorher nicht deinstallieren. Paket `org.zotero.android.debug`, Version `1.0.0-305`, Versionscode 305. Gleiches Signierzertifikat wie die vorherige Version 304. Datenpfade, Datenbank-/Syncformate und bisheriger Debug-Schlüssel bleiben erhalten. Eine tatsächliche Geräteinstallation ist noch nicht durchgeführt.
 
-## Stand und Wiederherstellung
+## Quellstand und Wiederherstellung
 
-Änderungen: FEATUREPLAN.md, Abschnitt „Auftrag vom 7. November“. Abgeschlossene Prüfungen und Grenzen: BUILD_STATUS.md und BUILD_VERIFICATION.json. Neue Berichte: qa/build305/. Ältere Dateien in qa/ sind historische Nachweise.
+Aktueller Code und Änderungen liegen im privaten GitHub-Repository. Normaler Einstieg:
 
-Das Quellarchiv enthält eigene Android-/Reader-Dateien, Laufzeitpakete, bisherigen Debug-Schlüssel und originale Git-Bundles. SOURCE_SNAPSHOT.json dokumentiert Ausgangscommits und neueren Arbeitsstand. Beim Wiederherstellen zuerst die Bundles importieren und dann die flachen Projektdateien als neueren Arbeitsstand übernehmen. Ein Checkout nur der Bundle-HEADs enthält die neuen Änderungen noch nicht.
+```sh
+git clone --recurse-submodules https://github.com/OptikerGerhardt/Motero.git
+```
 
-Vorhandene Checkouts und lokale Arbeit erhalten. Cloud-Aufgaben laufen bereits isoliert; keinen zusätzlichen Git-Worktree erstellen, sofern nicht ausdrücklich gewünscht. Den Reader als Submodul aus seinem mitgelieferten Bundle bereitstellen und alle festgeschriebenen Unterprojekte mit `git submodule update --init --recursive` initialisieren. Eigene Reader-Commits sind im Bundle enthalten und müssen nicht auf öffentlichem Upstream existieren.
+Der Reader ist als Submodul auf den Branch `reader` desselben Repositorys festgeschrieben. Die Releases enthalten außerdem ein vollständiges Quellarchiv einschließlich initialisierter Submodule und `SOURCE_SNAPSHOT.json`. Dieses neue Archiv benötigt keine alten Git-Bundles; Git-Metadaten, Caches und persönliche Dateien sind nicht enthalten. Die ursprünglichen importierten Archive und `qa/`-Baselines dokumentieren frühere Wiederherstellungswege.
+
+Änderungen: FEATUREPLAN.md, Abschnitt „Auftrag vom 7. November“. Prüfungen und Grenzen: BUILD_STATUS.md, BUILD_VERIFICATION.json und qa/build305/. Für GitHub-Builds und Releases gelten README.md und docs/RELEASING.md.
 
 ## Neubau
 
 Frisch verwendet: vollständiges JDK 17, Android SDK Platform 37.0 Revision 2, Build Tools 36.0.0, Gradle 9.6.1, Node 24 und npm 11. SDK/JDK, node_modules und Caches sind nicht im Quellarchiv enthalten.
 
 1. Im Reader `npm ci --no-audit --no-fund`; Lockfiles erhalten.
-2. Den unveränderten pdf/-Ordner aus app/src/main/assets/reader/reader.zip nach reader/build/mobile/pdf und reader/build/android/pdf übernehmen. PDF.js nicht unnötig neu bauen.
+2. Mit `python3 scripts/prepare_reader_assets.py` die geprüften Runtime-Dateien validieren und die mitgelieferte PDF.js-Distribution in reader/build/mobile und reader/build/android bereitstellen. PDF.js nicht unnötig neu bauen.
 3. Im Reader `npx webpack --config-name android` und `npm test`. Tests müssen tatsächliche Einzeltests zählen. In dieser Cloud-Shell war vollständige Prozessunterstützung nötig; alternativ jede vorhandene Testdatei in einem eigenen Prozess mit `node --test --test-isolation=none --test-reporter=tap <Datei>` ausführen.
 4. Im Android-Projekt `python3 scripts/package_reader_assets.py` für Reader-ZIP und Hash.
 5. `./gradlew :app:testDevDebugUnitTest :app:assembleDevDebug --init-script scripts/test_jvm_agent.gradle --no-build-cache --max-workers=4`. JDK/SDK über die üblichen Umgebungsvariablen aktivieren. ByteBuddy wird nur für die Test-JVM vorgeladen; Main-Thread-Prüfung bleibt aktiv.

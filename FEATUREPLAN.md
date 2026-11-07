@@ -22,7 +22,7 @@ Die ersten drei zuletzt priorisierten Features sind umgesetzt:
 
 **Prüfung:** 276 Reader-Tests und 109 Android-Tests in 25 Suiten bestanden; zehn Browserprüfungen bestanden. Neue Prüfungen decken Tag-Ranking, Bestätigung ohne versehentliche Neuanlage, Komposition/Cursor, überholte Suchläufe und Datenbankänderungen ab. Der Zuschnitt wurde mit echten Touch-Ziehgesten, geraden/ungeraden Seiten, weiteren Beispielseiten, Wiederöffnen, Abbrechen, Drehungen und Rückkehr zur Automatik geprüft. Native Tests prüfen ungültige Nutzdaten, getrennte Bibliotheken/Anhänge, Speichern/Wiederöffnen und Abmelden. Randtipps wurden in allen drei PDF-Modi samt Bookmark-Erstellen/Löschen, langen Druckgesten und Wischen geprüft. Bestehende Reader-, Annotations-, EPUB- und Original-Plessner-Prüfungen sind weiter bestanden.
 
-Gleiche Paketkennung und gleicher Signierer wie 304, höherer Versionscode 305. Die 57 weiteren Laufzeitdateien und alle 207 PDF.js-Dateien sind unverändert. Nachweise: BUILD_STATUS.md, BUILD_VERIFICATION.json und qa/build305/. Physischer BOOX-/Smartphone-Test, BOOX-Tastatur und echter Kontosync stehen noch aus. Keine Veröffentlichung beauftragt.
+Gleiche Paketkennung und gleicher Signierer wie 304, höherer Versionscode 305. Die 57 weiteren Laufzeitdateien und alle 207 PDF.js-Dateien sind unverändert. Nachweise: BUILD_STATUS.md, BUILD_VERIFICATION.json und qa/build305/. Physischer BOOX-/Smartphone-Test, BOOX-Tastatur und echter Kontosync stehen noch aus. Der Code und die APK werden im privaten GitHub-Repository bereitgestellt; die Sichtbarkeit bleibt privat.
 
 ## Reader-Auftrag vom 6. November: zusätzliche Änderungen für Build 304
 
