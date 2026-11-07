@@ -630,6 +630,21 @@ open class Defaults @Inject constructor(
         }
     }
 
+    fun getManualCrops(libraryId: LibraryIdentifier, key: String): org.zotero.android.screens.reader.data.ReaderManualCrops? {
+        val json = sharedPreferences.getString("manualCrop_${libraryId.folderName}_$key", null) ?: return null
+        return runCatching { org.zotero.android.screens.reader.data.ReaderManualCrops.fromJson(
+            com.google.gson.JsonParser.parseString(json).asJsonObject) }.getOrNull()
+    }
+
+    fun setManualCrops(libraryId: LibraryIdentifier, key: String, crops: org.zotero.android.screens.reader.data.ReaderManualCrops) {
+        sharedPreferences.edit { putString("manualCrop_${libraryId.folderName}_$key", dataMarshaller.marshal(crops)) }
+    }
+
+    private fun clearManualCrops() {
+        val keys = sharedPreferences.all.keys.filter { it.startsWith("manualCrop_") }
+        sharedPreferences.edit { keys.forEach { remove(it) } }
+    }
+
     fun getEpubViewState(libraryId: LibraryIdentifier, key: String): ReaderEpubViewState? {
         val json = sharedPreferences.getString("$epubViewStatePrefix${libraryId.folderName}_$key", null) ?: return null
         return runCatching { dataMarshaller.unmarshal<ReaderEpubViewState>(json) }.getOrNull()
@@ -687,6 +702,7 @@ open class Defaults @Inject constructor(
         setExportOutputMode(CitBibExportOutputMode.bibliography)
         clearPdfViewStates()
         clearEpubViewStates()
+        clearManualCrops()
         setButtonPageTurning(false)
         setKeepZoom(false)
         setPageTurningReversed(false)

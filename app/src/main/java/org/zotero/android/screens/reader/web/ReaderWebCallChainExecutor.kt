@@ -220,6 +220,10 @@ class ReaderWebCallChainExecutor @Inject constructor(
                             )
                         }
 
+                        "onManualCropChanged" -> {
+                            observable.emitAsync(Result.Success(ReaderWebData.setManualCrop(data["params"].asJsonObject)))
+                        }
+
                         "onChangeViewState" -> {
                             val params = data["params"].asJsonObject
                             observable.emitAsync(
@@ -469,7 +473,7 @@ class ReaderWebCallChainExecutor @Inject constructor(
             annotations = data.annotationsJson,
             pageFitting = if (data.type == "pdf") defaults.getReaderSettings().let {
                 org.zotero.android.screens.reader.web.data.CreateReaderPageFitting(
-                    it.pageFitMode(), it.fitReference(), it.contentMargin.fraction, it.fittingRevision, it.includeMarginalia
+                    it.pageFitMode(), it.fitReference(), it.contentMargin.fraction, it.fittingRevision, it.includeMarginalia, data.manualCrops
                 )
             } else null,
             directHighlight = !defaults.getReaderSettings().nativeTextSelection,
@@ -627,6 +631,10 @@ class ReaderWebCallChainExecutor @Inject constructor(
 
     fun setReaderChromeVisible(visible: Boolean) {
         readerWebViewHandler.evaluateJavascript("window.setReaderChromeVisible?.($visible);") {}
+    }
+
+    suspend fun beginManualCrop() = suspendCancellableCoroutine { cont ->
+        readerWebViewHandler.evaluateJavascript("javascript:window.beginManualCrop();") { cont.resume(Unit) }
     }
 
     suspend fun setPageFitting(settings: org.zotero.android.screens.reader.settings.data.ReaderSettings, apply: Boolean) {

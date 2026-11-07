@@ -11,6 +11,7 @@ data class ReaderDocumentData(
     val selectedAnnotationKey: String?,
     val savedPdfViewState: ReaderPdfViewState? = null,
     val savedEpubViewState: ReaderEpubViewState? = null,
+    val manualCrops: ReaderManualCrops? = null,
     val readOnly: Boolean = false,
     // Fit to Content margin, null when it's off
     val contentFitMargin: Double? = null,

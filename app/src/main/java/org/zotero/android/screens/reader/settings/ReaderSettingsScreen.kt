@@ -42,7 +42,10 @@ internal fun ReaderSettingsScreen(
                 )
             },
         ) {
-            ReaderSettingsTable(viewState, viewModel)
+            ReaderSettingsTable(viewState, viewModel, onManualCrop = {
+                onBack()
+                viewModel.applyChangesImmediately(startManualCrop = true)
+            })
         }
     }
 }

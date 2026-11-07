@@ -294,10 +294,10 @@ internal class ReaderSettingsViewModel @Inject constructor(
         }
     }
 
-    fun applyChangesImmediately() {
+    fun applyChangesImmediately(startManualCrop: Boolean = false) {
         debounceApplyJob?.cancel()
         debounceApplyJob = null
-        sendSettingsParams()
+        sendSettingsParams(startManualCrop)
     }
 
     private fun updatePdfSettings(option: ReaderSettingsOptions) {
@@ -383,8 +383,8 @@ internal class ReaderSettingsViewModel @Inject constructor(
         pdfReaderThemeDecider.setCurrentOsTheme(isOsThemeDark = isDark)
     }
 
-    private fun sendSettingsParams() {
-        EventBus.getDefault().post(ReaderSettingsChangeResult(readerSettings.copy(), reapplyFitting))
+    private fun sendSettingsParams(startManualCrop: Boolean = false) {
+        EventBus.getDefault().post(ReaderSettingsChangeResult(readerSettings.copy(), reapplyFitting, startManualCrop))
         reapplyFitting = false
     }
 

@@ -1544,6 +1544,8 @@ class ReaderViewModel @Inject constructor(
                     savedEpubViewState = if (type == "epub") defaults.getEpubViewState(
                         this@ReaderViewModel.library.identifier, this@ReaderViewModel.key
                     ) else null,
+                    manualCrops = if (type == "pdf") defaults.getManualCrops(
+                        this@ReaderViewModel.library.identifier, this@ReaderViewModel.key) else null,
                     contentFitMargin = contentFitMargin,
                     // A zoom the user chose for this document takes precedence over fitting
                     fitToContentOnOpen = savedPdfViewState == null,
@@ -1710,6 +1712,23 @@ class ReaderViewModel @Inject constructor(
             }
             ReaderWebData.clearSelectedTextParams -> {
                 clearSelectedTextParams()
+            }
+            is ReaderWebData.setManualCrop -> {
+                if (viewState.fileType == ReaderFileType.PDF) {
+                    val crop = successValue.params["crop"]?.takeIf { it.isJsonObject }?.asJsonObject
+                        ?.let { org.zotero.android.screens.reader.data.ReaderManualCrops.fromJson(it) }
+                    if (crop != null) {
+                        defaults.setManualCrops(this.library.identifier, this.key, crop)
+                        val settings = defaults.getReaderSettings()
+                        if (successValue.params["enable"]?.asBoolean == true) {
+                            settings.setPageFitMode("content")
+                            settings.fitTextReference = true
+                            settings.spreadsMode = org.zotero.android.screens.reader.settings.data.PageSpreadsMode.NONE
+                        }
+                        successValue.params["revision"]?.asLong?.let { settings.fittingRevision = it }
+                        defaults.setReaderSettings(settings)
+                    }
+                }
             }
             is ReaderWebData.setViewState -> {
                 setViewState(successValue.params)
@@ -2683,11 +2702,15 @@ class ReaderViewModel @Inject constructor(
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(result: ReaderSettingsChangeResult) {
         viewModelScope.launch {
-            update(result.readerSettings, result.reapplyFitting)
+            val appearance = update(result.readerSettings, result.reapplyFitting)
+            if (result.startManualCrop && viewState.fileType == ReaderFileType.PDF) {
+                appearance.join()
+                readerWebCallChainExecutor.beginManualCrop()
+            }
         }
     }
 
-    private fun update(readerSettings: ReaderSettings, reapplyFitting: Boolean = false) {
+    private fun update(readerSettings: ReaderSettings, reapplyFitting: Boolean = false): kotlinx.coroutines.Job {
         val previousSettings = defaults.getReaderSettings()
         updatePdfPageAppearanceMode(readerSettings)
         val applyFit = reapplyFitting || previousSettings.pageFitMode() != readerSettings.pageFitMode()
@@ -2699,11 +2722,11 @@ class ReaderViewModel @Inject constructor(
             || previousSettings.spreadsMode != readerSettings.spreadsMode
         readerSettings.fittingRevision = previousSettings.fittingRevision + if (applyFit) 1 else 0
         defaults.setReaderSettings(readerSettings)
-        updateAppearanceAccordingToSettings(isSettingsUpdate = true, applyFit = applyFit)
+        return updateAppearanceAccordingToSettings(isSettingsUpdate = true, applyFit = applyFit)
     }
 
-    private fun updateAppearanceAccordingToSettings(isSettingsUpdate: Boolean, applyFit: Boolean = false) {
-        viewModelScope.launch {
+    private fun updateAppearanceAccordingToSettings(isSettingsUpdate: Boolean, applyFit: Boolean = false): kotlinx.coroutines.Job {
+        return viewModelScope.launch {
             val readerSettings = defaults.getReaderSettings()
             if (isSettingsUpdate) {
                 readerWebCallChainExecutor.updateInterface(pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)

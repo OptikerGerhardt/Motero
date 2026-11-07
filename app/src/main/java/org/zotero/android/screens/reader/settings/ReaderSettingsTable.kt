@@ -3,6 +3,9 @@ package org.zotero.android.screens.reader.settings
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.Text
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import org.zotero.android.screens.reader.data.ReaderFileType
 import org.zotero.android.screens.reader.settings.data.ReaderSettingsOptions
@@ -13,7 +16,8 @@ import kotlin.math.roundToInt
 @Composable
 internal fun ReaderSettingsTable(
     viewState: ReaderSettingsViewState,
-    viewModel: ReaderSettingsViewModel
+    viewModel: ReaderSettingsViewModel,
+    onManualCrop: () -> Unit = {},
 ) {
     LazyColumn(
         modifier = Modifier
@@ -42,6 +46,7 @@ internal fun ReaderSettingsTable(
                 columns = 2,
                 optionSelected = viewModel::onOptionSelected
             )
+            item { TextButton(onClick = onManualCrop) { Text(stringResource(Strings.reader_manual_crop)) } }
             val axisFit = viewState.selectedFitToContentOption == ReaderSettingsOptions.FitToWidth
                 || viewState.selectedFitToContentOption == ReaderSettingsOptions.FitToHeight
             if (axisFit) {
