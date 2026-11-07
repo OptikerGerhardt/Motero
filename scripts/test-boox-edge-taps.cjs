@@ -20,6 +20,8 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   const errors=[];page.on('pageerror',e=>{errors.push(e.message);console.error(e.stack);});
   const origin='http://127.0.0.1:'+server.address().port;
   const cdp=await page.context().newCDPSession(page);
+  const cpuRate=Number(process.env.BOOX_TEST_CPU_RATE||1);
+  if(cpuRate>1) await cdp.send('Emulation.setCPUThrottlingRate',{rate:cpuRate});
   const touch=(type,points)=>cdp.send('Input.dispatchTouchEvent',{type,touchPoints:points.map((p,i)=>({...p,id:i+1,radiusX:2,radiusY:2}))});
   async function open(type,url,extra={}){
    await page.goto(origin+'/view.html');await page.evaluate(()=>{window.messages=[];const c=new MessageChannel();c.port1.onmessage=e=>window.messages.push(JSON.parse(e.data));window.postMessage('initPort','*',[c.port2]);});
@@ -28,17 +30,21 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
    if(type==='pdf') await page.waitForFunction(()=>window._view?._view?._pageFitting?.applied);
    else await page.waitForFunction(()=>window._view?._view?.initialized&&window._view._view.flow?.startRange);
    await page.waitForTimeout(100);
+   // Fitting can finish before its scroll events settle, especially in Wrapped.
+   // A tap during that transition is correctly rejected as an active scroll.
+   if(type==='pdf') await page.waitForFunction(()=>{const v=window._view._view;return v._pageFitting.applied&&!v._pageFitting.pendingPage&&!v._scrolling&&!v._pendingPageTurn;});
   }
 
   const fit={mode:'content',reference:'content',margin:0,revision:305};
   async function tap(x,y,hold=0) {await touch('touchStart',[{x,y}]);if(hold)await page.waitForTimeout(hold);await touch('touchEnd',[]);await page.waitForTimeout(500);}
   const state=()=>page.evaluate(()=>{let v=window._view._view,f=v._pageFitting;return {page:f.viewer.currentPageNumber,scale:f.viewer.currentScale,mode:f.viewer.scrollMode,notes:v._annotations.length,edges:window.messages.filter(x=>x.message?.event==='onEdgePageTurnTap').length};});
+  const waitForPage=number=>page.waitForFunction(expected=>{const v=window._view._view;return v._pageFitting.viewer.currentPageNumber===expected&&!v._pendingPageTurn&&!v._scrolling;},number,{timeout:15000});
   for(const scrollMode of [0,1,2]) {
    await open('pdf','/fixture.pdf',{viewState:{pageIndex:4,scale:'page-width',scrollMode,spreadMode:0},pageFitting:fit});
    let original=await state();
-   await tap(590,450);
+   await tap(590,450);await waitForPage(original.page+1);
    assert.equal((await state()).page,original.page+1,'right edge mode '+scrollMode);
-   await tap(10,450);
+   await tap(10,450);await waitForPage(original.page);
    assert.equal((await state()).page,original.page,'left edge mode '+scrollMode);
    assert.equal((await state()).edges,2);
    let before=await state();await tap(590,450,550);
@@ -57,8 +63,8 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
    console.log('PASS real left/right, long-press, swipe and bookmark priority in PDF scroll mode '+scrollMode);
   }
   await open('pdf','/fixture.pdf',{readOnly:true,viewState:{pageIndex:1,scale:'page-width',scrollMode:0,spreadMode:0},pageFitting:fit});
-  await tap(590,450);assert.equal((await state()).page,3);
-  await tap(10,450);assert.equal((await state()).page,2);
+  await tap(590,450);await waitForPage(3);assert.equal((await state()).page,3);
+  await tap(10,450);await waitForPage(2);assert.equal((await state()).page,2);
   assert.equal((await state()).notes,0);
   console.log('PASS read-only PDFs still support edge navigation');
   assert.deepEqual(errors,[]);console.log('PASS: all scroll mode edge tap checks');
