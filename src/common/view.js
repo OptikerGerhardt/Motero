@@ -168,6 +168,7 @@ class View {
 			onBackdropTap: this._options.onBackdropTap,
 			onDismissReaderChrome: this._options.onDismissReaderChrome,
 			onEdgePageTurnTap: this._options.onEdgePageTurnTap,
+			onManualCropChanged: this._options.onManualCropChanged,
 		};
 		return common;
 	}

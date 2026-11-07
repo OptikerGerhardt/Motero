@@ -39,7 +39,7 @@ export function getHardwareScrollLimits(view, viewer, page) {
 }
 
 export async function navigateWithHardwareButton(view, next, fraction = 2 / 3) {
-	if (!view || view._destroyed) return 'ignored';
+	if (!view || view._destroyed || view._pageFitting?.editor) return 'ignored';
 	let viewer = view._iframeWindow?.PDFViewerApplication?.pdfViewer;
 	if (!viewer) {
 		let navigate = next ? view.navigateToNextPage : view.navigateToPreviousPage;

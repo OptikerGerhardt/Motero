@@ -130,7 +130,8 @@ window.createView = (encodedOptions) => {
 		onDismissReaderChrome: () => postMessage('onDismissReaderChrome'),
 		onEdgePageTurnTap: () => {
 			postMessage('onEdgePageTurnTap');
-		}
+		},
+		onManualCropChanged: (params) => postMessage('onManualCropChanged', params),
 	});
 };
 
@@ -150,6 +151,7 @@ window.fitToContent = (options) => {
 
 window.fitToWidth = () => window._view.fitToWidth();
 window.setPageFitting = (options, apply = true) => window._view.setPageFitting(options, apply);
+window.beginManualCrop = () => window._view?._activeView?._pageFitting?.openCropEditor();
 window.setDirectHighlight = enabled => window._view.setDirectHighlight(enabled);
 window.setReaderChromeVisible = visible => window._view?.setReaderChromeVisible(visible);
 

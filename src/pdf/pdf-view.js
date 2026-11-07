@@ -3541,6 +3541,7 @@ class PDFView {
 	}
 
 	_handlePointerDown(event) {
+		if (this._pageFitting?.editor) return;
 		// This listener runs on window during capture, before the palette stops
 		// propagation. Its pointerup never reaches us: don't start a page action
 		// for a palette button, or the next annotation tap only clears that action.
@@ -4282,6 +4283,7 @@ class PDFView {
 	}
 
 	_handlePointerUp(event) {
+		if (this._pageFitting?.editor) return;
 		if (this._chromeTapGuard?.up(event)) return;
 		if (this._directHighlight?.up(event)) {
 			return;

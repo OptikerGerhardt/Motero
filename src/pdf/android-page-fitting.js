@@ -1,5 +1,7 @@
 import { getReadingSamples, getReadingTextLines, buildReadingModel, getReadingBounds,
 	buildReadingProfiles, resolveReadingBounds, getReadingFit, rotateReadingBounds, getReadingMarginalia } from './reading-layout.mjs';
+import { cropForPage, normalizeCrops } from './manual-crop.mjs';
+import { ManualCropEditor } from './manual-crop-editor.js';
 
 // View-only fitting. PDF coordinates, annotations and the PDF file are untouched.
 export class AndroidPageFitting {
@@ -18,7 +20,7 @@ export class AndroidPageFitting {
 		this.clipped = new Map();
 		this.touches = 0;
 		this.onDown = event => {
-			if (event.target?.closest?.('.boox-highlight-palette')) return;
+			if (event.target?.closest?.('.boox-highlight-palette, .boox-manual-crop')) return;
 			this.pointers.add(event.pointerId);
 			if (this.pointers.size === 1) this.panStart = { x: event.clientX, y: event.clientY };
 			this.inputEpoch++;
@@ -94,6 +96,7 @@ export class AndroidPageFitting {
 			includeMarginalia: options?.includeMarginalia === true,
 			margin: Math.max(0, Math.min(0.2, Number(options?.margin) || 0)),
 			revision: options?.revision || 0,
+			manualCrop: normalizeCrops(options?.manualCrop === undefined ? this.options.manualCrop : options.manualCrop),
 		};
 		this.configured = true;
 		if (!apply) return Promise.resolve(false);
@@ -184,7 +187,9 @@ export class AndroidPageFitting {
 		return this.modelPromise;
 	}
 
-	async boundsFor(index, { includeMarginalia = false } = {}) {
+	async boundsFor(index, { includeMarginalia = false, manualCrop = this.options.manualCrop } = {}) {
+		let manual = cropForPage(manualCrop, index);
+		if (manual) return rotateReadingBounds(manual, this.viewer.pagesRotation);
 		let model = await this.ensureModel();
 		if (!model) return [0, 0, 1, 1];
 		if (!this.cache.has(index)) {
@@ -219,6 +224,7 @@ export class AndroidPageFitting {
 	}
 
 	maskRectsFor(index) {
+		if (cropForPage(this.options.manualCrop, index)) return [];
 		if (!this.active || this.zooming || this.peekPageIndex === index || this.options.includeMarginalia
 			|| this.options.mode !== 'content' && this.options.reference === 'page') return [];
 		if (this.masks?.index === index && this.masks.rotation === this.viewer.pagesRotation) return this.masks.rects;
@@ -239,7 +245,8 @@ export class AndroidPageFitting {
 		let base = pdfPage.getViewport({ scale: 96 / 72, rotation: pdfPage.rotate + rotation });
 		let fit = getReadingFit({ ...options, bounds, width, height, pageWidth: base.width, pageHeight: base.height });
 		let page = await this.cache.get(index);
-		let marginalia = (page?.marginalia || []).map(r => rotateReadingBounds(r, rotation));
+		let marginalia = cropForPage(options.manualCrop, index) ? []
+			: (page?.marginalia || []).map(r => rotateReadingBounds(r, rotation));
 		let prepared = { index, key: this.key(options), bounds, pdfPage, fit, rotation, inputEpoch, width, height, marginalia };
 		if (includeNeighbors && (options.mode === 'content' || options.reference === 'cropped-content')) {
 			prepared.neighbors = (await Promise.all([index - 1, index + 1]
@@ -340,6 +347,7 @@ export class AndroidPageFitting {
 	}
 
 	destroy() {
+		this.editor?.close();
 		this.suspend(); this.cache.clear(); this.marginaliaByPage.clear(); this.win.clearTimeout(this.prefetchTimer);
 		this.win.removeEventListener('pointerdown', this.onDown, true);
 		this.win.removeEventListener('pointermove', this.onMove, true);
@@ -351,5 +359,12 @@ export class AndroidPageFitting {
 		this.win.removeEventListener('touchcancel', this.onTouch, true);
 		this.bus.off('pagechanging', this.onPage); this.bus.off('scalechanging', this.onScale);
 		this.bus.off('rotationchanging', this.onRotation);
+	}
+
+	openCropEditor() {
+		if (!this.view._destroyed && this.viewer.pdfDocument && !this.editor) {
+			this.view._clearPendingBackdropTap?.();
+			this.editor = new ManualCropEditor(this);
+		}
 	}
 }
