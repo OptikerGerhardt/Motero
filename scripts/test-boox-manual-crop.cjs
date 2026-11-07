@@ -22,7 +22,11 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   const cdp=await page.context().newCDPSession(page);
   const touch=(type,points)=>cdp.send('Input.dispatchTouchEvent',{type,touchPoints:points.map((p,i)=>({...p,id:i+1,radiusX:2,radiusY:2}))});
   async function open(type,url,extra={}){
-   await page.goto(origin+'/view.html');await page.evaluate(()=>{window.messages=[];const c=new MessageChannel();c.port1.onmessage=e=>window.messages.push(JSON.parse(e.data));window.postMessage('initPort','*',[c.port2]);});
+   await page.goto(origin+'/view.html');await page.evaluate(delay=>{window.messages=[];const c=new MessageChannel();c.port1.onmessage=e=>{
+    const message=JSON.parse(e.data);
+    if(message.message?.event==='onManualCropChanged' && delay) setTimeout(()=>window.messages.push(message),delay);
+    else window.messages.push(message);
+   };window.postMessage('initPort','*',[c.port2]);},Number(process.env.BOOX_TEST_BRIDGE_DELAY_MS)||0);
    await page.waitForFunction(()=>window.messages.some(x=>x.message?.event==='onInitialized'));
    await page.evaluate(options=>window.createView(btoa(JSON.stringify(options))),{type,url:origin+url,annotations:[],...extra});
    if(type==='pdf') await page.waitForFunction(()=>window._view?._view?._pageFitting?.applied);
@@ -73,6 +77,8 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   const chosen=await page.evaluate(()=>window._view._view._pageFitting.editor.rect);
   await action('save');await settled();
   let state=await read();close(state.bounds,chosen);close(state.options.manualCrop.all,chosen);
+  // MessagePort delivery to Android is asynchronous and can follow the fit.
+  await page.waitForFunction(()=>window.messages.some(x=>x.message?.event==='onManualCropChanged' && x.message.params.crop?.all));
   const saved=await page.evaluate(()=>window.messages.filter(x=>x.message?.event==='onManualCropChanged').at(-1).message.params.crop);
   close(saved.all,chosen);
   await page.evaluate(()=>window.turnPageWithHardwareButton(true,0));
