@@ -129,8 +129,12 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
         }
         let annotation = this.getAnnotationFromRange(range, 'note', '#aaaaaa');
         if (!annotation) return false;
-        if (this._annotations.some(a => a.type === 'note' && a.sortIndex === annotation!.sortIndex
-                && /^(Lesezeichen|Bookmark) · /.test(a.comment || ''))) return true;
+        let existing = this._annotations.find(a => a.type === 'note' && a.sortIndex === annotation!.sortIndex
+                && /^(Lesezeichen|Bookmark) · /.test(a.comment || ''));
+        if (existing) {
+            if (!existing.readOnly) this._options.onDeleteAnnotationsFromPalette?.([existing.id]);
+            return true;
+        }
         let label = this._iframeWindow.navigator.language.startsWith('de') ? 'Lesezeichen' : 'Bookmark';
         annotation.comment = label + ' · ' + new Intl.DateTimeFormat(
             this._iframeWindow.navigator.language, { dateStyle: 'short', timeStyle: 'short' }

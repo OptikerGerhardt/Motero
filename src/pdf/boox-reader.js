@@ -130,16 +130,23 @@ export class PDFBooxReader {
 	}
 
 	addBookmark(pageIndex) {
-		if (!this.bookmarkRequests.has(pageIndex)) {
-			this.bookmarkRequests.set(pageIndex, this.placeBookmark(pageIndex)
-				.finally(() => this.bookmarkRequests.delete(pageIndex)));
-		}
-		return this.bookmarkRequests.get(pageIndex);
+		let previous = this.bookmarkRequests.get(pageIndex) || Promise.resolve();
+		let request = previous.catch(() => {}).then(() => this.placeBookmark(pageIndex));
+		this.bookmarkRequests.set(pageIndex, request);
+		return request.finally(() => {
+			if (this.bookmarkRequests.get(pageIndex) === request) this.bookmarkRequests.delete(pageIndex);
+		});
 	}
 
 	async placeBookmark(pageIndex) {
 		let view = this.view, page = this.viewer.getPageView(pageIndex);
 		if (!page?.pdfPage || view._destroyed || view._readOnly) return;
+		let existing = view._annotations.find(a => a.type === 'note'
+			&& /^(Lesezeichen|Bookmark) · /.test(a.comment || '') && a.position.pageIndex === pageIndex);
+		if (existing) {
+			if (!existing.readOnly) view._onDeleteAnnotationsFromPalette([existing.id]);
+			return;
+		}
 		let rotation = page.viewport.rotation;
 		// Always use the unpadded content frame, including when paper/manual fit is selected.
 		let bounds = await view._pageFitting.boundsFor(pageIndex);
@@ -154,15 +161,7 @@ export class PDFBooxReader {
 		let p1 = viewport.convertToPdfPoint(right, top + size);
 		let position = { pageIndex, rects: [[Math.min(p0[0], p1[0]), Math.min(p0[1], p1[1]),
 			Math.max(p0[0], p1[0]), Math.max(p0[1], p1[1])]] };
-		let existing = view._annotations.find(a => a.type === 'note'
-			&& /^(Lesezeichen|Bookmark) · /.test(a.comment || '') && a.position.pageIndex === pageIndex);
-		if (existing) {
-			if (!existing.readOnly && JSON.stringify(existing.position) !== JSON.stringify(position)) {
-				view._onUpdateAnnotations([{ id: existing.id, position, sortIndex: getSortIndex(view._pdfPages, position) }]);
-			}
-			view._onSelectAnnotations([existing.id]);
-		}
-		else view._onAddAnnotation({ type: 'note', color: '#aaaaaa', position,
+		view._onAddAnnotation({ type: 'note', color: '#aaaaaa', position,
 			pageLabel: view._getPageLabel(pageIndex, true), sortIndex: getSortIndex(view._pdfPages, position),
 			comment: (this.de ? 'Lesezeichen' : 'Bookmark') + ' · '
 				+ new Intl.DateTimeFormat(this.de ? 'de-DE' : undefined,

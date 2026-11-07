@@ -118,6 +118,8 @@ const types = { '.html':'text/html', '.js':'text/javascript', '.mjs':'text/javas
   });
   assert.ok(Math.abs(bookmark.right-8)<.1&&Math.abs(bookmark.top-4)<.1,JSON.stringify(bookmark));
   await fit('width','page',.08);await page.evaluate(()=>window._view._view._booxReader.addBookmark(8));
+  assert.ok(await page.evaluate(()=>!window._view._view._annotations.some(a=>a.type==='note')));
+  await page.evaluate(()=>window._view._view._booxReader.addBookmark(8));
   assert.deepEqual(await page.evaluate(()=>window._view._view._annotations.find(a=>a.type==='note').position),bookmark.position);
   console.log('PASS bookmark uses raw content frame independent of selected fit and margins');
   const protectedPosition=await page.evaluate(async()=>{
@@ -127,7 +129,7 @@ const types = { '.html':'text/html', '.js':'text/javascript', '.mjs':'text/javas
    await view._booxReader.addBookmark(8);return view._annotations.find(a=>a.id===note.id).position;
   });
   assert.deepEqual(protectedPosition,{pageIndex:8,rects:[[10,750,32,772]]});
-  console.log('PASS protected bookmark is opened without changing its position');
+  console.log('PASS protected bookmark is retained without changing its position');
   await open('/scanned.pdf',0);let scan=await state();
   const textCount=await page.evaluate(async()=>{let p=await window._view._view._pageFitting.viewer.pdfDocument.getPage(1);return (await p.getTextContent()).items.length;});
   assert.equal(textCount,0);assert.ok(scan.bounds[0]>.18&&scan.bounds[2]<.82&&scan.bounds[1]>.13&&scan.bounds[3]>.92&&scan.bounds[3]<.94,JSON.stringify(scan));

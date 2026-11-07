@@ -2,6 +2,18 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { navigateWithHardwareButton as move, getHardwareScrollLimits } from '../../src/pdf/hardware-navigation.mjs';
 
+test('EPUB hardware navigation respects document ends and ignores an uninitialized flow', async () => {
+	let calls = [];
+	let view = {initialized:true,canNavigateToNextPage:()=>false,canNavigateToPreviousPage:()=>true,
+		navigateToNextPage(){calls.push('next');},navigateToPreviousPage(){calls.push('previous');}};
+	assert.equal(await move(view,true),'none');
+	assert.equal(await move(view,false),'page');
+	assert.deepEqual(calls,['previous']);
+	view.initialized=false;
+	assert.equal(await move(view,false),'ignored');
+	assert.deepEqual(calls,['previous']);
+});
+
 function fixture({ height = 1800, viewport = 600, pages = 3, mode = 1 } = {}) {
 	let container = { clientHeight: viewport, clientWidth: 400, clientTop: 2,
 		scrollTop: 0, scrollLeft: 17, getBoundingClientRect: () => ({ top: 40 }) };

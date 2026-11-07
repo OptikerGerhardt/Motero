@@ -43,7 +43,9 @@ export async function navigateWithHardwareButton(view, next, fraction = 2 / 3) {
 	let viewer = view._iframeWindow?.PDFViewerApplication?.pdfViewer;
 	if (!viewer) {
 		let navigate = next ? view.navigateToNextPage : view.navigateToPreviousPage;
-		if (!navigate) return 'ignored';
+		if (!navigate || view.initialized === false) return 'ignored';
+		let canNavigate = next ? view.canNavigateToNextPage : view.canNavigateToPreviousPage;
+		if (canNavigate && !canNavigate.call(view)) return 'none';
 		await navigate.call(view);
 		return 'page';
 	}

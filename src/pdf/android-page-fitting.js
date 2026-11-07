@@ -16,9 +16,11 @@ export class AndroidPageFitting {
 		this.cache = new Map();
 		this.marginaliaByPage = new Map();
 		this.clipped = new Map();
+		this.touches = 0;
 		this.onDown = event => {
 			if (event.target?.closest?.('.boox-highlight-palette')) return;
 			this.pointers.add(event.pointerId);
+			if (this.pointers.size === 1) this.panStart = { x: event.clientX, y: event.clientY };
 			this.inputEpoch++;
 			this.token++;
 		};
@@ -29,29 +31,57 @@ export class AndroidPageFitting {
 				this.win.clearTimeout(this.timer);
 				return;
 			}
-			if (!this.pointers.size && this.pendingPage) this.schedule();
+			if (!this.pointers.size && (this.pendingPage || this.zooming)) this.schedule();
+		};
+		this.onTouch = event => {
+			this.touches = event.touches.length;
+			if (this.touches > 1) this.touchZoom = true;
+			if (!this.touches) {
+				this.touchZoom = false;
+				if (this.zooming || this.pendingPage) this.schedule();
+			}
+		};
+		this.onMove = event => {
+			if (!this.active || this.applying || this.zooming || this.touchZoom || this.pointers.size !== 1
+					|| event.pointerType !== 'touch' || !this.panStart || this.view._tool.type !== 'pointer'
+					|| this.view._directHighlight?.gesture.active || this.view._directHighlight?.pressAnnotation
+					|| this.view._selectionRanges?.some(range => !range.collapsed)
+					|| Math.hypot(event.clientX - this.panStart.x, event.clientY - this.panStart.y) < 8) return;
+			let index = this.viewer.currentPageNumber - 1;
+			if (this.peekPageIndex === index) return;
+			this.peekPageIndex = index;
+			this.restoreCrop(this.viewer.getPageView(index)?.div);
+			this.view._render();
 		};
 		this.onPage = () => { if (this.active && !this.applying) this.schedule(); };
 		this.onScale = () => {
 			if (this.active && !this.applying && (!this.applied
-					|| Math.abs(this.viewer.currentScale - this.applied.scale) > 0.002)) this.suspend();
+					|| Math.abs(this.viewer.currentScale - this.applied.scale) > 0.002)) {
+				if (this.pointers.size || this.touchZoom || this.zooming) {
+					this.zooming = true;
+					this.token++;
+					this.pendingPage = true;
+					this.clearClips();
+					this.masks = null;
+					this.view._render();
+					if (!this.pointers.size && !this.touches) this.schedule();
+				}
+				else this.suspend(); // Explicit zoom buttons still allow the Wrapped overview.
+			}
 		};
 		this.onRotation = () => {
 			this.token++; this.clearClips();
 			if (this.active) this.schedule();
 		};
 		this.onResize = () => { if (this.active) this.schedule(); };
-		this.onScroll = () => {
-			let c = this.viewer.container;
-			if (this.applied && Math.abs(c.scrollLeft - this.applied.left) < 1
-					&& Math.abs(c.scrollTop - this.applied.top) < 1) return;
-			if (this.active && !this.applying && this.options.mode === 'content') this.schedule(180);
-		};
 		this.win.addEventListener('pointerdown', this.onDown, true);
+		this.win.addEventListener('pointermove', this.onMove, true);
 		this.win.addEventListener('pointerup', this.onUp, true);
 		this.win.addEventListener('pointercancel', this.onUp, true);
 		this.win.addEventListener('resize', this.onResize);
-		this.viewer.container.addEventListener('scroll', this.onScroll);
+		this.win.addEventListener('touchstart', this.onTouch, { passive: true, capture: true });
+		this.win.addEventListener('touchend', this.onTouch, { passive: true, capture: true });
+		this.win.addEventListener('touchcancel', this.onTouch, { passive: true, capture: true });
 		this.bus.on('pagechanging', this.onPage);
 		this.bus.on('scalechanging', this.onScale);
 		this.bus.on('rotationchanging', this.onRotation);
@@ -70,6 +100,8 @@ export class AndroidPageFitting {
 		this.token++;
 		this.win.clearTimeout(this.timer);
 		this.pendingPage = false;
+		this.zooming = false;
+		this.peekPageIndex = null;
 		this.clearClips();
 		this.masks = null;
 		this.active = this.options.mode !== 'none';
@@ -83,7 +115,7 @@ export class AndroidPageFitting {
 
 	state() {
 		return this.configured && !this.applying && (this.applied || !this.active)
-			? { pageFitMode: this.active ? this.options.mode : 'none', pageFitRevision: this.options.revision } : {};
+			? { pageFitMode: this.options.mode, pageFitRevision: this.options.revision } : {};
 	}
 
 	suspend() {
@@ -96,7 +128,7 @@ export class AndroidPageFitting {
 		this.pendingPage = true;
 		this.win.clearTimeout(this.timer);
 		this.timer = this.win.setTimeout(() => {
-			if (this.pointers.size || this.applying || !this.active || this.view._destroyed) return;
+			if (this.pointers.size || this.touches || this.applying || !this.active || this.view._destroyed) return;
 			this.pendingPage = false;
 			this.apply().catch(error => console.error(error));
 		}, delay);
@@ -187,7 +219,7 @@ export class AndroidPageFitting {
 	}
 
 	maskRectsFor(index) {
-		if (!this.active || this.options.includeMarginalia
+		if (!this.active || this.zooming || this.peekPageIndex === index || this.options.includeMarginalia
 			|| this.options.mode !== 'content' && this.options.reference === 'page') return [];
 		if (this.masks?.index === index && this.masks.rotation === this.viewer.pagesRotation) return this.masks.rects;
 		return (this.marginaliaByPage.get(index) || []).map(r => rotateReadingBounds(r, this.viewer.pagesRotation));
@@ -196,7 +228,7 @@ export class AndroidPageFitting {
 
 	key(options = this.options) { return JSON.stringify(options); }
 
-	async prepare(index, options = this.options) {
+	async prepare(index, options = this.options, includeNeighbors = true) {
 		let v = this.viewer, c = v.container;
 		if (!v.pdfDocument || this.view._destroyed || v.spreadMode !== 0) return null;
 		let rotation = v.pagesRotation, inputEpoch = this.inputEpoch;
@@ -208,7 +240,13 @@ export class AndroidPageFitting {
 		let fit = getReadingFit({ ...options, bounds, width, height, pageWidth: base.width, pageHeight: base.height });
 		let page = await this.cache.get(index);
 		let marginalia = (page?.marginalia || []).map(r => rotateReadingBounds(r, rotation));
-		return { index, key: this.key(options), bounds, pdfPage, fit, rotation, inputEpoch, width, height, marginalia };
+		let prepared = { index, key: this.key(options), bounds, pdfPage, fit, rotation, inputEpoch, width, height, marginalia };
+		if (includeNeighbors && (options.mode === 'content' || options.reference === 'cropped-content')) {
+			prepared.neighbors = (await Promise.all([index - 1, index + 1]
+				.filter(i => i >= 0 && i < v.pdfDocument.numPages)
+				.map(i => this.prepare(i, options, false).catch(error => { console.error(error); return null; })))).filter(Boolean);
+		}
+		return prepared;
 	}
 
 	commit(prepared, { alignTop = false, topFraction = 0, navigate } = {}) {
@@ -223,6 +261,9 @@ export class AndroidPageFitting {
 		this.token++; this.pendingPage = false; this.win.clearTimeout(this.timer);
 		this.applying = true;
 		try {
+			this.clearClips();
+			this.peekPageIndex = null;
+			this.zooming = false;
 			navigate?.();
 			if (!page.pdfPage) page.setPdfPage(pdfPage);
 			v.currentScale = fit.scale;
@@ -240,11 +281,11 @@ export class AndroidPageFitting {
 				c.scrollTop = Math.max(0, d.offsetTop + d.clientTop + (alignTop
 					? Math.max(0, b[1] * d.clientHeight - fit.pad) : topFraction * d.clientHeight));
 			}
-			this.clearClips();
 			this.masks = { index, rotation: v.pagesRotation, rects: prepared.marginalia };
 			if (this.options.mode === 'content' || this.isCroppedWidth()) {
-				this.clipped.set(d, d.style.clipPath);
-				d.style.clipPath = `inset(${Math.max(0, b[1] * d.clientHeight - fit.pad)}px ${Math.max(0, (1 - b[2]) * d.clientWidth - fit.pad)}px ${Math.max(0, (1 - b[3]) * d.clientHeight - fit.pad)}px ${Math.max(0, b[0] * d.clientWidth - fit.pad)}px)`;
+				let center = d.offsetLeft + d.clientLeft + (b[0] + b[2]) / 2 * d.clientWidth;
+				this.cropPage(prepared);
+				for (let neighbor of prepared.neighbors || []) this.cropPage(neighbor, center);
 			}
 			this.applied = { scale: v.currentScale, bounds, pageIndex: index, left: c.scrollLeft, top: c.scrollTop };
 			this.view._booxReader?.rememberReadingView();
@@ -252,16 +293,17 @@ export class AndroidPageFitting {
 		finally { this.applying = false; }
 		this.view._render();
 		this.view._updateViewStats();
-		this.win.clearTimeout(this.prefetchTimer);
-		this.prefetchTimer = this.win.setTimeout(() => {
-			if (!this.active || this.view._destroyed) return;
-			for (let neighbor of [index - 1, index + 1]) {
-				if (neighbor >= 0 && neighbor < v.pdfDocument.numPages) this.boundsFor(neighbor).then(() => {
-					if (this.active && !this.view._destroyed) this.view._render();
-				}).catch(console.error);
-			}
-		}, 180);
 		return true;
+	}
+
+	cropPage(prepared, center = null) {
+		let page = this.viewer.getPageView(prepared.index);
+		if (!page) return;
+		if (!page.pdfPage) page.setPdfPage(prepared.pdfPage);
+		let d = page.div, b = prepared.fit.bounds, pad = prepared.fit.pad;
+		this.clipped.set(d, { clipPath: d.style.clipPath, translate: d.style.translate });
+		d.style.clipPath = `inset(${Math.max(0, b[1] * d.clientHeight - pad)}px ${Math.max(0, (1 - b[2]) * d.clientWidth - pad)}px ${Math.max(0, (1 - b[3]) * d.clientHeight - pad)}px ${Math.max(0, b[0] * d.clientWidth - pad)}px)`;
+		if (center !== null) d.style.translate = `${center - (d.offsetLeft + d.clientLeft + (b[0] + b[2]) / 2 * d.clientWidth)}px 0px`;
 	}
 
 	isCroppedWidth() { return this.options.mode === 'width' && this.options.reference === 'cropped-content'; }
@@ -280,21 +322,33 @@ export class AndroidPageFitting {
 
 	resetInput() {
 		this.inputEpoch++; this.token++; this.pointers.clear(); this.pendingPage = false;
+		this.touches = 0; this.touchZoom = false;
 		this.win.clearTimeout(this.timer);
+		if (this.zooming) this.schedule();
 	}
 
 	clearClips() {
-		for (let [element, before] of this.clipped) element.style.clipPath = before;
-		this.clipped.clear();
+		for (let element of this.clipped.keys()) this.restoreCrop(element);
+	}
+
+	restoreCrop(element) {
+		let before = this.clipped.get(element);
+		if (!before) return;
+		element.style.clipPath = before.clipPath;
+		element.style.translate = before.translate;
+		this.clipped.delete(element);
 	}
 
 	destroy() {
 		this.suspend(); this.cache.clear(); this.marginaliaByPage.clear(); this.win.clearTimeout(this.prefetchTimer);
 		this.win.removeEventListener('pointerdown', this.onDown, true);
+		this.win.removeEventListener('pointermove', this.onMove, true);
 		this.win.removeEventListener('pointerup', this.onUp, true);
 		this.win.removeEventListener('pointercancel', this.onUp, true);
 		this.win.removeEventListener('resize', this.onResize);
-		this.viewer.container.removeEventListener('scroll', this.onScroll);
+		this.win.removeEventListener('touchstart', this.onTouch, true);
+		this.win.removeEventListener('touchend', this.onTouch, true);
+		this.win.removeEventListener('touchcancel', this.onTouch, true);
 		this.bus.off('pagechanging', this.onPage); this.bus.off('scalechanging', this.onScale);
 		this.bus.off('rotationchanging', this.onRotation);
 	}

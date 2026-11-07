@@ -463,25 +463,21 @@ export class ScrolledFlow extends AbstractFlow {
 
 	canNavigateToPreviousPage() {
 		if (this._isVertical) {
-			return Math.abs(this._iframeWindow.scrollX) >= this._iframe.clientWidth
-				- this.scrollPadding;
+			return Math.abs(this._iframeWindow.scrollX) > 1;
 		}
 		else {
-			return this._iframeWindow.scrollY >= this._iframe.clientHeight
-				- this.scrollPadding;
+			return this._iframeWindow.scrollY > 1;
 		}
 	}
 
 	canNavigateToNextPage() {
 		if (this._isVertical) {
-			return Math.abs(this._iframeWindow.scrollX) <= this._iframeDocument.documentElement.scrollWidth
-				- this._iframe.clientWidth * 2
-				+ this.scrollPadding;
+			return Math.abs(this._iframeWindow.scrollX) < this._iframeDocument.documentElement.scrollWidth
+				- this._iframe.clientWidth - 1;
 		}
 		else {
-			return this._iframeWindow.scrollY <= this._iframeDocument.documentElement.scrollHeight
-				- this._iframe.clientHeight * 2
-				+ this.scrollPadding;
+			return this._iframeWindow.scrollY < this._iframeDocument.documentElement.scrollHeight
+				- this._iframe.clientHeight - 1;
 		}
 	}
 

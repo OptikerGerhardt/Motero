@@ -8,6 +8,40 @@ const body = [line('This is a complete line of ordinary text.', [.2, .2, .8, .22
 	line('The next full line belongs to the page body.', [.2, .3, .8, .32]),
 	line('Another ordinary line, with more content.', [.2, .5, .8, .52])];
 
+test('paired lower folios identify changing footer labels and their rule, keeping complete notes', () => {
+	let pages = Array.from({ length: 8 }, (_, index) => ({ index, lines: [...body,
+		line(`Text ${index % 3 + 1} · PDF ${index + 1} · ${index % 2 ? 'links' : 'rechts'}`, [.1,.947,.32,.958]),
+		line(String(index + 1), [.88,.947,.9,.958])] }));
+	let model = buildReadingModel(pages);
+	for (let title of ['Text 5 · Anmerkungen', 'Inhaltsverzeichnis', 'Text 2 · PDF 14 · links']) {
+		let footer = line(title, [.1,.947,.32,.958]);
+		let note = line('61 A complete, genuine footnote including its final line.', [.1,.87,.9,.891]);
+		let source = line('PDF-Seite 14 · rechts', [.1,.82,.4,.832]);
+		let lines = [...body,source,note,footer,line('115',[.88,.947,.91,.958])];
+		let exclusions = getReadingExclusions(lines,model,114);
+		assert.ok(exclusions.includes(footer.rect));
+		assert.ok(!exclusions.includes(note.rect) && !exclusions.includes(source.rect));
+		let bounds = getReadingBounds(image([...lines.map(l=>l.rect),[.1,.934,.9,.936],[.1,.85,.4,.853]]),lines,model,114);
+		assert.ok(bounds[3] >= .89 && bounds[3] < .90,JSON.stringify(bounds));
+	}
+});
+
+test('a repeated note at the bottom stays even beside a folio and a model footer band', () => {
+	let pages = Array.from({length:8},(_,index)=>({index,lines:[...body,
+		line('Text 1 · PDF 2 · links',[.1,.947,.4,.958]),line(String(index+1),[.88,.947,.9,.958])]}));
+	let model = buildReadingModel(pages);
+	for (let text of ['1 A real footnote.', '* A real footnote.', 'Ibid.', 'Vgl. Plessner.']) {
+		let note=line(text,[.1,.947,.4,.958]);
+		assert.ok(!getReadingExclusions([...body,note,line('42',[.88,.947,.9,.958])],model).includes(note.rect),text);
+	}
+});
+
+test('small repeated bottom text without a separate folio remains ambiguous content', () => {
+	let note=line('Repeated bibliographic note.',[.1,.947,.6,.958]);
+	let lines=[...body,note],model=buildReadingModel(Array.from({length:8},(_,index)=>({index,lines})));
+	assert.ok(!getReadingExclusions(lines,model).includes(note.rect));
+});
+
 test('vector separators in excluded running-head bands do not hold the upper crop edge', () => {
 	let header = line('Author or chapter title', [.22,.045,.65,.058]);
 	let folio = line('14', [.12,.045,.15,.059]);

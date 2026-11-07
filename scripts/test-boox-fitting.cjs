@@ -94,7 +94,7 @@ const types = { '.html':'text/html', '.js':'text/javascript', '.mjs':'text/javas
   assert.ok((await state()).y<=0,'width mode permits scrolling to paper top');
   console.log('PASS adjustable content margins, full vertical paper access in width mode');
   await page.evaluate(()=>{window._view._view._pageFitting.viewer.currentScale=1.8;});await page.waitForTimeout(150);
-  assert.equal((await state()).active,false);assert.equal((await state()).reported.pageFitMode,'none');
+  assert.equal((await state()).active,false);assert.equal((await state()).reported.pageFitMode,'width');
   let reapplied=await fit('width','content',.08);assert.ok(Math.abs(reapplied.scale-roomy.scale)<.002,JSON.stringify({roomy,reapplied}));
   let none=await fit('none');assert.equal(none.active,false);assert.equal(none.scale,reapplied.scale);
   console.log('PASS manual zoom suspends fitting, selecting same mode reapplies, Off preserves zoom');

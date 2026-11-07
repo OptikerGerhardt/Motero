@@ -65,9 +65,10 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   assert.ok(targets.left>25&&targets.right<975,JSON.stringify(targets));
   await touch('touchStart',[{x:10,y:350},{x:990,y:350}]);
   for(let i=1;i<=9;i++){await touch('touchMove',[{x:10+i*40,y:350},{x:990-i*40,y:350}]);await page.waitForTimeout(25);}
-  await touch('touchEnd',[]);await page.waitForTimeout(180);assert.equal((await state()).overview,true);
-  await tapCurrentPage();fitted(await state());
-  console.log('PASS a real pinch starting outside the PDF page restores fitting');
+  await touch('touchEnd',[]);
+  await page.waitForFunction(()=>{const f=window._view._view._pageFitting;return f.active&&!f.zooming&&f.applied&&Math.abs(f.viewer.currentScale-f.applied.scale)<.002;});
+  await page.waitForTimeout(180);assert.equal((await state()).overview,false);fitted(await state());
+  console.log('PASS a real pinch starting outside the PDF page restores fitting on release');
   await overview();await configure('none');await page.evaluate(()=>window._view._view._booxReader.enterPage(8));await page.waitForTimeout(150);
   let off=await state();assert.equal(off.active,false);assert.equal(off.clip,'');assert.equal(off.readingFit,null);
   console.log('PASS explicit Off forgets the old fit instead of restoring it from the overview');

@@ -2522,6 +2522,7 @@ export type DOMViewOptions<State extends DOMViewState, Data> = {
 	onSetDataTransferAnnotations: (dataTransfer: DataTransfer, annotation: NewAnnotation<WADMAnnotation> | NewAnnotation<WADMAnnotation>[], fromText?: boolean) => void;
 	onAddAnnotation: (annotation: NewAnnotation<WADMAnnotation>, select?: boolean) => WADMAnnotation;
 	onUpdateAnnotations: (annotations: Partial<Annotation>[]) => void;
+	onDeleteAnnotationsFromPalette?: (ids: string[]) => void;
 	onOpenLink: (url: string) => void;
 	onSelectAnnotations: (ids: string[], triggeringEvent?: KeyboardEvent | MouseEvent) => void;
 	onSetSelectionPopup: (params?: SelectionPopupParams<WADMAnnotation> | null) => void;

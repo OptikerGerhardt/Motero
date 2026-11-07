@@ -146,10 +146,36 @@ function sameHeaderBand(a, b) {
 	return Math.abs(a.y0 - b.y0) < 0.012 && Math.abs(a.y1 - b.y1) < 0.012;
 }
 
+function footerCandidatesFor(lines, fallbackHeight = 0) {
+	let bodyHeight = bodyLineHeight(lines) || fallbackHeight;
+	if (!bodyHeight) return [];
+	return lines.filter(line => {
+		let [x0, y0, x1, y1] = line.rect, text = line.text.trim();
+		if (line.vertical || y0 < 0.92 || text.length < 3 || text.length > 120
+				|| y1 - y0 > bodyHeight * 0.9 || pageNumber(text)
+				|| /^(?:\d+[.)]?\s|[*†‡]|ibid\b|ebd\b|vgl\b|cf\b)/i.test(text)) return false;
+		// A separate folio on the same baseline supplies evidence beyond small
+		// type or repetition. Sources within notes must never become footers.
+		let folio = lines.some(other => other !== line && pageNumber(other.text)
+			&& other.rect[1] > 0.94 && Math.abs(other.rect[1] - y0) < bodyHeight * 0.4
+			&& Math.max(other.rect[0] - x1, x0 - other.rect[2]) > 0.12);
+		if (!folio) return false;
+		let above = lines.filter(other => other !== line && other.rect[3] <= y0
+			&& !pageNumber(other.text));
+		return !above.length || y0 - Math.max(...above.map(l => l.rect[3])) > bodyHeight * 1.5;
+	});
+}
+
 export function buildReadingModel(pages) {
 	let occurrences = new Map();
 	let headerCandidates = [];
+	let footerCandidates = [];
+	let heights = pages.map(p => bodyLineHeight(p.lines)).filter(Boolean).sort((a, b) => a - b);
+	let bodyHeight = heights[Math.floor(heights.length / 2)] || 0;
 	for (let page of pages) {
+		for (let line of footerCandidatesFor(page.lines, bodyHeight)) {
+			footerCandidates.push({ index: page.index, y0: line.rect[1], y1: line.rect[3] });
+		}
 		for (let line of headerCandidatesFor(page.lines)) {
 			headerCandidates.push({ index: page.index, y0: line.rect[1], y1: line.rect[3] });
 		}
@@ -176,7 +202,10 @@ export function buildReadingModel(pages) {
 		}
 	}
 
-	return { repeated, headerBands };
+	let footerBands = footerCandidates.filter(candidate => new Set(footerCandidates
+		.filter(other => sameHeaderBand(other, candidate)).map(other => other.index))
+		.size >= Math.max(3, Math.ceil(pages.length / 2)));
+	return { repeated, headerBands, footerBands, bodyHeight };
 }
 
 export function getReadingExclusions(lines, model = { repeated: new Set() }, pageIndex = null, { includeMarginalia = false } = {}) {
@@ -193,6 +222,11 @@ export function getReadingExclusions(lines, model = { repeated: new Set() }, pag
 		if (pageNumber(line.text) && !adjacentText && (y1 < 0.10 || y0 > 0.94)) excluded.add(line);
 	}
 	let bodyHeight = bodyLineHeight(lines);
+	for (let line of footerCandidatesFor(lines, model.bodyHeight)) {
+		if (model.footerBands?.some(band => sameHeaderBand(band, { y0: line.rect[1], y1: line.rect[3] }))) {
+			excluded.add(line);
+		}
+	}
 	let headers = lines.filter(line => {
 		let [ , y0, , y1] = line.rect;
 		if (line.sideCandidate && editionReference(line.text)) return false;
@@ -316,6 +350,25 @@ export function getReadingBounds(image, lines, model, pageIndex = null, options 
 		}
 	}
 	// No vertical band trimming: even a one-line footnote is part of the page.
+	// A footer may also have a vector rule above it. Search only the small empty
+	// strip below ALL retained text, so a real footnote and its separator survive.
+	let footers = ignored.filter(rect => rect[1] > 0.92 && lines.some(line => line.rect === rect && !pageNumber(line.text)));
+	if (footers.length) {
+		let top = Math.min(...footers.map(r => r[1]));
+		let retainedBottom = Math.max(0, ...lines.filter(l => !ignored.includes(l.rect)
+			&& l.rect[1] < top).map(l => l.rect[3]));
+		let start = Math.max(Math.ceil(retainedBottom * height) + 2, Math.floor((top - 0.035) * height));
+		let end = Math.floor(top * height) - 2, run = null;
+		for (let y = start; y <= end; y++) {
+			let ink = 0;
+			if (y < end) for (let x = 0; x < width; x++) if (data[(y * width + x) * 4] < 235) ink++;
+			if (ink > width * 0.5) { if (run === null) run = y; }
+			else if (run !== null) {
+				if (y - run <= Math.max(2, height * 0.004)) data.fill(255, run * width * 4, y * width * 4);
+				run = null;
+			}
+		}
+	}
 	let bounds = getInkBounds({ data, width, height }, { trimVertical: false, trimHorizontal: !options.includeMarginalia });
 	return bounds && bounds[2] - bounds[0] > 0.015 && bounds[3] - bounds[1] > 0.015 ? bounds : null;
 }

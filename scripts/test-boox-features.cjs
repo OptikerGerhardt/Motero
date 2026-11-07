@@ -210,10 +210,15 @@ const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/ja
   assert.equal(notes.length, 1); assert.equal(notes[0].type, 'note'); assert.equal(notes[0].color, '#aaaaaa');
   assert.match(notes[0].comment, /^(Bookmark|Lesezeichen) · /);
   const fixedPosition = notes[0].position;
+  const removedBookmarkID = notes[0].id;
   await tap({ x: 590, y: 40 });
+  await page.waitForFunction(() => window._view._view._annotations.length === 0);
+  await page.waitForFunction(id => window.testMessages.some(x => x.message?.event === 'onDeleteAnnotations' && x.message.params.ids.includes(id)), removedBookmarkID);
+  await tap({ x: 590, y: 40 });
+  await page.waitForFunction(() => window._view._view._annotations.length === 1);
   assert.equal(await page.evaluate(() => window._view._view._annotations.length), 1);
   assert.deepEqual(await page.evaluate(() => window._view._view._annotations[0].position), fixedPosition);
-  assert.ok(await page.evaluate(() => window._view._view._selectedAnnotationIDs.length === 1));
+  assert.ok(await page.evaluate(() => window._view._view._selectedAnnotationIDs.length === 0));
   assert.ok(await page.evaluate(() => window.testMessages.some(x => x.message?.event === 'onSaveAnnotations')));
   await page.evaluate(() => window._view.selectAnnotations([]));
   await page.evaluate(() => window.turnPageWithHardwareButton(true, 0));
