@@ -247,12 +247,21 @@ jobs:
               assert hashlib.sha256((Path('app/build/update-probes')/name).read_bytes()).hexdigest()==digest,name
           PY
           if [ -e /dev/kvm ]; then sudo chmod a+rw /dev/kvm; fi
+          export ANDROID_AVD_HOME="$RUNNER_TEMP/motero-avd"
           python3 - <<'PY'
-          import os,subprocess
+          import os
           from pathlib import Path
-          command=Path(os.environ['ANDROID_HOME'])/'cmdline-tools/latest/bin/avdmanager'
+          root=Path(os.environ['ANDROID_AVD_HOME'])
+          root.mkdir(parents=True,exist_ok=True)
           for api in ['31','35']:
-              subprocess.run([str(command),'create','avd','--force','--name','motero-update-'+api,'--package','system-images;android-'+api+';default;x86_64','--device','pixel_2'],input='no\n',text=True,check=True)
+              name='motero-update-'+api
+              directory=root/(name+'.avd')
+              directory.mkdir(exist_ok=True)
+              image=Path(os.environ['ANDROID_HOME'])/('system-images/android-'+api+'/default/x86_64')
+              assert (image/'source.properties').is_file(),str(image)
+              (root/(name+'.ini')).write_text('avd.ini.encoding=UTF-8\npath='+str(directory)+'\ntarget=android-'+api+'\n')
+              settings={'AvdId':name,'avd.ini.encoding':'UTF-8','abi.type':'x86_64','hw.cpu.arch':'x86_64','hw.cpu.ncore':'2','hw.ramSize':'2048','hw.keyboard':'yes','hw.lcd.density':'160','hw.lcd.width':'480','hw.lcd.height':'800','hw.gpu.enabled':'yes','hw.gpu.mode':'swiftshader_indirect','hw.mainKeys':'no','disk.dataPartition.size':'2G','tag.id':'default','tag.display':'Default','PlayStore.enabled':'false','image.sysdir.1':str(image)+'/'}
+              (directory/'config.ini').write_text(''.join(k+'='+v+'\n' for k,v in settings.items()))
           PY
           accel=on
           if ! "$ANDROID_HOME/emulator/emulator" -accel-check; then accel=off; fi
