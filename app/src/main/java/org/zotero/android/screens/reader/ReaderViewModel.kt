@@ -83,6 +83,7 @@ import org.zotero.android.screens.reader.data.NewReaderAnnotation
 import org.zotero.android.screens.reader.data.ReaderAnnotation
 import org.zotero.android.screens.reader.data.ReaderAnnotationTool
 import org.zotero.android.screens.reader.data.ReaderAnnotationsFilter
+import org.zotero.android.screens.reader.data.isReaderBookmark
 import org.zotero.android.screens.reader.data.ReaderArgs
 import org.zotero.android.screens.reader.data.ReaderDocumentData
 import org.zotero.android.screens.reader.data.ReaderFileType
@@ -1713,6 +1714,9 @@ class ReaderViewModel @Inject constructor(
             ReaderWebData.clearSelectedTextParams -> {
                 clearSelectedTextParams()
             }
+            is ReaderWebData.setCropEditorOpen -> {
+                updateState { copy(manualCropOpen = successValue.open) }
+            }
             is ReaderWebData.setManualCrop -> {
                 if (viewState.fileType == ReaderFileType.PDF) {
                     val crop = successValue.params["crop"]?.takeIf { it.isJsonObject }?.asJsonObject
@@ -1861,6 +1865,15 @@ class ReaderViewModel @Inject constructor(
     }
 
     private fun setViewStats(params: JsonObject) {
+        params["stats"]?.takeIf { it.isJsonObject }?.asJsonObject?.get("textScale")
+            ?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isNumber }?.asFloat
+            ?.takeIf { it.isFinite() && it in 0.6f..1.8f }?.let { scale ->
+                val settings = defaults.getReaderSettings()
+                if (kotlin.math.abs(settings.effectiveTextScale() - scale) > 0.001f) {
+                    settings.textScale = scale
+                    defaults.setReaderSettings(settings)
+                }
+            }
         restartDisableForceScreenOnTimer()
 
         val stats = params["stats"]?.takeIf { it.isJsonObject }?.asJsonObject
@@ -2017,15 +2030,22 @@ class ReaderViewModel @Inject constructor(
     }
 
     fun displayedSortedKeys(): List<String> {
-        if (!viewState.readingModeEnabled) {
-            return viewState.sortedKeys
-        }
         return viewState.sortedKeys.filter { key ->
+            if (viewState.bookmarksOnly && annotation(key)?.isReaderBookmark() != true) return@filter false
+            if (!viewState.readingModeEnabled) return@filter true
             when (annotation(key)?.type) {
                 AnnotationType.highlight, AnnotationType.underline, AnnotationType.note -> true
                 else -> false
             }
         }
+    }
+
+    fun toggleBookmarksOnly() {
+        updateState { copy(bookmarksOnly = !bookmarksOnly) }
+    }
+
+    fun cancelManualCrop() {
+        viewModelScope.launch { readerWebCallChainExecutor.cancelManualCrop() }
     }
 
     fun onCommentFocusFieldChange(annotationKey: String) {
@@ -2586,6 +2606,7 @@ class ReaderViewModel @Inject constructor(
     }
 
     private fun setReaderChromeVisible(visible: Boolean) {
+        if (viewState.manualCropOpen && visible) return
         if (visible == viewState.isTopBarVisible) return
         if (!visible) previousSidebarVisibilityState = viewState.showSideBar
         updateState {
@@ -2705,6 +2726,8 @@ class ReaderViewModel @Inject constructor(
             val appearance = update(result.readerSettings, result.reapplyFitting)
             if (result.startManualCrop && viewState.fileType == ReaderFileType.PDF) {
                 appearance.join()
+                setReaderChromeVisible(false)
+                updateState { copy(manualCropOpen = true, showPdfSearch = false, showSideBar = false) }
                 readerWebCallChainExecutor.beginManualCrop()
             }
         }
@@ -2905,6 +2928,8 @@ data class ReaderViewState(
     val focusSidebarKey: String? = null,
     val sortedKeys: List<String> = emptyList(),
     val annotationSearchTerm: String = "",
+    val bookmarksOnly: Boolean = false,
+    val manualCropOpen: Boolean = false,
     val annotationFilter: ReaderAnnotationsFilter? = null,
     val annotationPopoverKey: String? = null,
     val annotationPopoverRect: RectF? = null,
@@ -2950,7 +2975,7 @@ data class ReaderViewState(
     }
 
     fun isScrubberVisible(): Boolean {
-        return fileType == ReaderFileType.PDF && !readingModeEnabled && isTopBarVisible
+        return fileType == ReaderFileType.PDF && !readingModeEnabled && isTopBarVisible && !manualCropOpen
     }
 
 

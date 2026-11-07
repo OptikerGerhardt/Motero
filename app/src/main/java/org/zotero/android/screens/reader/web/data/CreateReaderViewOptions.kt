@@ -55,5 +55,5 @@ data class CreateReaderPageFitting(val mode: String, val reference: String, val 
 // Apply EPUB layout before restoring the CFI.
 data class CreateReaderReflowableAppearance(
     val lineHeight: Double, val wordSpacing: Double, val letterSpacing: Double,
-    val pageWidth: Int, val useOriginalFont: Boolean = false,
+    val pageWidth: Int, val useOriginalFont: Boolean = false, val textScale: Double? = null,
 )

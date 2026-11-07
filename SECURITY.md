@@ -18,7 +18,7 @@ Earlier Motero test APKs used Zotero's publicly available Android development ke
 
 The application ID remains `org.zotero.android.debug`. A signed rotation proof supports migration from the earlier key on Android 9+. The old key retains only the installed-data capability; it has no rollback, shared-UID, signature-permission, or authenticator capability in the new lineage. This prevents that old identity from authorizing a rollback of the migrated installation under Android's signing checks.
 
-Signing-tool checks cover APIs 28, 32, 33, and 36. Installation and data migration on physical BOOX and GrapheneOS devices still need verification. Back up app data before the first migration. Android 6–8 are not supported by these release APKs.
+Signing-tool checks cover APIs 28, 32, 33, and 36. The maintainer reported a successful Build 307 update on a Pixel 8 running GrapheneOS. BOOX installation and live-account compatibility still need separate confirmation. Back up app data before the first migration. Android 6–8 are not supported by these release APKs.
 
 The tracked `debug.keystore` and a historical temporary keystore are byte-identical public Zotero upstream files. Their exact hashes are documented in [scripts/publication-exceptions.json](scripts/publication-exceptions.json). They are permitted only as development fixtures and are rejected as production signers.
 

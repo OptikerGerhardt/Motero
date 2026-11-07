@@ -6,4 +6,6 @@
     <string name="tag_suggestion_selected">Selected tags</string>
     <string name="tag_suggestion_suggestions">Suggestions</string>
     <string name="reader_manual_crop">Manual crop…</string>
+    <string name="reader_bookmarks_filter">Show only bookmarks</string>
+    <string name="reader_text_size">Font size</string>
 </resources>

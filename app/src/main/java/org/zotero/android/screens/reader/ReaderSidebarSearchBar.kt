@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.Modifier
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.textinput.SearchViewM3
@@ -15,6 +16,7 @@ import org.zotero.android.uicomponents.textinput.SearchViewM3
 internal fun ReaderSidebarSearchBar(
     searchValue: String,
     onSearch: (String) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     var searchBarTextFieldState by remember {
         mutableStateOf(
@@ -28,6 +30,7 @@ internal fun ReaderSidebarSearchBar(
         onSearch(it.text)
     }
     SearchViewM3(
+        modifier = modifier,
         hint = safeStringResource(id = Strings.pdf_annotations_sidebar_search_title),
         onInnerValueChanged = searchBarOnInnerValueChanged,
         textFieldState = searchBarTextFieldState,

@@ -6,6 +6,7 @@ import android.view.ViewTreeObserver
 import android.content.res.Resources
 import android.util.TypedValue
 import androidx.activity.compose.LocalActivity
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -74,6 +75,7 @@ internal fun ReaderScreen(
     viewModel.initFileType()
     viewModel.setOsTheme(isDark = isSystemInDarkTheme())
     val viewState by viewModel.viewStates.observeAsState(ReaderViewState())
+    BackHandler(enabled = viewState.manualCropOpen) { viewModel.cancelManualCrop() }
     val viewEffect by viewModel.viewEffects.observeAsState()
     LaunchedEffect(viewState.isTopBarVisible, viewState.isReaderLoading) {
         viewModel.syncReaderChromeVisibility()
@@ -92,7 +94,7 @@ internal fun ReaderScreen(
     val currentView = LocalView.current
     org.zotero.android.uicomponents.ReaderHardwareButtons(
         enabled = !viewState.isReaderLoading && !viewState.showPdfSearch &&
-            viewState.selectedAnnotationKey == null,
+            viewState.selectedAnnotationKey == null && !viewState.manualCropOpen,
         onTurnPage = viewModel::turnPage,
     )
 
@@ -189,7 +191,7 @@ internal fun ReaderScreen(
             shouldIncludeTopBarAndNavBarPaddings = false,
             topBar = {
                 AnimatedContent(
-                    targetState = viewState.isTopBarVisible,
+                    targetState = viewState.isTopBarVisible && !viewState.manualCropOpen,
                     label = ""
                 ) { isTopBarVisible ->
                     if (isTopBarVisible) {

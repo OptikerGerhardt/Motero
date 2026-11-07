@@ -12,6 +12,7 @@ sealed interface ReaderWebData {
     data class setSelectedTextParams(val params: JsonObject) : ReaderWebData
     object clearSelectedTextParams : ReaderWebData
     data class setManualCrop(val params: JsonObject) : ReaderWebData
+    data class setCropEditorOpen(val open: Boolean) : ReaderWebData
     data class setViewState(val params: JsonObject) : ReaderWebData
     data class setViewStats(val params: JsonObject) : ReaderWebData
     data class showUrl(val url: String) : ReaderWebData

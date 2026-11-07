@@ -6,4 +6,6 @@
     <string name="tag_suggestion_selected">Ausgewählte Tags</string>
     <string name="tag_suggestion_suggestions">Vorschläge</string>
     <string name="reader_manual_crop">Manueller Zuschnitt…</string>
+    <string name="reader_bookmarks_filter">Nur Lesezeichen anzeigen</string>
+    <string name="reader_text_size">Schriftgröße</string>
 </resources>

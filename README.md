@@ -8,7 +8,9 @@ This fork is maintained independently and is not affiliated with or endorsed by 
 
 ## Features
 
-- Direct text highlighting, annotation tools, and Zotero tags in the PDF reader.
+- Direct text highlighting, annotation tools, Zotero tags, and a bookmark filter in the PDF reader.
+- Continuous cropped PDF pages, temporary two-finger access to full pages, and a manual crop editor.
+- Font-size controls with a percentage display for EPUBs and Reading Mode.
 - Automatic content fitting with controls for margins and marginal notes.
 - Manual PDF cropping for all pages, odd pages, or even pages, saved per attachment.
 - SmartScroll, hardware-button navigation, and edge taps in vertical, horizontal, and wrapped PDF layouts.
@@ -24,7 +26,7 @@ View cropping does not modify the PDF file or annotation coordinates. Manual cro
 
 Release APKs are signed with a dedicated Motero key. The public certificate and signing policy are available in [signing/](signing/). The application ID is `org.zotero.android.debug`; this is retained for compatibility with earlier Motero installations. Release APKs are not debuggable.
 
-Use **Build 307 or later** when updating an earlier Motero test build. Build 306 has a receiver-permission conflict that prevents this migration. The corrected update retains the application ID and uses a new internal permission alongside signing-key rotation. Back up your data before updating. Physical-device migration still needs confirmation; see [SECURITY.md](SECURITY.md).
+Use **Build 307 or later** when updating an earlier Motero test build. Build 306 has a receiver-permission conflict that prevents this migration. The corrected update retains the application ID and uses a new internal permission alongside signing-key rotation. Back up your data before updating. A successful Build 307 update has been reported on a Pixel 8 running GrapheneOS; BOOX confirmation is still pending. See [SECURITY.md](SECURITY.md).
 
 You can also track this repository with [Obtainium](https://github.com/ImranR98/Obtainium). Use the APK filename filter `^Motero_Build[0-9]+\.apk$`.
 
@@ -65,7 +67,7 @@ The customized reader is pinned as a submodule from this repository's [`reader` 
 
 ## Tests and project status
 
-The release workflow runs reader and Android unit tests, browser checks, and publication/signing checks. Before publishing, it also exercises a real update from Build 303 on Android API 31 and 35, verifies private test-data and UID retention, and rejects updates or internal-permission access using the old public key. Versioned reports accompany each release. Physical-device migration, BOOX keyboard behavior, and synchronization with a live Zotero account require separate testing.
+The release workflow runs reader and Android unit tests, browser checks, and publication/signing checks. Before publishing, it also exercises a real update from Build 303 on Android API 31 and 35, verifies private test-data and UID retention, and rejects updates or internal-permission access using the old public key. Versioned reports accompany each release. New reader behavior on physical devices, BOOX keyboard behavior, and synchronization with a live Zotero account require separate testing.
 
 Browser checks use Playwright 1.56.1 and Chromium. With Playwright installed and available through `NODE_PATH`, run:
 

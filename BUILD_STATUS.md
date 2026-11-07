@@ -1,4 +1,10 @@
-# Motero 307: Update-Kompatibilität
+# Motero 308: Reader-Überarbeitung
+
+Lokal erfolgreich gebaut und mit dem bestehenden privaten Motero-Schlüssel signiert. 282 Reader-Tests, 113 native Tests in 26 Suiten, zehn Browserprüfungen und elf Veröffentlichungs-/Signierprüfungen bestanden. Die APK-Prüfung bestätigt Version 308, V3-Rotation, neue Receiver-Berechtigung, Android 9+, 93 aktuelle eingebettete Reader-Quellen, 207 unveränderte PDF.js-Dateien und 45 Runtime-Dateien. Nachweise: `qa/build308/`.
+
+Der GitHub-Release wird erst nach zusätzlichen Installationsprüfungen auf Android API 31 und 35 veröffentlicht. Die lokale APK-SHA-256 lautet `88c61d92fa90fb6e70e42f41e28a9d079412e803b0d1fcd844688f3145ab3eae`; die auf GitHub gebaute APK erhält einen eigenen Nachweis. Neue physische Bedienprüfungen sind nicht behauptet. Der Nutzer hat die erfolgreiche Installation von Build 307 auf Pixel 8/GrapheneOS bestätigt.
+
+## Vorheriger Stand: Build 307
 
 **Als GitHub-Release verfügbar:** [Build 307](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.0-307). Die tatsächlich veröffentlichte APK wurde erneut heruntergeladen und geprüft. Beide Android-Updateprüfungen auf API 31 und 35 sind erfolgreich: ursprünglichen 306-Konflikt reproduziert, 303 → 307 installiert, privaten Testdatensatz und UID erhalten, App gestartet, altsigniertes Update und Berechtigungsanfrage abgewiesen. Die SHA-256 der APK lautet `1bcc4e7a816a12f295b01b89ab29ae067d446dd46625d09ca2e859e34b7a805c`. Nachweise: `qa/build307/github-migration-api31.json`, `github-migration-api35.json` und `github-apk-verification.json`.
 

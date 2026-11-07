@@ -6,6 +6,13 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -15,12 +22,17 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Icon
+import androidx.compose.material3.FilledTonalIconToggleButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -40,6 +52,7 @@ import org.zotero.android.screens.reader.sidebar.rows.ReaderAnnotationsSidebarIn
 import org.zotero.android.screens.reader.sidebar.rows.ReaderAnnotationsSidebarNoteRow
 import org.zotero.android.screens.reader.sidebar.rows.ReaderAnnotationsSidebarUnderlineRow
 import org.zotero.android.uicomponents.foundation.safeClickable
+import org.zotero.android.R
 
 @Composable
 internal fun ReaderAnnotationsSidebar(
@@ -57,14 +70,26 @@ internal fun ReaderAnnotationsSidebar(
     ) {
         LazyColumn(
             state = annotationsLazyListState,
+            contentPadding = PaddingValues(bottom = 80.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()),
             verticalArrangement = Arrangement.Absolute.spacedBy(16.dp),
         ) {
             item {
                 Spacer(modifier = Modifier.height(16.dp))
-                ReaderSidebarSearchBar(
-                    searchValue = viewState.annotationSearchTerm,
-                    onSearch = viewModel::onAnnotationSearch,
-                )
+                Row(Modifier.fillMaxWidth().padding(end = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    ReaderSidebarSearchBar(
+                        modifier = Modifier.weight(1f),
+                        searchValue = viewState.annotationSearchTerm,
+                        onSearch = viewModel::onAnnotationSearch,
+                    )
+                    FilledTonalIconToggleButton(
+                        checked = viewState.bookmarksOnly,
+                        onCheckedChange = { viewModel.toggleBookmarksOnly() },
+                        modifier = Modifier.size(48.dp),
+                    ) {
+                        Icon(painterResource(R.drawable.ic_reader_bookmark),
+                            contentDescription = stringResource(R.string.reader_bookmarks_filter))
+                    }
+                }
             }
             itemsIndexed(
                 items = viewModel.displayedSortedKeys(),

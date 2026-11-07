@@ -224,6 +224,10 @@ class ReaderWebCallChainExecutor @Inject constructor(
                             observable.emitAsync(Result.Success(ReaderWebData.setManualCrop(data["params"].asJsonObject)))
                         }
 
+                        "onCropEditorChanged" -> {
+                            observable.emitAsync(Result.Success(ReaderWebData.setCropEditorOpen(data["params"].asJsonObject["open"].asBoolean)))
+                        }
+
                         "onChangeViewState" -> {
                             val params = data["params"].asJsonObject
                             observable.emitAsync(
@@ -515,6 +519,7 @@ class ReaderWebCallChainExecutor @Inject constructor(
                 appearance = org.zotero.android.screens.reader.web.data.CreateReaderReflowableAppearance(
                     settings.lineHeight.toDouble(), settings.wordSpacing.toDouble(),
                     settings.letterSpacing.toDouble(), settings.pageWidth,
+                    textScale = data.savedEpubViewState?.scale ?: settings.effectiveTextScale().toDouble(),
                 )
             }
             data.savedEpubViewState?.restoreInto(createReaderViewOptions.viewState)
@@ -637,6 +642,10 @@ class ReaderWebCallChainExecutor @Inject constructor(
         readerWebViewHandler.evaluateJavascript("javascript:window.beginManualCrop();") { cont.resume(Unit) }
     }
 
+    suspend fun cancelManualCrop() = suspendCancellableCoroutine { cont ->
+        readerWebViewHandler.evaluateJavascript("javascript:window.cancelManualCrop();") { cont.resume(Unit) }
+    }
+
     suspend fun setPageFitting(settings: org.zotero.android.screens.reader.settings.data.ReaderSettings, apply: Boolean) {
         val options = org.zotero.android.screens.reader.web.data.CreateReaderPageFitting(
             settings.pageFitMode(), settings.fitReference(), settings.contentMargin.fraction, settings.fittingRevision, settings.includeMarginalia
@@ -709,7 +718,7 @@ class ReaderWebCallChainExecutor @Inject constructor(
     ) {
         return suspendCancellableCoroutine { cont ->
             val javascript =
-                "javascript:setAppearance({ lineHeight: $lineHeight, wordSpacing: $wordSpacing, letterSpacing: $letterSpacing, pageWidth: $pageWidth });"
+                "javascript:setAppearance({ lineHeight: $lineHeight, wordSpacing: $wordSpacing, letterSpacing: $letterSpacing, pageWidth: $pageWidth, textScale: ${defaults.getReaderSettings().effectiveTextScale()} });"
             readerWebViewHandler.evaluateJavascript(javascript) {
                 cont.resume(Unit)
             }

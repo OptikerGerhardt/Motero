@@ -1,5 +1,18 @@
 # Änderungen
 
+## 1.0.0-308 — 7. November 2026
+
+- PDF-Zuschnitt bleibt beim Ein-Finger-Scrollen erhalten. Sichtbare Seiten und ihr Puffer werden vorbereitet; zugeschnittene Inhaltsrahmen bestimmen den Seitenabstand, statt die unsichtbaren Papierränder mitzuscrollen. Das gilt für Vertical, Horizontal und Wrapped.
+- Zwei Finger zeigen vorübergehend die vollständigen PDF-Seiten. Nach dem letzten Loslassen werden Lesestelle, Zentrierung und eingestellter Zuschnitt/Zoom wiederhergestellt.
+- Seitliche römische Kant-Verweise sowie zusammenhängende Verlags-/Download-Wasserzeichen werden besser erkannt. Fußnoten bleiben durch Regressionen geschützt.
+- Manueller Zuschnitt: echte Touch-Klicks auf Übernehmen, Abbrechen, Zurücksetzen und Vorschauseiten repariert; native Reader-Leisten während des Editors ausgeblendet. Überarbeitete Oberfläche mit Zotero-Farben, kompaktem Kopf und klarer Seitenbereichsauswahl; Android-Zurück bricht den Editor ab.
+- Eigener Lesezeichenfilter neben der Annotationssuche, unabhängig von der Lesezeichenfarbe. Bestehende graue Lesezeichen bleiben erkennbar, neue sind blau; Karten zeigen Seite sowie Datum und weitere gespeicherte Angaben ohne redundanten Lesezeichen-Präfix.
+- Größere Annotationsfilterleiste mit Abstand zur Android-Gestenleiste.
+- Übersicht: Seitentipp stellt den Lesefit auch in Vertical und Horizontal wieder her.
+- Schriftgrößenregler mit Prozentanzeige für EPUB und Text-Lesemodus; Einstellung wird gespeichert und tatsächlicher Textzoom zurückgemeldet.
+- Prüfung: 282 Reader-Tests, 113 native Tests, zehn Browserprüfungen und elf Veröffentlichungs-/Signierprüfungen lokal bestanden; vollständige Original-Plessner-Prüfung über 116 Seiten. APK-Identität und eingebettete Quellen geprüft.
+- Erfolgreiche Installation von Build 307 auf Pixel 8 mit GrapheneOS durch den Nutzer bestätigt. Die neuen Reader-Funktionen und BOOX-Bedienung benötigen weiterhin Rückmeldung vom Gerät.
+
 ## 1.0.0-307 — 7. November 2026
 
 - Update-Konflikt beim Wechsel vom öffentlichen Testschlüssel zum privaten Motero-Schlüssel behoben: eigene neue Receiver-Berechtigung statt erneuter Deklaration der alten Signaturberechtigung.

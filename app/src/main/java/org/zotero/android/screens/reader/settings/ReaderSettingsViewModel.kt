@@ -76,6 +76,7 @@ internal class ReaderSettingsViewModel @Inject constructor(
                     selectedSpreadsOption = convert(readerSettings.spreadsMode),
                     selectedPageLayoutFlowMode = convert(readerSettings.pageLayoutFlowMode),
                     lineHeight = readerSettings.lineHeight,
+                    textScale = readerSettings.effectiveTextScale(),
                     wordSpacing = readerSettings.wordSpacing,
                     letterSpacing = readerSettings.letterSpacing,
                     pageWidth = readerSettings.pageWidth.toFloat(),
@@ -261,6 +262,13 @@ internal class ReaderSettingsViewModel @Inject constructor(
         scheduleDebouncedApply()
     }
 
+    fun onTextScaleChanged(value: Float) {
+        val scale = (value * 10).roundToInt().coerceIn(6, 18) / 10f
+        readerSettings.textScale = scale
+        updateState { copy(textScale = scale) }
+        scheduleDebouncedApply()
+    }
+
     fun onWordSpacingChanged(value: Float) {
         readerSettings.wordSpacing = value
         updateState {
@@ -396,6 +404,7 @@ internal data class ReaderSettingsViewState(
     val selectedSpreadsOption: ReaderSettingsOptions = ReaderSettingsOptions.PageSpreadsNone,
     val selectedPageLayoutFlowMode: ReaderSettingsOptions = ReaderSettingsOptions.PageLayoutFlowModePaginated,
     val lineHeight: Float = 1.2f,
+    val textScale: Float = 1f,
     val wordSpacing: Float = 0f,
     val letterSpacing: Float = 0f,
     val pageWidth: Float = 0f,

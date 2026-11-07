@@ -11,6 +11,8 @@ import androidx.compose.ui.unit.dp
 import org.zotero.android.screens.reader.ReaderViewModel
 import org.zotero.android.screens.reader.ReaderViewState
 import org.zotero.android.screens.reader.data.ReaderAnnotation
+import org.zotero.android.screens.reader.data.isReaderBookmark
+import org.zotero.android.screens.reader.data.bookmarkDetails
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.textinput.CustomTextField
 
@@ -21,7 +23,7 @@ internal fun ReaderAnnotationsSidebarCommentSection(
     annotation: ReaderAnnotation,
     shouldAddTopPadding: Boolean,
 ) {
-    if (viewState.isAnnotationSelected(annotation.key)) {
+    if (viewState.isAnnotationSelected(annotation.key) && !annotation.isReaderBookmark()) {
         CustomTextField(
             modifier = Modifier
                 .sectionHorizontalPadding()
@@ -50,7 +52,7 @@ internal fun ReaderAnnotationsSidebarCommentSection(
                 .sectionHorizontalPadding()
                 .padding(bottom = 8.dp)
                 .padding(top = if (shouldAddTopPadding) 8.dp else 0.dp),
-            text = annotation.comment,
+            text = if (annotation.isReaderBookmark()) annotation.bookmarkDetails() else annotation.comment,
             color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.bodyMedium,
         )

@@ -50,7 +50,9 @@ data class ReaderSettings(
     var nativeTextSelection: Boolean = false,
     var fitWidthCrop: Boolean = false,
     var includeMarginalia: Boolean = false,
+    var textScale: Float = 1f,
 ) {
+    fun effectiveTextScale(): Float = textScale.takeIf { it.isFinite() && it in 0.6f..1.8f } ?: 1f
     fun fitReference(): String = when {
         !fitTextReference -> "page"
         fitToWidth && fitWidthCrop -> "cropped-content"

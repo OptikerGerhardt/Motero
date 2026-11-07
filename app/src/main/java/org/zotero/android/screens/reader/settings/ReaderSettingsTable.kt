@@ -99,6 +99,14 @@ internal fun ReaderSettingsTable(
 
         if (viewState.fileType == ReaderFileType.EPUB || viewState.readingModeEnabled) {
             readerSettingsSliderRow(
+                titleResId = org.zotero.android.R.string.reader_text_size,
+                value = viewState.textScale,
+                valueRange = 0.6f..1.8f,
+                steps = 11,
+                valueLabel = "${(viewState.textScale * 100).roundToInt()}%",
+                onValueChange = viewModel::onTextScaleChanged,
+            )
+            readerSettingsSliderRow(
                 titleResId = Strings.pdf_settings_line_height_title,
                 value = viewState.lineHeight,
                 valueRange = 0.80f..2.00f,

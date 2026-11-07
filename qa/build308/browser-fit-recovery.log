@@ -1,0 +1,11 @@
+DIAG tapping visible overview page {"x":242,"y":513.5,"index":7,"area":274467}
+DIAG tapping visible overview page {"x":253,"y":375,"index":6,"area":306560}
+DIAG tapping visible overview page {"x":238,"y":338,"index":4,"area":304640}
+DIAG tapping visible overview page {"x":372.5,"y":338,"index":4,"area":291200}
+DIAG tapping visible overview page {"x":242,"y":384,"index":3,"area":306560}
+DIAG tapping visible overview page {"x":253,"y":315.5,"index":2,"area":302249}
+PASS overview taps in Vertical, Horizontal and Wrapped restore the target page and complete fit
+PASS a real pinch starting outside the PDF page restores fitting on release
+PASS explicit Off forgets the old fit instead of restoring it from the overview
+PASS simulated camera safe area stays constant through toolbar toggles and hardware page turns in all scroll modes
+PASS: fit recovery and safe viewport regressions

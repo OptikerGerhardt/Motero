@@ -120,7 +120,7 @@ internal fun ReaderBox(
                 Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface).windowInsetsPadding(safeInsets)
             } else Modifier
             ReaderWebView(viewModel = viewModel, modifier = readingModifier)
-            if (viewState.showCreationToolbar && viewState.isTopBarVisible) {
+            if (viewState.showCreationToolbar && viewState.isTopBarVisible && !viewState.manualCropOpen) {
                 ReaderAnnotationCreationToolbar(
                     viewState = viewState,
                     viewModel = viewModel,

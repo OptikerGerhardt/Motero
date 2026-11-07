@@ -17,10 +17,11 @@ import org.zotero.android.screens.reader.PdfReaderSidebarDivider
 
 @Composable
 internal fun BoxScope.ReaderBottomPanel(viewModel: ReaderViewModel, viewState: ReaderViewState) {
-    Column(Modifier.fillMaxWidth().height(48.dp).align(Alignment.BottomStart)
-        .background(MaterialTheme.colorScheme.surfaceContainer)) {
+    Column(Modifier.fillMaxWidth().align(Alignment.BottomStart)
+        .background(MaterialTheme.colorScheme.surfaceContainer)
+        .navigationBarsPadding().padding(bottom = 8.dp)) {
         PdfReaderSidebarDivider()
-        Row(Modifier.fillMaxWidth().weight(1f), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().height(56.dp), verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = viewModel::showAnnotationTagFilter,
                 contentPadding = PaddingValues(horizontal = 8.dp)) {
                 val count = viewState.annotationFilter?.tags?.size ?: 0

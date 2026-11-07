@@ -1,6 +1,17 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 7. November 2026. Aktueller Paketierungsstand: 306 mit privater Signierung und Android 9+. Funktionsreferenz: Build 305. F19, F22 und F23 sind umgesetzt. Die verlinkte Grundrecherche stammt vom 28. Oktober; ältere Build-Abschnitte dokumentieren den damaligen Stand.
+Stand: 7. November 2026. Build 308 enthält die folgende Reader-Überarbeitung; Signieridentität, Paketkennung und Android-9+-Anforderung bleiben erhalten. Die Installation von Build 307 ist auf Pixel 8/GrapheneOS vom Nutzer bestätigt.
+
+## Reader-Überarbeitung: Build 308
+
+- Permanenter Zuschnitt und kompakter Seitenfluss in Vertical, Horizontal und Wrapped. Kleine Geometriedatensätze decken alle Seiten ab; aktuelle Seiten und jeweils vier Nachbarseiten werden vorab analysiert. Noch nicht vorbereitete Seiten erscheinen nicht kurz mit falschem Papierzuschnitt. Die Rasteranalyse bleibt auf einen begrenzten Cache beschränkt.
+- Nur Zwei-Finger-Gesten geben die Originalseiten vorübergehend frei; ein Finger scrollt weiter in der zugeschnittenen Darstellung. Loslassen stellt den gewählten Fit an der bisherigen Lesestelle wieder her.
+- Automatik berücksichtigt freistehende römische Kant-Verweise und zusammengehörige Verlagswasserzeichen; vollständige Fußnoten bleiben geschützt. Die ursprünglichen Kant-/Hobbes-/Fuchs-Dateien aus den neuen Screenshots liegen nicht vor, daher sind die passenden Muster synthetisch geprüft.
+- Manueller Editor mit reaktionsfähigen Touch-Knöpfen, ausgeblendeten nativen Reader-Leisten, Zotero-Gestaltung, Vorschauseiten, geraden/ungeraden Seiten und Abbrechen über Android-Zurück. Vorschau und Zuschnitt bleiben reine Darstellung; Dateien und Annotationskoordinaten werden nicht umgeschrieben.
+- Bookmark-Schalter neben der Suche, bestehende graue und neue blaue Lesezeichen, knappe Karten mit Seite/Datum und vorhandenen Angaben. Die untere Filterleiste berücksichtigt die Android-Navigationsleiste und bietet größere Touch-Ziele.
+- Übersichtsnavigation stellt in allen drei PDF-Scrollmodi den Fit für die angeklickte Seite her. EPUB und Text-Lesemodus erhalten einen gespeicherten Schriftgrößenregler mit Prozentwert.
+
+Prüfberichte werden unter `qa/build308/` und im GitHub-Release abgelegt. Physische Bedienung der neuen Funktionen sowie BOOX- und echter Kontosync-Test sind getrennt von Browser-/Emulatorprüfungen zu betrachten.
 
 ## Update-Korrektur: Build 307
 
