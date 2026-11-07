@@ -75,7 +75,8 @@ const types = { '.html':'text/html', '.js':'text/javascript', '.mjs':'text/javas
   const cleaned=await page.evaluate(()=>({ids:window._view.getSelectedAnnotationIDs(),pointer:window._view._view._pointerDownTriggered,pointers:window._view._view._pageFitting.pointers.size,action:window._view._view.action}));
   assert.deepEqual(cleaned,{ids:[],pointer:false,pointers:0,action:null});
   const count=await page.evaluate(()=>window.messages.filter(m=>m.message?.event==='onBackdropTap').length);
-  await page.touchscreen.tap(30,400);await page.waitForTimeout(450);
+  // Use the center: the side strip intentionally turns pages in every mode in Build 305.
+  await page.touchscreen.tap(300,400);await page.waitForTimeout(450);
   assert.ok(await page.evaluate(n=>window.messages.filter(m=>m.message?.event==='onBackdropTap').length>n,count),'first backdrop tap after deletion');
   console.log('PASS deleting selected annotation clears pointer and first backdrop tap works');
   const added=await page.evaluate(()=>window._view._view._onAddAnnotation({type:'highlight',color:'#ffd400',text:'Preserved text',comment:'Preserved comment',tags:[{name:'method'}],pageLabel:'9',sortIndex:'00008|000001|00001',position:{pageIndex:8,rects:[[132,630,260,642]]}}));

@@ -2178,7 +2178,7 @@ class PDFView {
 		}
 
 		let pdfViewer = this._iframeWindow.PDFViewerApplication.pdfViewer;
-		if (pdfViewer.scrollMode !== HORIZONTAL_SCROLL_MODE) {
+		if (![0, 1, 2].includes(pdfViewer.scrollMode) || this._tool.type !== 'pointer') {
 			return null;
 		}
 
@@ -3590,6 +3590,7 @@ class PDFView {
 		}
 		this._pointerDownTriggered = true;
 		this._pointerDownTap = {
+			time: Date.now(),
 			x: event.clientX,
 			y: event.clientY,
 			button: event.button,
@@ -4234,6 +4235,7 @@ class PDFView {
 		if (movedTooFar) {
 			return false;
 		}
+		if (axisMovementTolerancePx !== undefined && Date.now() - pointerDownTap.time > 400) return false;
 
 		if (!this.pointerDownPosition) {
 			return !position;

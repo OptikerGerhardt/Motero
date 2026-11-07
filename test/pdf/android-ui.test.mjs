@@ -766,6 +766,7 @@ function createEdgePageTurnView({
 	};
 	let view = {
 		_options: { platform },
+		_tool: { type: 'pointer' },
 		_iframeWindow: {
 			innerWidth: width,
 			PDFViewerApplication: { pdfViewer },
@@ -1180,14 +1181,16 @@ test('Desktop platforms and unsupported scroll modes use plain PDF.js positionin
 	}
 });
 
-test('Android PDF edge taps turn horizontal pages and preserve zoom', () => {
-	let { calls, pdfViewer, view } = createEdgePageTurnView();
+test('Android PDF edge taps turn all three scroll modes and preserve zoom', () => {
+ for (let scrollMode of [0,1,2]) {
+	let { calls, pdfViewer, view } = createEdgePageTurnView({scrollMode});
 	PDFView.prototype._resolveBackdropTap.call(view, {}, 'previous');
 	PDFView.prototype._resolveBackdropTap.call(view, {}, 'next');
 	PDFView.prototype._resolveBackdropTap.call(view, {}, null);
 
 	assert.deepEqual(calls, { backdrop: 1, manual: 2, next: 1, previous: 1 });
 	assert.equal(pdfViewer.currentScaleValue, 2.5);
+ }
 });
 
 test('Android PDF edge zones scale on phones and cap on wider viewports', () => {
@@ -1204,9 +1207,9 @@ test('Android PDF edge zones scale on phones and cap on wider viewports', () => 
 	assert.equal(tabletView._getEdgePageTurnDirection({ pointerType: 'touch' }, 904), 'next');
 });
 
-test('PDF edge taps fall through outside Android horizontal touch input', () => {
+test('PDF edge taps fall through outside supported Android touch input', () => {
 	for (let options of [
-		{ scrollMode: 0 },
+		{ scrollMode: 3 },
 		{ platform: 'zotero' },
 		{ width: 0 },
 	]) {
@@ -1991,4 +1994,19 @@ test('Position navigation preserves legacy targets outside the Android centered 
 		assert.deepEqual(element.lastScrollTo, { ...getScrollTarget({ rect, ...element, ...options }), behavior: 'instant' });
 		assert.equal(pdfViewer.currentScaleValue, 'page-width');
 	}
+});
+
+
+test('edge page turns exclude drawing tools in every PDF scroll mode', () => {
+ for (let scrollMode of [0,1,2]) for (let type of ['hand','highlight','ink','eraser','note','image','text']) {
+  let {view}=createEdgePageTurnView({scrollMode});view._tool={type};
+  assert.equal(view._getEdgePageTurnDirection({pointerType:'touch'},10),null);
+ }
+});
+test('long edge presses and moved pointers do not turn a page', () => {
+ for (let mutate of [({view})=>view._pointerDownTap.time=Date.now()-500,
+   ({event})=>event.clientX+=12,({event})=>event.clientY+=12]) {
+  let f=createBackdropTapEligibilityFixture();f.view._pointerDownTap.time=Date.now();mutate(f);
+  assert.equal(PDFView.prototype._shouldHandleBackdropTap.call(f.view,f.event,f.position,10),false);
+ }
 });
