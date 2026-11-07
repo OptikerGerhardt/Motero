@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      reuse_build_run_id:
+        description: 'Optional successful build-job run to reuse after release infrastructure changes only'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -16,6 +22,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.event_name != 'workflow_dispatch' || inputs.reuse_build_run_id == ''
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     outputs:
@@ -81,6 +88,7 @@ jobs:
           mkdir -p qa-ci
           python3 scripts/audit_publication.py --ref HEAD --ref refs/remotes/origin/reader --output qa-ci/publication-audit.json
           python3 -m unittest discover -s scripts/tests -p test_publication_audit.py -v
+          python3 -m unittest discover -s scripts/tests -p test_build_reuse.py -v
       - name: Build and test the reader
         shell: bash
         run: |
@@ -151,16 +159,27 @@ jobs:
 
   release:
     needs: build
-    if: needs.build.outputs.publish == 'true' && github.ref == 'refs/heads/main'
+    if: always() && !cancelled() && github.ref == 'refs/heads/main' && ((needs.build.result == 'success' && needs.build.outputs.publish == 'true') || (github.event_name == 'workflow_dispatch' && inputs.reuse_build_run_id != ''))
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 55
     permissions:
       contents: write
+      actions: read
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
+          fetch-depth: 0
           submodules: recursive
           persist-credentials: false
+      - name: Read current release version
+        id: release_meta
+        run: |
+          python3 - <<'PY'
+          import json,os,subprocess
+          metadata=json.loads(subprocess.check_output(['python3','scripts/prepare_release.py','--metadata-only'],text=True))
+          with open(os.environ['GITHUB_OUTPUT'],'a') as output:
+              for key,value in metadata.items(): output.write(f'{key}={value}\n')
+          PY
       - name: Require private production signing
         env:
           MOTERO_RELEASE_SIGNING: ${{ secrets.MOTERO_RELEASE_SIGNING }}
@@ -173,24 +192,48 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      - name: Install emulator host libraries
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends libpulse0 libnss3 libxcb-cursor0 libxkbcommon-x11-0 libx11-xcb1 libvulkan1
       - name: Locate release verification tools
         run: |
           sdkmanager_path="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           "$sdkmanager_path" 'build-tools;36.0.0' 'platforms;android-37.0' 'emulator' 'system-images;android-31;default;x86_64' 'system-images;android-35;default;x86_64'
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      - name: Download current build
+        if: inputs.reuse_build_run_id == ''
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: motero-unsigned-build-${{ needs.build.outputs.version_code }}
+          name: motero-unsigned-build-${{ steps.release_meta.outputs.version_code }}
           path: dist
+      - name: Download previously tested build
+        if: inputs.reuse_build_run_id != ''
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: motero-unsigned-build-${{ steps.release_meta.outputs.version_code }}
+          path: dist
+          run-id: ${{ inputs.reuse_build_run_id }}
+          github-token: ${{ github.token }}
+      - name: Verify unchanged application inputs and rebuild source package
+        if: inputs.reuse_build_run_id != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILD_RUN_ID: ${{ inputs.reuse_build_run_id }}
+          VERSION_CODE: ${{ steps.release_meta.outputs.version_code }}
+        run: |
+          python3 scripts/reuse_tested_build.py --run-id "$BUILD_RUN_ID" --repository "$GITHUB_REPOSITORY" --directory dist
+          python3 -m unittest discover -s scripts/tests -p test_build_reuse.py -v
+          python3 scripts/audit_publication.py --ref HEAD --ref refs/remotes/origin/reader --archive "dist/Motero_Build${VERSION_CODE}_Source.zip" --output dist/Motero_ReusedSourceAudit.json
       - name: Sign and verify the public release
         env:
           MOTERO_RELEASE_SIGNING: ${{ secrets.MOTERO_RELEASE_SIGNING }}
-          VERSION_CODE: ${{ needs.build.outputs.version_code }}
+          VERSION_CODE: ${{ steps.release_meta.outputs.version_code }}
         run: |
           python3 scripts/sign_release.py --apk "dist/Motero_Build${VERSION_CODE}-unsigned.apk" --output "dist/Motero_Build${VERSION_CODE}.apk" --build-tools "$ANDROID_HOME/build-tools/36.0.0"
       - name: Verify Android update and data preservation
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION_CODE: ${{ needs.build.outputs.version_code }}
+          VERSION_CODE: ${{ steps.release_meta.outputs.version_code }}
         shell: bash
         run: |
           python3 scripts/create_update_probes.py --build-tools "$ANDROID_HOME/build-tools/36.0.0" --output app/build/update-probes
@@ -211,11 +254,14 @@ jobs:
           for api in ['31','35']:
               subprocess.run([str(command),'create','avd','--force','--name','motero-update-'+api,'--package','system-images;android-'+api+';default;x86_64','--device','pixel_2'],input='no\n',text=True,check=True)
           PY
+          accel=on
+          if ! "$ANDROID_HOME/emulator/emulator" -accel-check; then accel=off; fi
           for api in 31 35; do
             if [ "$api" = 31 ]; then serial=emulator-5554; port=5554; else serial=emulator-5556; port=5556; fi
-            "$ANDROID_HOME/emulator/emulator" -avd "motero-update-$api" -no-window -no-audio -no-snapshot -no-boot-anim -gpu swiftshader -memory 2048 -cores 2 -port "$port" -feature -Vulkan > "$RUNNER_TEMP/motero-emulator-$api.log" 2>&1 &
+            "$ANDROID_HOME/emulator/emulator" -avd "motero-update-$api" -no-window -no-audio -no-snapshot -no-boot-anim -gpu swiftshader_indirect -accel "$accel" -skin 480x800 -dpi-device 160 -memory 2048 -cores 2 -port "$port" -feature -Vulkan > "$RUNNER_TEMP/motero-emulator-$api.log" 2>&1 &
+            emulator_pid=$!
             trap '"$ANDROID_HOME/platform-tools/adb" -s "$serial" emu kill || true' EXIT
-            python3 scripts/check_android_update.py --adb "$ANDROID_HOME/platform-tools/adb" --serial "$serial" --baseline-apk app/build/update-probes/OriginalBuild303.apk --candidate-apk "dist/Motero_Build${VERSION_CODE}.apk" --rejected-apk app/build/update-probes/Motero_Build306.apk --rollback-probe-apk app/build/update-probes/RejectedOldKey9999.apk --legacy-client-apk app/build/update-probes/UntrustedLegacyClient.apk --output "dist/Motero_UpdateVerification_API${api}.json"
+            python3 scripts/check_android_update.py --adb "$ANDROID_HOME/platform-tools/adb" --serial "$serial" --boot-timeout 900 --emulator-pid "$emulator_pid" --emulator-log "$RUNNER_TEMP/motero-emulator-$api.log" --baseline-apk app/build/update-probes/OriginalBuild303.apk --candidate-apk "dist/Motero_Build${VERSION_CODE}.apk" --rejected-apk app/build/update-probes/Motero_Build306.apk --rollback-probe-apk app/build/update-probes/RejectedOldKey9999.apk --legacy-client-apk app/build/update-probes/UntrustedLegacyClient.apk --output "dist/Motero_UpdateVerification_API${api}.json"
             "$ANDROID_HOME/platform-tools/adb" -s "$serial" emu kill
           done
       - name: Finalize verified release files
@@ -231,8 +277,8 @@ jobs:
       - name: Recheck immutable version and publish APK
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ needs.build.outputs.tag }}
-          VERSION: ${{ needs.build.outputs.version }}
+          TAG: ${{ steps.release_meta.outputs.tag }}
+          VERSION: ${{ steps.release_meta.outputs.version }}
         run: |
           python3 scripts/release_metadata.py
           gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "Motero $VERSION" --notes-file dist/RELEASE_NOTES.md --latest

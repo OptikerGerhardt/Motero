@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -19,6 +20,8 @@ parser.add_argument('--rollback-probe-apk', type=Path, required=True)
 parser.add_argument('--legacy-client-apk', type=Path, required=True)
 parser.add_argument('--output', type=Path, required=True)
 parser.add_argument('--boot-timeout', type=int, default=600)
+parser.add_argument('--emulator-pid', type=int)
+parser.add_argument('--emulator-log', type=Path)
 args = parser.parse_args()
 assert args.serial.startswith('emulator-'), 'Refusing to modify a physical device'
 package = 'org.zotero.android.debug'
@@ -34,13 +37,28 @@ def adb(*values, check=True, input=None, timeout=50):
 
 
 deadline = time.monotonic() + args.boot_timeout
+def boot_failure(message):
+    detail = message
+    if args.emulator_log and args.emulator_log.exists():
+        detail += '\n' + args.emulator_log.read_text(errors='replace')[-12000:]
+    if os.environ.get('GITHUB_ACTIONS') == 'true':
+        print('::error title=Android emulator startup::' + detail.replace('%','%25').replace('\r','%0D').replace('\n','%0A'), flush=True)
+    raise SystemExit(detail)
+
 while time.monotonic() < deadline:
+    if args.emulator_pid:
+        try:
+            state = Path('/proc/' + str(args.emulator_pid) + '/stat').read_text().split(') ', 1)[1][0]
+            if state == 'Z':
+                boot_failure('Emulator exited before boot completed')
+        except FileNotFoundError:
+            boot_failure('Emulator exited before boot completed')
     result = adb('shell', 'getprop', 'sys.boot_completed', check=False, timeout=10)
     if result.returncode == 0 and result.stdout.strip() == '1':
         break
     time.sleep(3)
 else:
-    raise SystemExit('Emulator did not finish booting within the test deadline')
+    boot_failure('Emulator did not finish booting within the test deadline')
 assert adb('shell', 'getprop', 'ro.kernel.qemu').stdout.strip() == '1', 'Emulator identity check failed'
 adb('root')
 adb('wait-for-device')
