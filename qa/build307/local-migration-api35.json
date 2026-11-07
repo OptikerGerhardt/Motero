@@ -9,5 +9,6 @@
   "application_uid_preserved": true,
   "old_key_update_rejected": true,
   "old_key_client_permission_denied": true,
-  "receiver_permission": "org.zotero.android.debug.MOTERO_DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+  "receiver_permission": "org.zotero.android.debug.MOTERO_DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION",
+  "updated_app_started": true
 }

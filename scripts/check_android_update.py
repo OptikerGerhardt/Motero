@@ -79,10 +79,23 @@ assert owner_before == owner_after, 'Application UID changed during the update'
 candidate_dump = adb('shell', 'dumpsys', 'package', package).stdout
 version = int(re.search(r'versionCode=(\d+)', candidate_dump).group(1))
 assert re.search(re.escape(permission) + r': granted=true', candidate_dump), 'New internal permission was not granted'
-launch = adb('shell', 'am', 'start', '-W', '-n', package + '/org.zotero.android.screens.root.RootActivity', timeout=90)
-assert 'Status: ok' in launch.stdout, launch.stdout
+adb('logcat', '-b', 'crash', '-c')
+launch = adb('shell', 'am', 'start', '-n', package + '/org.zotero.android.screens.root.RootActivity')
+assert 'Error:' not in launch.stdout + launch.stderr, launch.stdout + launch.stderr
+# RootActivity immediately forwards to login/dashboard; am start -W may time out
+# waiting for the already-finished forwarding activity even after a valid launch.
+deadline = time.monotonic() + 90
+while time.monotonic() < deadline:
+    activities = adb('shell', 'dumpsys', 'activity', 'activities').stdout
+    if re.search(r'(?:topResumedActivity=|mResumedActivity:|ResumedActivity:)[^\n]*' + re.escape(package) + '/', activities):
+        break
+    time.sleep(2)
+else:
+    raise AssertionError('The updated app did not reach a resumed activity')
 time.sleep(3)
 assert adb('shell', 'pidof', package).stdout.strip(), 'Updated app crashed during startup'
+crashes = adb('logcat', '-d', '-b', 'crash').stdout
+assert not re.search(r'(?:Process: |Cmdline: )' + re.escape(package), crashes), 'Updated app crashed during startup'
 install(args.rollback_probe_apk, 'INSTALL_FAILED_UPDATE_INCOMPATIBLE')
 assert adb('shell', 'cat', marker_path).stdout == marker
 install(args.legacy_client_apk)
