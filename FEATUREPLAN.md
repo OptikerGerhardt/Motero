@@ -4,7 +4,7 @@ Stand: 7. November 2026. Aktueller Paketierungsstand: 306 mit privater Signierun
 
 ## Vorbereitung zur öffentlichen Freigabe: Build 306
 
-Eigene Motero-Anpassungen als vollständig mit ChatGPT/Codex programmiert ausgewiesen; Zotero, Android, Reader und Community-Beiträge bleiben korrekt zugeordnet. Historie/Anhänge geprüft, alte Debug-Releases als Entwürfe archiviert, neues privates Zertifikat und eingeschränkte V3-Rotation vorbereitet. Öffentliche Builds benötigen Android 9+ und sind nicht debuggbar. Das ersetzt für öffentliche APKs die ältere Entscheidung zum unveränderten Testschlüssel; Paketkennung und Datenpfade bleiben erhalten. Der Workflow veröffentlicht ohne das private Secret keine APK. Stand, Prüfumfang und verbleibende Einrichtung: `docs/PUBLICATION_READINESS.md`.
+Eigene Motero-Anpassungen als vollständig mit ChatGPT/Codex programmiert ausgewiesen; Zotero, Android, Reader und Community-Beiträge bleiben korrekt zugeordnet. Historie/Anhänge geprüft, alte Debug-Releases als Entwürfe archiviert, neues privates Zertifikat und eingeschränkte V3-Rotation vorbereitet. Öffentliche Builds benötigen Android 9+ und sind nicht debuggbar. Das ersetzt für öffentliche APKs die ältere Entscheidung zum unveränderten Testschlüssel; Paketkennung und Datenpfade bleiben erhalten. Der Workflow veröffentlicht ohne das private Secret keine APK. Das private Actions-Secret ist eingerichtet und der signierte GitHub-Release 306 mit sämtlichen Prüfungen erfolgreich. Stand, Prüfumfang und verbleibende Gerätetests: `docs/PUBLICATION_READINESS.md`.
 
 ## Festgehaltene Entscheidungen
 

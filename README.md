@@ -4,7 +4,7 @@
 
 **Motero ist ein inoffizieller Fork von Zotero für Android**, angepasst für PDF-Lektüre auf BOOX-E-Readern und auf dem Smartphone. Das Projekt wird unabhängig von Zotero entwickelt und ist nicht mit der Corporation for Digital Scholarship verbunden.
 
-Die Veröffentlichung wird gerade abgesichert. Das Repository bleibt währenddessen privat. Öffentliche APKs sind nur mit dem eigenen, privaten Motero-Signierschlüssel zulässig; die früheren Test-APKs werden als private Entwürfe archiviert. Der genaue Freigabestand steht in [PUBLICATION_READINESS.md](docs/PUBLICATION_READINESS.md).
+Der Quellstand und die Release-Automatisierung sind für eine öffentliche Bereitstellung vorbereitet. Das Repository bleibt bis zur ausdrücklichen Entscheidung des Betreibers privat. Build 306 ist mit dem eigenen, privaten Motero-Schlüssel signiert und auf GitHub verfügbar; die früheren Test-APKs sind als private Entwürfe archiviert. Der genaue Freigabestand steht in [PUBLICATION_READINESS.md](docs/PUBLICATION_READINESS.md).
 
 ## Entwicklung mit ChatGPT und übernommene Beiträge
 
@@ -22,7 +22,7 @@ Quellen: [Zotero auf GitHub](https://github.com/zotero/zotero), [Zotero für And
 
 ## Herunterladen und aktualisieren
 
-Künftige öffentliche APKs erscheinen unter **[Releases](https://github.com/OptikerGerhardt/Motero/releases)** als `Motero_Build<Nummer>.apk`. Die öffentliche Variante benötigt **Android 9 oder neuer**, ist nicht debuggbar und wird mit einem privaten Motero-Schlüssel signiert. Der öffentliche Prüf-Schlüssel und die Update-Rotation sind in [signing/](signing/) dokumentiert.
+Geprüfte APKs stehen unter **[Releases](https://github.com/OptikerGerhardt/Motero/releases)** als `Motero_Build<Nummer>.apk`. Die öffentliche Variante benötigt **Android 9 oder neuer**, ist nicht debuggbar und wird mit einem privaten Motero-Schlüssel signiert. Der öffentliche Prüf-Schlüssel und die Update-Rotation sind in [signing/](signing/) dokumentiert.
 
 Die Paketkennung bleibt `org.zotero.android.debug`. Für bestehende Motero-Testinstallationen wird der Übergang vom alten Testschlüssel durch Androids signierte Zertifikatsrotation vorbereitet. Rückwechsel auf den bekannten Testschlüssel werden nicht erlaubt. Die Rotation erhält die Berechtigung zum Übernehmen vorhandener App-Daten; eine tatsächliche Update-Installation auf BOOX/GrapheneOS muss gesondert geprüft werden. Vor dem ersten Wechsel eigene Daten sichern.
 
@@ -73,7 +73,7 @@ Die Browserprüfungen benötigen Playwright 1.56.1 für Node. Installiere es get
 
 Bei Änderungen an der App oder am eingebundenen Reader wird `BuildConfig.versionCode` erhöht. Der GitHub-Workflow baut und testet `main` und Pull Requests. Ein neuer Build auf `main` wird nach erfolgreichen Prüfungen und ausschließlich mit vorhandenem privaten Signierschlüssel als Release mit APK, vollständigem Quellarchiv, Prüfberichten und SHA-256-Summen angelegt. Fehlt die sichere Signierung, stoppt die Veröffentlichung; es gibt keinen Rückfall auf den Debug-Schlüssel. Bereits vorhandene Releases werden nicht überschrieben. Details: [Release-Ablauf](docs/RELEASING.md).
 
-Referenzstand Build 305: **276 Reader-Tests, 109 Android-Tests in 25 Suiten und zehn Browserprüfungen bestanden**. Build 306 ergänzt die abgesicherte öffentliche Paketierung und Zertifikatsrotation. Die Original-Plessner-Prüfung wurde lokal ebenfalls durchgeführt. Physische BOOX-/Smartphone-Tests, die tatsächliche BOOX-Tastatur und echter Kontosync sind im automatisierten Testlauf nicht enthalten.
+Build 306: **276 Reader-Tests, 109 Android-Tests in 25 Suiten, zehn Browserprüfungen und fünf Veröffentlichungs-/Signierprüfungen bestanden**. Die private Signierung und der automatische GitHub-Release wurden erfolgreich ausgeführt; die tatsächlich heruntergeladene APK ist erneut geprüft. [Release und Nachweise](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.0-306). Die Original-Plessner-Prüfung wurde lokal ebenfalls durchgeführt. Physische BOOX-/Smartphone-Tests, die tatsächliche BOOX-Tastatur und echter Kontosync sind im automatisierten Testlauf nicht enthalten.
 
 ## Herkunft und Lizenz
 

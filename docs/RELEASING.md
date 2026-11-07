@@ -10,7 +10,7 @@ Der öffentliche Prüf-Schlüssel und die Rotationslinie liegen in `signing/`. D
 2. Name: **`MOTERO_RELEASE_SIGNING`**. Als Wert den vollständigen Inhalt der privaten Datei `MOTERO_RELEASE_SIGNING.json` einfügen. Speichern. Die Datei enthält `keystore_base64`, `store_password`, `key_password` und `key_alias`.
 3. Unter **Actions → Motero build, test and release → Run workflow** auf `main` starten. Eine vorhandene fehlgeschlagene Ausführung kann ebenfalls erneut ausgeführt werden, sofern sie den aktuellen Quellstand verwendet.
 
-Die aktuelle Chat-GitHub-Verbindung darf die Actions-Secrets-API nicht verwenden (HTTP 403). Deshalb muss der Besitzer diesen einen Einrichtungsschritt auf GitHub ausführen. Der private Sicherungsdownload wird separat bereitgestellt; er ist kein Repository-Inhalt.
+Für Build 306 hat der Besitzer das Secret eingerichtet; der signierte GitHub-Release ist erfolgreich geprüft. Bei einer neuen Einrichtung erfolgt dieser Schritt durch den Besitzer: Die aktuelle Chat-GitHub-Verbindung darf die Actions-Secrets-API nicht verwenden (HTTP 403). Der private Sicherungsdownload wird separat bereitgestellt; er ist kein Repository-Inhalt.
 
 ## Automatischer Ablauf
 

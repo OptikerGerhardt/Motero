@@ -1,6 +1,6 @@
 # Vorbereitung einer öffentlichen Freigabe
 
-Stand: 7. November 2026. **Die Repository-Sichtbarkeit wurde nicht geändert.** Der überprüfte Quellstand ist für eine öffentliche Bereitstellung vorbereitet. Automatische signierte GitHub-APKs benötigen noch das einmalige private Actions-Secret. Dies ist eine Prüfung auf versehentliche Offenlegung und sichere Release-Konfiguration, keine unabhängige vollständige Schwachstellenprüfung.
+Stand: 7. November 2026. **Die Repository-Sichtbarkeit wurde nicht geändert.** Der überprüfte Quellstand ist für eine öffentliche Bereitstellung vorbereitet. Das private Actions-Secret ist eingerichtet, und Build 306 wurde erfolgreich automatisch signiert und als GitHub-Release bereitgestellt. Dies ist eine Prüfung auf versehentliche Offenlegung und sichere Release-Konfiguration, keine unabhängige vollständige Schwachstellenprüfung.
 
 ## Durchgeführte Prüfung
 
@@ -25,8 +25,14 @@ Die tatsächliche APK-Signatur und ihre Rotation wurden mit Android Build Tools 
 
 Die GitHub-CI baut ohne privaten Schlüssel und bewahrt nur eine unsignierte, nicht installierbare APK sowie Quellen/Prüfberichte auf. Nur der Release-Job für `main` erhält den Schlüssel. Er veröffentlicht erst nach erneuter Signatur- und Inhaltsprüfung. Pull Requests erhalten keine Signiersecrets. Ohne Secret gibt es keinen installierbaren Release und keinen Debug-Fallback.
 
-## Noch erforderlich
+## Erfolgreich eingerichteter GitHub-Release
 
-1. **Besitzer: private Schlüsselsicherung herunterladen und sicher verwahren.** Danach einmal das Repository-Actions-Secret **`MOTERO_RELEASE_SIGNING`** aus der privaten JSON-Datei einrichten. Die aktuelle GitHub-Verbindung verweigert den Zugriff auf die Secrets-API mit HTTP 403; sie kann diesen Schritt nicht ausführen. Der genaue Klickpfad steht in [RELEASING.md](RELEASING.md). Private Schlüssel niemals in Chat, Git, Issues oder Release-Anhänge kopieren.
+Der Besitzer hat `MOTERO_RELEASE_SIGNING` eingerichtet. Der [GitHub-Lauf 42386366739](https://github.com/OptikerGerhardt/Motero/actions/runs/42386366739) ist erfolgreich: 276 Reader-Tests, 109 native Release-Tests in 25 Suiten, zehn Browserprüfungen und die Veröffentlichungs-/Signierkontrollen bestanden. Der erste Versuch stoppte korrekt wegen des damals fehlenden Secrets; nach dessen Einrichtung wurde nur der Release-Job erneut ausgeführt.
+
+[Build 306](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.0-306) enthält die privat signierte APK, vollständige Quellen, Prüfberichte und SHA-256-Summen. Die tatsächliche GitHub-APK wurde erneut heruntergeladen und lokal mit `apksigner` geprüft; sie entspricht den Release-Prüfsummen und dem festgeschriebenen privaten Motero-Zertifikat. Nachweise: `qa/build306/github-publication.json`, `github-apk-verification.json`, `github-native-release-tests.json` und `github-source-audit.json`.
+
+## Sicherung, Gerätetest und spätere Freigabe
+
+1. **Private Schlüsselsicherung sicher verwahren.** Sie ist für zukünftige Updates notwendig. Private Schlüssel niemals in Chat, Git, Issues oder Release-Anhänge kopieren. Das Actions-Secret ist eingerichtet; dafür besteht kein weiterer Einrichtungsschritt. Die aktuelle Chat-GitHub-Verbindung selbst hat weiterhin keinen Zugriff auf die Secrets-API.
 2. **Geräteprüfung:** Update von der alten Test-APK auf dem konkreten BOOX-/GrapheneOS-Gerät und Erhalt vorhandener Daten prüfen. Die kryptografische Prüfung ersetzt die Installation nicht. Vor dem ersten Wechsel Daten sichern. Android 6–8 werden durch die neue öffentliche Variante nicht unterstützt.
-3. Die Sichtbarkeit entscheidet der Besitzer ausdrücklich. Die Vorbereitung allein veröffentlicht weder Repository noch Cloud-Umgebung. Neue Dateien, Tags, Releases und Abhängigkeitsänderungen müssen weiterhin geprüft werden; alte Debug-Releases dürfen nicht wieder öffentlich freigeschaltet werden.
+3. Die Sichtbarkeit entscheidet der Besitzer ausdrücklich. Das Repository bleibt privat; die Cloud-Umgebung wurde ebenfalls nicht veröffentlicht. Neue Dateien, Tags, Releases und Abhängigkeitsänderungen müssen weiterhin geprüft werden; alte Debug-Releases dürfen nicht wieder öffentlich freigeschaltet werden.

@@ -7,7 +7,7 @@
 - Alte Test-Releases als private Entwürfe archiviert und das alte CI-Test-APK-Artefakt entfernt.
 - Historie und Release-Anhänge auf bekannte Geheimnisse/persönliche Dateien geprüft; wiederholbare Veröffentlichungskontrolle ergänzt.
 - ChatGPT-/Codex-Unterstützung offengelegt, übernommene Original-PRs eingeordnet und Zotero/Community ausdrücklich gewürdigt.
-- Erstmalige GitHub-Signierkonfiguration und physischer Update-Test sind gesondert im Freigabebericht gekennzeichnet.
+- Private GitHub-Signierung eingerichtet und Build 306 erfolgreich veröffentlicht; heruntergeladene APK erneut geprüft. 276 Reader-Tests, 109 native Tests, zehn Browserprüfungen und fünf Veröffentlichungs-/Signierprüfungen bestanden. Physischer Update-Test steht noch aus.
 
 ## 1.0.0-305 — 7. November 2026
 

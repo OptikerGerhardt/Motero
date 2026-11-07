@@ -10,7 +10,7 @@ Die private Sicherung wird außerhalb des Repositorys erstellt. Für GitHub Acti
 
 ## Übergang von den bisherigen Test-APKs
 
-Die APKs bis 305 waren mit dem öffentlichen Zotero-Debug-Schlüssel signiert. Diese Identität ist für eine geschützte öffentliche Verteilung ungeeignet. Die alten Releases werden als Entwürfe archiviert; alte CI-Artefakte mit installierbaren Test-APKs werden nach gesicherter Archivierung entfernt.
+Die APKs bis 305 waren mit dem öffentlichen Zotero-Debug-Schlüssel signiert. Diese Identität ist für eine geschützte öffentliche Verteilung ungeeignet. Die alten Releases sind als Entwürfe archiviert; das alte CI-Artefakt mit installierbarer Test-APK wurde nach gesicherter Archivierung entfernt.
 
 Die Paketkennung bleibt `org.zotero.android.debug`. Ein signierter Rotationsnachweis erlaubt Android 9+ den Wechsel zum privaten Schlüssel unter Übernahme vorhandener App-Daten. Das alte Zertifikat erhält keine Rollback-Berechtigung und kann eine bereits umgestellte Installation nicht wieder durch ein altsigniertes Update ersetzen. Android 6–8 werden von diesen öffentlichen APKs nicht mehr unterstützt. Die tatsächliche Installation und Datenübernahme auf einem physischen Gerät sind gesondert zu prüfen.
 
