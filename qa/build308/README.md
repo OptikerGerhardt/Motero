@@ -7,3 +7,5 @@
 - New Kant margin and publisher-watermark cases use synthetic tests. The specific originals visible in the latest screenshots were not provided.
 - Physical-device testing of these new reader changes and live-account synchronization are separate. The user reported successful installation of Build 307 on a Pixel 8 with GrapheneOS; BOOX confirmation remains pending.
 - Publication additionally requires successful API 31 and 35 emulator migration/security checks in the GitHub release job.
+
+The crop-editor check waits for the asynchronous persistence message before reading it. A separate run with 750 ms of deliberately delayed bridge delivery passed; all product assertions remain in place.
