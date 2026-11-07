@@ -7,6 +7,7 @@ data class TagPickerArgs(
     val libraryId: LibraryIdentifier,
     val selectedTags: Set<String>,
     val tags: List<Tag> = emptyList(),
-    val callPoint: TagPickerResult.CallPoint
+    val callPoint: TagPickerResult.CallPoint,
+    val documentKey: String? = null,
 )
 

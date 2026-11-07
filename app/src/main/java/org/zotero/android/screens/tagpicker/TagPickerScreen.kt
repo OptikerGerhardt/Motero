@@ -1,5 +1,15 @@
 package org.zotero.android.screens.tagpicker
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import org.zotero.android.uicomponents.Strings
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -55,41 +65,43 @@ internal fun TagPickerScreen(
             },
         ) {
             Column {
-                val searchValue = viewState.searchTerm
-                var searchBarTextFieldState by remember {
-                    mutableStateOf(
-                        TextFieldValue(searchValue)
-                    )
-                }
-                val searchBarOnInnerValueChanged: (TextFieldValue) -> Unit = {
-                    searchBarTextFieldState = it
-                    viewModel.search(it.text)
-                }
-                val onSearchAction = {
-                    viewModel.addTagIfNeeded()
-                    searchBarOnInnerValueChanged.invoke(TextFieldValue())
-                }
-
                 TagPickerSearchBar(
-                    onSearchAction = onSearchAction,
-                    searchBarOnInnerValueChanged = searchBarOnInnerValueChanged,
-                    searchBarTextFieldState = searchBarTextFieldState
+                    onSearchAction = viewModel::acceptSuggestion,
+                    searchBarOnInnerValueChanged = viewModel::search,
+                    searchBarTextFieldState = viewState.input,
+                    completion = viewState.ghostCandidate?.name,
+                    onMoveHighlight = viewModel::moveHighlight,
                 )
-
+                if (viewState.notice != null) {
+                    val message = when (viewState.notice) {
+                        TagNotice.ChooseOrCreate -> Strings.tag_suggestion_choose_or_create
+                        TagNotice.Wait -> Strings.tag_suggestion_wait
+                        else -> Strings.tag_suggestion_load_failed
+                    }
+                    Text(stringResource(message), modifier = Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.error)
+                }
                 LazyColumn {
-                    items(items = viewState.tags) { tag ->
-                        val isChecked = viewState.selectedTags.contains(tag.name)
-                        TagPickerRow(
-                            text = tag.name,
-                            tagColorHex = tag.color,
-                            isChecked = isChecked,
+                    if (viewState.selectedTags.isNotEmpty()) {
+                        item { Text(stringResource(Strings.tag_suggestion_selected), Modifier.padding(16.dp)) }
+                    }
+                    items(items = viewModel.selectedTags(), key = { "selected:" + it.name }) { tag ->
+                        TagPickerRow(text = tag.name, tagColorHex = tag.color, isChecked = true,
                             onTap = { viewModel.selectOrDeselect(tag.name) })
                     }
-                    if (viewState.showAddTagButton) {
+                    item { Text(stringResource(Strings.tag_suggestion_suggestions), Modifier.padding(16.dp)) }
+                    itemsIndexed(items = viewState.tags, key = { _, tag -> "suggestion:" + tag.name }) { index, tag ->
+                        Box(Modifier.background(if (index == viewState.highlighted)
+                            MaterialTheme.colorScheme.surfaceVariant else Color.Transparent)) {
+                            TagPickerRow(text = tag.name, tagColorHex = tag.color, isChecked = false,
+                                onTap = { viewModel.selectOrDeselect(tag.name) })
+                        }
+                    }
+                    if (viewState.showAddTagButton && viewState.ready) {
                         item {
                             TagPickerCreateTagRow(
-                                tagName = viewState.searchTerm,
-                                onTap = onSearchAction,
+                                tagName = viewState.searchTerm.trim(),
+                                onTap = viewModel::createTag,
                             )
                         }
                     }

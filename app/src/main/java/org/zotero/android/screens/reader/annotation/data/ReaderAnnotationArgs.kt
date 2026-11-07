@@ -7,4 +7,5 @@ data class ReaderAnnotationArgs(
     val selectedAnnotation: ReaderAnnotation?,
     val library: Library,
     val canEdit: Boolean = true,
+    val documentKey: String? = null,
 )

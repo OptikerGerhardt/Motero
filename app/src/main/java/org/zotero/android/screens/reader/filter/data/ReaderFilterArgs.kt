@@ -6,5 +6,7 @@ import org.zotero.android.sync.Tag
 data class ReaderFilterArgs(
     val filter: ReaderAnnotationsFilter?,
     val availableColors: MutableList<String>,
+    val libraryId: org.zotero.android.sync.LibraryIdentifier,
+    val documentKey: String? = null,
     val availableTags: List<Tag>
 )

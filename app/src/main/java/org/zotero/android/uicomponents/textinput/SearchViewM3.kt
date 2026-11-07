@@ -29,6 +29,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.Drawables
@@ -44,6 +45,8 @@ fun SearchViewM3(
     backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainer,
     focusOnScreenOpen: Boolean = false,
     horizontalPadding: Dp = 12.dp,
+    inputModifier: Modifier = Modifier,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
     val cornerShape = RoundedCornerShape(24.dp)
     Row(
@@ -74,7 +77,8 @@ fun SearchViewM3(
         BasicTextField(
             value = textFieldState,
             onValueChange = onInnerValueChanged,
-            modifier = Modifier.weight(1f).focusRequester(focusRequester),
+            modifier = Modifier.weight(1f).focusRequester(focusRequester).then(inputModifier),
+            visualTransformation = visualTransformation,
             textStyle = textStyle.copy(
                 color = MaterialTheme.colorScheme.onSurface
             ),

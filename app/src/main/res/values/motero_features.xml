@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tag_suggestion_choose_or_create">Choose an existing tag, explicitly create a new tag, or clear the input before saving.</string>
+    <string name="tag_suggestion_wait">Finish the input and wait for the suggestions.</string>
+    <string name="tag_suggestion_load_failed">Tags could not be loaded. Close and reopen this dialog to try again.</string>
+    <string name="tag_suggestion_selected">Selected tags</string>
+    <string name="tag_suggestion_suggestions">Suggestions</string>
+    <string name="reader_manual_crop">Manual crop…</string>
+</resources>

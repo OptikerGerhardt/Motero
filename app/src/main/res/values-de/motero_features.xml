@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tag_suggestion_choose_or_create">Wähle einen vorhandenen Tag, lege ausdrücklich einen neuen Tag an oder leere die Eingabe vor dem Speichern.</string>
+    <string name="tag_suggestion_wait">Beende die Eingabe und warte auf die Vorschläge.</string>
+    <string name="tag_suggestion_load_failed">Tags konnten nicht geladen werden. Schließe und öffne diesen Dialog zum erneuten Laden.</string>
+    <string name="tag_suggestion_selected">Ausgewählte Tags</string>
+    <string name="tag_suggestion_suggestions">Vorschläge</string>
+    <string name="reader_manual_crop">Manueller Zuschnitt…</string>
+</resources>

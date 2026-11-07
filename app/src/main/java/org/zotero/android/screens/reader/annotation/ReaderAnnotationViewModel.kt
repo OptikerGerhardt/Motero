@@ -115,6 +115,7 @@ internal class ReaderAnnotationViewModel @Inject constructor(
             selectedTags = selected,
             tags = emptyList(),
             callPoint = TagPickerResult.CallPoint.ReaderAnnotationScreen,
+            documentKey = args.documentKey,
         )
 
         triggerEffect(ReaderAnnotationViewEffect.NavigateToTagPickerScreen)

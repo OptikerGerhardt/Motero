@@ -29,6 +29,7 @@ internal class ReaderFilterViewModel @Inject constructor(
     private val pdfReaderCurrentThemeEventStream: PdfReaderCurrentThemeEventStream,
 ) : BaseViewModel2<ReaderFilterViewState, ReaderFilterViewEffect>(ReaderFilterViewState()) {
 
+    private lateinit var args: ReaderFilterArgs
     private var pdfReaderThemeCancellable: Job? = null
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -49,6 +50,7 @@ internal class ReaderFilterViewModel @Inject constructor(
     }
 
     fun init(args: ReaderFilterArgs) = initOnce {
+        this.args = args
         updateState {
             copy(isDark = pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
         }
@@ -103,7 +105,8 @@ internal class ReaderFilterViewModel @Inject constructor(
 
     fun onTagsClicked() {
         ScreenArguments.tagPickerArgs = TagPickerArgs(
-            libraryId = LibraryIdentifier.custom(RCustomLibraryType.myLibrary),
+            libraryId = args.libraryId,
+            documentKey = args.documentKey,
             selectedTags = viewState.tags,
             tags = viewState.availableTags,
             callPoint = TagPickerResult.CallPoint.ReaderFilter,

@@ -2067,6 +2067,7 @@ class ReaderViewModel @Inject constructor(
                 selectedTags = selected,
                 tags = emptyList(),
                 callPoint = TagPickerResult.CallPoint.ReaderScreen,
+                documentKey = this@ReaderViewModel.key,
             )
 
             triggerEffect(ReaderViewEffect.NavigateToTagPickerScreen)
@@ -2122,6 +2123,8 @@ class ReaderViewModel @Inject constructor(
         }
 
         val args = ReaderFilterArgs(
+            libraryId = this.library.identifier,
+            documentKey = this.key,
             filter = viewState.annotationFilter,
             availableColors = sortedColors,
             availableTags = sortedTags
@@ -2152,6 +2155,7 @@ class ReaderViewModel @Inject constructor(
             selectedTags = viewState.annotationFilter?.tags ?: emptySet(),
             tags = tags,
             callPoint = TagPickerResult.CallPoint.ReaderSidebarFilter,
+            documentKey = this.key,
         )
         triggerEffect(ReaderViewEffect.NavigateToTagPickerScreen)
     }
@@ -2501,6 +2505,7 @@ class ReaderViewModel @Inject constructor(
             annotationEditReaderKey = viewState.selectedAnnotationKey
             val selectedAnnotation = annotationEditReaderKey?.let { this.annotations[it] }
             val readerAnnotationArgs = ReaderAnnotationArgs(
+                documentKey = this.key,
                 selectedAnnotation = selectedAnnotation,
                 library = this.library,
                 canEdit = selectedAnnotation?.editability(userId, library) == org.zotero.android.pdf.data.AnnotationEditability.editable,
