@@ -1,7 +1,7 @@
-# Mitgelieferte Laufzeitpakete
+# Bundled runtime packages
 
-Der Motero-Reader wird aus seinem eigenen Quellcode gebaut. Die unveränderte mobile PDF.js-Distribution ist separat als `pdfjs-mobile.zip` enthalten, damit ein sauberer Build nicht auf einen privaten Zotero-Buildserver oder einen nicht verfügbaren Motero-Commit angewiesen ist. `pdfjs-mobile.json` enthält Quellcommit, Archivhash und Hash jedes Eintrags; `scripts/prepare_reader_assets.py` prüft und entpackt sie vor Webpack.
+Motero's reader is built from its source. The pinned mobile PDF.js distribution is supplied separately as `pdfjs-mobile.zip`. `pdfjs-mobile.json` records its source commit, archive hash, and individual file hashes; `scripts/prepare_reader_assets.py` verifies and extracts it before Webpack runs.
 
-`runtime-assets.json` erfasst die unveränderten Android-Laufzeitdateien des geprüften Build 305. Diese Dateien werden einmalig im Repository gespeichert. Die zugehörigen öffentlichen Quellstände sind als Submodule festgeschrieben; die bestehenden `scripts/bundle_*`-Skripte dokumentieren den ursprünglichen Paketierungsweg. Kein Anspruch auf bytegenau reproduzierbare APKs wird daraus abgeleitet.
+`runtime-assets.json` records the Android runtime files retained from the verified Build 305 baseline. Their source revisions are pinned as public submodules, and the existing `scripts/bundle_*` scripts document the original packaging process. These pinned inputs do not imply that complete APKs are byte-for-byte reproducible.
 
-Bei einem bewussten Abhängigkeitsupdate Quellen, Lizenzen, Pakete und Manifest gemeinsam aktualisieren und die Reader-/Android-Regressionen erneut ausführen. Normale Motero-Reader-Änderungen benötigen kein PDF.js- oder Runtime-Update.
+When updating a dependency, update its sources, licenses, packages, and manifests together and run the relevant reader and Android regression tests. Ordinary changes to Motero's reader do not require rebuilding PDF.js or the other runtime packages.

@@ -1,48 +1,50 @@
 # Motero
 
-[![Build und Tests](https://github.com/OptikerGerhardt/Motero/actions/workflows/motero.yml/badge.svg)](https://github.com/OptikerGerhardt/Motero/actions/workflows/motero.yml)
+[![Build and tests](https://github.com/OptikerGerhardt/Motero/actions/workflows/motero.yml/badge.svg)](https://github.com/OptikerGerhardt/Motero/actions/workflows/motero.yml)
 
-**Motero ist ein inoffizieller Fork von Zotero für Android**, angepasst für PDF-Lektüre auf BOOX-E-Readern und auf dem Smartphone. Das Projekt wird unabhängig von Zotero entwickelt und ist nicht mit der Corporation for Digital Scholarship verbunden.
+Motero is an unofficial fork of **[Zotero for Android](https://github.com/zotero/zotero-android)**, focused on reading and annotating PDFs on BOOX e-readers and Android phones. It adds reading controls, page fitting and cropping, and annotation tools tailored to that workflow.
 
-Der Quellstand und die Release-Automatisierung sind für eine öffentliche Bereitstellung vorbereitet. Das Repository bleibt bis zur ausdrücklichen Entscheidung des Betreibers privat. Build 306 ist mit dem eigenen, privaten Motero-Schlüssel signiert und auf GitHub verfügbar; die früheren Test-APKs sind als private Entwürfe archiviert. Der genaue Freigabestand steht in [PUBLICATION_READINESS.md](docs/PUBLICATION_READINESS.md).
+This fork is maintained independently and is not affiliated with or endorsed by Zotero or the Corporation for Digital Scholarship.
 
-## Entwicklung mit ChatGPT und übernommene Beiträge
+## Features
 
-**Die eigenen Motero-Anpassungen und ihre Integration wurden vollständig mithilfe von ChatGPT / OpenAI Codex programmiert.** Anforderungen, Entscheidungen und die praktische Erprobung werden vom Projektbetreiber verantwortet. Auch Tests und Build-/Repository-Konfiguration wurden mit dieser Unterstützung erstellt. Das ist keine unabhängige Sicherheitsprüfung und keine Garantie für fehlerfreie Software.
+- Direct text highlighting, annotation tools, and Zotero tags in the PDF reader.
+- Automatic content fitting with controls for margins and marginal notes.
+- Manual PDF cropping for all pages, odd pages, or even pages, saved per attachment.
+- SmartScroll, hardware-button navigation, and edge taps in vertical, horizontal, and wrapped PDF layouts.
+- A top-right bookmark shortcut: tap to add a bookmark, then tap again to remove it.
+- Tag suggestions ranked by use in the current document and library, with explicit creation of new tags.
+- EPUB navigation and local reading-position restoration.
 
-Die zugrunde liegende Zotero-Software und übernommene Community-Beiträge behalten ihre ursprüngliche Urheberschaft. In diesem Fork wurden außerdem ausgewählte Pull Requests aus den Originalprojekten zusammengeführt bzw. deren bereits gemergte Änderungen übernommen. Beispiele sind die Lautstärketasten-Steuerung, „Fit to Content“ und Korrekturen der Reader-Navigation. **„In Motero übernommen“ bedeutet nicht automatisch „im Zotero-Original gemergt“.** Verifizierte Links und die jeweilige Einordnung stehen in [UPSTREAM_CHANGES.md](UPSTREAM_CHANGES.md).
+View cropping does not modify the PDF file or annotation coordinates. Manual crop settings are stored locally and are not synchronized with Zotero.
 
-## Danke an Zotero und die Community
+## Install and update
 
-Motero wäre ohne die langjährige Arbeit der Entwicklerinnen und Entwickler von **[Zotero](https://www.zotero.org/)**, **[Zotero für Android](https://www.zotero.org/support/android)** und **[Zotero Reader](https://github.com/zotero/reader)** nicht möglich. Die Grundlage dieser App ist ihre Arbeit an Literaturverwaltung, Synchronisation, PDF-/EPUB-Lektüre, Annotationen, Übersetzungen und Dokumentation.
+**Requires Android 9 or later.** Download `Motero_Build<number>.apk` from the [latest release](https://github.com/OptikerGerhardt/Motero/releases/latest). Each release also includes source code, test reports, and SHA-256 checksums.
 
-Vielen Dank an die Corporation for Digital Scholarship sowie an die Maintainer, Beitragenden, Übersetzenden und Testenden für ihre Zeit, ihre Mühe und die offene Bereitstellung ihrer Arbeit. Die Motero-spezifischen Anpassungen bauen darauf auf. Hinweise und Anerkennung gelten ausdrücklich auch den ursprünglichen Autorinnen und Autoren der übernommenen Pull Requests.
+Release APKs are signed with a dedicated Motero key. The public certificate and signing policy are available in [signing/](signing/). The application ID is `org.zotero.android.debug`; this is retained for compatibility with earlier Motero installations. Release APKs are not debuggable.
 
-Quellen: [Zotero auf GitHub](https://github.com/zotero/zotero), [Zotero für Android auf GitHub](https://github.com/zotero/zotero-android), [Zotero Reader auf GitHub](https://github.com/zotero/reader). Motero ist ein unabhängiger Fork und kein offizielles Zotero-Produkt.
+For earlier Motero test builds, the release includes Android signing-key rotation. Back up your data before the first update: the rotation has been checked with Android signing tools, but installation and data migration on a physical device have not yet been verified. See [SECURITY.md](SECURITY.md) for details.
 
-## Herunterladen und aktualisieren
+You can also track this repository with [Obtainium](https://github.com/ImranR98/Obtainium). Use the APK filename filter `^Motero_Build[0-9]+\.apk$`.
 
-Geprüfte APKs stehen unter **[Releases](https://github.com/OptikerGerhardt/Motero/releases)** als `Motero_Build<Nummer>.apk`. Die öffentliche Variante benötigt **Android 9 oder neuer**, ist nicht debuggbar und wird mit einem privaten Motero-Schlüssel signiert. Der öffentliche Prüf-Schlüssel und die Update-Rotation sind in [signing/](signing/) dokumentiert.
+## Development with ChatGPT
 
-Die Paketkennung bleibt `org.zotero.android.debug`. Für bestehende Motero-Testinstallationen wird der Übergang vom alten Testschlüssel durch Androids signierte Zertifikatsrotation vorbereitet. Rückwechsel auf den bekannten Testschlüssel werden nicht erlaubt. Die Rotation erhält die Berechtigung zum Übernehmen vorhandener App-Daten; eine tatsächliche Update-Installation auf BOOX/GrapheneOS muss gesondert geprüft werden. Vor dem ersten Wechsel eigene Daten sichern.
+All Motero-specific changes and their integration were programmed using **ChatGPT / OpenAI Codex**, including the accompanying tests and build configuration. The project maintainer is responsible for requirements, review, and release decisions.
 
-Die bisherigen APKs 303/305 verwenden einen öffentlich bekannten Debug-Schlüssel. Sie sind keine sicheren öffentlichen Installationspakete und werden nicht als reguläre öffentliche Releases angeboten. Entwicklungsbuilds dürfen nicht als Ersatz für produktionssignierte Updates verwendet werden. Details: [SECURITY.md](SECURITY.md).
+The underlying Zotero code and incorporated community contributions retain their original authorship. Motero includes selected pull requests and fixes from the upstream projects; some have been merged upstream, while others were incorporated into this fork from open pull requests. [UPSTREAM_CHANGES.md](UPSTREAM_CHANGES.md) lists the contributions and their upstream status.
 
-Bei einem privaten Repository musst du auf GitHub angemeldet sein. Obtainium kann das Repository mit Leseberechtigung als GitHub-Quelle verwenden; der APK-Dateifilter ist `Motero_Build.*\.apk`. Zugangsdaten gehören ausschließlich in die lokale App-Konfiguration.
+## Thanks to Zotero and its contributors
 
-## Funktionen
+Motero exists because of the work behind **[Zotero](https://www.zotero.org/)**, **[Zotero for Android](https://www.zotero.org/support/android)**, and **[Zotero Reader](https://github.com/zotero/reader)**.
 
-- Direkte Textmarkierung, Annotationswerkzeuge und Zotero-Tags im PDF-Reader.
-- Automatische Inhaltserkennung mit wählbaren Fit-, Rand- und Marginalien-Einstellungen.
-- Manueller Zuschnitt für alle, gerade oder ungerade PDF-Seiten, lokal pro Dokument gespeichert.
-- SmartScroll und Hardware-Blättern, Randtippen in vertikalem, horizontalem und Wrapped-Modus.
-- Bookmark-Shortcut oben rechts: einmal tippen setzt das Lesezeichen, erneut tippen entfernt es.
-- Tag-Vorschläge nach Nutzung im aktuellen Dokument und in der Bibliothek, mit ausdrücklicher Neuanlage.
-- EPUB-Navigation und lokale Wiederherstellung der Leseposition.
+Thank you to the Corporation for Digital Scholarship and to the developers, maintainers, contributors, translators, reviewers, and testers for the time, care, and effort invested in these projects. Their work on reference management, synchronization, document reading, annotations, and open infrastructure is the foundation of this fork. Credit also belongs to the original authors of the pull requests incorporated into Motero.
 
-Vollständiger Stand: [Featureplan](FEATUREPLAN.md), [Änderungsübersicht](CHANGELOG.md) und [Prüfbericht](BUILD_STATUS.md). PDF-Dateien werden durch die Ansichts-Zuschnitte nicht verändert. Die manuellen Rahmen sind lokale Einstellungen und werden nicht mit Zotero synchronisiert.
+Upstream source repositories: [Zotero](https://github.com/zotero/zotero), [Zotero for Android](https://github.com/zotero/zotero-android), and [Zotero Reader](https://github.com/zotero/reader).
 
-## Entwicklung und Build
+## Build from source
+
+Requirements: JDK 17, Node.js 24, Python 3.12, Android SDK package `platforms;android-37.0`, and Build Tools 36.0.0. Current Android SDK command-line tools require JDK 21 for SDK installation; the app itself builds with JDK 17. The Gradle wrapper downloads the pinned Gradle distribution and checks its SHA-256 checksum.
 
 ```sh
 git clone --recurse-submodules https://github.com/OptikerGerhardt/Motero.git
@@ -57,28 +59,28 @@ python3 scripts/package_reader_assets.py
 ./gradlew :app:testDevDebugUnitTest :app:assembleDevDebug --init-script scripts/test_jvm_agent.gradle --no-build-cache
 ```
 
-Voraussetzungen: **JDK 17**, **Node 24**, Python 3, Android SDK **Platform 37.0** und **Build Tools 36.0.0**. Gradle 9.6.1 wird vom Wrapper mit SHA-256-Prüfung geladen. Der Workflow verwendet Java 21 für aktuelle SDK-Werkzeuge und danach JDK 17 für den App-Build. Die APK entsteht unter `app/build/outputs/apk/dev/debug/app-dev-debug.apk`.
+The development APK is written to `app/build/outputs/apk/dev/debug/app-dev-debug.apk`. It uses a public development key and must not be distributed as a production release. See [docs/RELEASING.md](docs/RELEASING.md) for release builds and private signing.
 
-Der angepasste Reader liegt im Branch [`reader`](https://github.com/OptikerGerhardt/Motero/tree/reader) **desselben Repositorys** und wird auf `main` als Submodul festgeschrieben. Damit enthält ein rekursiver Klon den tatsächlichen Motero-Reader statt eines nicht verfügbaren Upstream-Commits. Reader-Änderungen zuerst im Branch `reader` committen/pushen, danach den Submodulstand auf `main` aktualisieren.
+The customized reader is pinned as a submodule from this repository's [`reader` branch](https://github.com/OptikerGerhardt/Motero/tree/reader). Initialize submodules when cloning. The pinned PDF.js distribution and runtime packages are documented in [vendor/README.md](vendor/README.md).
 
-Die unveränderten Laufzeitpakete und die geprüfte mobile PDF.js-Distribution werden mitgeliefert. [vendor/README.md](vendor/README.md) beschreibt Quellen, Hashprüfung und Aktualisierung. Keine privaten PDFs oder Kontozugangsdaten werden für den Build benötigt.
+## Tests and project status
 
-## Tests und Releases
+Build 306 passed 276 reader tests, 109 Android tests across 25 suites, ten browser checks, and five publication and signing checks. The [release](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.0-306) includes test reports. Physical-device updates, BOOX keyboard behavior, and synchronization with a live Zotero account are not covered by that automated run.
+
+Browser checks use Playwright 1.56.1 and Chromium. With Playwright installed and available through `NODE_PATH`, run:
 
 ```sh
 python3 scripts/run_browser_checks.py --browser /usr/bin/chromium
 ```
 
-Die Browserprüfungen benötigen Playwright 1.56.1 für Node. Installiere es getrennt vom Projekt-Lockfile und setze `NODE_PATH` auf dessen `node_modules`. Eine zusätzliche Prüfung der privaten Original-Plessner-PDF läuft nur, wenn `BOOX_PLESSNER_PDF` gesetzt ist. Die mitgelieferten synthetischen PDF-/EPUB-Fixtures werden immer geprüft.
+Further development notes: [feature plan](FEATUREPLAN.md), [changelog](CHANGELOG.md), and [build verification](BUILD_STATUS.md) (in German).
 
-Bei Änderungen an der App oder am eingebundenen Reader wird `BuildConfig.versionCode` erhöht. Der GitHub-Workflow baut und testet `main` und Pull Requests. Ein neuer Build auf `main` wird nach erfolgreichen Prüfungen und ausschließlich mit vorhandenem privaten Signierschlüssel als Release mit APK, vollständigem Quellarchiv, Prüfberichten und SHA-256-Summen angelegt. Fehlt die sichere Signierung, stoppt die Veröffentlichung; es gibt keinen Rückfall auf den Debug-Schlüssel. Bereits vorhandene Releases werden nicht überschrieben. Details: [Release-Ablauf](docs/RELEASING.md).
+## Contributing and support
 
-Build 306: **276 Reader-Tests, 109 Android-Tests in 25 Suiten, zehn Browserprüfungen und fünf Veröffentlichungs-/Signierprüfungen bestanden**. Die private Signierung und der automatische GitHub-Release wurden erfolgreich ausgeführt; die tatsächlich heruntergeladene APK ist erneut geprüft. [Release und Nachweise](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.0-306). Die Original-Plessner-Prüfung wurde lokal ebenfalls durchgeführt. Physische BOOX-/Smartphone-Tests, die tatsächliche BOOX-Tastatur und echter Kontosync sind im automatisierten Testlauf nicht enthalten.
+Report Motero bugs and feature requests in [this repository's issues](https://github.com/OptikerGerhardt/Motero/issues). Include the build number, device, Android version, and steps to reproduce. See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidance and [SECURITY.md](SECURITY.md) for security reports. Please keep personal documents and credentials out of reports.
 
-## Herkunft und Lizenz
+## License
 
-Motero basiert auf [Zotero für Android](https://github.com/zotero/zotero-android) und [Zotero Reader](https://github.com/zotero/reader). Der abgeleitete Anwendungscode wird unter **GNU AGPLv3** weitergegeben, entsprechend den Upstream-Bedingungen. Die ursprünglich im leeren Repository gewählte Apache-Lizenz war für den später übernommenen Zotero-Code nicht die passende Projektlizenz.
+Motero's derived application code is distributed under the **GNU Affero General Public License, version 3 (AGPLv3)**, following the upstream license. See [LICENSE](LICENSE), the preserved upstream [COPYING](COPYING), and [NOTICE.md](NOTICE.md). Dependencies retain their respective licenses and copyright notices.
 
-Siehe [LICENSE](LICENSE), die erhaltenen Upstream-Hinweise in [COPYING](COPYING) und [NOTICE.md](NOTICE.md). Abhängigkeiten behalten ihre jeweiligen Lizenzen. „Zotero“ ist eine Marke der Corporation for Digital Scholarship; „Motero“ kennzeichnet diesen unabhängigen Fork.
-
-Fehler und Vorschläge zu Motero bitte in [diesem Repository](https://github.com/OptikerGerhardt/Motero/issues) melden. Hinweise zum Mitmachen stehen in [CONTRIBUTING.md](CONTRIBUTING.md).
+Zotero is a registered trademark of the Corporation for Digital Scholarship. The Motero name identifies this independent fork.

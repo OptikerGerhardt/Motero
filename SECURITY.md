@@ -1,21 +1,27 @@
-# Sicherheit, öffentliche Freigabe und Signierung
+# Security
 
-Motero bleibt privat, bis der Betreiber die Sichtbarkeit ausdrücklich ändert. Der öffentliche Code wird auf bekannte Zugangsdatenmuster, private Dokumente und sensible Dateien geprüft; auch Historie und alte Release-Anhänge werden berücksichtigt. Der konkrete Prüfstand steht in `docs/PUBLICATION_READINESS.md`. Eine solche Prüfung ersetzt keine vollständige Schwachstellenanalyse.
+## Reporting a vulnerability
 
-## Öffentliche APKs ab Build 306
+Use GitHub's **Report a vulnerability** option when it is available. Do not include credentials, signing keys, personal PDFs, or account data in public issues. If private reporting is unavailable, open an issue asking for a private reporting channel without disclosing the vulnerability or sensitive data.
 
-Öffentliche Installationspakete müssen nicht debuggbar sein, mindestens Android 9/API 28 erfordern und mit dem privaten Motero-Schlüssel aus `signing/release-policy.json` signiert sein. Geprüft werden Paketkennung, Code, V3-Signatur, Zertifikat, Runtime-/PDF.js-Hashes und die eingebetteten Reader-Quellen. Ein fehlendes oder falsches Secret stoppt die Veröffentlichung; der bekannte Debug-Schlüssel ist kein Ersatz.
+## Release signing
 
-Die private Sicherung wird außerhalb des Repositorys erstellt. Für GitHub Actions wird ausschließlich das Repository-Secret `MOTERO_RELEASE_SIGNING` verwendet. Der öffentliche Ordner `signing/` enthält keinen privaten Schlüssel.
+Release APKs from Build 306 onward require Android 9/API 28 or later. They are not debuggable and are signed with the private Motero identity pinned in [signing/release-policy.json](signing/release-policy.json). Verification checks the certificate, APK Signature Scheme v3, package and version, signing-key rotation, bundled runtime and PDF.js hashes, and embedded reader sources.
 
-## Übergang von den bisherigen Test-APKs
+GitHub Actions stores signing material in the repository secret `MOTERO_RELEASE_SIGNING`. Only the release job for `main` receives that secret. Missing or incorrect signing material stops publication. Pull-request builds receive no private signing key. The [signing/](signing/) directory contains only public verification information.
 
-Die APKs bis 305 waren mit dem öffentlichen Zotero-Debug-Schlüssel signiert. Diese Identität ist für eine geschützte öffentliche Verteilung ungeeignet. Die alten Releases sind als Entwürfe archiviert; das alte CI-Artefakt mit installierbarer Test-APK wurde nach gesicherter Archivierung entfernt.
+The maintainer must keep a separate, secure backup of the private key. Never commit that backup or attach it to a release.
 
-Die Paketkennung bleibt `org.zotero.android.debug`. Ein signierter Rotationsnachweis erlaubt Android 9+ den Wechsel zum privaten Schlüssel unter Übernahme vorhandener App-Daten. Das alte Zertifikat erhält keine Rollback-Berechtigung und kann eine bereits umgestellte Installation nicht wieder durch ein altsigniertes Update ersetzen. Android 6–8 werden von diesen öffentlichen APKs nicht mehr unterstützt. Die tatsächliche Installation und Datenübernahme auf einem physischen Gerät sind gesondert zu prüfen.
+## Earlier development builds
 
-## Meldungen und Zugangsdaten
+Earlier Motero test APKs used Zotero's publicly available Android development key. Those releases are archived as drafts and are not offered as production downloads. The old CI artifact containing a development-signed APK was removed after its contents were preserved privately.
 
-Schwachstellen oder versehentlich enthaltene Zugangsdaten vertraulich über GitHubs „Report a vulnerability“ melden, sofern verfügbar. Keine Tokens, privaten Schlüssel, Passwörter oder persönlichen PDFs in öffentliche Issues schreiben.
+The application ID remains `org.zotero.android.debug`. A signed rotation proof supports migration from the earlier key on Android 9+. The old key retains only the installed-data capability; it has no rollback, shared-UID, signature-permission, or authenticator capability in the new lineage. This prevents that old identity from authorizing a rollback of the migrated installation under Android's signing checks.
 
-Die mitgelieferte ältere Datei `debug.keystore` ist unverändert öffentlich aus Zotero übernommen und nur für lokale Entwicklungs-/Negativtests vorgesehen. Ein historischer temporärer Keystore wurde ebenfalls als identischer öffentlicher Upstream-Inhalt nachgewiesen. Keine dieser Identitäten ist als öffentlicher Motero-Release-Signierer zugelassen.
+Signing-tool checks cover APIs 28, 32, 33, and 36. Installation and data migration on physical BOOX and GrapheneOS devices still need verification. Back up app data before the first migration. Android 6–8 are not supported by these release APKs.
+
+The tracked `debug.keystore` and a historical temporary keystore are byte-identical public Zotero upstream files. Their exact hashes are documented in [scripts/publication-exceptions.json](scripts/publication-exceptions.json). They are permitted only as development fixtures and are rejected as production signers.
+
+## Scope of publication checks
+
+[The publication review](docs/PUBLICATION_READINESS.md) records checks for accidental credential or document disclosure, licensing notices, and release configuration. These checks do not constitute a comprehensive application vulnerability assessment.

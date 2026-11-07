@@ -1,7 +1,7 @@
-# Öffentliche Signierinformationen
+# Public signing information
 
-Dieser Ordner enthält ausschließlich das öffentliche X.509-Zertifikat, seinen SHA-256-Fingerabdruck und den öffentlichen Nachweis der Zertifikatsrotation. Der private Schlüssel und seine Passwörter dürfen hier niemals liegen.
+This directory contains only the public X.509 certificate, its SHA-256 fingerprint, and the public signing-key rotation proof. The private key and passwords must never be stored here.
 
-`release-policy.json` bindet öffentliche APKs an den eigenen Motero-Schlüssel, Android API 28+ und APK Signature Scheme v3. Die alte Testidentität darf vorhandene App-Daten an die neue Identität übergeben; Shared-UID-, Signature-Permission-, Authenticator- und Rollback-Vertrauen zum alten öffentlichen Testschlüssel werden nicht weitergegeben.
+`release-policy.json` pins release APKs to the Motero certificate, Android API 28+, and APK Signature Scheme v3. The legacy development identity retains only the installed-data capability for migration. It has no shared-UID, signature-permission, authenticator, or rollback capability in the new lineage.
 
-Die CI veröffentlicht ohne das Repository-Secret `MOTERO_RELEASE_SIGNING` keine APK. Eine neue Signieridentität darf nicht ohne geplante Rotation generiert werden. Der Besitzer muss die private Sicherung unabhängig von der Cloud und von GitHub verwahren.
+CI requires the repository secret `MOTERO_RELEASE_SIGNING` before publishing an APK. The maintainer must keep a secure private backup independent of GitHub. Changes to the signing identity require a planned rotation. See [the release guide](../docs/RELEASING.md).

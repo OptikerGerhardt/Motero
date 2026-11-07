@@ -1,9 +1,9 @@
-# Zu Motero beitragen
+# Contributing to Motero
 
-Fehler und Funktionswünsche zu diesem Fork gehören in die Issues dieses Repositorys. Bitte Buildnummer, Gerät, Android-/BOOX-Version und Schritte zum Nachstellen angeben. Private PDFs, Kontodaten und Tokens weglassen; nach Möglichkeit ein kleines anonymes Beispiel verwenden.
+Report bugs and feature requests for this fork in [Motero's issues](https://github.com/OptikerGerhardt/Motero/issues). Include the build number, device, Android/BOOX version, and steps to reproduce. Prefer a small, anonymized example over a personal document. Keep credentials and account data out of reports.
 
-Vor Änderungen `README.md`, `AGENTS.md` und den aktuellen `FEATUREPLAN.md` lesen. Relevante Tests ausführen und zusammenhängende Änderungen in nachvollziehbaren Commits festhalten. Lizenz- und Copyright-Hinweise der übernommenen Projekte erhalten. Keine neue Lizenzvereinbarung oder Rechteübertragung wird für Beiträge zu diesem Fork vorausgesetzt.
+Before making changes, read [README.md](README.md), [AGENTS.md](AGENTS.md), and the current [feature plan](FEATUREPLAN.md) (German). Run the tests relevant to your change, keep commits focused, and preserve existing copyright and license notices. This fork does not require a separate contributor agreement or copyright assignment.
 
-Der Reader liegt als Submodul im Branch `reader` desselben Repositorys. Reader-Commits zuerst dort veröffentlichen, anschließend den festgeschriebenen Stand auf `main` aktualisieren. Bei App-Änderungen die Buildnummer erhöhen; der erfolgreiche Workflow erstellt den zugehörigen Release.
+The reader is a submodule pinned to this repository's `reader` branch. Push reader commits there first, then update the submodule reference on `main`. App changes require a higher build number; the successful release workflow publishes the corresponding APK and sources.
 
-Meldungen zum unveränderten offiziellen Zotero-Programm richten sich nach den [Zotero-Supportregeln](https://www.zotero.org/support/zotero_support). Die Maintainer dieses Forks sprechen nicht für das Zotero-Team.
+Issues with the official Zotero application should follow [Zotero's support guidelines](https://www.zotero.org/support/zotero_support). Motero's maintainer does not speak on behalf of the Zotero team.

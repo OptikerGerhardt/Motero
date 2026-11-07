@@ -1,37 +1,39 @@
-# APK-Releases
+# Building and publishing releases
 
-Die Sichtbarkeit bleibt privat, bis der Betreiber sie ausdrücklich ändert. Ein Release ändert die Repository-Sichtbarkeit nicht. Die bisherigen Test-Releases bleiben als Entwürfe archiviert; sie dürfen nicht als sichere öffentliche APKs angeboten werden.
+## Signing setup
 
-## Einmalige private Signierung einrichten
+Release APKs use the private Motero signing identity pinned in `signing/release-policy.json`. The repository contains only its public certificate and rotation proof. Keep the private key and its recovery copy outside Git and release assets: future updates depend on retaining this identity.
 
-Der öffentliche Prüf-Schlüssel und die Rotationslinie liegen in `signing/`. Der dazugehörige private Schlüssel wurde außerhalb des Repositorys erzeugt. Er muss dauerhaft und sicher gesichert werden: Ohne ihn können zukünftige Updates nicht mit derselben Identität veröffentlicht werden. Private Sicherungsarchive und Secret-JSON niemals committen, in Releases hochladen oder in Issues/Chat kopieren.
+The maintainer configures the repository Actions secret **`MOTERO_RELEASE_SIGNING`** under **Settings → Secrets and variables → Actions**. Its value is a JSON object with `keystore_base64`, `store_password`, `key_password`, and `key_alias`, supplied from the private signing backup. Never paste those values into an issue or commit.
 
-1. Auf GitHub das Repository öffnen → **Settings → Secrets and variables → Actions → New repository secret**.
-2. Name: **`MOTERO_RELEASE_SIGNING`**. Als Wert den vollständigen Inhalt der privaten Datei `MOTERO_RELEASE_SIGNING.json` einfügen. Speichern. Die Datei enthält `keystore_base64`, `store_password`, `key_password` und `key_alias`.
-3. Unter **Actions → Motero build, test and release → Run workflow** auf `main` starten. Eine vorhandene fehlgeschlagene Ausführung kann ebenfalls erneut ausgeführt werden, sofern sie den aktuellen Quellstand verwendet.
+This signing setup was verified by the successful Build 306 release. Generating a replacement key requires a planned migration; do not silently change the pinned identity.
 
-Für Build 306 hat der Besitzer das Secret eingerichtet; der signierte GitHub-Release ist erfolgreich geprüft. Bei einer neuen Einrichtung erfolgt dieser Schritt durch den Besitzer: Die aktuelle Chat-GitHub-Verbindung darf die Actions-Secrets-API nicht verwenden (HTTP 403). Der private Sicherungsdownload wird separat bereitgestellt; er ist kein Repository-Inhalt.
+## Automated release process
 
-## Automatischer Ablauf
+1. Commit reader changes on this repository's `reader` branch and push them first. Update the reader submodule reference and Android changes on `main`.
+2. For app changes, increase `BuildConfig.versionCode` and update the changelog and feature plan. Use focused commits.
+3. The build job receives no signing secret. It checks source history, builds and tests the reader and Android app, runs browser and publication checks, and prepares an unsigned APK with a complete source archive including submodules.
+4. Only the release job for `main` receives the signing secret. It signs and verifies the APK against the pinned certificate, Android 9+ requirement, non-debuggable manifest, V3 rotation, restricted legacy signing capabilities, and runtime/reader content hashes.
+5. The unsigned input is removed from the release files. GitHub publishes `v1.0.0-<build>` with `Motero_Build<build>.apk`, complete sources, verification reports, and `SHA256SUMS.txt`.
 
-1. Reader-Änderungen im Submodul committen und in den Branch `reader` dieses Repositorys pushen. Danach den Submodulstand und Android-Änderungen auf `main` übernehmen.
-2. Bei Produktänderungen `BuildConfig.versionCode` erhöhen und Changelog/Featureplan aktualisieren. Fokusierte Commits nach `main` pushen.
-3. Der Build-Job erhält keine Signiersecrets. Er prüft die Quellhistorie, baut den Reader, führt Reader-, native Release- und Browserprüfungen aus und baut eine **unsignierte, nicht installierbare** Release-APK. Negativtests prüfen den Abbruch bei fehlendem Schlüssel und die Zurückweisung des alten öffentlichen Schlüssels. Ein Quellarchiv einschließlich initialisierter Submodule wird ebenfalls geprüft.
-4. Nur der Release-Job für vertrauenswürdiges `main` erhält das Secret. Er signiert mit der festgeschriebenen Motero-Identität und prüft Version, Paket, nicht debuggbaren Manifestzustand, Android 9+, V3-Rotation, die eingeschränkten Rechte des alten Signierers sowie Runtime-/PDF.js-Hashes und eingebettete Reader-Quellen.
-5. Nach finaler Prüfung wird die unsignierte Eingabe entfernt. Der neue Tag `v1.0.0-<Buildnummer>` und der Release enthalten ausschließlich die sichere APK, vollständige Quellen, Nachweise und `SHA256SUMS.txt`. Ein fehlendes oder falsches Secret stoppt die Veröffentlichung. Es gibt keinen Debug-Fallback.
+A missing or incorrect signing secret stops publication. There is no fallback to the public development key. Pull requests cannot publish releases and receive no signing secret. Existing tags and assets must not be overwritten. App changes cannot reuse a published build number; documentation updates do not replace existing releases.
 
-Pull Requests veröffentlichen nichts und erhalten keinen privaten Signierschlüssel. Dokumentationsänderungen überschreiben keine vorhandenen Releases. Produktänderungen ohne höhere Buildnummer werden abgewiesen. Bestehende Tags oder Assets werden nie per Force-Push oder `--clobber` ersetzt. Die Actions sind auf Commit-SHAs festgeschrieben; der Release-Job benötigt `contents: write`, der Build-Job nur `contents: read`.
+The workflow can also be started under **Actions → Motero build, test and release → Run workflow** on `main`. The release job needs `contents: write`; the build job needs `contents: read`. Third-party Actions are pinned to commit hashes.
 
-## Lokaler öffentlicher Build
+## Local release build
 
-Mit initialisierten Submodulen, JDK 17, dem dokumentierten SDK und den vorbereiteten Reader-Assets:
+Initialize submodules and prepare the reader assets as described in the root README. Use JDK 17 and the documented Android SDK, then:
 
 ```sh
 ./gradlew :app:testDevReleaseUnitTest :app:assembleDevRelease -PmoteroPublicRelease=true --init-script scripts/test_jvm_agent.gradle --no-build-cache
-python3 scripts/sign_release.py --apk app/build/outputs/apk/dev/release/app-dev-release-unsigned.apk --output /tmp/Motero_Build306.apk --build-tools "$ANDROID_HOME/build-tools/36.0.0" --secret-file /sicherer/privater/Pfad/MOTERO_RELEASE_SIGNING.json
+python3 scripts/sign_release.py --apk app/build/outputs/apk/dev/release/app-dev-release-unsigned.apk --output /tmp/Motero_Build306.apk --build-tools "$ANDROID_HOME/build-tools/36.0.0" --secret-file /secure/private/path/MOTERO_RELEASE_SIGNING.json
 python3 scripts/prepare_release.py --apk /tmp/Motero_Build306.apk --output dist --build-tools "$ANDROID_HOME/build-tools/36.0.0"
 ```
 
-Buildnummer jeweils anpassen. `--secret-file` ist ausschließlich für die lokale private Einrichtung; CI liest das Secret aus ihrer Umgebung. Quellarchive enthalten Git-Dateien samt Submodulen, keine `.git`-Verzeichnisse oder unversionierten privaten Dateien. `debug.keystore` ist die nachgewiesene öffentliche Upstream-Testdatei und darf nur für Entwicklungs- und Negativtests verwendet werden.
+Adjust the build number to the current version. `--secret-file` is for local signing; CI reads the Actions secret from its environment. The source packer includes tracked files and initialized submodules, excludes Git metadata and untracked local files, and records file hashes in `SOURCE_SNAPSHOT.json`.
 
-Android-9+-Zertifikatsrotation ist technisch geprüft; die Installation und Datenübernahme auf dem konkreten BOOX-/GrapheneOS-Gerät ist noch zu erproben. Vor dem ersten Wechsel eigene Daten sichern. Der bekannte alte Schlüssel hat nach dem Wechsel keine Rollback-Berechtigung. Ältere `verify_reader_update.py`-Berichte bis Build 305 dokumentieren denselben Testschlüssel und sind kein Beleg für diese neue Rotation.
+## Development keys and migration
+
+`debug.keystore` is the verified public Zotero development key, retained for development and negative signing tests. It is not an acceptable release identity. Earlier development-signed releases remain archived as drafts and must not be re-published as production downloads.
+
+The release APK's Android-9+ rotation proof has been checked with signing tools. Actual installation and data migration on BOOX/GrapheneOS devices still need verification. Back up data before the first migration. The old key has no rollback capability after the transition. Historical same-key update reports through Build 305 do not verify this new rotation.

@@ -1,16 +1,16 @@
-# Übernommene Änderungen aus den Originalprojekten
+# Incorporated upstream contributions
 
-Geprüft am 7. November 2026 anhand der Git-Historie und der GitHub-PR-Metadaten. Die ursprüngliche Urheberschaft und vorhandene Co-Author-Hinweise bleiben erhalten. Eigene Motero-Anpassungen wurden mit ChatGPT/Codex umgesetzt; diese Aussage schreibt die folgenden Originalbeiträge nicht ChatGPT zu.
+Reviewed on November 7, 2026 against Git history and GitHub pull-request metadata. Original authorship and co-author notices are preserved. The statement that Motero's own changes were programmed with ChatGPT/Codex does not attribute these upstream contributions to ChatGPT.
 
-| Originalbeitrag | Einordnung in Motero | Status im Original bei der Prüfung |
+| Contribution | Inclusion in Motero | Upstream status at review |
 | --- | --- | --- |
-| [Zotero Android #298 — Add volume buttons zoom](https://github.com/zotero/zotero-android/pull/298) | Der entsprechende Entwicklungszweig `add_volume_buttons_zoom` ist über Merge `ecb3f171` Teil der importierten Android-Historie. Die Hardware-Tasten wurden in Motero weiter angepasst. | **Offen, nicht im Original gemergt.** Der übernommene PR-Head ist `83a96c3e`. |
-| [Zotero Android #353 — Fit to Content](https://github.com/zotero/zotero-android/pull/353) | PR-Stand `f5ff0a91` ist über den ausdrücklichen Merge `c826f975` enthalten und wurde anschließend für Motero erweitert. | **Offen, nicht im Original gemergt.** |
-| [Zotero Android #348 — Leisten beim Randtippen ausblenden](https://github.com/zotero/zotero-android/pull/348) | Der Original-Merge `1faa4de7` ist ein Vorfahr unseres Android-Stands. | Im Original gemergt. |
-| [Zotero Reader #254 — Position beim Scrollmoduswechsel erhalten](https://github.com/zotero/reader/pull/254) | Der Original-Merge `2a0bc655` ist in der Reader-Historie enthalten. | Im Original gemergt. |
-| [Zotero Reader #256 — Zoom-/Positionsversatz beim Blättern](https://github.com/zotero/reader/pull/256) | Der Original-Merge `a94045fe` ist in der Reader-Historie enthalten; Motero erweitert die Navigation. | Im Original gemergt. |
-| [Zotero Reader #260 — Fit to Content](https://github.com/zotero/reader/pull/260) | Der entsprechende Inhalts-Fit bildet eine Grundlage der anschließend erweiterten Motero-Fit-Geometrie. | **Offen, nicht im Original gemergt.** |
+| [Zotero Android #298 — Add volume buttons zoom](https://github.com/zotero/zotero-android/pull/298) | PR head `83a96c3e` is included through merge `ecb3f171` of `add_volume_buttons_zoom`. Motero further adapts hardware-button behavior. | Open; not merged upstream. |
+| [Zotero Android #353 — Fit to Content](https://github.com/zotero/zotero-android/pull/353) | PR revision `f5ff0a91` is included through merge `c826f975` and subsequently extended for Motero. | Open; not merged upstream. |
+| [Zotero Android #348 — Hide toolbars on edge taps](https://github.com/zotero/zotero-android/pull/348) | Upstream merge `1faa4de7` is an ancestor of Motero's Android revision. | Merged upstream. |
+| [Zotero Reader #254 — Preserve position across scroll-mode changes](https://github.com/zotero/reader/pull/254) | Upstream merge `2a0bc655` is included in the reader history. | Merged upstream. |
+| [Zotero Reader #256 — Zoom and position offsets during navigation](https://github.com/zotero/reader/pull/256) | Upstream merge `a94045fe` is included; Motero extends navigation behavior. | Merged upstream. |
+| [Zotero Reader #260 — Fit to Content](https://github.com/zotero/reader/pull/260) | Its content-fitting work forms a basis for Motero's extended fitting geometry. | Open; not merged upstream. |
 
-Nicht jeder im Featureplan verlinkte PR wurde übernommen. Dort werden auch recherchierte, abgelehnte oder später eigenständig nachgebaute Ansätze dokumentiert. Zum Beispiel ist Android #205 eine Referenz für das Teilen von Anhängen; die Motero-Implementierung nutzt eigene Anpassungen am aktuellen Downloader und FileProvider.
+Inclusion in Motero does not mean a change has been merged into official Zotero. Not every PR linked in the feature plan was incorporated: some are research references or approaches that were later implemented independently. For example, Android #205 is a reference for attachment sharing; Motero uses its own adaptations of the current downloader and FileProvider.
 
-Vielen Dank an sämtliche ursprünglichen Autoren, Reviewer und Maintainer dieser Beiträge und an die Zotero-Community. Maßgeblich bleiben die Copyright- und Lizenzhinweise der Originalquellen.
+Thank you to the authors, reviewers, maintainers, and the wider Zotero community. Copyright and license notices in the original sources remain authoritative.

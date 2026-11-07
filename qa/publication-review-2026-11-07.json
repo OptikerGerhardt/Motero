@@ -1,0 +1,474 @@
+{
+  "review_date": "2026-11-07",
+  "input_main_commit": "9fb942febdfae5f807c9666b56523f967ce41982",
+  "repository_visibility_at_review": "private",
+  "unresolved_publication_blockers": 0,
+  "scope": "Accidental disclosure, attribution, source distribution and release-signing configuration; not a comprehensive application vulnerability audit.",
+  "refs": [
+    {
+      "ref": "refs/heads/main",
+      "commit_or_tag_object": "9fb942febdfae5f807c9666b56523f967ce41982"
+    },
+    {
+      "ref": "refs/heads/reader",
+      "commit_or_tag_object": "1f8d5e015de8142be2e83878d9ad4b5cb2fed527"
+    },
+    {
+      "ref": "refs/tags/Release",
+      "commit_or_tag_object": "84b6ba464a73687538ac17aea03dce1daec58cc5"
+    },
+    {
+      "ref": "refs/tags/v1.0.0-305",
+      "commit_or_tag_object": "a41f072678fd332ca08fd5f571501a0411ad8998"
+    },
+    {
+      "ref": "refs/tags/v1.0.0-306",
+      "commit_or_tag_object": "4629ce31f9d1597ce5c8b0dc227b8b06d40a1600"
+    }
+  ],
+  "source_guard": {
+    "passed": true,
+    "git_objects": 35545,
+    "git_blobs": 13729,
+    "git_bytes": 235617012,
+    "archive_entries": 14742,
+    "archive_bytes": 730429024,
+    "unreviewed_findings": 0
+  },
+  "gitleaks": {
+    "version": "8.30.1",
+    "official_release": "https://github.com/gitleaks/gitleaks/releases/tag/v8.30.1",
+    "download_sha256": "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb",
+    "history_entries_reported": 2507,
+    "history_alerts_reviewed": 7,
+    "release_alerts_reviewed": 84,
+    "unreviewed_alerts": 0,
+    "release_alert_categories": {
+      "localized schema field label": 5,
+      "constant identifier alphabet": 5,
+      "already-public upstream translator service identifier": 8,
+      "public Chrome extension verification key": 2,
+      "expired public PDF.js signed test-fixture URL": 2,
+      "verified source-file SHA-256 checksum": 62
+    },
+    "history_classifications": [
+      {
+        "RuleID": "generic-api-key",
+        "File": "app/src/main/assets/schema.json",
+        "StartLine": 3561,
+        "Commit": "6cfae9cbad9d2f417df86565f4536c35eac6d023",
+        "Fingerprint": "6cfae9cbad9d2f417df86565f4536c35eac6d023:app/src/main/assets/schema.json:generic-api-key:3561",
+        "blob": "e2b939f0f71f901e27d72cd70d6a48a9f7562371",
+        "classification": "localized accessDate field label; not a credential",
+        "evidence_paths": [
+          "locales.af-ZA.fields.accessDate"
+        ]
+      },
+      {
+        "RuleID": "gcp-api-key",
+        "File": "app/google-services.json",
+        "StartLine": 23,
+        "Commit": "142b58f51d7c70c63d2c524dc3be81aa204e9df4",
+        "Fingerprint": "142b58f51d7c70c63d2c524dc3be81aa204e9df4:app/google-services.json:gcp-api-key:23",
+        "blob": "4e440cb98e1245f19a9f0644b0a4a3212c4dc75e",
+        "classification": "public upstream Firebase client configuration; provenance checked separately"
+      },
+      {
+        "RuleID": "gcp-api-key",
+        "File": "app/google-services.json",
+        "StartLine": 52,
+        "Commit": "142b58f51d7c70c63d2c524dc3be81aa204e9df4",
+        "Fingerprint": "142b58f51d7c70c63d2c524dc3be81aa204e9df4:app/google-services.json:gcp-api-key:52",
+        "blob": "4e440cb98e1245f19a9f0644b0a4a3212c4dc75e",
+        "classification": "public upstream Firebase client configuration; provenance checked separately"
+      },
+      {
+        "RuleID": "generic-api-key",
+        "File": "app/src/main/assets/schema.json",
+        "StartLine": 2866,
+        "Commit": "beff9db6a17e7aaf4a13a795fd1526429e9040cd",
+        "Fingerprint": "beff9db6a17e7aaf4a13a795fd1526429e9040cd:app/src/main/assets/schema.json:generic-api-key:2866",
+        "blob": "84560b48619086073361577d0b17acd7707b1354",
+        "classification": "localized accessDate field label; not a credential",
+        "evidence_paths": [
+          "locales.af-ZA.fields.accessDate"
+        ]
+      },
+      {
+        "RuleID": "generic-api-key",
+        "File": "src/annotations-store.js",
+        "StartLine": 211,
+        "Commit": "fa65291fa2afbb669fd507fffd421fdbfb5e1d32",
+        "Fingerprint": "fa65291fa2afbb669fd507fffd421fdbfb5e1d32:src/annotations-store.js:generic-api-key:211",
+        "blob": "97e74f11dd24b906542f4815ce5b411f03c7a1c4",
+        "classification": "constant alphabet for annotation identifiers; not a credential"
+      },
+      {
+        "RuleID": "generic-api-key",
+        "File": "src/annotations-store.js",
+        "StartLine": 76,
+        "Commit": "99d6be557cf01dd643271e03a8a1f736fa65c0b8",
+        "Fingerprint": "99d6be557cf01dd643271e03a8a1f736fa65c0b8:src/annotations-store.js:generic-api-key:76",
+        "blob": "65d33946a9d3733c7c2a269283720a6cacf7cca5",
+        "classification": "constant alphabet for annotation identifiers; not a credential"
+      },
+      {
+        "RuleID": "generic-api-key",
+        "File": "src/annotations-store.js",
+        "StartLine": 40,
+        "Commit": "e6e91b9170dc17f30bca301b23b006fee197fb38",
+        "Fingerprint": "e6e91b9170dc17f30bca301b23b006fee197fb38:src/annotations-store.js:generic-api-key:40",
+        "blob": "f37a6d7073376c24ac1f3945ab6cd4cbe8f066c7",
+        "classification": "constant alphabet for annotation identifiers; not a credential"
+      }
+    ],
+    "release_classifications_excluding_file_checksums": [
+      {
+        "rule": "generic-api-key",
+        "archive_entry": "Motero_Build306_Source.zip!app/src/main/assets/schema.json",
+        "line": 3561,
+        "blob": "e2b939f0f71f901e27d72cd70d6a48a9f7562371",
+        "classification": "localized schema field label"
+      },
+      {
+        "rule": "generic-api-key",
+        "archive_entry": "Motero_Build306_Source.zip!app/src/main/assets/translator.zip!translate/modules/utilities/resource/schema/global/schema.json",
+        "line": 3045,
+        "blob": "451a7f95d9f238fffe79c5cb893779b6b114d3f3",
+        "classification": "localized schema field label"
+      },
+      {
+        "rule": "generic-api-key",
+        "archive_entry": "Motero_Build306_Source.zip!app/src/main/assets/translator.zip!translate/modules/utilities/utilities.js",
+        "line": 1620,
+        "blob": "b681553b96b09ba528fcbc2f22ac34097bcf973c",
+        "classification": "constant identifier alphabet"
+      },
+      {
+        "rule": "generic-api-key",
+        "archive_entry": "Motero_Build306_Source.zip!app/src/main/assets/translators/translators.zip!Idref.js",
+        "line": 51,
+        "blob": "8b66021531585305993d830ea4ba1b24b78113de",
+        "classification": "already-public upstream translator service identifier",
+        "public_repository": "zotero/translators"
+      },
+      {
+        "rule": "generic-api-key",
+        "archive_entry": "Motero_Build306_Source.zip!app/src/main/assets/translators/translators.zip!J-Stage.js",
+        "line": 207,
+        "blob": "26c52d9329681409ea838f272b077e2262d37f6f",
+        "classification": "already-public upstream translator service identifier",
+        "public_repository": "zotero/translators"
+      },
+      {
+        "rule": "generic-api-key",
+        "archive_entry": "Motero_Build306_Source.zip!app/src/main/assets/translators/translators.zip!Flickr.js",
+        "line": 95,
+        "blob": "9b1adaa24ac117763f34465c4513713dd4af9a3e",
+        "classification": "already-public upstream translator service identifier",
+        "public_repository": "zotero/translators"
+      },
+      {
+        "rule": "generic-api-key",
+        "archive_entry": "Motero_Build306_Source.zip!app/src/main/assets/translators/translators.zip!.ci/pull-request-check/check-pull-request.sh",
+        "line": 32,
+        "blob": "913b5e4b2cf98381e22a526bb6002379a379222a",
+        "classification": "public Chrome extension verification key",
+        "public_repository": "zotero/translators"
+      },
+      {
+        "rule": "generic-api-key",
+        "archive_entry": "Motero_Build306_Source.zip!app/src/main/assets/translators/translators.zip!Camara Brasileira do Livro ISBN.js",
+        "line": 66,
+        "blob": "be20df316f8fa5c2912692decbfea20a9b232784",
+        "classification": "already-public upstream translator service identifier",
+        "public_repository": "zotero/translators"
+      },
+      {
+        "rule": "generic-api-key",
+        "archive_entry": "Motero_Build306_Source.zip!app/src/main/assets/utilities/utilities.zip!resource/schema/global/schema.json",
+        "line": 3048,
+        "blob": "15df113a855263076a60dc3f5fc4e91b92853f9c",
+        "classification": "localized schema field label"
+      },
+      {
+        "rule": "generic-api-key",
+        "archive_entry": "Motero_Build306_Source.zip!app/src/main/assets/utilities/utilities.zip!utilities.js",
+        "line": 1729,
+        "blob": "0cf67a0da9b8d33ae195b1346ea209608a557c15",
+        "classification": "constant identifier alphabet"
+      },
+      {
+        "rule": "aws-access-token",
+        "archive_entry": "Motero_Build306_Source.zip!document-worker/pdf.js/test/pdfs/issue6360.pdf.link",
+        "line": 1,
+        "blob": "79104f844d68247063cf1c55b7435ce5af02bc06",
+        "classification": "expired public PDF.js signed test-fixture URL",
+        "public_repository": "zotero/pdf.js",
+        "expires_unix": 1440104129
+      },
+      {
+        "rule": "aws-access-token",
+        "archive_entry": "Motero_Build306_Source.zip!reader/pdfjs/pdf.js/test/pdfs/issue6360.pdf.link",
+        "line": 1,
+        "blob": "79104f844d68247063cf1c55b7435ce5af02bc06",
+        "classification": "expired public PDF.js signed test-fixture URL",
+        "public_repository": "zotero/pdf.js",
+        "expires_unix": 1440104129
+      },
+      {
+        "rule": "generic-api-key",
+        "archive_entry": "Motero_Build306_Source.zip!reader/src/common/annotation-manager.js",
+        "line": 324,
+        "blob": "df9e42582b1dcdf6c462ac70b1466779991bccdd",
+        "classification": "constant identifier alphabet"
+      },
+      {
+        "rule": "generic-api-key",
+        "archive_entry": "Motero_Build306_Source.zip!translation/translate/modules/utilities/resource/schema/global/schema.json",
+        "line": 3045,
+        "blob": "451a7f95d9f238fffe79c5cb893779b6b114d3f3",
+        "classification": "localized schema field label"
+      },
+      {
+        "rule": "generic-api-key",
+        "archive_entry": "Motero_Build306_Source.zip!translation/translate/modules/utilities/utilities.js",
+        "line": 1620,
+        "blob": "b681553b96b09ba528fcbc2f22ac34097bcf973c",
+        "classification": "constant identifier alphabet"
+      },
+      {
+        "rule": "generic-api-key",
+        "archive_entry": "Motero_Build306_Source.zip!translators/.ci/pull-request-check/check-pull-request.sh",
+        "line": 32,
+        "blob": "913b5e4b2cf98381e22a526bb6002379a379222a",
+        "classification": "public Chrome extension verification key",
+        "public_repository": "zotero/translators"
+      },
+      {
+        "rule": "generic-api-key",
+        "archive_entry": "Motero_Build306_Source.zip!translators/Camara Brasileira do Livro ISBN.js",
+        "line": 66,
+        "blob": "be20df316f8fa5c2912692decbfea20a9b232784",
+        "classification": "already-public upstream translator service identifier",
+        "public_repository": "zotero/translators"
+      },
+      {
+        "rule": "generic-api-key",
+        "archive_entry": "Motero_Build306_Source.zip!translators/Flickr.js",
+        "line": 95,
+        "blob": "9b1adaa24ac117763f34465c4513713dd4af9a3e",
+        "classification": "already-public upstream translator service identifier",
+        "public_repository": "zotero/translators"
+      },
+      {
+        "rule": "generic-api-key",
+        "archive_entry": "Motero_Build306_Source.zip!translators/Idref.js",
+        "line": 51,
+        "blob": "8b66021531585305993d830ea4ba1b24b78113de",
+        "classification": "already-public upstream translator service identifier",
+        "public_repository": "zotero/translators"
+      },
+      {
+        "rule": "generic-api-key",
+        "archive_entry": "Motero_Build306_Source.zip!translators/J-Stage.js",
+        "line": 207,
+        "blob": "26c52d9329681409ea838f272b077e2262d37f6f",
+        "classification": "already-public upstream translator service identifier",
+        "public_repository": "zotero/translators"
+      },
+      {
+        "rule": "generic-api-key",
+        "archive_entry": "Motero_Build306_Source.zip!utilities/resource/schema/global/schema.json",
+        "line": 3048,
+        "blob": "15df113a855263076a60dc3f5fc4e91b92853f9c",
+        "classification": "localized schema field label"
+      },
+      {
+        "rule": "generic-api-key",
+        "archive_entry": "Motero_Build306_Source.zip!utilities/utilities.js",
+        "line": 1729,
+        "blob": "0cf67a0da9b8d33ae195b1346ea209608a557c15",
+        "classification": "constant identifier alphabet"
+      }
+    ],
+    "upstream_public_blob_provenance": [
+      {
+        "repository": "zotero/pdf.js",
+        "blob": "79104f844d68247063cf1c55b7435ce5af02bc06",
+        "public_provenance_verified": true
+      },
+      {
+        "repository": "zotero/translators",
+        "blob": "8b66021531585305993d830ea4ba1b24b78113de",
+        "public_provenance_verified": true
+      },
+      {
+        "repository": "zotero/translators",
+        "blob": "913b5e4b2cf98381e22a526bb6002379a379222a",
+        "public_provenance_verified": true
+      },
+      {
+        "repository": "zotero/translators",
+        "blob": "9b1adaa24ac117763f34465c4513713dd4af9a3e",
+        "public_provenance_verified": true
+      },
+      {
+        "repository": "zotero/translators",
+        "blob": "be20df316f8fa5c2912692decbfea20a9b232784",
+        "public_provenance_verified": true
+      },
+      {
+        "repository": "zotero/translators",
+        "blob": "26c52d9329681409ea838f272b077e2262d37f6f",
+        "public_provenance_verified": true
+      },
+      {
+        "repository": "zotero/reader",
+        "blob": "f37a6d7073376c24ac1f3945ab6cd4cbe8f066c7",
+        "public_provenance_verified": true
+      },
+      {
+        "repository": "zotero/zotero-android",
+        "blob": "4e440cb98e1245f19a9f0644b0a4a3212c4dc75e",
+        "public_provenance_verified": true
+      },
+      {
+        "repository": "zotero/reader",
+        "blob": "97e74f11dd24b906542f4815ce5b411f03c7a1c4",
+        "public_provenance_verified": true
+      },
+      {
+        "repository": "zotero/reader",
+        "blob": "65d33946a9d3733c7c2a269283720a6cacf7cca5",
+        "public_provenance_verified": true
+      }
+    ]
+  },
+  "published_release": {
+    "tag": "v1.0.0-306",
+    "commit": "4629ce31f9d1597ce5c8b0dc227b8b06d40a1600",
+    "source_snapshot_files_verified": 8944,
+    "assets": [
+      {
+        "name": "Motero_Build306.apk",
+        "size": 147117808,
+        "digest": "sha256:8d49d8dd599ce6d611e0c43dafb4bf3a04357cef38d9ba5b45f8d3e0a240eb3b",
+        "verified": true
+      },
+      {
+        "name": "Motero_Build306_Source.zip",
+        "size": 294583718,
+        "digest": "sha256:37ee3e1b18f0c809519970b1c1caf937f6070dba7740dea0be42ca82eb64076c",
+        "verified": true
+      },
+      {
+        "name": "Motero_SigningVerification.json",
+        "size": 398,
+        "digest": "sha256:7d17043b11cf95267b25a6c203b54e3257e83eeb89f1e30e9e6e7b20dd289cab",
+        "verified": true
+      },
+      {
+        "name": "Motero_TestReports.zip",
+        "size": 24410,
+        "digest": "sha256:3808b17968d95b56dae8c9652bd2a400eb39ecef84156d3ef4ff228d501bc816",
+        "verified": true
+      },
+      {
+        "name": "release-metadata.json",
+        "size": 270,
+        "digest": "sha256:9a446f31ac24b8668fed7c67ea6a500f48ee99552c9d8fde63690d5cb9f1ee31",
+        "verified": true
+      },
+      {
+        "name": "RELEASE_NOTES.md",
+        "size": 1301,
+        "digest": "sha256:dc733af8089e214c1d0a226dd3df98cb2080cad3352a6a5e0fdcccf059ffc45a",
+        "verified": true
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "size": 537,
+        "digest": "sha256:d1d7f4420b05347ebca182bd4a43d9717ca26bf0d0c046a7146594c36d443312",
+        "verified": true
+      }
+    ]
+  },
+  "apk_verification": {
+    "verified": true,
+    "package": "org.zotero.android.debug",
+    "version_code": 306,
+    "certificate_sha256": "f6b9547e9644f44e23bcceac94ec32cfd6576b5f732af7e12094699307de778d",
+    "signing_policy": "public",
+    "legacy_rotation_verified": true,
+    "apk_sha256": "8d49d8dd599ce6d611e0c43dafb4bf3a04357cef38d9ba5b45f8d3e0a240eb3b",
+    "runtime_files": 45,
+    "pdfjs_files": 207,
+    "reader_sources": 92
+  },
+  "private_signing_material_check": {
+    "current_tracked_source_and_submodules": true,
+    "published_source_archive": true,
+    "method": "Compared bytes against the actual private PKCS12 payload, its base64 representation and both passwords without recording their values."
+  },
+  "github_surface": {
+    "issue_and_pr_count": 0,
+    "last_app_workflow_conclusion": "success",
+    "latest_release": "v1.0.0-306"
+  },
+  "upstream_pr_status": [
+    {
+      "repository": "zotero/zotero-android",
+      "number": 298,
+      "state": "open",
+      "merged": false,
+      "merge_commit_sha": "aeddfa735c8e55810982cf60afa3408f0e423f84",
+      "head_sha": "83a96c3e4807787eac80cb3d589aae14c8b5c647"
+    },
+    {
+      "repository": "zotero/zotero-android",
+      "number": 353,
+      "state": "open",
+      "merged": false,
+      "merge_commit_sha": null,
+      "head_sha": "f5ff0a91e1209a977269efc8a8648e4473a3a877"
+    },
+    {
+      "repository": "zotero/zotero-android",
+      "number": 348,
+      "state": "closed",
+      "merged": true,
+      "merge_commit_sha": "1faa4de7515971e3fde7ba4ab6bfec231f6d0eea",
+      "head_sha": "202c71455f906bb0a67b89d85d285c6bb54cebe8"
+    },
+    {
+      "repository": "zotero/reader",
+      "number": 254,
+      "state": "closed",
+      "merged": true,
+      "merge_commit_sha": "2a0bc6554c1d595b1cd7d1a7c61c500a722a4e14",
+      "head_sha": "e7ba99e04a0f353db8a3717c10756c309ecbb6c5"
+    },
+    {
+      "repository": "zotero/reader",
+      "number": 256,
+      "state": "closed",
+      "merged": true,
+      "merge_commit_sha": "a94045fe686f7cde65181f99955f28ed63afd9b6",
+      "head_sha": "6d5a399ac1cdf3e4f84013a7431911e33920443b"
+    },
+    {
+      "repository": "zotero/reader",
+      "number": 260,
+      "state": "open",
+      "merged": false,
+      "merge_commit_sha": null,
+      "head_sha": "1bae81c3591479e4e4c03a8568cf0c12f5d3db74"
+    }
+  ],
+  "remaining_device_checks": [
+    "Physical-device installation and data migration",
+    "BOOX keyboard behavior",
+    "Live account synchronization"
+  ]
+}
