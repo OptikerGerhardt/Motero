@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify the Build-304 update against the user's actual Build-303 APK."""
+"""Verify a Motero update, its embedded sources and the fresh automated checks."""
 import argparse
 import hashlib
 import io
@@ -45,6 +45,9 @@ with zipfile.ZipFile(args.base) as baseline,zipfile.ZipFile(args.apk) as apk:
     assert not any(re.search('pspdfkit|nutrient',name,re.I) for name in apk.namelist())
     dex=[apk.read(n) for n in apk.namelist() if re.fullmatch(r'classes\d*\.dex',n)]
     assert any(b'copyReaderAnnotationQuote' in data for data in dex),'Clipboard code missing from APK'
+    if new['version_code'] >= 305:
+        for marker in [b'TagSuggestions', b'TagPickerViewModel', b'ReaderManualCrops', b'onManualCropChanged']:
+            assert any(marker in data for data in dex), marker
     assert not any(re.search(rb'com[/\.]pspdfkit|com[/\.]nutrient|libpspdfkit',data,re.I) for data in dex)
     current_reader=apk.read('assets/reader/reader.zip')
     assert current_reader==(root/'app/src/main/assets/reader/reader.zip').read_bytes()
@@ -57,6 +60,8 @@ with zipfile.ZipFile(args.base) as baseline,zipfile.ZipFile(args.apk) as apk:
         names=['pdf/reading-layout.mjs','pdf/android-page-fitting.js','pdf/boox-reader.js',
                'pdf/hardware-navigation.mjs','index.android.js','common/view.js',
                'dom/epub/epub-view.ts','dom/epub/flow.ts','dom/common/dom-view.tsx']
+        if new['version_code'] >= 305:
+            names += ['pdf/manual-crop.mjs','pdf/manual-crop-editor.js','pdf/pdf-view.js']
         for name in names:
             indexes=[i for i,s in enumerate(mapping['sources']) if s.endswith('/src/'+name)]
             assert len(indexes)==1,(name,indexes)
@@ -75,6 +80,10 @@ browser={
  'controls':'PASS: all new Android reader controls','annotation-tools':'PASS: all annotation tool regressions',
  'fit-recovery':'PASS: fit recovery and safe viewport regressions','reader-update':'PASS reader update regressions',
 }
+if new['version_code'] >= 305:
+    browser.update({'manual-crop':'PASS: manual crop editor checks','edge-taps':'PASS: all scroll mode edge tap checks'})
+    for suffix in ['TagPickerConfirmationTest','TagSuggestionsTest','ReaderManualCropsTest','ReaderManualCropStorageTest']:
+        assert any(s['suite'].endswith(suffix) for s in native['suites']), suffix
 for name,marker in browser.items():assert marker in (args.checks/f'browser-{name}.log').read_text(),name
 assert 'BUILD SUCCESSFUL' in (args.checks/'android-build.log').read_text()
 assert 'BUILD SUCCESSFUL' in (args.checks/'android-final-packaging.log').read_text()

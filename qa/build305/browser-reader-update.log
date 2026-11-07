@@ -1,0 +1,9 @@
+PASS current and previous/next pages are cropped before hardware navigation completes
+PASS real finger zoom returns to the selected fit after release
+PASS real one-finger panning reveals margins without resetting the chosen fit or uncropping neighbors
+PASS all 116 original Plessner pages exclude the footer/rule; complete body and all 19 note source labels remain; cache bounded
+PASS EPUB paginated, rtl=false: forward/backward chapters, end fragments, editing guard and bookmark deletion through persistence
+PASS EPUB scrolled, rtl=false: forward/backward chapters, end fragments, editing guard and bookmark deletion through persistence
+PASS EPUB paginated, rtl=true: forward/backward chapters, end fragments, editing guard and bookmark deletion through persistence
+PASS EPUB scrolled, rtl=true: forward/backward chapters, end fragments, editing guard and bookmark deletion through persistence
+PASS reader update regressions

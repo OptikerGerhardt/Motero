@@ -1,12 +1,12 @@
-# Motero auf BOOX: Build 304
+# Motero auf BOOX: Build 305
 
 ## Installation
 
-Über die vorhandene Motero-Testversion installieren, vorher nicht deinstallieren. Paket `org.zotero.android.debug`, Version `1.0.0-304`, Versionscode 304. Gleiches Signierzertifikat wie die bereitgestellte Version 303. Datenpfade, Datenbank-/Syncformate und bisheriger Debug-Schlüssel bleiben erhalten. Eine tatsächliche Geräteinstallation ist noch nicht durchgeführt.
+Über die vorhandene Motero-Testversion installieren, vorher nicht deinstallieren. Paket `org.zotero.android.debug`, Version `1.0.0-305`, Versionscode 305. Gleiches Signierzertifikat wie die vorherige Version 304. Datenpfade, Datenbank-/Syncformate und bisheriger Debug-Schlüssel bleiben erhalten. Eine tatsächliche Geräteinstallation ist noch nicht durchgeführt.
 
 ## Stand und Wiederherstellung
 
-Änderungen: FEATUREPLAN.md, Abschnitt „Reader-Auftrag vom 6. November“. Abgeschlossene Prüfungen und Grenzen: BUILD_STATUS.md und BUILD_VERIFICATION.json. Neue Berichte: qa/build304/. Ältere Dateien in qa/ sind historische Nachweise.
+Änderungen: FEATUREPLAN.md, Abschnitt „Auftrag vom 7. November“. Abgeschlossene Prüfungen und Grenzen: BUILD_STATUS.md und BUILD_VERIFICATION.json. Neue Berichte: qa/build305/. Ältere Dateien in qa/ sind historische Nachweise.
 
 Das Quellarchiv enthält eigene Android-/Reader-Dateien, Laufzeitpakete, bisherigen Debug-Schlüssel und originale Git-Bundles. SOURCE_SNAPSHOT.json dokumentiert Ausgangscommits und neueren Arbeitsstand. Beim Wiederherstellen zuerst die Bundles importieren und dann die flachen Projektdateien als neueren Arbeitsstand übernehmen. Ein Checkout nur der Bundle-HEADs enthält die neuen Änderungen noch nicht.
 
@@ -26,8 +26,16 @@ In dieser Cloud-Instanz benötigte Gradle die JVM-Optionen `-Dhttps.proxyHost=pr
 
 ## Browser und APK
 
-Playwright getrennt vom Projekt-Lockfile installieren und vorhandenes Chromium verwenden. Die sieben bisherigen reader/scripts/test-boox-*.cjs sowie test-boox-reader-update.cjs ausführen. BOOX_TEST_BROWSER gibt den Browserpfad an; NODE_PATH kann eine getrennte Playwright-Installation auswählen.
+Playwright getrennt vom Projekt-Lockfile installieren und vorhandenes Chromium verwenden. Die zehn Browserprüfungen in reader/scripts/ ausführen: test-boox-browser.cjs, test-boox-features.cjs, test-boox-fitting.cjs, test-boox-stability.cjs, test-boox-reader-controls.cjs, test-boox-annotation-tools.cjs, test-boox-fit-recovery.cjs, test-boox-reader-update.cjs, test-boox-manual-crop.cjs und test-boox-edge-taps.cjs. BOOX_TEST_BROWSER gibt den Browserpfad an; NODE_PATH kann eine getrennte Playwright-Installation auswählen.
 
 EPUB-Fixtures: `python3 reader/scripts/make-navigation-epub.py <Pfad>/navigation.epub`. BOOX_NAVIGATION_EPUB und BOOX_NAVIGATION_RTL_EPUB auf die erzeugten Dateien setzen. BOOX_PLESSNER_PDF muss auf die gelieferte Original-PDF zeigen. Originaldateien und interne Screenshots sind nicht im Quellarchiv. Optionale BOOX_KANT_PDF, BOOX_HOEFFE_PDF, BOOX_FUCHS_PDF und BOOX_PROBLEM_PDF benötigen die jeweiligen Originaldateien.
 
-Abschließend `python3 scripts/verify_reader_update.py --base <303.apk> --apk <304.apk> --build-tools <SDK/build-tools/36.0.0> --checks <frische-Berichte> --output BUILD_VERIFICATION.json`. Das prüft Update-Identität, Signatur/Ausrichtung, Laufzeit-/PDF.js-Erhalt, aktuelle eingebettete Quellen und neue Testnachweise. Das historische verify_boox_update.py prüft ältere Updates mit teils ausdrücklich unveränderter Zuschnittgeometrie und ersetzt die neue Prüfung nicht.
+Abschließend `python3 scripts/verify_reader_update.py --base <304.apk> --apk <305.apk> --build-tools <SDK/build-tools/36.0.0> --checks <frische-Berichte> --output BUILD_VERIFICATION.json`. Das prüft Update-Identität, Signatur/Ausrichtung, Laufzeit-/PDF.js-Erhalt, aktuelle eingebettete Quellen und neue Testnachweise. Das historische verify_boox_update.py prüft ältere Updates mit teils ausdrücklich unveränderter Zuschnittgeometrie und ersetzt die neue Prüfung nicht.
+
+## Bedienung der neuen Funktionen
+
+Tags in der bestehenden Tag-Auswahl eingeben; sichtbare Ergänzung mit Enter oder Speichern übernehmen. Neue Namen ausdrücklich über „Neuen Tag … anlegen“ auswählen. Ausgewählte Tags können im oberen Bereich wieder abgewählt werden.
+
+Im PDF-Einstellungsmenü „Manueller Zuschnitt…“ öffnen. Rahmen ziehen, „Alle Seiten“, „Ungerade Seiten“ oder „Gerade Seiten“ wählen und übernehmen. Mit den Pfeilen weitere passende Beispielseiten ansehen; geänderte Rahmen bleiben dabei erhalten. PDF-Seite 1 zählt als ungerade. Zuschnitte sind lokal pro Bibliothek/Anhang; „Automatisch“ entfernt alle manuellen Rahmen. Die PDF-Datei bleibt unverändert.
+
+Randtippen gilt in vertikalem, horizontalem und Wrapped-Modus. Die obere rechte Bookmark-Fläche behält ihre Umschaltfunktion. Vorhandene Links und Annotationen sowie lange Markier- und Wischgesten behalten ihre normale Bedienung.

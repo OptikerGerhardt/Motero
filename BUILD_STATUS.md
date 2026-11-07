@@ -1,20 +1,25 @@
-# Motero 304: Build und Prüfung
+# Motero 305: Build und Prüfung
 
-Stand: 6. November 2026. Die neue APK ist erfolgreich nativ gebaut und als Update der bereitgestellten Version 303 technisch geprüft.
+Stand: 7. November 2026. Die neue APK ist nativ gebaut und als Update von Build 304 technisch geprüft.
 
-Umgesetzt sind Footer-Erkennung einschließlich Trennlinie, vollständiges Kopieren des Annotationstexts per Tipp, erreichbare EPUB-Restabschnitte beim Hardware-Blättern, Bookmark-Umschaltung, gemeinsam vorbereitete Zuschnitte der aktuellen und beiden Nachbarseiten sowie Rückkehr zum gewählten Fit nach Fingerzoom. Einfingriges Verschieben darf vorübergehend aktuelle Seitenränder zeigen; die Menüeinstellung bleibt gespeichert. Zoomknöpfe erhalten den Zugang zur Wrapped-Übersicht.
+Umgesetzt sind F19 Tag-Vorschläge nach Nutzung in Dokument und Bibliothek, F22 manueller PDF-Zuschnitt für alle/ungerade/gerade Seiten und F23 Randtippen in allen drei PDF-Scrollmodi. Die bisherigen Build-304-Funktionen bleiben erhalten.
 
-- 268 Reader-Tests bestanden; keine fehlgeschlagenen, abgebrochenen oder übersprungenen Tests.
-- 91 native Tests in 21 Suiten bestanden; keine Fehler oder übersprungenen Tests. Zwei neue Clipboard-Tests prüfen vollständigen langen Unicode-Text und den Schutz des Clipboards bei leerem Text.
-- Acht Browserprüfungen bestanden: Gesten, Features, Fitting, Stabilität, Bedienelemente, Annotationswerkzeuge, Fit-Wiederherstellung und Reader-Update.
-- Original-Plessner-PDF: alle 116 Seiten und alle 19 Quellenlabels im Anmerkungsbereich geprüft. Fließtext und Anmerkungen bleiben erhalten. Die alten Original-Kant-/Höffe-/Fuchs-/Mul-Dateien lagen nicht vor; deren vorhandene synthetische Regressionen wurden ausgeführt.
-- EPUB: paginiert und gescrollt, LTR und RTL; vorwärts/rückwärts über Kapitelgrenzen, letzte kurze Scrollabschnitte, Eingabesicherung und echte Bookmark-Tipps mit normalem Speichern/Löschen geprüft.
-- Update: Paket org.zotero.android.debug, Name Motero, Code 304, Version 1.0.0-304. Gleiches Signierzertifikat wie 303; v2-Signatur und ZIP-Ausrichtung geprüft. Zertifikat-SHA-256: c4e70a6935d239246540532b6d3ea514eb2a428e1e8eaacbf94c8a9a01989299.
-- 57 weitere Laufzeitdateien und sämtliche 207 PDF.js-Dateien sind bytegleich zur Referenz-APK. Die APK enthält die frisch gebauten Reader-Quellen und die neue native Clipboard-Funktion. PSPDFKit/Nutrient bleibt entfernt.
+- 276 Reader-Tests und 109 native Tests in 25 Suiten bestanden; keine Fehler, Abbrüche oder übersprungenen Tests.
+- Zehn Browserprüfungen bestanden: Gesten, Features, Fitting, Stabilität, Bedienelemente, Annotationswerkzeuge, Fit-Wiederherstellung, Reader-Update, manueller Zuschnitt und Randtippen.
+- Tag-Tests prüfen Ranking, exakte vorhandene Namen, graue Ergänzung, Enter/Speichern, ausdrückliche Neuanlage, getrennte Auswahl, Cursor/Komposition, überholte Suchläufe, Datenbankbenachrichtigungen und aktive Einträge derselben Bibliothek. Alte Vorschläge verschwinden sofort bei neuer Eingabe. Zählung und Sortierung laufen im Hintergrund.
+- Manueller Zuschnitt: echte Touch-Ziehgesten, All/Odd/Even, weitere passende Beispielseiten, aktuelle und nächste Seiten, Wiederöffnen, Abbrechen, 90/180/270-Grad-Drehungen und Rücksetzen auf Automatik geprüft. Native Tests prüfen Nutzdaten, lokale Speicherung, Bibliotheks-/Anhangstrennung und Abmelden.
+- Randtippen: links/rechts in vertikalem, horizontalem und Wrapped-Modus; Bookmark-Erstellen/Löschen hat Vorrang. Langes Drücken und Wischen lösen kein zusätzliches Randblättern aus. Schreibgeschützte PDFs bleiben navigierbar. Bestehende Unit-Prüfungen für Links, Annotationen und Textauswahl bleiben bestanden.
+- Original-Plessner: alle 116 Seiten und 19 Quellenlabels im Anmerkungsbereich erneut geprüft. Frühere Original-Kant-/Höffe-/Fuchs-/Mul-Dateien lagen nicht vor; deren vorhandene synthetische Regressionen wurden ausgeführt.
+- EPUB: paginiert und gescrollt, LTR und RTL; Kapitelgrenzen, kurze Restabschnitte, Eingabesicherung und Bookmark-Speichern/Löschen bleiben geprüft.
+- Update: Paket org.zotero.android.debug, Name Motero, Version 1.0.0-305, Code 305. Gleicher Signierer wie 304, v2-Signatur und ZIP-Ausrichtung geprüft.
+- 57 weitere Laufzeitdateien und alle 207 PDF.js-Dateien sind bytegleich zu 304. Aktuelle Reader-Quellen und neue native Klassen sind in der APK nachgewiesen. PSPDFKit/Nutrient bleibt entfernt.
 
-APK-SHA-256: 95a7c6119f771a38084e3857eed7d7a2780aadf189b3784ace0daa0c206da07d
-Reader-SHA-256: ae52b3fdce28654311063aadde1a4d3e273ad3386d1679bdd21a6e39e5876aca
+APK-SHA-256: e02785d5e093882133119d15657dc145e5f1bea43ca09433be5f821271bacc9e
+Reader-SHA-256: f6040f78cc2d567c62db9b790c22f76fd9442d522aef9f21fe18da7e6fcff382
+Zertifikat-SHA-256: c4e70a6935d239246540532b6d3ea514eb2a428e1e8eaacbf94c8a9a01989299
 
-Die letzte Reader-Absicherung wurde nach den nativen Tests erneut paketiert; die unveränderten nativen Kompilate wurden dabei UP-TO-DATE wiederverwendet. Einzelheiten: BUILD_VERIFICATION.json und qa/build304/.
+Zuschnitt: PDF-Einstellungen → „Manueller Zuschnitt…“. Rahmen ändern, Seitenbereich wählen und übernehmen. PDF-Seite 1 zählt als ungerade. Zuschnitt ist lokal pro Bibliothek/Anhang; die PDF-Datei und Annotationskoordinaten werden nicht verändert. „Automatisch“ löscht alle manuellen Rahmen.
 
-Nicht durchgeführt: physischer BOOX-/Smartphone-Test, reale Lautstärketasten auf einem Gerät, visuelle native Clipboard-/Scroll-Prüfung, echte Update-Installation und Kontosynchronisation. Die vorbereitete lokale EPUB-Zustandswiederherstellung muss zusätzlich am Gerät erprobt werden. Paket-/Signaturvergleich belegt die technische Update-Identität, keine bereits erfolgte Geräteinstallation. Es wurde nichts auf GitHub veröffentlicht.
+Nachweise: BUILD_VERIFICATION.json und qa/build305/. android-final-packaging.log dokumentiert denselben letzten Aufruf mit erfolgreichen nativen Tests und assembleDevDebug; danach wurde kein Produktcode mehr geändert.
+
+Nicht durchgeführt: physischer BOOX-/Smartphone-Test, echte BOOX-Tastaturprüfung, tatsächliche Update-Installation, native visuelle Prüfung und Kontosynchronisation. Der Paket-/Signaturvergleich belegt die technische Update-Identität. Es wurde nichts auf GitHub veröffentlicht.

@@ -1,0 +1,5 @@
+PASS real left/right, long-press, swipe and bookmark priority in PDF scroll mode 0
+PASS real left/right, long-press, swipe and bookmark priority in PDF scroll mode 1
+PASS real left/right, long-press, swipe and bookmark priority in PDF scroll mode 2
+PASS read-only PDFs still support edge navigation
+PASS: all scroll mode edge tap checks

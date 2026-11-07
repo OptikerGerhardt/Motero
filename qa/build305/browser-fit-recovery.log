@@ -1,0 +1,7 @@
+DIAG tapping visible overview page {"x":242,"y":265.5,"index":8,"area":254349}
+DIAG tapping visible overview page {"x":242,"y":275,"index":8,"area":263450}
+PASS native zoom buttons and real Wrapped taps restore the complete fit without a seeded zoom origin
+PASS a real pinch starting outside the PDF page restores fitting on release
+PASS explicit Off forgets the old fit instead of restoring it from the overview
+PASS simulated camera safe area stays constant through toolbar toggles and hardware page turns in all scroll modes
+PASS: fit recovery and safe viewport regressions
