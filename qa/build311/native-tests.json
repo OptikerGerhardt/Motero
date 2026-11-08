@@ -1,6 +1,6 @@
 {
   "build": 311,
-  "reader_commit": "8423837f2bd7ce48d10b11467ce9385d72ebfbd4",
+  "reader_commit": "2d0fc4a9b428affb2125442a27388f3c99468a81",
   "suites": [
     {
       "name": "org.zotero.android.api.mappers.LinkResponseMapperTest",

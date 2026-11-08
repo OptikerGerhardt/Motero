@@ -13,7 +13,7 @@ DIAG odd {
   pw: 969,
   ph: 1292,
   clip: 'inset(213.692px 162px 123.231px 207.231px)',
-  cache: 14,
+  cache: 15,
   reported: {
     pageFitMode: 'width',
     pageFitRevision: 1,
@@ -36,7 +36,7 @@ DIAG even {
   pw: 969,
   ph: 1292,
   clip: 'inset(213.692px 249.231px 123.231px 120px)',
-  cache: 14,
+  cache: 15,
   reported: {
     pageFitMode: 'width',
     pageFitRevision: 1,
