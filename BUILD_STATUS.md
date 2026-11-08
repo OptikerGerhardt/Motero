@@ -1,15 +1,13 @@
-# Build 312 — lokaler Prüfstand, 8. November 2026
+# Build 312 — veröffentlicht und unabhängig geprüft, 8. November 2026
 
-119 native Tests bestanden. APK-Paketierung und Veröffentlichung werden durch den Release-Durchlauf geprüft. Die neue native Regression reproduziert und verhindert fehlende entfernte Miniaturseiten nach einem Renderer-Neustart. Der Reader bleibt auf dem vollständig geprüften Stand aus Build 311; GitHub wiederholt vor Veröffentlichung alle Reader-, Browser-, Signier- und API-31/35-Updateprüfungen mit 311 als aktueller Basis.
+[APK und vollständige Quellen](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.0-312) sind veröffentlicht. Bestanden: 305 Reader-Tests, 119 native Tests, zwölf Browser-Suites und beide echten Android-Update-Gates auf API 31/35. Die Korrektur stellt auch entfernte Miniaturseiten nach einem Renderer-Neustart wieder her.
 
-Nachweise: [qa/build312](qa/build312/README.md). Build 311 ist bereits unabhängig heruntergeladen und geprüft: 305 Reader-Tests, 118 native Tests, zwölf Browser-Suites, Signatur/Rotation, Quellen und echte datenerhaltende Updates. APK-SHA-256: `5a03af804277e75d21ca74ef641dd4062fb90b5a089344ae15c0722b3fe88d25`. Siehe [qa/build311](qa/build311/README.md).
+Die tatsächlich veröffentlichte APK wurde separat heruntergeladen und geprüft: private Motero-Signatur, V3-Rotation, nicht debuggbares Paket, 98 aktuelle Reader-Quellen, 207 unveränderte PDF.js-Dateien und 45 Runtime-Dateien. SHA-256: `7d8a35ad4d5681519e634fba0c2ebe544f59bee761ced7b7fc8b5ac543fe7401`. Prüfsummen und beide Migrationsberichte stimmen überein. Updates von 303 und 311 erhalten Testdaten und UID; alte Schlüssel werden abgewiesen. Die anonyme Latest-Release-API liefert diese APK für Obtainium.
 
-# Build 311 — lokaler Prüfstand, 8. November 2026
+Nachweise: [qa/build312](qa/build312/README.md), [GitHub-Durchlauf](https://github.com/OptikerGerhardt/Motero/actions/runs/42507380160). Physische BOOX-/GrapheneOS- und Kontosync-Tests sind gesondert zu bestätigen.
+# Build 311 — veröffentlicht und unabhängig geprüft, 8. November 2026
 
-Release-APK lokal gebaut. Bestanden: 305 Reader-Tests, 118 native Tests, zwölf Browser-Suites und elf Release-/Signierhelfer-Prüfungen. Die neuen Prüfungen decken Theme vor dem ersten HTML-Bild, korrekte Vorschau-Pixel, veraltete Render-Ergebnisse, Bookmark-Fähnchen/Undo, wiederverwendete Zeichenobjekte, persistente Geometrie sowie echte Chromium-Stifteingabe mit Abbruch und zweitem Pointer ab.
-
-Nachweise: [qa/build311](qa/build311/README.md). Signierung und echte API-31/35-Updates von 303 und 310 werden vor Veröffentlichung von GitHub geprüft. Physische BOOX-/GrapheneOS- und Kontosync-Tests sind gesondert auszuweisen.
-
+Enthält die Reader-UI-, Zuschnitt-, Speicher- und Stiftverbesserungen. Erfolgreich geprüft und veröffentlicht mit 305 Reader-Tests, 118 nativen Tests, zwölf Browser-Suites und datenerhaltenden API-31/35-Updates von 303 und 310. Die separat heruntergeladene APK wurde einschließlich Signatur, Quellen, Prüfsummen und Obtainium-Schnittstelle geprüft. Nachweise: [qa/build311](qa/build311/README.md).
 # Motero 308: Reader-Überarbeitung
 
 **Veröffentlicht:** [Build 308](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.0-308). GitHub-Lauf [42413319376](https://github.com/OptikerGerhardt/Motero/actions/runs/42413319376) hat Build, 282 Reader-Tests, 113 native Tests in 26 Suiten, zehn Browserprüfungen sowie Veröffentlichungs-/Signierprüfungen erfolgreich abgeschlossen. Vor dem Release bestanden zusätzlich die echten Updateprüfungen auf Android API 31 und 35 mit privatem Testdatensatz, unveränderter UID, App-Start und Abweisung des alten Schlüssels.

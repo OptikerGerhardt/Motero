@@ -2,6 +2,7 @@
 
 ## 1.0.0-312 — 8. November 2026
 
+- Veröffentlicht und unabhängig geprüft: 305 Reader-Tests, 119 native Tests, zwölf Browser-Suites und beide echten API-31/35-Updates bestanden; Signatur, Quellen und Prüfsummen stimmen überein.
 - Entfernte PDF-Miniaturseiten werden nach einem Neustart des Readers oder seines Renderers erneut angefordert. Die gewünschten Seitenindizes bleiben erhalten, während alte Bilddaten weiterhin verworfen werden. Eine native Regression reproduziert den Fehler vor der Korrektur.
 - Enthält alle Reader-UI-, Zuschnitt-, Speicher- und Stiftverbesserungen aus Build 311. Die Update-Prüfung verwendet Build 311 als aktuelle Vorgängerversion; Signierer und Paketkennung bleiben unverändert.
 
