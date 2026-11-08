@@ -9,6 +9,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
+import org.zotero.android.screens.reader.data.isReaderBookmark
+import org.zotero.android.R
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -46,7 +50,7 @@ internal fun ReaderAnnotationsSidebarHeaderSection(
     }
     Row(
         modifier = Modifier
-            .height(36.dp)
+            .height(44.dp)
             .sectionHorizontalPadding(),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -65,7 +69,16 @@ internal fun ReaderAnnotationsSidebarHeaderSection(
             overflow = TextOverflow.Ellipsis
         )
         Spacer(modifier = Modifier.weight(1f))
-        if (viewState.isAnnotationSelected(annotation.key)) {
+        if (viewState.bookmarksOnly && annotation.isReaderBookmark() && !viewState.isAnnotationSelected(annotation.key)) {
+            IconButton(onClick = { viewModel.focusBookmark(annotation.key) }) {
+                Icon(painterResource(Drawables.chevron_right_24px), stringResource(R.string.reader_go_to_bookmark),
+                    modifier = Modifier.size(22.dp), tint = MaterialTheme.colorScheme.primary)
+            }
+            IconButton(onClick = { viewModel.deleteBookmark(annotation.key) }, enabled = viewModel.canDeleteBookmark(annotation)) {
+                Icon(painterResource(Drawables.delete_24px), stringResource(R.string.reader_delete_bookmark),
+                    modifier = Modifier.size(22.dp), tint = if(viewModel.canDeleteBookmark(annotation)) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(alpha = .38f))
+            }
+        } else if (viewState.isAnnotationSelected(annotation.key)) {
                 Image(
                     modifier = Modifier
                         .size(22.dp)

@@ -15,6 +15,12 @@ class PdfReaderThemeDecider @Inject constructor(
     private var pdfPageAppearanceMode: PageAppearanceMode = PageAppearanceMode.AUTOMATIC
 
 
+    fun initialize(mode: PageAppearanceMode, osDark: Boolean) {
+        this.pdfPageAppearanceMode = mode
+        this.isOsThemeDark = osDark
+        recalculateCurrentTheme()
+    }
+
     fun setCurrentOsTheme(isOsThemeDark: Boolean) {
         if (isOsThemeDark != this.isOsThemeDark) {
             this.isOsThemeDark = isOsThemeDark

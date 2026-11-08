@@ -51,11 +51,13 @@ data class ReaderSettings(
     var fitWidthCrop: Boolean = false,
     var includeMarginalia: Boolean = false,
     var textScale: Float = 1f,
+    var epubProgressMode: String? = null,
 ) {
     fun effectiveTextScale(): Float = textScale.takeIf { it.isFinite() && it in 0.6f..1.8f } ?: 1f
+    fun effectiveProgressMode(): String = epubProgressMode?.takeIf { it in listOf("both", "hidden", "position", "percent") } ?: "both"
     fun fitReference(): String = when {
-        !fitTextReference -> "page"
-        fitToWidth && fitWidthCrop -> "cropped-content"
+        pageFitMode() == "none" -> "page"
+        fitToWidth -> "cropped-content"
         else -> "content"
     }
 

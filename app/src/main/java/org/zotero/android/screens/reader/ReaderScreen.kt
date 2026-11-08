@@ -74,7 +74,7 @@ internal fun ReaderScreen(
 ) {
     viewModel.initFileType()
     viewModel.setOsTheme(isDark = isSystemInDarkTheme())
-    val viewState by viewModel.viewStates.observeAsState(ReaderViewState())
+    val viewState by viewModel.viewStates.observeAsState(ReaderViewState(isDark = viewModel.initialReaderIsDark(isSystemInDarkTheme())))
     BackHandler(enabled = viewState.manualCropOpen) { viewModel.cancelManualCrop() }
     val viewEffect by viewModel.viewEffects.observeAsState()
     LaunchedEffect(viewState.isTopBarVisible, viewState.isReaderLoading) {

@@ -8,15 +8,15 @@ This fork is maintained independently and is not affiliated with or endorsed by 
 
 ## Features
 
-- Direct text highlighting, annotation tools, Zotero tags, and a bookmark filter in the PDF reader.
-- Continuous cropped PDF pages, temporary two-finger access to full pages, and a manual crop editor.
+- Direct text highlighting, annotation tools, Zotero tags, and a bookmark filter with jump and delete shortcuts.
+- Continuous cropped PDF pages, temporary two-finger access to full pages, and an overview that stays open when two complete pages are visible.
 - Font-size controls with a percentage display for EPUBs and Reading Mode.
 - Automatic content fitting with controls for margins and marginal notes.
-- Manual PDF cropping for all pages, odd pages, or even pages, saved per attachment.
+- Automatic or manual content cropping, shared by the page-fitting modes. Manual frames for all, odd, or even pages are saved per attachment.
 - SmartScroll, hardware-button navigation, and edge taps in vertical, horizontal, and wrapped PDF layouts.
-- A top-right bookmark shortcut: tap to add a bookmark, then tap again to remove it.
+- A top-right bookmark shortcut for the centered reading page: tap to add a black bookmark, then tap again to remove it. Existing bookmark colors are preserved.
 - Tag suggestions ranked by use in the current document and library, with explicit creation of new tags.
-- EPUB navigation and local reading-position restoration.
+- EPUB navigation, local reading-position restoration, and a persistent choice of progress display, including hidden.
 
 View cropping does not modify the PDF file or annotation coordinates. Manual crop settings are stored locally and are not synchronized with Zotero.
 

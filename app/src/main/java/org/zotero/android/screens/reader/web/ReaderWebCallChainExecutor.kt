@@ -8,6 +8,7 @@ import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.Result
@@ -39,11 +40,14 @@ class ReaderWebCallChainExecutor @Inject constructor(
     private val defaults: Defaults,
 ) {
 
+    var documentCrops: org.zotero.android.screens.reader.data.ReaderManualCrops? = null
     private val limitedParallelismDispatcher =
         dispatchers.io.limitedParallelism(1)
     private var webViewExecutorScope = CoroutineScope(limitedParallelismDispatcher)
 
     fun start(webView: WebView, file: File) {
+        webViewExecutorScope.cancel()
+        webViewExecutorScope = CoroutineScope(limitedParallelismDispatcher)
         try {
             val filePath = "file://" + file.absolutePath
 
@@ -52,6 +56,7 @@ class ReaderWebCallChainExecutor @Inject constructor(
                 url = filePath,
                 onWebViewLoadPage = ::onIndexHtmlLoaded,
                 processWebViewResponses = ::receiveMessage,
+                onRendererGone = { observable.emitAsync(Result.Success(ReaderWebData.rendererGone)) },
             )
 
             Timber.i("ReaderWebCallChainExecutor: initialization succeeded")
@@ -224,6 +229,9 @@ class ReaderWebCallChainExecutor @Inject constructor(
                             observable.emitAsync(Result.Success(ReaderWebData.setManualCrop(data["params"].asJsonObject)))
                         }
 
+                        "onCropEditorState" -> {
+                            observable.emitAsync(Result.Success(ReaderWebData.setCropEditorState(data["params"].asJsonObject)))
+                        }
                         "onCropEditorChanged" -> {
                             observable.emitAsync(Result.Success(ReaderWebData.setCropEditorOpen(data["params"].asJsonObject["open"].asBoolean)))
                         }
@@ -471,6 +479,7 @@ class ReaderWebCallChainExecutor @Inject constructor(
     suspend fun loadDocument(data: ReaderDocumentData, isDark: Boolean, chromeVisible: Boolean) {
         Timber.i("ReaderWebCallChainExecutor: try creating view for ${data.type}; page = ${data.page}")
         Timber.i("${data.file.absolutePath}")
+        documentCrops = data.manualCrops
         val createReaderViewOptions = CreateReaderViewOptions(
             type = data.type,
             url = "https://appassets.androidplatform.net/local/${data.file.name}",
@@ -639,7 +648,15 @@ class ReaderWebCallChainExecutor @Inject constructor(
     }
 
     suspend fun beginManualCrop() = suspendCancellableCoroutine { cont ->
-        readerWebViewHandler.evaluateJavascript("javascript:window.beginManualCrop();") { cont.resume(Unit) }
+        readerWebViewHandler.evaluateJavascript("javascript:window.beginManualCrop({nativeControls:true});") { cont.resume(Unit) }
+    }
+
+    fun cropEditorAction(action: String, scope: String? = null, top: Double? = null, bottom: Double? = null) {
+        val json = gson.toJson(mapOf("action" to action, "scope" to scope, "top" to top, "bottom" to bottom))
+        readerWebViewHandler.evaluateJavascript("window.cropEditorAction?.($json);") {}
+    }
+    suspend fun focusBookmark(key: String) = suspendCancellableCoroutine { cont ->
+        readerWebViewHandler.evaluateJavascript("window.focusReaderBookmark?.(${gson.toJson(key)});") { cont.resume(Unit) }
     }
 
     suspend fun cancelManualCrop() = suspendCancellableCoroutine { cont ->
@@ -648,7 +665,7 @@ class ReaderWebCallChainExecutor @Inject constructor(
 
     suspend fun setPageFitting(settings: org.zotero.android.screens.reader.settings.data.ReaderSettings, apply: Boolean) {
         val options = org.zotero.android.screens.reader.web.data.CreateReaderPageFitting(
-            settings.pageFitMode(), settings.fitReference(), settings.contentMargin.fraction, settings.fittingRevision, settings.includeMarginalia
+            settings.pageFitMode(), settings.fitReference(), settings.contentMargin.fraction, settings.fittingRevision, settings.includeMarginalia, documentCrops
         )
         val json = gson.toJson(options)
         suspendCancellableCoroutine<Unit> { cont ->

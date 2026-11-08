@@ -7,10 +7,13 @@ data class ReaderManualCrops(
     val all: List<Double>? = null,
     val odd: List<Double>? = null,
     val even: List<Double>? = null,
+    val mode: String? = null,
 ) {
+    fun effectiveMode(): String = mode?.takeIf { it in setOf("automatic", "manual") }
+        ?: if (all != null || odd != null || even != null) "manual" else "automatic"
     companion object {
         fun fromJson(value: JsonObject): ReaderManualCrops? = runCatching {
-            require(value.keySet().all { it in setOf("all", "odd", "even") })
+            require(value.keySet().all { it in setOf("all", "odd", "even", "mode") })
             fun rect(key: String): List<Double>? {
                 val raw = value[key] ?: return null
                 require(raw.isJsonArray && raw.asJsonArray.size() == 4)
@@ -22,7 +25,7 @@ data class ReaderManualCrops(
                     && r[2] - r[0] >= .02 && r[3] - r[1] >= .02)
                 return r
             }
-            ReaderManualCrops(rect("all"), rect("odd"), rect("even"))
+            ReaderManualCrops(rect("all"), rect("odd"), rect("even"), value["mode"]?.asString?.also { require(it in setOf("automatic", "manual")) })
         }.getOrNull()
     }
 }

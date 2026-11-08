@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reader_content_cropping">Content cropping</string>
+    <string name="reader_crop_automatic">Automatic</string>
+    <string name="reader_crop_manual">Manual</string>
+    <string name="reader_progress_display">Reading progress</string>
+    <string name="reader_progress_both">Position and percentage</string>
+    <string name="reader_progress_hidden">Hidden</string>
+    <string name="reader_progress_position">Position</string>
+    <string name="reader_progress_percent">Percentage</string>
+    <string name="reader_go_to_bookmark">Go to bookmark</string>
+    <string name="reader_delete_bookmark">Delete bookmark</string>
+    <string name="reader_crop_title">Manual crop</string>
+    <string name="reader_crop_all">All pages</string>
+    <string name="reader_crop_odd">Odd pages</string>
+    <string name="reader_crop_even">Even pages</string>
+    <string name="reader_crop_apply">Apply</string>
+    <string name="reader_crop_cancel">Cancel</string>
+    <string name="reader_crop_help">Drag a corner or move the frame. Odd/even counts from PDF page 1.</string>
+    <string name="reader_retry">Reload reader</string>
+    <string name="reader_recovery_failed">The reader stopped responding. Reload to continue at your last reading position.</string>
+</resources>

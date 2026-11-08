@@ -49,6 +49,7 @@ internal class ReaderSettingsViewModel @Inject constructor(
 
     private var debounceApplyJob: Job? = null
     private var reapplyFitting = false
+    private var cropModeChanged: String? = null
     private val DEBOUNCE_APPLY_DELAY_MS = 500L
 
     private fun startObservingTheme() {
@@ -97,6 +98,8 @@ internal class ReaderSettingsViewModel @Inject constructor(
                     selectedContentMarginOption = convert(readerSettings.contentMargin),
                     fileType = loadedArgs.fileType,
                     readingModeEnabled = loadedArgs.readingModeEnabled,
+                    cropMode = loadedArgs.cropMode,
+                    progressMode = readerSettings.effectiveProgressMode(),
                 )
             }
         }
@@ -262,6 +265,16 @@ internal class ReaderSettingsViewModel @Inject constructor(
         scheduleDebouncedApply()
     }
 
+    fun useAutomaticCrop() {
+        cropModeChanged = "automatic"
+        updateState { copy(cropMode = "automatic") }
+        scheduleDebouncedApply()
+    }
+    fun setProgressMode(mode: String) {
+        readerSettings.epubProgressMode = mode
+        updateState { copy(progressMode = mode) }
+        scheduleDebouncedApply()
+    }
     fun onTextScaleChanged(value: Float) {
         val scale = (value * 10).roundToInt().coerceIn(6, 18) / 10f
         readerSettings.textScale = scale
@@ -392,7 +405,7 @@ internal class ReaderSettingsViewModel @Inject constructor(
     }
 
     private fun sendSettingsParams(startManualCrop: Boolean = false) {
-        EventBus.getDefault().post(ReaderSettingsChangeResult(readerSettings.copy(), reapplyFitting, startManualCrop))
+        EventBus.getDefault().post(ReaderSettingsChangeResult(readerSettings.copy(), reapplyFitting, startManualCrop, cropModeChanged))
         reapplyFitting = false
     }
 
@@ -405,6 +418,8 @@ internal data class ReaderSettingsViewState(
     val selectedPageLayoutFlowMode: ReaderSettingsOptions = ReaderSettingsOptions.PageLayoutFlowModePaginated,
     val lineHeight: Float = 1.2f,
     val textScale: Float = 1f,
+    val cropMode: String = "automatic",
+    val progressMode: String = "both",
     val wordSpacing: Float = 0f,
     val letterSpacing: Float = 0f,
     val pageWidth: Float = 0f,

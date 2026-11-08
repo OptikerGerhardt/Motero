@@ -19,4 +19,12 @@ class ReaderManualCropsTest {
             """{"even":[0,0,0.01,1]}""", """{"all":["0",0,1,1]}""", """{"all":null}""",
             """{"all":[0,0,1]}""", """{"unknown":[0,0,1,1]}""")) assertNull(json, parse(json))
     }
+    @Test fun `legacy manual frames migrate while automatic selection preserves frames`() {
+        val legacy = parse("""{"all":[0.1,0.1,0.9,0.9]}""")!!
+        assertEquals("manual", legacy.effectiveMode())
+        assertEquals("automatic", legacy.copy(mode = "automatic").effectiveMode())
+        assertEquals(legacy.all, legacy.copy(mode = "automatic").all)
+        assertEquals("automatic", ReaderManualCrops().effectiveMode())
+        assertNull(parse("""{"mode":"unknown"}"""))
+    }
 }

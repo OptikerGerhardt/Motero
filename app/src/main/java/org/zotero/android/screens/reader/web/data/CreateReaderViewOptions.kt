@@ -50,7 +50,8 @@ data class CreateReaderViewState(
 // Four Android fitting modes share the same detected content geometry.
 data class CreateReaderPageFitting(val mode: String, val reference: String, val margin: Double,
     val revision: Long = 0, val includeMarginalia: Boolean = false,
-    val manualCrop: org.zotero.android.screens.reader.data.ReaderManualCrops? = null)
+    val manualCrop: org.zotero.android.screens.reader.data.ReaderManualCrops? = null,
+    val cropMode: String = manualCrop?.effectiveMode() ?: "automatic")
 
 // Apply EPUB layout before restoring the CFI.
 data class CreateReaderReflowableAppearance(

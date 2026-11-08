@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reader_content_cropping">Inhaltszuschnitt</string>
+    <string name="reader_crop_automatic">Automatisch</string>
+    <string name="reader_crop_manual">Manuell</string>
+    <string name="reader_progress_display">Lesefortschritt</string>
+    <string name="reader_progress_both">Position und Prozent</string>
+    <string name="reader_progress_hidden">Ausgeblendet</string>
+    <string name="reader_progress_position">Position</string>
+    <string name="reader_progress_percent">Prozent</string>
+    <string name="reader_go_to_bookmark">Zum Lesezeichen</string>
+    <string name="reader_delete_bookmark">Lesezeichen löschen</string>
+    <string name="reader_crop_title">Manueller Zuschnitt</string>
+    <string name="reader_crop_all">Alle Seiten</string>
+    <string name="reader_crop_odd">Ungerade Seiten</string>
+    <string name="reader_crop_even">Gerade Seiten</string>
+    <string name="reader_crop_apply">Übernehmen</string>
+    <string name="reader_crop_cancel">Abbrechen</string>
+    <string name="reader_crop_help">Ecken ziehen oder den Rahmen verschieben. Gerade/ungerade zählt ab PDF-Seite 1.</string>
+    <string name="reader_retry">Reader neu laden</string>
+    <string name="reader_recovery_failed">Der Reader reagiert nicht mehr. Lade ihn neu, um an der letzten Leseposition fortzufahren.</string>
+</resources>

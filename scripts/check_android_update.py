@@ -16,6 +16,7 @@ parser.add_argument('--serial', default='emulator-5554')
 parser.add_argument('--baseline-apk', type=Path, required=True)
 parser.add_argument('--candidate-apk', type=Path, required=True)
 parser.add_argument('--rejected-apk', type=Path)
+parser.add_argument('--current-baseline-apk', type=Path)
 parser.add_argument('--rollback-probe-apk', type=Path, required=True)
 parser.add_argument('--legacy-client-apk', type=Path, required=True)
 parser.add_argument('--output', type=Path, required=True)
@@ -121,13 +122,29 @@ client_dump = adb('shell', 'dumpsys', 'package', 'org.motero.test.legacyclient')
 assert permission in client_dump, 'Probe did not request the internal permission'
 assert not re.search(re.escape(permission) + r': granted=true', client_dump), 'The public old key gained the private receiver permission'
 
+current_update = None
+if args.current_baseline_apk:
+    # This test owns the guarded, rooted emulator. Reset only its test install.
+    adb('uninstall', package)
+    install(args.current_baseline_apk)
+    owner = adb('shell', 'stat', '-c', '%u', data).stdout.strip()
+    adb('shell', 'mkdir', '-p', data + '/files')
+    adb('shell', '-T', 'tee', marker_path, input=marker)
+    adb('shell', 'chown', owner + ':' + owner, marker_path)
+    install(args.candidate_apk)
+    assert adb('shell', 'cat', marker_path).stdout == marker
+    assert adb('shell', 'stat', '-c', '%u', data).stdout.strip() == owner
+    install(args.rollback_probe_apk, 'INSTALL_FAILED_UPDATE_INCOMPATIBLE')
+    current_update = {'baseline_sha256': hashlib.sha256(args.current_baseline_apk.read_bytes()).hexdigest(),
+        'private_data_marker_preserved': True, 'application_uid_preserved': True, 'old_key_update_rejected': True}
+
 report = {'passed': True, 'android_api': int(adb('shell', 'getprop', 'ro.build.version.sdk').stdout),
     'emulator_only': True, 'version_code': version, 'candidate_sha256': hashlib.sha256(args.candidate_apk.read_bytes()).hexdigest(),
     'legacy_duplicate_permission_failure_reproduced': rejection is not None,
     'private_data_marker_preserved': True, 'application_uid_preserved': True,
     'updated_app_started': True,
     'old_key_update_rejected': True, 'old_key_client_permission_denied': True,
-    'receiver_permission': permission}
+    'receiver_permission': permission, 'current_release_update': current_update}
 args.output.parent.mkdir(parents=True, exist_ok=True)
 args.output.write_text(json.dumps(report, indent=2) + '\n')
 print(json.dumps(report), flush=True)

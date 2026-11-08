@@ -6,4 +6,5 @@ data class ReaderSettingsArgs(
     val readerSettings: ReaderSettings,
     val fileType: ReaderFileType,
     val readingModeEnabled: Boolean = false,
+    val cropMode: String = "automatic",
 )

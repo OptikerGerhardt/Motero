@@ -1,6 +1,19 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 7. November 2026. Build 308 enthält die folgende Reader-Überarbeitung; Signieridentität, Paketkennung und Android-9+-Anforderung bleiben erhalten. Die Installation von Build 307 ist auf Pixel 8/GrapheneOS vom Nutzer bestätigt.
+Stand: 8. November 2026. Build 309 setzt die nächste Reader-Überarbeitung um.
+
+## Reader-Überarbeitung: Build 309
+
+- Lesezeichen: neue Einträge schwarz, vorhandene Farben unverändert; zentrierte Seite als Ziel; direkter Sprung und roter Löschknopf nur im Schnellfilter bei nicht ausgewählten Karten.
+- Randtipps schmaler (12 %, maximal 64 CSS-Pixel), vor Annotationen priorisiert; Links, längere Gesten und Werkzeuge geschützt. Untere Filterleiste mit 4 dp Zusatzabstand und System-Navigationsabstand.
+- Lesen / Zwei-Finger-Vorschau / Übersicht getrennt: zwei vollständig sichtbare Originalseiten halten die Übersicht offen; ansonsten Snap-back. Seitentipp stellt den Fit in allen drei Scrollmodi wieder her.
+- Inhaltszuschnitt Automatic / Manual zwischen Scrolling und Page fitting; gespeicherte Rahmen bleiben beim Umschalten erhalten, Abbrechen verändert die vorherige Wahl nicht. Off entfernt den Zuschnitt. Native Material-Bedienelemente steuern die vorhandene Vorschau ohne WebView-Neuerstellung. Lupe auf 1,4-fache Vergrößerung.
+- Kant: getrennte B-/Römerzahlen vor Zeilenbildung gruppieren und gegenüber der Textspalte bewerten. Fuchs: isolierte untere Folien zusätzlich anhand Positionsband und Nummernfolge bewerten. Die neuesten Originaldateien aus den Screenshots liegen nicht vor; diese Muster sind synthetisch geprüft.
+- EPUB: persistente Fortschrittsanzeige mit vier Zuständen, ohne Umbruch beim Umschalten; alte Toolbar-Reserve entfernt, Systemabstände einmal angerechnet. Theme initial aus Einstellung und Betriebssystem; WebView-eigene Verdunkelung aus.
+- Stabilität: priorisierte Analysewarteschlange pro Dokument, maximal zwei Rasteranalysen, 32 schwere Cache-/Vorschau-Einträge, kleine Geometriedaten getrennt; veraltete Arbeiten abbrechen, Layout-Schreibvorgänge bündeln. Kontrollierte Wiederherstellung bei beendetem Renderer.
+- Prüfung und Auslieferung: Reader-/Android-Tests, Browserfälle, privates Plessner-Original, signierte APK, API-31/35-Update von 303 sowie 308, Datenmarker-/UID-Erhalt und Ablehnung des alten Schlüssels. Physische Geräte- und Kontosync-Prüfung separat.
+
+Historischer Stand: 7. November 2026. Build 308 enthält die folgende Reader-Überarbeitung; Signieridentität, Paketkennung und Android-9+-Anforderung bleiben erhalten. Die Installation von Build 307 ist auf Pixel 8/GrapheneOS vom Nutzer bestätigt.
 
 ## Reader-Überarbeitung: Build 308
 

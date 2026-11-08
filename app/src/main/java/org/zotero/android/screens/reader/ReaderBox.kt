@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.layout.Arrangement
@@ -109,7 +110,7 @@ internal fun ReaderBox(
         ) {
             // Reserve a stable reading viewport even when system bars are
             // hidden. Fits, page turns and SmartScroll all use this same area.
-            val readingModifier = if (viewState.isPdfOrHtml()) {
+            val readingModifier = run {
                 val cutout = WindowInsets.displayCutout
                 val direction = LocalLayoutDirection.current
                 val hasCutout = cutout.getTop(density) > 0 || cutout.getBottom(density) > 0
@@ -118,7 +119,7 @@ internal fun ReaderBox(
                     WindowInsets.statusBarsIgnoringVisibility.only(WindowInsetsSides.Top).union(cutout)
                 } else WindowInsets(0, 0, 0, 0)
                 Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface).windowInsetsPadding(safeInsets)
-            } else Modifier
+            }
             ReaderWebView(viewModel = viewModel, modifier = readingModifier)
             if (viewState.showCreationToolbar && viewState.isTopBarVisible && !viewState.manualCropOpen) {
                 ReaderAnnotationCreationToolbar(
@@ -130,7 +131,8 @@ internal fun ReaderBox(
                     shouldShowSnapTargetAreas = shouldShowSnapTargetAreas
                 )
             }
-            if (viewState.fileType == ReaderFileType.PDF) {
+            if (viewState.manualCropOpen) Box(readingModifier) { ReaderCropControls(viewModel, viewState) }
+            if (viewState.fileType == ReaderFileType.PDF && !viewState.manualCropOpen) {
                 val isScrubberVisible = viewState.isScrubberVisible()
                 Column(
                     modifier = Modifier
@@ -169,7 +171,8 @@ internal fun ReaderBox(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(32.dp)
+                    .windowInsetsPadding(NavigationBarDefaults.windowInsets)
+                    .height(40.dp).clickable(onClick = viewModel::cycleEpubProgress)
                     .background(MaterialTheme.colorScheme.surface)
             ) {
                 // EPUB: When bars are hidden, show page progress in the empty space
@@ -179,7 +182,12 @@ internal fun ReaderBox(
                 ) {
                     Text(
                         modifier = Modifier.align(Alignment.Center),
-                        text = pageProgress,
+                        text = when(viewState.progressMode) {
+                            "hidden" -> ""
+                            "position" -> viewState.progressPosition.orEmpty()
+                            "percent" -> viewState.progressPercent.orEmpty()
+                            else -> pageProgress
+                        },
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall,
                     )

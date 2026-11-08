@@ -6,14 +6,14 @@ import org.junit.Test
 import org.zotero.android.screens.reader.settings.data.ReaderSettings
 
 class ReaderPageFittingSettingsTest {
-    @Test fun `older settings keep their fitting mode and default to paper reference`() {
+    @Test fun `older settings keep their fitting mode and use the selected crop`() {
         val old = Gson().fromJson("""{"fitToWidth":true,"fitToContent":false}""", ReaderSettings::class.java)
         assertEquals("width", old.pageFitMode())
         assertFalse(old.fitToHeight)
         assertFalse(old.fitTextReference)
         assertFalse(old.fitWidthCrop)
         assertFalse(old.includeMarginalia)
-        assertEquals("page", old.fitReference())
+        assertEquals("cropped-content", old.fitReference())
         assertEquals(0L, old.fittingRevision)
     }
 
@@ -41,19 +41,28 @@ class ReaderPageFittingSettingsTest {
         assertEquals("content", restored.fitReference())
     }
 
-    @Test fun `cropped width is distinct and never changes height or existing text width`() {
+    @Test fun `active width and height fitting always use the chosen crop`() {
         val settings = ReaderSettings.default().apply {
             setPageFitMode("width")
             fitTextReference = true
         }
-        assertEquals("content", settings.fitReference())
+        assertEquals(if(settings.fitToWidth) "cropped-content" else "content", settings.fitReference())
         settings.fitWidthCrop = true
         assertEquals("cropped-content", settings.fitReference())
         settings.setPageFitMode("height")
-        assertEquals("content", settings.fitReference())
+        assertEquals(if(settings.fitToWidth) "cropped-content" else "content", settings.fitReference())
         settings.setPageFitMode("width")
         assertEquals("cropped-content", settings.fitReference())
         settings.fitTextReference = false
-        assertEquals("page", settings.fitReference())
+        assertEquals("cropped-content", settings.fitReference())
+    }
+    @Test fun `progress setting survives reopening and old settings retain both`() {
+        val gson=Gson()
+        assertEquals("both", ReaderSettings.default().effectiveProgressMode())
+        for(mode in listOf("both", "hidden", "position", "percent")) {
+            val settings=ReaderSettings.default().apply { epubProgressMode=mode }
+            assertEquals(mode, gson.fromJson(gson.toJson(settings),ReaderSettings::class.java).effectiveProgressMode())
+        }
+        assertEquals("both", ReaderSettings.default().apply { epubProgressMode="unknown" }.effectiveProgressMode())
     }
 }

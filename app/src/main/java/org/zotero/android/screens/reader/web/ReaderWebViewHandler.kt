@@ -11,6 +11,9 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.webkit.RenderProcessGoneDetail
+import androidx.webkit.WebSettingsCompat
+import androidx.webkit.WebViewFeature
 import androidx.webkit.WebViewAssetLoader
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CoroutineScope
@@ -28,6 +31,7 @@ class ReaderWebViewHandler @Inject constructor(
 ) {
     private val uiMainCoroutineScope = CoroutineScope(dispatchers.main)
 
+    private var webViewAlive = false
     private lateinit var webView: WebView
     private lateinit var webViewPort: WebMessagePort
 
@@ -36,11 +40,21 @@ class ReaderWebViewHandler @Inject constructor(
         webView: WebView,
         url: String,
         onWebViewLoadPage: () -> Unit,
-        processWebViewResponses: ((message: WebMessage) -> Unit)? = null
+        processWebViewResponses: ((message: WebMessage) -> Unit)? = null,
+        onRendererGone: () -> Unit = {},
     ) {
         this.webView = webView
+        this.webViewAlive = true
+        if (::webViewPort.isInitialized) webViewPort.close()
         uiMainCoroutineScope.launch {
             webView.settings.javaScriptEnabled = true
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+                WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.settings, false)
+            }
+            @Suppress("DEPRECATION")
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
+                WebSettingsCompat.setForceDark(webView.settings, WebSettingsCompat.FORCE_DARK_OFF)
+            }
             webView.settings.allowFileAccess = true
             webView.settings.allowFileAccessFromFileURLs = true
             webView.settings.allowUniversalAccessFromFileURLs = true
@@ -64,6 +78,14 @@ class ReaderWebViewHandler @Inject constructor(
                 .addPathHandler("/local/", WebViewAssetLoader.InternalStoragePathHandler(context, fileStore.runningReaderDirectory()))
                 .build()
             webView.webViewClient = object : WebViewClient() {
+                override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
+                    webViewAlive = false
+                    Timber.e("Reader renderer exited; crash=%s", detail.didCrash())
+                    if (::webViewPort.isInitialized) webViewPort.close()
+                    view.destroy()
+                    onRendererGone()
+                    return true
+                }
                 override fun shouldInterceptRequest(
                     view: WebView?,
                     request: WebResourceRequest
@@ -80,6 +102,7 @@ class ReaderWebViewHandler @Inject constructor(
                 }
 
                 override fun onPageFinished(view: WebView, url: String) {
+                    if (view !== this@ReaderWebViewHandler.webView || !webViewAlive) return
                     webView.requestFocus()
                     val channel = webView.createWebMessageChannel()
                     val port = channel[0]
@@ -105,8 +128,10 @@ class ReaderWebViewHandler @Inject constructor(
     }
 
     fun evaluateJavascript(javascript: String, result: (String) -> Unit) {
+        val target = webView
         uiMainCoroutineScope.launch {
-            webView.evaluateJavascript(javascript) { result ->
+            if (!webViewAlive || target !== webView) { result("null"); return@launch }
+            target.evaluateJavascript(javascript) { result ->
                 result(result)
             }
         }

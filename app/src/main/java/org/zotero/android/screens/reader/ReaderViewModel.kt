@@ -421,12 +421,27 @@ class ReaderViewModel @Inject constructor(
 
         updatePdfPageAppearanceMode(defaults.getReaderSettings())
         updateState {
-            copy(isDark = pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
+            copy(isDark = pdfReaderCurrentThemeEventStream.currentValue()!!.isDark, progressMode = defaults.getReaderSettings().effectiveProgressMode())
         }
         progressHandler.muteProgressToolbarForScreen()
 
     }
 
+    private var automaticRecoveryUsed = false
+    fun onReaderRendererGone() {
+        updateState { copy(manualCropOpen = false, isReaderLoading = true, selectedAnnotationKey = null,
+            readerAnnotationArgs = null, readerAnnotationMoreArgs = null, showCreationToolbar = false, selectedText = null, rendererFailed = automaticRecoveryUsed,
+            rendererGeneration = if (automaticRecoveryUsed) rendererGeneration else rendererGeneration + 1) }
+        automaticRecoveryUsed = true
+    }
+    fun retryReaderRenderer() {
+        updateState { copy(rendererFailed = false, isReaderLoading = true, rendererGeneration = rendererGeneration + 1) }
+    }
+    fun initialReaderIsDark(osDark: Boolean): Boolean = when(defaults.getReaderSettings().appearanceMode) {
+        PageAppearanceMode.LIGHT -> false
+        PageAppearanceMode.DARK -> true
+        PageAppearanceMode.AUTOMATIC -> osDark
+    }
     fun initEveryTime(webView: ReaderCustomWebView) {
         restartDisableForceScreenOnTimer()
         this.readerWebView = webView
@@ -480,8 +495,18 @@ class ReaderViewModel @Inject constructor(
         }, 25 * 60 * 1000L)
     }
 
+    private var readerThemeInitialized = false
     fun setOsTheme(isDark: Boolean) {
-        pdfReaderThemeDecider.setCurrentOsTheme(isOsThemeDark = isDark)
+        if (!readerThemeInitialized) {
+            readerThemeInitialized = true
+            val mode = when(defaults.getReaderSettings().appearanceMode) {
+                PageAppearanceMode.LIGHT -> org.zotero.android.pdf.data.PageAppearanceMode.LIGHT
+                PageAppearanceMode.DARK -> org.zotero.android.pdf.data.PageAppearanceMode.DARK
+                PageAppearanceMode.AUTOMATIC -> org.zotero.android.pdf.data.PageAppearanceMode.AUTOMATIC
+            }
+            pdfReaderThemeDecider.initialize(mode, isDark)
+            updateState { copy(isDark = initialReaderIsDark(isDark)) }
+        } else pdfReaderThemeDecider.setCurrentOsTheme(isOsThemeDark = isDark)
     }
 
     fun turnPage(next: Boolean) {
@@ -1677,6 +1702,7 @@ class ReaderViewModel @Inject constructor(
         }
         val successValue = (result as Result.Success).value
         when (successValue) {
+            ReaderWebData.rendererGone -> { onReaderRendererGone() }
             ReaderWebData.loadDocument -> {
                 load()
             }
@@ -1714,6 +1740,12 @@ class ReaderViewModel @Inject constructor(
             ReaderWebData.clearSelectedTextParams -> {
                 clearSelectedTextParams()
             }
+            is ReaderWebData.setCropEditorState -> {
+                val state = successValue.state
+                readerWebCallChainExecutor.cropEditorAction("insets", top = cropTopInset, bottom = 12.0)
+                updateState { copy(cropEditorPage = state["page"]?.asInt ?: 1, cropEditorCount = state["count"]?.asInt ?: 1,
+                    cropEditorScope = state["scope"]?.asString ?: "all", cropEditorBusy = state["busy"]?.asBoolean ?: true) }
+            }
             is ReaderWebData.setCropEditorOpen -> {
                 updateState { copy(manualCropOpen = successValue.open) }
             }
@@ -1724,11 +1756,7 @@ class ReaderViewModel @Inject constructor(
                     if (crop != null) {
                         defaults.setManualCrops(this.library.identifier, this.key, crop)
                         val settings = defaults.getReaderSettings()
-                        if (successValue.params["enable"]?.asBoolean == true) {
-                            settings.setPageFitMode("content")
-                            settings.fitTextReference = true
-                            settings.spreadsMode = org.zotero.android.screens.reader.settings.data.PageSpreadsMode.NONE
-                        }
+                        readerWebCallChainExecutor.documentCrops = crop
                         successValue.params["revision"]?.asLong?.let { settings.fittingRevision = it }
                         defaults.setReaderSettings(settings)
                     }
@@ -1791,6 +1819,8 @@ class ReaderViewModel @Inject constructor(
             Timber.e("ReaderViewModel: invalid params - $params")
             return
         }
+
+        if (state["readingPresentation"]?.asString in listOf("peek", "overview")) return
 
         val page: String
 
@@ -1908,8 +1938,12 @@ class ReaderViewModel @Inject constructor(
             null
         }
 
-        if (viewState.pageProgress != pageProgress) {
-            updateState { copy(pageProgress = pageProgress) }
+        val position = pageProgress?.substringBefore(" (")
+        val percent = if(pageIndex != null && pagesCount != null && pagesCount > 0) "${(pageIndex.toDouble()/pagesCount*100).roundToInt()}%" else null
+        val progressMode = defaults.getReaderSettings().effectiveProgressMode()
+        if (viewState.pageProgress != pageProgress || viewState.progressMode != progressMode) {
+            updateState { copy(pageProgress = pageProgress, progressPosition = position, progressPercent = percent,
+                progressMode = progressMode) }
         }
     }
 
@@ -2038,6 +2072,33 @@ class ReaderViewModel @Inject constructor(
                 else -> false
             }
         }
+    }
+
+    fun cycleEpubProgress() {
+        val modes = listOf("both", "hidden", "position", "percent")
+        val settings = defaults.getReaderSettings()
+        val mode = modes[(modes.indexOf(settings.effectiveProgressMode()) + 1) % modes.size]
+        settings.epubProgressMode = mode; defaults.setReaderSettings(settings)
+        updateState { copy(progressMode = mode) }
+    }
+    fun cropAction(action: String, scope: String? = null) = readerWebCallChainExecutor.cropEditorAction(action, scope)
+    private var cropTopInset = 180.0
+    fun cropInsets(top: Double, bottom: Double) {
+        cropTopInset = top
+        readerWebCallChainExecutor.cropEditorAction("insets", top = top, bottom = bottom)
+    }
+    fun canDeleteBookmark(annotation: ReaderAnnotation): Boolean = annotation.isReaderBookmark() &&
+        annotation.editability(userId, library) == org.zotero.android.pdf.data.AnnotationEditability.editable
+    fun deleteBookmark(key: String) {
+        val bookmark = annotation(key) ?: return
+        if (canDeleteBookmark(bookmark)) removeAnnotation(key)
+    }
+    fun focusBookmark(key: String) {
+        if (annotation(key)?.isReaderBookmark() != true) return
+        updateState { copy(isTopBarVisible = false, showSideBar = false, showCreationToolbar = false,
+            selectedAnnotationKey = null, readerAnnotationArgs = null, readerAnnotationMoreArgs = null) }
+        previousSidebarVisibilityState = false
+        viewModelScope.launch { readerWebCallChainExecutor.focusBookmark(key) }
     }
 
     fun toggleBookmarksOnly() {
@@ -2633,6 +2694,7 @@ class ReaderViewModel @Inject constructor(
             readerSettings = defaults.getReaderSettings(),
             fileType = viewState.fileType,
             readingModeEnabled = viewState.readingModeEnabled,
+            cropMode = defaults.getManualCrops(library.identifier, key)?.effectiveMode() ?: "automatic",
         )
         val params = navigationParamsMarshaller.encodeObjectToBase64(args)
         if (isTablet) {
@@ -2723,11 +2785,19 @@ class ReaderViewModel @Inject constructor(
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(result: ReaderSettingsChangeResult) {
         viewModelScope.launch {
-            val appearance = update(result.readerSettings, result.reapplyFitting)
+            var cropChanged = false
+            result.cropMode?.let { mode ->
+                val previous = defaults.getManualCrops(library.identifier, key) ?: org.zotero.android.screens.reader.data.ReaderManualCrops()
+                cropChanged = previous.effectiveMode() != mode
+                val crop = previous.copy(mode = mode)
+                defaults.setManualCrops(library.identifier, key, crop)
+                readerWebCallChainExecutor.documentCrops = crop
+            }
+            val appearance = update(result.readerSettings, result.reapplyFitting || cropChanged)
             if (result.startManualCrop && viewState.fileType == ReaderFileType.PDF) {
                 appearance.join()
                 setReaderChromeVisible(false)
-                updateState { copy(manualCropOpen = true, showPdfSearch = false, showSideBar = false) }
+                updateState { copy(manualCropOpen = true, cropEditorBusy = true, showPdfSearch = false, showSideBar = false) }
                 readerWebCallChainExecutor.beginManualCrop()
             }
         }
@@ -2745,6 +2815,9 @@ class ReaderViewModel @Inject constructor(
             || previousSettings.spreadsMode != readerSettings.spreadsMode
         readerSettings.fittingRevision = previousSettings.fittingRevision + if (applyFit) 1 else 0
         defaults.setReaderSettings(readerSettings)
+        updateState { copy(progressMode = readerSettings.effectiveProgressMode()) }
+        val onlyProgress = previousSettings.copy(epubProgressMode = readerSettings.epubProgressMode) == readerSettings
+        if (onlyProgress && !applyFit) return viewModelScope.launch { }
         return updateAppearanceAccordingToSettings(isSettingsUpdate = true, applyFit = applyFit)
     }
 
@@ -2930,6 +3003,12 @@ data class ReaderViewState(
     val annotationSearchTerm: String = "",
     val bookmarksOnly: Boolean = false,
     val manualCropOpen: Boolean = false,
+    val cropEditorPage: Int = 1,
+    val cropEditorCount: Int = 1,
+    val cropEditorScope: String = "all",
+    val cropEditorBusy: Boolean = true,
+    val rendererGeneration: Int = 0,
+    val rendererFailed: Boolean = false,
     val annotationFilter: ReaderAnnotationsFilter? = null,
     val annotationPopoverKey: String? = null,
     val annotationPopoverRect: RectF? = null,
@@ -2953,6 +3032,9 @@ data class ReaderViewState(
     val toolColors: Map<ReaderAnnotationTool, String> = emptyMap(),
     val focusDocumentLocationAnnotationKey: String? = null,
     val pageProgress: String? = null,
+    val progressPosition: String? = null,
+    val progressPercent: String? = null,
+    val progressMode: String = "both",
     val canNavigateBack: Boolean = false,
     val canNavigateForward: Boolean = false,
     val fileType: ReaderFileType = ReaderFileType.EPUB,

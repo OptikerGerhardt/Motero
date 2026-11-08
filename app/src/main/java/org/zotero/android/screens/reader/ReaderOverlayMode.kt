@@ -31,14 +31,7 @@ internal fun ReaderOverlayMode(
     val isPdfOrHtml = viewState.isPdfOrHtml()
     var boxModifier = Modifier.fillMaxSize()
 
-    if (!isPdfOrHtml) {
-        val density = LocalDensity.current
-        val insets = WindowInsets.systemBarsIgnoringVisibility
-        boxModifier = boxModifier.padding(
-            top = with(density) { insets.getTop(this).toDp() } + TopAppBarDefaults.TopAppBarExpandedHeight,
-            bottom = with(density) { insets.getBottom(this).toDp() },
-        )
-    }
+
     Box(
         modifier = boxModifier
     ) {

@@ -5,6 +5,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.FilterChip
+import androidx.compose.foundation.layout.*
+import androidx.compose.ui.unit.dp
+import org.zotero.android.R
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import org.zotero.android.screens.reader.data.ReaderFileType
@@ -39,6 +44,17 @@ internal fun ReaderSettingsTable(
         }
         // Fitting applies to the PDF pages, not to Reading Mode's reflowed text
         if (viewState.fileType == ReaderFileType.PDF && !viewState.readingModeEnabled) {
+            item {
+                Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    Text(stringResource(R.string.reader_content_cropping), style = MaterialTheme.typography.titleSmall)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(selected = viewState.cropMode == "automatic", onClick = viewModel::useAutomaticCrop,
+                            label = { Text(stringResource(R.string.reader_crop_automatic)) })
+                        FilterChip(selected = viewState.cropMode == "manual", onClick = onManualCrop,
+                            label = { Text(stringResource(R.string.reader_crop_manual)) })
+                    }
+                }
+            }
             readerSettingsSettingRow(
                 titleResId = Strings.pdf_settings_page_fitting_title,
                 options = viewState.fitToContentOptions,
@@ -46,20 +62,10 @@ internal fun ReaderSettingsTable(
                 columns = 2,
                 optionSelected = viewModel::onOptionSelected
             )
-            item { TextButton(onClick = onManualCrop) { Text(stringResource(Strings.reader_manual_crop)) } }
             val axisFit = viewState.selectedFitToContentOption == ReaderSettingsOptions.FitToWidth
                 || viewState.selectedFitToContentOption == ReaderSettingsOptions.FitToHeight
-            if (axisFit) {
-                readerSettingsSettingRow(
-                    titleResId = Strings.pdf_settings_fit_reference_title,
-                    options = if (viewState.selectedFitToContentOption == ReaderSettingsOptions.FitToWidth)
-                        viewState.widthReferenceOptions else viewState.fitReferenceOptions,
-                    selectedOption = viewState.selectedFitReferenceOption,
-                    optionSelected = viewModel::onOptionSelected
-                )
-            }
             if (viewState.selectedFitToContentOption == ReaderSettingsOptions.FitToContentOn
-                || (axisFit && viewState.selectedFitReferenceOption != ReaderSettingsOptions.FitReferencePage)) {
+                || axisFit) {
                 readerSettingsSettingRow(
                     titleResId = Strings.pdf_settings_content_margin_title,
                     options = viewState.contentMarginOptions,
@@ -97,6 +103,18 @@ internal fun ReaderSettingsTable(
             )
         }
 
+        if (viewState.fileType == ReaderFileType.EPUB) {
+            item {
+                Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                    Text(stringResource(R.string.reader_progress_display), style = MaterialTheme.typography.titleSmall)
+                    for ((mode, label) in listOf("both" to R.string.reader_progress_both, "hidden" to R.string.reader_progress_hidden,
+                        "position" to R.string.reader_progress_position, "percent" to R.string.reader_progress_percent)) {
+                        FilterChip(selected = viewState.progressMode == mode, onClick = { viewModel.setProgressMode(mode) },
+                            label = { Text(stringResource(label)) })
+                    }
+                }
+            }
+        }
         if (viewState.fileType == ReaderFileType.EPUB || viewState.readingModeEnabled) {
             readerSettingsSliderRow(
                 titleResId = org.zotero.android.R.string.reader_text_size,

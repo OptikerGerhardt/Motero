@@ -5,6 +5,7 @@ import com.google.gson.JsonObject
 
 sealed interface ReaderWebData {
     object loadDocument : ReaderWebData
+    object rendererGone : ReaderWebData
     data class deleteAnnotations(val params: JsonObject) : ReaderWebData
     data class saveAnnotations(val params: JsonObject) : ReaderWebData
     data class selectAnnotationFromDocument(val key: String, val inlineTextEditing: Boolean = false): ReaderWebData
@@ -12,6 +13,7 @@ sealed interface ReaderWebData {
     data class setSelectedTextParams(val params: JsonObject) : ReaderWebData
     object clearSelectedTextParams : ReaderWebData
     data class setManualCrop(val params: JsonObject) : ReaderWebData
+    data class setCropEditorState(val state: JsonObject) : ReaderWebData
     data class setCropEditorOpen(val open: Boolean) : ReaderWebData
     data class setViewState(val params: JsonObject) : ReaderWebData
     data class setViewStats(val params: JsonObject) : ReaderWebData

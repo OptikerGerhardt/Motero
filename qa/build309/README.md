@@ -1,0 +1,10 @@
+# Build 309 verification
+
+- 289 reader unit tests and 118 Android unit tests in 27 suites passed locally. Eleven publication/signing guard tests passed.
+- Browser regressions cover all three PDF scroll modes, real touch gestures, two-finger peek and overview restoration, crop-frame dragging, native crop commands and measured insets, centered-page bookmarks, retained bookmark colors, quick navigation without annotation selection, and fast alternating turns with bounded analysis state.
+- Edge-control setup explicitly waits for document learning before testing the edge zones. The independent refinements test exercises rapid navigation and validates the expected end page and queue/cache limits. The crop editor also passed with 750 ms of deliberately delayed persistence-message delivery.
+- The private original Plessner PDF was checked on all 116 pages: body text and all nineteen checked note-source labels remain; the footer/rule is excluded and the cache stays bounded. The document is not included in Git or release assets.
+- New Kant gutter-folio and Fuchs bottom-folio patterns are covered synthetically. The exact originals visible in the latest screenshots were not supplied.
+- The local signed APK matches the pinned private certificate, V3 rotation policy, package, receiver permission, 95 embedded reader sources, 207 PDF.js files and 45 runtime files. Its digest is in `local-apk-verification.json`. The GitHub-built APK is verified separately and can have a different digest.
+- Publication requires API 31/35 emulator tests for direct legacy-303 migration, current-308 update, data-marker/UID retention, startup and old-key refusal. Their reports are included in the release.
+- Physical BOOX/GrapheneOS reader interaction and live-account synchronization remain separate from automated checks. The reported PDF crash cannot be assigned to a proven single cause without a device crash log. Renderer recovery is a bounded fallback, not evidence of the original cause.

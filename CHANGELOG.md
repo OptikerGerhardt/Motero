@@ -1,5 +1,19 @@
 # Änderungen
 
+## 1.0.0-309 — 8. November 2026
+
+- Neue Lesezeichen sind schwarz. Bestehende Farben bleiben erhalten. Der obere rechte Shortcut schaltet das Lesezeichen der zentrierten Leseseite um, auch wenn Fragmente anderer Seiten sichtbar sind.
+- Im Lesezeichenfilter bieten nicht ausgewählte Karten einen direkten Seitensprung und einen roten Löschknopf. Ausgewählte Karten behalten das normale Bearbeitungsmenü. Die untere Filterleiste sitzt etwas tiefer.
+- Schmalere Blätterbereiche: 12 % der Breite, maximal 64 CSS-Pixel. Randtipps haben vor Highlights Vorrang; Links und längere Auswahlgesten bleiben bedienbar.
+- Zwei Finger zeigen die Originalseiten. Nach dem Herauszoomen bleibt eine Übersicht mit mindestens zwei vollständig sichtbaren Seiten offen; sonst kehrt der Reader zum Lesefit zurück. Ein Seitentipp stellt den Fit wieder her.
+- „Content cropping“ trennt Automatic und Manual vom Seiten-Fitting. Manuelle Rahmen bleiben beim Wechsel zur Automatik gespeichert. Speichern verändert weder Fit noch Scrollmodus; Off zeigt das unbeschnittene Papier.
+- Manueller Zuschnitt mit nativen Zotero-Material-Bedienelementen, gemessenen Vorschauabständen und denselben funktionierenden Ziehgriffen. Auswahl-Lupe mit größerem Kontext.
+- Verbesserte Erkennung getrennter Kant-Randfolien und isolierter unterer Seitenzahlen; Fußnoten und zentrale Überschriften bleiben geschützt.
+- EPUB-Fortschritt durch Antippen oder im Menü umschaltbar: Position und Prozent, ausgeblendet, Position, Prozent. Gespeicherte Darstellung; stabiler Viewport ohne alten Toolbar-Abstand. Gespeichertes Theme gilt beim Öffnen, zusätzliche WebView-Verdunkelung deaktiviert.
+- Aktuelle Seiten warten nicht auf acht Nachbaranalysen. Priorisierte, deduplizierte Analyse mit maximal zwei laufenden Aufgaben, begrenztem Cache und zusammengefassten Layout-Aktualisierungen. Schnelle Blätterfolgen behalten ihr Endziel.
+- Bei beendetem WebView-Renderer einmal kontrolliert an der gespeicherten Lesestelle neu laden, bei wiederholtem Ausfall manueller Neustart. Der gemeldete Geräteabsturz ist ohne Geräteprotokoll keiner einzelnen Ursache sicher zuzuordnen.
+- Release prüft zusätzlich das Update von Build 308 samt Datenerhalt. Die bisherigen API-31/35-Migrations- und Signaturprüfungen bleiben bestehen.
+
 ## 1.0.0-308 — 7. November 2026
 
 - PDF-Zuschnitt bleibt beim Ein-Finger-Scrollen erhalten. Sichtbare Seiten und ihr Puffer werden vorbereitet; zugeschnittene Inhaltsrahmen bestimmen den Seitenabstand, statt die unsichtbaren Papierränder mitzuscrollen. Das gilt für Vertical, Horizontal und Wrapped.
