@@ -98,23 +98,26 @@ assert owner_before == owner_after, 'Application UID changed during the update'
 candidate_dump = adb('shell', 'dumpsys', 'package', package).stdout
 version = int(re.search(r'versionCode=(\d+)', candidate_dump).group(1))
 assert re.search(re.escape(permission) + r': granted=true', candidate_dump), 'New internal permission was not granted'
-adb('logcat', '-b', 'crash', '-c')
-launch = adb('shell', 'am', 'start', '-n', package + '/org.zotero.android.screens.root.RootActivity')
-assert 'Error:' not in launch.stdout + launch.stderr, launch.stdout + launch.stderr
-# RootActivity immediately forwards to login/dashboard; am start -W may time out
-# waiting for the already-finished forwarding activity even after a valid launch.
-deadline = time.monotonic() + 90
-while time.monotonic() < deadline:
-    activities = adb('shell', 'dumpsys', 'activity', 'activities').stdout
-    if re.search(r'(?:topResumedActivity=|mResumedActivity:|ResumedActivity:)[^\n]*' + re.escape(package) + '/', activities):
-        break
-    time.sleep(2)
-else:
-    raise AssertionError('The updated app did not reach a resumed activity')
-time.sleep(3)
-assert adb('shell', 'pidof', package).stdout.strip(), 'Updated app crashed during startup'
-crashes = adb('logcat', '-d', '-b', 'crash').stdout
-assert not re.search(r'(?:Process: |Cmdline: )' + re.escape(package), crashes), 'Updated app crashed during startup'
+def launch_and_check():
+    adb('logcat', '-b', 'crash', '-c')
+    launch = adb('shell', 'am', 'start', '-n', package + '/org.zotero.android.screens.root.RootActivity')
+    assert 'Error:' not in launch.stdout + launch.stderr, launch.stdout + launch.stderr
+    # RootActivity immediately forwards to login/dashboard; am start -W may time out
+    # waiting for the already-finished forwarding activity even after a valid launch.
+    deadline = time.monotonic() + 90
+    while time.monotonic() < deadline:
+        activities = adb('shell', 'dumpsys', 'activity', 'activities').stdout
+        if re.search(r'(?:topResumedActivity=|mResumedActivity:|ResumedActivity:)[^\n]*' + re.escape(package) + '/', activities):
+            break
+        time.sleep(2)
+    else:
+        raise AssertionError('The updated app did not reach a resumed activity')
+    time.sleep(3)
+    assert adb('shell', 'pidof', package).stdout.strip(), 'Updated app crashed during startup'
+    crashes = adb('logcat', '-d', '-b', 'crash').stdout
+    assert not re.search(r'(?:Process: |Cmdline: )' + re.escape(package), crashes), 'Updated app crashed during startup'
+
+launch_and_check()
 install(args.rollback_probe_apk, 'INSTALL_FAILED_UPDATE_INCOMPATIBLE')
 assert adb('shell', 'cat', marker_path).stdout == marker
 install(args.legacy_client_apk)
@@ -130,13 +133,15 @@ if args.current_baseline_apk:
     owner = adb('shell', 'stat', '-c', '%u', data).stdout.strip()
     adb('shell', 'mkdir', '-p', data + '/files')
     adb('shell', '-T', 'tee', marker_path, input=marker)
-    adb('shell', 'chown', owner + ':' + owner, marker_path)
+    adb('shell', 'chown', '-R', owner + ':' + owner, data + '/files')
+    adb('shell', 'restorecon', '-RF', data + '/files')
     install(args.candidate_apk)
+    launch_and_check()
     assert adb('shell', 'cat', marker_path).stdout == marker
     assert adb('shell', 'stat', '-c', '%u', data).stdout.strip() == owner
     install(args.rollback_probe_apk, 'INSTALL_FAILED_UPDATE_INCOMPATIBLE')
     current_update = {'baseline_sha256': hashlib.sha256(args.current_baseline_apk.read_bytes()).hexdigest(),
-        'private_data_marker_preserved': True, 'application_uid_preserved': True, 'old_key_update_rejected': True}
+        'private_data_marker_preserved': True, 'application_uid_preserved': True, 'updated_app_started': True, 'old_key_update_rejected': True}
 
 report = {'passed': True, 'android_api': int(adb('shell', 'getprop', 'ro.build.version.sdk').stdout),
     'emulator_only': True, 'version_code': version, 'candidate_sha256': hashlib.sha256(args.candidate_apk.read_bytes()).hexdigest(),
