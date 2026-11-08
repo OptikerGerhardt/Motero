@@ -435,3 +435,8 @@ PDF-Fitting, PDF.js, vorhandene Markierungswerkzeuge, Tags und Sync-/Datenformat
 Umgesetzt: Theme vor dem ersten Bild und konsistente Systemleisten/Vorschaubilder; unteres PDF-Werkzeug-Dock mit Undo und Farbfeld; einheitliche Cropping-Auswahl und kompakter Editor; gebogener Bookmark-Sprungpfeil und schwarzes Fähnchen mit 70 % Deckkraft im PDF. Breiter verteilte und lokale Cropping-Stichproben, persistente Geometrie/numerisches Lernen, Pixel-/Speicher-/Warteschlangengrenzen und gezielte Stiftkorrekturen aus den Ansätzen von F03.
 
 [Recherche, Quellen und verbleibende Kandidaten](docs/READER_OPTIMIZATIONS.md). F03 ist gezielt adaptiert, nicht als vollständiger Upstream-PR gemerged. Hardware-Radierertasten, variable Druckbreite und BOOX-SDK bleiben eigene Geräteprüfungen; direkte Forenlektüre bleibt wegen der Netzwerkregel offen.
+
+
+## Build 312 — vollständige Vorschau-Wiederherstellung
+
+Die Wünsche für Miniaturseiten bleiben bei einem neuen Renderer erhalten. Nur Bilddaten werden verworfen; der neue Renderer rendert nahe Seiten und die weiterhin benötigten entfernten Landmarken erneut. Native Regression ergänzt; alle Funktionen aus Build 311 bleiben enthalten. Build 311 wurde mit 305 Reader-Tests, 118 nativen Tests, zwölf Browser-Suites und erfolgreichen API-31/35-Updates veröffentlicht und unabhängig geprüft.

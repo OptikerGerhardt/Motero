@@ -57,7 +57,8 @@ class ReaderThumbnailPreviewManager @Inject constructor(
 
     private fun initialize(thumbnails: JsonArray) {
         val nextKey = thumbnails.firstOrNull()?.asJsonObject?.get("renderKey")?.asString.orEmpty()
-        if (renderKey.isNotEmpty() && renderKey.substringBefore(':') != nextKey.substringBefore(':')) requestedExact = emptyList()
+        // Keep page-index requests across renderer recovery; all image data is
+        // still discarded and keyed to the new reader instance below.
         renderKey = nextKey
         numOfPagesInDocument = thumbnails.size()
         resetWorker()

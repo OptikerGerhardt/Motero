@@ -1,3 +1,9 @@
+# Build 312 — lokaler Prüfstand, 8. November 2026
+
+119 native Tests bestanden. APK-Paketierung und Veröffentlichung werden durch den Release-Durchlauf geprüft. Die neue native Regression reproduziert und verhindert fehlende entfernte Miniaturseiten nach einem Renderer-Neustart. Der Reader bleibt auf dem vollständig geprüften Stand aus Build 311; GitHub wiederholt vor Veröffentlichung alle Reader-, Browser-, Signier- und API-31/35-Updateprüfungen mit 311 als aktueller Basis.
+
+Nachweise: [qa/build312](qa/build312/README.md). Build 311 ist bereits unabhängig heruntergeladen und geprüft: 305 Reader-Tests, 118 native Tests, zwölf Browser-Suites, Signatur/Rotation, Quellen und echte datenerhaltende Updates. APK-SHA-256: `5a03af804277e75d21ca74ef641dd4062fb90b5a089344ae15c0722b3fe88d25`. Siehe [qa/build311](qa/build311/README.md).
+
 # Build 311 — lokaler Prüfstand, 8. November 2026
 
 Release-APK lokal gebaut. Bestanden: 305 Reader-Tests, 118 native Tests, zwölf Browser-Suites und elf Release-/Signierhelfer-Prüfungen. Die neuen Prüfungen decken Theme vor dem ersten HTML-Bild, korrekte Vorschau-Pixel, veraltete Render-Ergebnisse, Bookmark-Fähnchen/Undo, wiederverwendete Zeichenobjekte, persistente Geometrie sowie echte Chromium-Stifteingabe mit Abbruch und zweitem Pointer ab.
