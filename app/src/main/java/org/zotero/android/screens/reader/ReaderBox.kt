@@ -110,7 +110,7 @@ internal fun ReaderBox(
         ) {
             // Reserve a stable reading viewport even when system bars are
             // hidden. Fits, page turns and SmartScroll all use this same area.
-            val readingModifier = run {
+            val readingInsets = run {
                 val cutout = WindowInsets.displayCutout
                 val direction = LocalLayoutDirection.current
                 val hasCutout = cutout.getTop(density) > 0 || cutout.getBottom(density) > 0
@@ -118,8 +118,9 @@ internal fun ReaderBox(
                 val safeInsets = if (hasCutout) {
                     WindowInsets.statusBarsIgnoringVisibility.only(WindowInsetsSides.Top).union(cutout)
                 } else WindowInsets(0, 0, 0, 0)
-                Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface).windowInsetsPadding(safeInsets)
+                safeInsets
             }
+            val readingModifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface).windowInsetsPadding(readingInsets)
             ReaderWebView(viewModel = viewModel, modifier = readingModifier)
             if (viewState.showCreationToolbar && viewState.isTopBarVisible && !viewState.manualCropOpen) {
                 ReaderAnnotationCreationToolbar(
@@ -131,7 +132,7 @@ internal fun ReaderBox(
                     shouldShowSnapTargetAreas = shouldShowSnapTargetAreas
                 )
             }
-            if (viewState.manualCropOpen) Box(readingModifier) { ReaderCropControls(viewModel, viewState) }
+            if (viewState.manualCropOpen) Box(Modifier.fillMaxSize().windowInsetsPadding(readingInsets)) { ReaderCropControls(viewModel, viewState) }
             if (viewState.fileType == ReaderFileType.PDF && !viewState.manualCropOpen) {
                 val isScrubberVisible = viewState.isScrubberVisible()
                 Column(

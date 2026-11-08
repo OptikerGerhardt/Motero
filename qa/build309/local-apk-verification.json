@@ -5,7 +5,7 @@
   "certificate_sha256": "f6b9547e9644f44e23bcceac94ec32cfd6576b5f732af7e12094699307de778d",
   "signing_policy": "public",
   "legacy_rotation_verified": true,
-  "apk_sha256": "d522bedc63a7e75d38a058b2e4f8945d0b7729430db8d0e8f2c2e0bdb5921a8b",
+  "apk_sha256": "8f54401dc2c3252b0dd5a63addf9d46d4dba744023dd87cbd3a6c2e3075b9c89",
   "runtime_files": 45,
   "pdfjs_files": 207,
   "reader_sources": 95,
