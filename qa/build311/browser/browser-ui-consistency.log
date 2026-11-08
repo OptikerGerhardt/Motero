@@ -1,6 +1,6 @@
 PASS explicit Reader Light overrides OS Dark; thumbnails follow theme; stale renders and redundant resets are avoided
 PASS semantic black bookmark flag at 70%; ordinary notes retain shape; Undo travels through annotation history
 PASS unchanged annotation vectors survive incremental ink redraws
-PASS automatic geometry and numeric learning restore on reopen; browser opening milliseconds {"cold":1568,"warm":438,"learning":true,"pages":7,"work":0}
+PASS automatic geometry and numeric learning restore on reopen; browser opening milliseconds {"cold":1308,"warm":420,"learning":true,"pages":5,"work":0}
 PASS real Chromium pen stream keeps short strokes, release endpoints and canceled ink; a second pointer cannot hijack an active stroke
 PASS crop mask is confined to PDF sheet; no browser exceptions

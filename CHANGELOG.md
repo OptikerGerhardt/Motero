@@ -7,6 +7,7 @@
 - Content-Cropping-Auswahl im Stil der übrigen Einstellungen. Kompakter nativer Crop-Kopf, neutraler Hintergrund und auf die PDF-Seite begrenzte Abdunklung; größere unsichtbare Greifflächen am Rahmen.
 - Bookmark-Sprung mit gebogenem Rechtspfeil. Nur schwarze semantische Bookmarks erhalten das Fähnchen, auf der PDF mit 70 % und in der Liste mit voller Deckkraft. Normale Notizen und vorhandene andere Bookmark-Farben bleiben erhalten.
 - Zuschnitt lernt aus verteilten und lokalen Seiten. Geometrie und numerisches Modell werden begrenzt zwischengespeichert. Analyse-Pixel, Vorschau-Speicher und Warteschlangen sind begrenzt; gültige Ergebnisse bleiben beim Nachlernen erhalten.
+- Zuschnitt-Regressionsprüfungen schützen unterschiedliche Seitenformate und später eintreffende lokale Evidenz; bei Stiftkontakt wird nicht neu positioniert.
 - Stifteingabe erhält kurze Striche, Endpunkte und gesammelte Eingabe bei Abbruch; veränderte Zeichenobjekte werden pro Frame aktualisiert und unveränderte wiederverwendet. Forschungsstand und weitere gerätespezifische Schritte: [Reader-Review](docs/READER_OPTIMIZATIONS.md).
 
 ## 1.0.0-310 — 8. November 2026

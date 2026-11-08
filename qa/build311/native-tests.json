@@ -1,6 +1,6 @@
 {
   "build": 311,
-  "reader_commit": "e820640f4a43a1dd42c4be24b7fb411e76f5dec0",
+  "reader_commit": "8423837f2bd7ce48d10b11467ce9385d72ebfbd4",
   "suites": [
     {
       "name": "org.zotero.android.api.mappers.LinkResponseMapperTest",
@@ -166,5 +166,6 @@
     }
   ],
   "tests": 118,
-  "failures": 0
+  "failures": 0,
+  "native_inputs_unchanged_after_reader_correction": true
 }
