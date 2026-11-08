@@ -88,10 +88,18 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   console.log('PASS bookmark focus navigates without selection or reader chrome');
 
   // Rapid alternating requests keep the final target and bound analysis state.
-  const rapid=await page.evaluate(async()=>{const w=window._view._view,v=w._pageFitting.viewer;
-   const directions=[1,1,1,-1,1,-1,-1,1,1];let expected=v.currentPageNumber;
-   const jobs=directions.map(d=>{expected=Math.max(1,Math.min(v.pagesCount,expected+d));return w._navigateToPage({direction:d});});
-   await Promise.all(jobs);return {expected,actual:v.currentPageNumber,running:w._pageFitting.work.running,cache:w._pageFitting.cache.size,prepared:w._pageFitting.preparedPages.size};
+  const rapid=await page.evaluate(async()=>{const w=window._view._view,f=w._pageFitting,v=f.viewer;
+   const prepare=f.prepare, first=f.geometry.get(0);
+   // Force a late buffered crop and two frames while navigation awaits its target.
+   // This used to move scroll offsets and cancel the entire queued turn sequence.
+   f.prepare=async function(...args){const result=await prepare.apply(this,args);
+    if(first){const bounds=first.fit.bounds.slice();bounds[3]=Math.min(1,bounds[3]+.01);f.geometry.set(0,{...first,fit:{...first.fit,bounds}});}
+    f.queueGeometryRefresh();await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));return result;};
+   try {
+    const directions=[1,1,1,-1,1,-1,-1,1,1];let expected=v.currentPageNumber;
+    const jobs=directions.map(d=>{expected=Math.max(1,Math.min(v.pagesCount,expected+d));return w._navigateToPage({direction:d});});
+    await Promise.all(jobs);return {expected,actual:v.currentPageNumber,running:f.work.running,cache:f.cache.size,prepared:f.preparedPages.size};
+   } finally {f.prepare=prepare;if(first)f.geometry.set(0,first);f.queueGeometryRefresh();}
   });
   assert.equal(rapid.actual,rapid.expected,JSON.stringify(rapid));assert.ok(rapid.running<=2&&rapid.cache<=32&&rapid.prepared<=32);
   console.log('PASS rapid alternating turns retain the final target with bounded analysis/cache');

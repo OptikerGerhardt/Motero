@@ -247,11 +247,7 @@ export class AndroidPageFitting {
 					if (!prepared || this.zooming || key !== this.key() || rotation !== this.viewer.pagesRotation) break;
 					this.rememberPrepared(prepared);
 					if (this.layout.boxes && !this.applying) {
-                        if (!this.layoutFrame) this.layoutFrame = this.win.requestAnimationFrame(() => {
-                            this.layoutFrame = null;
-                            if (!this.active || this.zooming || this.view._destroyed || !this.layout.boxes) return;
-                            this.layout.apply(this.geometry, { preservePosition:true }); this.view._render();
-                        });
+                        this.queueGeometryRefresh();
 					}
 				}
 			}
@@ -259,6 +255,24 @@ export class AndroidPageFitting {
 			finally { this.prefetching = false; }
 		}, 20);
 	}
+
+    queueGeometryRefresh() {
+        if (this.layoutFrame) return;
+        this.layoutFrame = this.win.requestAnimationFrame(() => {
+            this.layoutFrame = null;
+            if (!this.active || this.zooming || this.view._destroyed || !this.layout.boxes) return;
+            // A turn snapshots scale/scroll before awaiting its target crop. Moving
+            // neighboring pages here would cancel that entire queued navigation.
+            if (this.view._pendingPageTurn || this.inkActive() || this.pointers.size || this.touches || this.applying) {
+                if (!this.layoutRetryTimer) this.layoutRetryTimer = this.win.setTimeout(() => {
+                    this.layoutRetryTimer = null; this.queueGeometryRefresh();
+                }, 50);
+                return;
+            }
+            this.win.clearTimeout(this.layoutRetryTimer); this.layoutRetryTimer = null;
+            this.layout.apply(this.geometry, { preservePosition:true }); this.view._render();
+        });
+    }
 
 	snapshot() { return this.active && this.applied ? { ...this.options } : null; }
 
@@ -277,6 +291,7 @@ export class AndroidPageFitting {
 		this.pendingPage = true;
 		this.win.clearTimeout(this.timer);
 		this.timer = this.win.setTimeout(() => {
+            if (this.view._pendingPageTurn) { this.schedule(50); return; }
 			if (this.pointers.size || this.touches || this.inkActive() || this.applying || !this.active || this.view._destroyed) return;
 			this.pendingPage = false;
 			this.apply().catch(error => console.error(error));
@@ -496,7 +511,7 @@ export class AndroidPageFitting {
 
 	commit(prepared, { alignTop = false, topFraction = 0, navigate } = {}) {
 		let v = this.viewer, c = v.container;
-		if (!prepared || !this.active || this.inkActive() || this.view._destroyed || v.spreadMode !== 0
+		if (!prepared || !this.active || this.inkActive() || this.view._pendingPageTurn && !navigate || this.view._destroyed || v.spreadMode !== 0
 				|| prepared.key !== this.key() || prepared.rotation !== v.pagesRotation
 				|| prepared.inputEpoch !== this.inputEpoch || this.pointers.size
 				|| prepared.width !== c.clientWidth || prepared.height !== c.clientHeight) return false;
@@ -551,7 +566,7 @@ export class AndroidPageFitting {
 
 	async apply({ alignTop = false } = {}) {
 		let v = this.viewer, c = v.container;
-		if (!this.active || !v.pdfDocument || this.inkActive() || this.view._destroyed) return false;
+		if (!this.active || !v.pdfDocument || this.inkActive() || this.view._pendingPageTurn || this.view._destroyed) return false;
 		if (v.spreadMode !== 0) { this.suspend(); return false; }
         let index = this.peekAnchor?.index ?? v.currentPageNumber - 1, token = ++this.token, scale = v.currentScale;
         const samples = new Set(getReadingSamples(v.pdfDocument.numPages));
@@ -580,7 +595,7 @@ export class AndroidPageFitting {
         this.preparedPages.clear(); this.geometry.clear(); this.modelPromise=null; this.readingModel=null;
 		this.viewer.container.removeEventListener('scroll', this.onScroll);
 		this.cache.clear(); this.marginaliaByPage.clear(); this.win.clearTimeout(this.prefetchTimer);
-        this.win.clearTimeout(this.persistTimer); this.persistent.flush();
+        this.win.clearTimeout(this.persistTimer); this.win.clearTimeout(this.layoutRetryTimer); this.persistent.flush();
 		this.win.removeEventListener('pointerdown', this.onDown, true);
 
 		this.win.removeEventListener('pointerup', this.onUp, true);

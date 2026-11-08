@@ -147,3 +147,25 @@ test('background crop refinement waits until the pen stroke has finished',async(
     delete fitting.view.action;fitting.onUp({pointerId:77});await flush();
     assert.equal(refits,1);assert.equal(fitting.penPointers.size,0);
 });
+
+test('buffered geometry cannot move the viewport while a page turn owns it',async()=>{
+    const {fitting,flush}=fixture();
+    await fitting.configure({mode:'content',reference:'content',margin:0});
+    let layouts=0;const apply=fitting.layout.apply.bind(fitting.layout);
+    fitting.layout.apply=(...args)=>{layouts++;return apply(...args);};
+    fitting.preparedPages.clear();
+    fitting.view._pendingPageTurn={};
+    fitting.prefetchVisible();await flush();await flush();
+    assert.equal(layouts,0,'background page preparation must not invalidate the navigation snapshot');
+    fitting.view._pendingPageTurn=null;await flush();await flush();
+    assert.ok(layouts>0,'the buffered geometry is applied after navigation');
+});
+
+test('a scheduled reading refit defers to a queued page turn',async()=>{
+    const {fitting,flush}=fixture();fitting.active=true;
+    let applies=0;fitting.apply=async()=>{applies++;return true;};
+    fitting.view._pendingPageTurn={};fitting.schedule(0);await flush();
+    assert.equal(applies,0);
+    fitting.view._pendingPageTurn=null;await flush();
+    assert.equal(applies,1);
+});
