@@ -95,6 +95,12 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   });
   assert.equal(rapid.actual,rapid.expected,JSON.stringify(rapid));assert.ok(rapid.running<=2&&rapid.cache<=32&&rapid.prepared<=32);
   console.log('PASS rapid alternating turns retain the final target with bounded analysis/cache');
+  const turnsBefore=await page.evaluate(()=>window.messages.filter(m=>m.message?.event==='onEdgePageTurnTap').length);
+  await touch('touchStart',[{x:590,y:450}]);
+  await touch('touchMove',[{x:530,y:460}]);await touch('touchMove',[{x:590,y:450}]);
+  await touch('touchEnd',[]);await page.waitForTimeout(250);
+  assert.equal(await page.evaluate(()=>window.messages.filter(m=>m.message?.event==='onEdgePageTurnTap').length),turnsBefore);
+  console.log('PASS a drag returning to its starting edge is never mistaken for a tap');
   assert.deepEqual(errors,[]);console.log('PASS: Build 309 reader refinements');
  } finally {if(browser) await browser.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);process.exitCode=1;});

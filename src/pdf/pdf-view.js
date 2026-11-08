@@ -458,6 +458,11 @@ class PDFView {
 			if (this._iframeWindow.document.hidden) this._directHighlight?.reset();
 		});
 		this._iframeWindow.addEventListener('touchend', this._handleTouchEnd.bind(this), { passive: false });
+        // Record the entire gesture path before PDF.js can consume movement.
+        this._iframeWindow.addEventListener('pointermove', event => {
+            const down = this._readerPriorityDown;
+            if (down && Math.hypot(event.clientX-down.x,event.clientY-down.y)>8) this._readerPriorityDown=null;
+        }, {capture:true,passive:true});
 		this._iframeWindow.addEventListener('pointermove', this._handlePointerMove.bind(this), { passive: true });
 		// PDF.js consumes pointer endings during pinch gestures. Observe them before
 		// its container listeners so no finger remains registered in our gesture.
@@ -467,6 +472,7 @@ class PDFView {
             if (!this._chromeTapGuard?.up(event)) this._directHighlight?.up(event);
 		}, true);
 		this._iframeWindow.addEventListener('pointercancel', event => {
+            this._readerPriorityDown=null;
 			this._chromeTapGuard?.reset();
 			this._directHighlight?.gesture.interrupted(event);
 		}, true);
@@ -4306,7 +4312,8 @@ class PDFView {
     _tryPriorityReaderTap(event) {
         const down=this._readerPriorityDown;
         this._readerPriorityDown=null;
-        if (!down || event.target?.closest?.('.boox-highlight-palette, .boox-manual-crop, input, textarea, [contenteditable=true]')
+        if (!down || this.action?.triggered || this._nativeTextSelection?.shouldDeferEvent(event)
+            || event.target?.closest?.('.boox-highlight-palette, .boox-manual-crop, input, textarea, [contenteditable=true]')
             || this._options.platform!=='android' || this._tool.type!=='pointer'
             || this._pageFitting?.zooming || Date.now()-down.time>=450
             || Math.hypot(event.clientX-down.x,event.clientY-down.y)>8
