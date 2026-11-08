@@ -16,3 +16,12 @@ test('malformed and predicted input is not persisted',()=>{
     const path=[1,2];appendInkSamples(path,{clientX:3,clientY:4,getCoalescedEvents:()=>[{clientX:NaN,clientY:5}],getPredictedEvents:()=>[{clientX:99,clientY:99}]},project);
     assert.deepEqual(path,[1,2,3,4]);
 });
+
+
+test('queued pen hover cannot add ink, while a zero-button release keeps its endpoint',()=>{
+    const path=[1,2];
+    appendInkSamples(path,{type:'pointermove',buttons:0,clientX:99,clientY:99},project);
+    assert.deepEqual(path,[1,2]);
+    appendInkSamples(path,{type:'pointerup',buttons:0,clientX:3,clientY:4},project);
+    assert.deepEqual(path,[1,2,3,4]);
+});

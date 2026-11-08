@@ -79,13 +79,21 @@ const root = path.resolve(__dirname, '../build/android');
   const restored=await page.evaluate(()=>{const f=window._view._view._pageFitting;return {learning:!!f.persistent.learning,pages:f.persistent.pages.size,work:f.work.jobs.size};});
   assert.ok(restored.learning && restored.pages>0,JSON.stringify(restored));
   console.log('PASS automatic geometry and numeric learning restore on reopen; browser opening milliseconds '+JSON.stringify({cold,warm,...restored}));
+  await page.waitForFunction(()=>{const v=window._view._view,f=v._pageFitting;return !v._scrolling&&!v._pendingPageTurn&&!f.pendingPage&&!f.applying;});
+  const inkPoint=await page.evaluate(()=>{
+   const f=window._view._view._pageFitting,v=f.viewportFrame();
+   const frames=f.pageFrames().map(r=>({...r,top:Math.max(r.top,v.top),bottom:Math.min(r.bottom,v.bottom)}))
+    .filter(r=>r.bottom-r.top>60&&f.preparedPages.has(r.index)).sort((a,b)=>(b.bottom-b.top)-(a.bottom-a.top));
+   const r=frames[0];return {index:r.index,x:(Math.max(r.left,v.left)+Math.min(r.right,v.right))/2,y:(r.top+r.bottom)/2};
+  });
+  await page.evaluate(index=>window._view._view._ensureBasicPageData(index),inkPoint.index);
   await page.evaluate(()=>window.setTool({type:'ink',color:'#000000',size:2}));
   const cdp=await page.context().newCDPSession(page);
   const pen=(type,x,y)=>cdp.send('Input.dispatchMouseEvent',{type,x,y,pointerType:'pen',button:type==='mouseMoved'?'none':'left',buttons:type==='mouseReleased'?0:1});
-  await pen('mousePressed',180,240);await pen('mouseMoved',181,241);await pen('mouseReleased',182,242);
+  await pen('mousePressed',inkPoint.x,inkPoint.y);await pen('mouseMoved',inkPoint.x+1,inkPoint.y+1);await pen('mouseReleased',inkPoint.x+2,inkPoint.y+2);
   await page.waitForFunction(()=>window._view._view._annotations.some(a=>a.type==='ink'));
   assert.ok(await page.evaluate(()=>window._view._view._annotations.find(a=>a.type==='ink').position.paths[0].length>=4));
-  await pen('mousePressed',180,260);await pen('mouseMoved',184,264);
+  await pen('mousePressed',inkPoint.x,inkPoint.y+16);await pen('mouseMoved',inkPoint.x+4,inkPoint.y+20);
   assert.ok(await page.evaluate(()=>{
    const v=window._view._view, id=v.action.pointerID, win=v._iframeWindow;
    win.dispatchEvent(new win.PointerEvent('pointerdown',{pointerId:id+10,pointerType:'touch',clientX:20,clientY:20,bubbles:true}));
@@ -94,7 +102,7 @@ const root = path.resolve(__dirname, '../build/android');
    win.dispatchEvent(new win.PointerEvent('pointercancel',{pointerId:id,pointerType:'pen',clientX:0,clientY:0,bubbles:true}));
    return active;
   }));
-  await pen('mouseReleased',184,264);
+  await pen('mouseReleased',inkPoint.x+4,inkPoint.y+20);
   const paths=await page.evaluate(()=>window._view._view._annotations.filter(a=>a.type==='ink').flatMap(a=>a.position.paths));
   assert.ok(paths.length>=2 && paths.every(p=>p.length>=2 && p.every(Number.isFinite)));
   console.log('PASS real Chromium pen stream keeps short strokes, release endpoints and canceled ink; a second pointer cannot hijack an active stroke');

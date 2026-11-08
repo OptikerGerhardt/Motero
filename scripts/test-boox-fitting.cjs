@@ -15,6 +15,8 @@ const types = { '.html':'text/html', '.js':'text/javascript', '.mjs':'text/javas
  try {
   browser = await chromium.launch({executablePath:process.env.BOOX_TEST_BROWSER,headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   const page = await browser.newPage({viewport:{width:600,height:800},isMobile:true,hasTouch:true});
+  const cpuRate = Number(process.env.BOOX_TEST_CPU_RATE || 1);
+  if (cpuRate > 1) await (await page.context().newCDPSession(page)).send('Emulation.setCPUThrottlingRate', {rate:cpuRate});
   const errors=[]; page.on('pageerror',e=>{errors.push(e.message);console.error(e.stack)});
   page.setDefaultTimeout(45000);
   const origin='http://127.0.0.1:'+server.address().port;

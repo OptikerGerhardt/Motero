@@ -19,6 +19,7 @@ export class AndroidPageFitting {
 		this.token = 0;
 		this.inputEpoch = 0;
 		this.pointers = new Set();
+        this.penPointers = new Set();
 		this.cache = new Map();
         this.provisionalPages = new Set();
         this.analysisLines = new Map();
@@ -30,7 +31,11 @@ export class AndroidPageFitting {
 		this.layout = new CroppedPageLayout(this);
 		this.touches = 0;
 		this.onDown = event => {
-            if (event.pointerType === 'pen' || this.view.action?.type === 'ink') return;
+            if (event.pointerType === 'pen') {
+                this.penPointers.add(event.pointerId); this.inputEpoch++; this.token++;
+                return;
+            }
+            if (this.inkActive()) return;
 			if (event.target?.closest?.('.boox-highlight-palette, .boox-manual-crop')) return;
 			this.pointers.add(event.pointerId);
 			if (this.pointers.size > 1) this.beginPeek();
@@ -39,16 +44,20 @@ export class AndroidPageFitting {
 			this.token++;
 		};
 		this.onUp = event => {
+            this.penPointers.delete(event.pointerId);
 			this.pointers.delete(event.pointerId);
 			if (this.view._booxReader?.palette) {
 				this.pendingPage = false;
 				this.win.clearTimeout(this.timer);
 				return;
 			}
-			if (!this.pointers.size && !this.touches && (this.pendingPage || this.zooming)) this.finishGesture();
+			if (!this.pointers.size && !this.touches && !this.penPointers.size && (this.pendingPage || this.zooming)) {
+                if (this.view.action?.type === 'ink') this.win.setTimeout(() => this.finishGesture(), 0);
+                else this.finishGesture();
+            }
 		};
 		this.onTouch = event => {
-            if (this.view.action?.type === 'ink') { this.touches = 0; return; }
+            if (this.inkActive()) { this.touches = 0; return; }
 			this.touches = event.touches.length;
 			if (this.touches > 1) { this.touchZoom = true; this.beginPeek(); }
 			if (!this.touches) {
@@ -167,7 +176,7 @@ export class AndroidPageFitting {
 	}
 
 	beginPeek() {
-		if ((!this.active && this.presentation !== 'overview') || this.zooming || this.editor) return;
+		if ((!this.active && this.presentation !== 'overview') || this.zooming || this.editor || this.inkActive()) return;
 		const c = this.viewer.container, index = this.centeredPageIndex(), d = this.viewer.getPageView(index)?.div;
 		if (!d) return;
 		this.peekAnchor = { index, fraction: (c.scrollTop + c.clientHeight / 2 - d.offsetTop - d.clientTop) / d.clientHeight, screenY: c.clientHeight / 2 };
@@ -197,7 +206,7 @@ export class AndroidPageFitting {
     }
     centeredPageIndex() { return centeredPage(this.pageFrames(),this.viewportFrame(),this.viewer.currentPageNumber-1); }
     finishGesture() {
-        if (this.touches || this.pointers.size || this.editor) return;
+        if (this.touches || this.pointers.size || this.inkActive() || this.editor) return;
         if (this.zooming && this.gestureOrigin) {
             const changed = Math.abs(this.viewer.currentScale-this.gestureOrigin.scale)>0.002;
             if (changed && this.viewer.currentScale < (this.view._booxReader?.readingScale || this.gestureOrigin.scale)
@@ -268,7 +277,7 @@ export class AndroidPageFitting {
 		this.pendingPage = true;
 		this.win.clearTimeout(this.timer);
 		this.timer = this.win.setTimeout(() => {
-			if (this.pointers.size || this.touches || this.applying || !this.active || this.view._destroyed) return;
+			if (this.pointers.size || this.touches || this.inkActive() || this.applying || !this.active || this.view._destroyed) return;
 			this.pendingPage = false;
 			this.apply().catch(error => console.error(error));
 		}, delay);
@@ -306,21 +315,26 @@ export class AndroidPageFitting {
             this.analysisLines.delete(index);
             this.analysisLines.set(index, { index, aspect: base.width / base.height, lines });
             while (this.analysisLines.size > 32) this.analysisLines.delete(this.analysisLines.keys().next().value);
-            if (this.readingModel && this.provisionalPages.size && this.nearbyLines(index).length >= 3) this.refineAfterLearning();
+            if (this.readingModel && this.provisionalPages.size && [...this.provisionalPages].some(i => this.hasLocalEvidence(i))) this.refineAfterLearning();
 			return { index, aspect: base.width / base.height,
 				image: ctx.getImageData(0, 0, canvas.width, canvas.height), lines };
 		}
 		finally { canvas.width = canvas.height = 0; }
 	}
 
+    inkActive() { return this.penPointers.size > 0 || this.view.action?.type === 'ink'; }
+
     nearbyLines(index) {
         const aspect = this.analysisLines.get(index)?.aspect;
-        return [...this.analysisLines.values()].filter(p => Math.abs(p.index-index) <= 3
+        return [...this.analysisLines.values()].filter(p => Math.abs(p.index-index) <= 4
             && (!aspect || Math.abs(p.aspect/aspect - 1) < .05));
     }
+    hasLocalEvidence(index) {
+        const required = Math.min(3, Math.ceil((this.viewer.pdfDocument.numPages - index % 2) / 2));
+        return this.nearbyLines(index).filter(p => p.index % 2 === index % 2).length >= required;
+    }
     localModel(index, fallback) {
-        const nearby = this.nearbyLines(index);
-        return nearby.length >= 3 ? buildReadingModel(nearby) : fallback;
+        return this.hasLocalEvidence(index) ? buildReadingModel(this.nearbyLines(index)) : fallback;
     }
 
 	async ensureModel() {
@@ -331,7 +345,7 @@ export class AndroidPageFitting {
 				let pages = [];
                 const count = this.viewer.pdfDocument.numPages;
                 const center = this.centeredPageIndex();
-                const local = [center - 1, center, center + 1].filter(i => i >= 0 && i < count);
+                const local = [center - 2, center - 1, center, center + 1, center + 2].filter(i => i >= 0 && i < count);
                 const samples = [...new Set([...local, ...getReadingSamples(count)])];
 				for (let index of samples) {
 					if (this.view._destroyed) return null;
@@ -349,9 +363,10 @@ export class AndroidPageFitting {
 					delete page.image; delete page.lines;
 					if (rotation === this.viewer.pagesRotation) {
                         this.cache.set(page.index, Promise.resolve(page));
-                        this.provisionalPages.delete(page.index);
+                        if (this.hasLocalEvidence(page.index)) this.provisionalPages.delete(page.index);
+                        else this.provisionalPages.add(page.index);
                     }
-                    this.persistent.put(page);
+                    if (this.hasLocalEvidence(page.index)) this.persistent.put(page);
 				}
 				let aspects = pages.map(p => p.aspect).sort((a, b) => a - b);
 				this.model = model;
@@ -363,26 +378,32 @@ export class AndroidPageFitting {
                 this.persistent.setLearning({ model, profiles: this.profiles, aspect: this.readingModel.aspect,
                     withMarginalia: this.readingModel.withMarginalia });
                 this.persistent.flush();
-                this.refineAfterLearning();
+                this.refineAfterLearning(true);
                 return this.readingModel;
 			})();
 		}
 		return this.modelPromise;
 	}
 
-    refineAfterLearning() {
+    refineAfterLearning(force = false) {
+        this.refineForce ||= force;
         this.win.clearTimeout(this.refineTimer);
         this.refineTimer = this.win.setTimeout(() => {
             if (this.view._destroyed) return;
-            if (this.view._pendingPageTurn || this.pointers.size || this.touches || this.zooming || this.applying || this.editor) {
+            if (this.view._pendingPageTurn || this.pointers.size || this.touches || this.inkActive() || this.zooming || this.applying || this.editor) {
                 this.refineAfterLearning(); return;
             }
+            let changed = this.refineForce;
+            this.refineForce = false;
             for (const index of this.provisionalPages) {
+                if (!this.hasLocalEvidence(index)) continue;
                 this.cache.delete(index); this.marginaliaByPage.delete(index);
+                this.provisionalPages.delete(index); changed = true;
             }
-            this.provisionalPages.clear();
-            this.preparedPages.clear();
-            if (this.active) this.schedule(0);
+            if (changed) {
+                this.preparedPages.clear();
+                if (this.active) this.schedule(0);
+            }
         }, 250);
     }
 	async boundsFor(index, { includeMarginalia = false, manualCrop = this.options.manualCrop } = {}) {
@@ -402,8 +423,10 @@ export class AndroidPageFitting {
             if (!learned) this.provisionalPages.add(index);
 			let rotation = this.viewer.pagesRotation;
             this.cache.set(index, this.readPage(index).then(page => {
-                model = { ...model, ...(this.localModel(index, model) || buildReadingModel([page])), aspect: page.aspect };
-                if (this.nearbyLines(index).length < 3 && !this.persistent.get(index)) this.provisionalPages.add(index);
+                // Keep the profile's original aspect: an unusual landscape page must
+                // use its actual content bounds instead of inheriting portrait width.
+                model = { aspect: page.aspect, ...model, ...(this.localModel(index, model) || buildReadingModel([page])) };
+                if (!this.hasLocalEvidence(index) && !this.persistent.get(index)) this.provisionalPages.add(index);
 				let marginalia = this.readMarginalia(page, model);
 				// Keep a synchronous mask lookup beside the existing bounded promise
 				// cache, so visible neighboring pages share the Exclude setting.
@@ -473,7 +496,7 @@ export class AndroidPageFitting {
 
 	commit(prepared, { alignTop = false, topFraction = 0, navigate } = {}) {
 		let v = this.viewer, c = v.container;
-		if (!prepared || !this.active || this.view._destroyed || v.spreadMode !== 0
+		if (!prepared || !this.active || this.inkActive() || this.view._destroyed || v.spreadMode !== 0
 				|| prepared.key !== this.key() || prepared.rotation !== v.pagesRotation
 				|| prepared.inputEpoch !== this.inputEpoch || this.pointers.size
 				|| prepared.width !== c.clientWidth || prepared.height !== c.clientHeight) return false;
@@ -528,7 +551,7 @@ export class AndroidPageFitting {
 
 	async apply({ alignTop = false } = {}) {
 		let v = this.viewer, c = v.container;
-		if (!this.active || !v.pdfDocument || this.view._destroyed) return false;
+		if (!this.active || !v.pdfDocument || this.inkActive() || this.view._destroyed) return false;
 		if (v.spreadMode !== 0) { this.suspend(); return false; }
         let index = this.peekAnchor?.index ?? v.currentPageNumber - 1, token = ++this.token, scale = v.currentScale;
         const samples = new Set(getReadingSamples(v.pdfDocument.numPages));
@@ -541,6 +564,7 @@ export class AndroidPageFitting {
 	}
 
 	resetInput() {
+        this.penPointers.clear();
 		this.inputEpoch++; this.token++; this.pointers.clear(); this.pendingPage = false;
 		this.touches = 0; this.touchZoom = false;
 		this.win.clearTimeout(this.timer);

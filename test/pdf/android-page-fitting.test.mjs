@@ -108,3 +108,42 @@ test('two complete pages retain overview; panning keeps it and zooming back to o
  fitting.pageFrames=()=>[{index:1,left:0,right:500,top:0,bottom:700}];
  fitting.finishGesture();await flush();assert.equal(fitting.active,true);assert.equal(fitting.presentation,'reading');
 });
+
+test('uncached landscape analysis does not inherit a portrait width profile', async()=>{
+    const {fitting}=fixture();delete fitting.boundsFor;
+    fitting.readingModel={aspect:.75,profiles:[[.1,.1,.9,.9],[.1,.1,.9,.9]],width:.8,repeated:new Set()};
+    fitting.modelPromise=Promise.resolve(fitting.readingModel);
+    const image={width:100,height:100,data:new Uint8ClampedArray(100*100*4).fill(255)};
+    for(let y=20;y<80;y++)for(let x=10;x<30;x++){
+        const i=(y*100+x)*4;image.data[i]=image.data[i+1]=image.data[i+2]=0;
+    }
+    fitting.readPage=async index=>({index,aspect:4/3,image,lines:[{text:'Complete landscape page content.',rect:[.1,.2,.3,.8]}]});
+    const bounds=await fitting.boundsFor(0);
+    assert.ok(bounds[2]<.5,JSON.stringify(bounds));
+});
+
+
+test('late same-parity evidence refines only provisional geometry and retains valid results', async()=>{
+    const {fitting,viewer,flush}=fixture();viewer.pdfDocument.numPages=18;
+    const pending=Promise.resolve({bounds:[.1,.04,.9,.9]});
+    fitting.cache.set(8,pending);fitting.cache.set(5,pending);fitting.provisionalPages.add(8);
+    for(const index of [6,7,8]) fitting.analysisLines.set(index,{index,aspect:.75,lines:[]});
+    fitting.refineAfterLearning();await flush();
+    assert.equal(fitting.cache.get(8),pending,'two same-parity samples do not finalize the model');
+    fitting.analysisLines.set(10,{index:10,aspect:.75,lines:[]});
+    fitting.refineAfterLearning();await flush();
+    assert.ok(!fitting.cache.has(8),'new local evidence invalidates the provisional result');
+    assert.equal(fitting.cache.get(5),pending,'already valid geometry remains cached');
+});
+
+
+test('background crop refinement waits until the pen stroke has finished',async()=>{
+    const {fitting,flush}=fixture();fitting.active=true;
+    let refits=0;fitting.schedule=()=>refits++;
+    fitting.onDown({pointerId:77,pointerType:'pen'});
+    fitting.view.action={type:'ink'};
+    fitting.refineAfterLearning(true);await flush();
+    assert.equal(refits,0);assert.equal(fitting.penPointers.size,1);
+    delete fitting.view.action;fitting.onUp({pointerId:77});await flush();
+    assert.equal(refits,1);assert.equal(fitting.penPointers.size,0);
+});
