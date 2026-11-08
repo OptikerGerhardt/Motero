@@ -27,7 +27,12 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
    await page.goto(origin+'/view.html');await page.evaluate(()=>{window.messages=[];const c=new MessageChannel();c.port1.onmessage=e=>window.messages.push(JSON.parse(e.data));window.postMessage('initPort','*',[c.port2]);});
    await page.waitForFunction(()=>window.messages.some(x=>x.message?.event==='onInitialized'));
    await page.evaluate(options=>window.createView(btoa(JSON.stringify(options))),{type,url:origin+url,annotations:[],...extra});
-   if(type==='pdf') await page.waitForFunction(()=>window._view?._view?._pageFitting?.applied);
+   if(type==='pdf') {
+    await page.waitForFunction(()=>window._view?._view?._pageFitting?.applied);
+    await page.evaluate(()=>window._view._view._pageFitting.ensureModel());
+    await page.waitForTimeout(350);
+    await page.evaluate(()=>{const f=window._view._view._pageFitting;return window.setPageFitting(f.options);});
+   }
    else await page.waitForFunction(()=>window._view?._view?.initialized&&window._view._view.flow?.startRange);
    await page.waitForTimeout(100);
    // Fitting can finish before its scroll events settle, especially in Wrapped.
