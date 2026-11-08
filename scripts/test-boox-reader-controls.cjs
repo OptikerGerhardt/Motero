@@ -37,7 +37,7 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   for(const mode of [0,1,2]){
    await page.evaluate(m=>window._view._view.setScrollMode(m),mode);
    let text=await fit('content'),crop=await fit('cropped-content');
-   assert.ok(Math.abs(text.scale-crop.scale)<.002);assert.equal(text.clip,'');assert.ok(crop.clip.startsWith('inset('));
+   assert.ok(Math.abs(text.scale-crop.scale)<.002);assert.ok(text.clip.startsWith('inset('));assert.ok(crop.clip.startsWith('inset('));
    assert.ok((crop.bounds[3]-crop.bounds[1])*crop.ph>crop.height);
    let first=await page.evaluate(()=>window.turnPageWithHardwareButton(true,2/3));assert.equal(first,'scroll');
    let atBottom;for(let i=0;i<8;i++){atBottom=await state();let result=await page.evaluate(()=>window.turnPageWithHardwareButton(true,2/3));if(result==='page')break;assert.equal(result,'scroll');}

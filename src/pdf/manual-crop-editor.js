@@ -3,7 +3,8 @@ import { rotateReadingBounds } from './reading-layout.mjs';
 
 /** Separate full-page preview: reader zoom, PDF coordinates and annotations remain independent. */
 export class ManualCropEditor {
-	constructor(fitting) {
+	constructor(fitting, { nativeControls = false } = {}) {
+        this.nativeControls = nativeControls;
 		this.fitting = fitting;
 		this.view = fitting.view;
 		this.win = fitting.win;
@@ -59,7 +60,11 @@ export class ManualCropEditor {
 <div class="crop-range"><select aria-label="${t.scope}"><option value="all">${t.all}</option><option value="odd">${t.odd}</option><option value="even">${t.even}</option></select><div class="crop-pages"><button data-action="previous" aria-label="${t.previous}">‹</button><span class="crop-page"></span><button data-action="next" aria-label="${t.next}">›</button></div></div>
 <div class="crop-help">${t.help}</div>
 <div class="crop-preview"><div class="crop-sheet"><canvas></canvas><div class="crop-selection" data-handle="move"><i class="crop-handle" data-handle="nw"></i><i class="crop-handle" data-handle="ne"></i><i class="crop-handle" data-handle="sw"></i><i class="crop-handle" data-handle="se"></i></div></div></div>
-<div class="crop-footer"><div class="crop-status" role="status"></div><button data-action="automatic">${t.reset}</button></div>`;
+<div class="crop-footer"><div class="crop-status" role="status"></div></div>`;
+        if (nativeControls) {
+            for (const element of this.root.querySelectorAll('.crop-toolbar,.crop-range,.crop-help,.crop-footer')) element.style.display = 'none';
+            this.root.style.paddingTop = '180px';
+        }
 		doc.body.append(this.root);
 		this.beforeFocus = doc.activeElement;
 		this.view._options.onCropEditorChanged?.(true);
@@ -80,8 +85,7 @@ export class ManualCropEditor {
 		this.root.querySelector('[data-action=previous]').onclick = () => this.changePage(-1);
 		this.root.querySelector('[data-action=next]').onclick = () => this.changePage(1);
 		this.root.querySelector('[data-action=cancel]').onclick = () => this.close();
-		this.root.querySelector('[data-action=automatic]').onclick = () => this.save(true);
-		this.root.querySelector('[data-action=save]').onclick = () => this.save(false);
+		this.root.querySelector('[data-action=save]').onclick = () => this.save();
 		this.sheet.onpointerdown = event => this.down(event);
 		this.sheet.onpointermove = event => this.move(event);
 		this.sheet.onpointerup = event => this.up(event);
@@ -97,8 +101,26 @@ export class ManualCropEditor {
 		let next = this.index + direction * (this.scope === 'all' ? 1 : 2);
 		if (next >= 0 && next < this.viewer.pdfDocument.numPages) { this.index = next; this.load(); }
 	}
+    action({ action, scope, top, bottom }) {
+        if (action === 'insets') {
+            this.root.style.paddingTop = Math.max(0, top || 0) + 'px';
+            this.root.style.paddingBottom = Math.max(0, bottom || 0) + 'px';
+            this.sizePreview();
+        }
+        else if (action === 'scope' && ['all','odd','even'].includes(scope)) {
+            if (scope === 'even' && this.viewer.pdfDocument.numPages < 2) return;
+            this.select.value = scope; this.select.onchange();
+        }
+        else if (action === 'previous') this.changePage(-1);
+        else if (action === 'next') this.changePage(1);
+        else if (action === 'save') this.save();
+        else if (action === 'cancel') this.close();
+    }
+    publishState() {
+        this.view._options.onCropEditorState?.({page:this.index+1, count:this.viewer.pdfDocument.numPages, scope:this.scope, busy:!!this.busy});
+    }
 	setBusy(value) {
-		this.busy = value;
+		this.busy = value; this.publishState();
 		this.root.querySelector('[data-action=save]').disabled = value;
 	}
 	async load() {
@@ -174,27 +196,21 @@ export class ManualCropEditor {
 		this.move(event); this.drafts[this.scope] = rotateReadingBounds(this.rect, -this.rotation); this.drag = null;
 		if (this.sheet.hasPointerCapture(event.pointerId)) this.sheet.releasePointerCapture(event.pointerId);
 	}
-	async save(automatic) {
-		if (this.saving || this.busy && !automatic) return;
-		this.saving = true;
-		let crops = this.crops;
-		if (!automatic) {
-			// Preserve edits to both parity tabs made during the same session.
-			for (const scope of ['all', 'odd', 'even']) {
-				if (this.drafts[scope]) crops = updateCrop(crops, scope, this.drafts[scope]);
-			}
-			crops = updateCrop(crops, this.scope, rotateReadingBounds(this.rect, -this.rotation));
-		}
-		let options = { ...this.fitting.options,
-			manualCrop: automatic ? {} : crops,
-			revision: (this.fitting.options.revision || 0) + 1 };
-		if (!automatic) { options.mode = 'content'; options.reference = 'content'; }
-		// Notify Android before the asynchronous fit, so navigation/reopen cannot lose the crop.
-		this.view._options.onManualCropChanged?.({ crop: options.manualCrop, enable: !automatic, revision: options.revision });
-		this.close();
-		if (!automatic) this.viewer.spreadMode = 0;
-		await this.fitting.configure(options);
-	}
+	async save() {
+        if (this.saving || this.busy || !this.rect) return;
+        this.saving = true;
+        let crops = this.crops;
+        for (const scope of ['all', 'odd', 'even']) {
+            if (this.drafts[scope]) crops = updateCrop(crops, scope, this.drafts[scope]);
+        }
+        crops = updateCrop(crops, this.scope, rotateReadingBounds(this.rect, -this.rotation));
+        let options = { ...this.fitting.options, cropMode: 'manual', manualCrop: crops,
+            revision: (this.fitting.options.revision || 0) + 1 };
+        this.view._options.onManualCropChanged?.({ crop: {...crops, mode:'manual'}, enable:true, revision:options.revision });
+        this.close();
+        await this.fitting.configure(options);
+    }
+
 	close() {
 		if (this.closed) return;
 		this.closed = true; ++this.token; this.renderTask?.cancel(); this.resize.disconnect();

@@ -601,7 +601,7 @@ export class ScrolledFlow extends AbstractFlow {
 }
 
 const PAGE_TURN_SWIPE_LENGTH_PX = 100;
-const PAGE_TURN_TAP_MARGIN_FRACTION = 0.2;
+const PAGE_TURN_TAP_MARGIN_FRACTION = 0.12;
 const EPSILON_PX = 10;
 // Viewport width at/below which _paginated.scss reduces --block-margin
 const BLOCK_MARGIN_BREAKPOINT_PX = 800;
@@ -613,6 +613,7 @@ export class PaginatedFlow extends AbstractFlow {
 
 	private _touchDown = false;
 
+	private _touchStartedAt = 0;
 	private _touchStartX = 0;
 
 	private _touchStartY = 0;
@@ -925,7 +926,7 @@ export class PaginatedFlow extends AbstractFlow {
 	private _handlePointerDown = (event: PointerEvent) => {
 		if (!event.isPrimary
 				|| (event.pointerType !== 'touch' && event.pointerType !== 'pen')
-				|| (event.composedPath()[0] as Element).closest('.annotation-container')) {
+				|| (event.composedPath()[0] as Element).closest('.annotation-container') && !this._view.readerNavigationAllowed()) {
 			return;
 		}
 		// Mobile: Ignore touches near a selection, because Safari and Android
@@ -946,6 +947,7 @@ export class PaginatedFlow extends AbstractFlow {
 		}
 
 		this._touchDown = true;
+        this._touchStartedAt = Date.now();
 		this._touchStartX = event.clientX;
 		this._touchStartY = event.clientY;
 		this._touchLastX = event.clientX;
@@ -1033,17 +1035,20 @@ export class PaginatedFlow extends AbstractFlow {
 		}
 		// If there's no selection, allow single-tap page turns
 		else if (target
+                && this._view.readerNavigationAllowed() && Date.now()-this._touchStartedAt < 450
 				&& this._iframeWindow.getSelection()!.isCollapsed
-				&& !this._view.selectedAnnotationIDs.length
+				&& (!this._view.selectedAnnotationIDs.length || this._view.readerNavigationAllowed())
 				&& Math.abs(clientX - this._touchStartX) < EPSILON_PX
 				&& Math.abs(clientY - this._touchStartY) < EPSILON_PX
 				&& !target.closest('a, .clickable-image')) {
-			if (clientX >= this._iframeWindow.innerWidth * (1 - PAGE_TURN_TAP_MARGIN_FRACTION)) {
+			if (clientX >= this._iframeWindow.innerWidth - Math.min(64, this._iframeWindow.innerWidth * PAGE_TURN_TAP_MARGIN_FRACTION)) {
+                if (this._view.readerNavigationAllowed()) this._view.clearReaderNavigationSelection();
 				this._onManualNavigation();
 				this.navigateRight();
 				return true;
 			}
-			else if (clientX <= this._iframeWindow.innerWidth * PAGE_TURN_TAP_MARGIN_FRACTION) {
+			else if (clientX <= Math.min(64, this._iframeWindow.innerWidth * PAGE_TURN_TAP_MARGIN_FRACTION)) {
+                if (this._view.readerNavigationAllowed()) this._view.clearReaderNavigationSelection();
 				this._onManualNavigation();
 				this.navigateLeft();
 				return true;

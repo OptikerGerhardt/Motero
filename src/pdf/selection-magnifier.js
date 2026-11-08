@@ -27,7 +27,7 @@ export class PDFSelectionMagnifier {
             }
             this.win.document.body.append(this.box);
         }
-        const width = Math.min(144, this.win.innerWidth - 16), height = 72, zoom = 1.8;
+        const width = Math.min(144, this.win.innerWidth - 16), height = 72, zoom = 1.4;
         const ratio = Math.min(2, this.win.devicePixelRatio || 1);
         this.canvas.width = Math.round(width * ratio); this.canvas.height = height * ratio;
         this.canvas.style.width = width + 'px'; this.canvas.style.height = height + 'px';

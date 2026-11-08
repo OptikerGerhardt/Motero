@@ -18,7 +18,8 @@ function fixture() {
         pdfDocument:{numPages:4,getPage:async n=>pages[n-1].pdfPage},getPageView:i=>pages[i],scrollPageIntoView(){},
         _getVisiblePages(){return {views:[]};},_setCurrentPageNumber(n){this.currentPageNumber=n;}};
 	let win={PDFViewerApplication:{pdfViewer:viewer,eventBus:{on(){},off(){}}},addEventListener(){},removeEventListener(){},
-		setTimeout:f=>{timers.set(++serial,f);return serial;},clearTimeout:id=>timers.delete(id)};
+		requestAnimationFrame:f=>{timers.set(++serial,f);return serial;},cancelAnimationFrame:id=>timers.delete(id),
+        setTimeout:f=>{timers.set(++serial,f);return serial;},clearTimeout:id=>timers.delete(id)};
 	let view={_iframeWindow:win,_tool:{type:'pointer'},_render(){},_updateViewStats(){}};
 	let fitting=new AndroidPageFitting(view);
 	fitting.boundsFor=async i=>i%2?[.1,.2,.7,.6]:[.2,.2,.8,.6];
@@ -26,9 +27,11 @@ function fixture() {
 	return {fitting,viewer,pages,container,flush,timers};
 }
 
-test('all buffered pages have compact, centered crops in the same commit',async()=>{
+test('prepared buffered pages have compact, centered crops without blocking the target',async()=>{
 	let {fitting,pages}=fixture();
 	assert.equal(await fitting.configure({mode:'content',reference:'content',margin:0}),true);
+    for (let i=0;i<pages.length;i++) fitting.rememberPrepared(await fitting.prepare(i));
+    fitting.layout.apply(fitting.geometry);
     for (const page of pages) assert.match(page.div.style.clipPath,/^inset\(/);
     const boxes = fitting.layout.boxes;
     for (let i=1;i<boxes.length;i++) assert.equal(boxes[i].y-boxes[i-1].y-boxes[i-1].height,12);
@@ -85,12 +88,23 @@ test('Off during a zoom cancels the pending fit and is never undone on release',
 	for(let p of pages) assert.equal(p.div.style.clipPath,'');
 });
 
-test('input during neighbor preparation invalidates the entire commit',async()=>{
+test('input during target preparation invalidates the commit',async()=>{
 	let {fitting,pages}=fixture();
 	await fitting.configure({mode:'content',reference:'content'},false);fitting.active=true;
-	let release;fitting.boundsFor=i=>i===2?new Promise(r=>release=r):Promise.resolve([.1,.2,.8,.7]);
+	let release;fitting.boundsFor=i=>i===1?new Promise(r=>release=r):Promise.resolve([.1,.2,.8,.7]);
 	let pending=fitting.prepare(1);await new Promise(setImmediate);
 	fitting.onDown({pointerId:1,clientX:100,clientY:100});release([.1,.2,.8,.7]);
 	assert.equal(fitting.commit(await pending),false);
 	assert.ok(pages.every(p=>p.div.style.clipPath===''));
+});
+
+test('two complete pages retain overview; panning keeps it and zooming back to one page restores fit',async()=>{
+ const {fitting,viewer,flush}=fixture();await fitting.configure({mode:'content',reference:'content'});
+ fitting.beginPeek();viewer.currentScale=.2;
+ fitting.pageFrames=()=>[{index:0,left:0,right:200,top:0,bottom:300},{index:1,left:0,right:200,top:312,bottom:612}];
+ fitting.finishGesture();assert.equal(fitting.presentation,'overview');assert.equal(fitting.active,false);
+ fitting.beginPeek();fitting.finishGesture();assert.equal(fitting.presentation,'overview');
+ fitting.beginPeek();viewer.currentScale=.8;
+ fitting.pageFrames=()=>[{index:1,left:0,right:500,top:0,bottom:700}];
+ fitting.finishGesture();await flush();assert.equal(fitting.active,true);assert.equal(fitting.presentation,'reading');
 });

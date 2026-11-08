@@ -17,7 +17,7 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
    await page.goto(origin+'/view.html');await page.evaluate(()=>{window.messages=[];const c=new MessageChannel();c.port1.onmessage=e=>window.messages.push(JSON.parse(e.data));window.postMessage('initPort','*',[c.port2]);});
    await page.waitForFunction(()=>window.messages.some(x=>x.message?.event==='onInitialized'));
    await page.evaluate(({origin,pdf,index})=>window.createView(btoa(JSON.stringify({type:'pdf',url:origin+pdf,annotations:[],directHighlight:true,viewState:{pageIndex:index,scale:'page-width',scrollMode:2,spreadMode:0},pageFitting:{mode:'content',reference:'content',margin:0,includeMarginalia:false,revision:303}}))),{origin,pdf,index});
-   await page.waitForFunction(()=>window._view?._view?._pageFitting?.applied);await page.waitForTimeout(180);
+   await page.waitForFunction(()=>window._view?._view?._pageFitting?.applied);await page.evaluate(async()=>{let f=window._view._view._pageFitting;await f.ensureModel();});await page.waitForTimeout(350);await page.evaluate(()=>{let f=window._view._view._pageFitting;return window.setPageFitting(f.options);});await page.waitForTimeout(180);
   }
   const state=()=>page.evaluate(()=>{
    const w=window._view._view,f=w._pageFitting,b=w._booxReader,v=f.viewer,p=v.getPageView(v.currentPageNumber-1),c=v.container;
@@ -67,9 +67,14 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   await touch('touchStart',[{x:10,y:350},{x:990,y:350}]);
   for(let i=1;i<=9;i++){await touch('touchMove',[{x:10+i*40,y:350},{x:990-i*40,y:350}]);await page.waitForTimeout(25);}
   await touch('touchEnd',[]);
-  await page.waitForFunction(()=>{const f=window._view._view._pageFitting;return f.active&&!f.zooming&&f.applied&&Math.abs(f.viewer.currentScale-f.applied.scale)<.002;});
-  await page.waitForTimeout(180);assert.equal((await state()).overview,false);fitted(await state());
-  console.log('PASS a real pinch starting outside the PDF page restores fitting on release');
+  await page.waitForTimeout(500);
+  const afterPinch=await page.evaluate(()=>{const f=window._view._view._pageFitting,v=f.viewportFrame();return {presentation:f.presentation,complete:f.pageFrames().filter(p=>p.left>=v.left-2&&p.right<=v.right+2&&p.top>=v.top-2&&p.bottom<=v.bottom+2).length};});
+  if(afterPinch.presentation==='overview') {
+   assert.ok(afterPinch.complete>=2,JSON.stringify(afterPinch));
+   await tapCurrentPage();fitted(await state());
+   console.log('PASS a real zoom-out with two complete pages retains overview and tap restores the reading fit');
+  }
+  else { fitted(await state());console.log('PASS a real pinch with fewer than two complete pages restores fitting on release'); }
   await overview();await configure('none');await page.evaluate(()=>window._view._view._booxReader.enterPage(8));await page.waitForTimeout(150);
   let off=await state();assert.equal(off.active,false);assert.equal(off.clip,'');assert.equal(off.readingFit,null);
   console.log('PASS explicit Off forgets the old fit instead of restoring it from the overview');

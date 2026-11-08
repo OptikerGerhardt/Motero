@@ -133,6 +133,7 @@ window.createView = (encodedOptions) => {
 		},
 		onManualCropChanged: (params) => postMessage('onManualCropChanged', params),
 		onCropEditorChanged: (open) => postMessage('onCropEditorChanged', { open }),
+        onCropEditorState: params => postMessage('onCropEditorState', params),
 	});
 };
 
@@ -152,7 +153,22 @@ window.fitToContent = (options) => {
 
 window.fitToWidth = () => window._view.fitToWidth();
 window.setPageFitting = (options, apply = true) => window._view.setPageFitting(options, apply);
-window.beginManualCrop = () => window._view?._activeView?._pageFitting?.openCropEditor();
+window.beginManualCrop = options => window._view?._activeView?._pageFitting?.openCropEditor(options);
+window.cropEditorAction = options => window._view?._activeView?._pageFitting?.editor?.action(options);
+window.focusReaderBookmark = async id => {
+    const reader = window._view, view = reader?._activeView;
+    const annotation = view?._annotations?.find(a => a.id === id);
+    if (!annotation) return false;
+    reader.selectAnnotations([]);
+    view._options.onSetAnnotationPopup?.(null);
+    if (Number.isInteger(annotation.position?.pageIndex)) {
+        if (view._booxReader?.isOverview()) await view._booxReader.enterPage(annotation.position.pageIndex);
+        else await view.navigate({pageIndex: annotation.position.pageIndex});
+    }
+    else await view.navigate({position: annotation.position});
+    reader.setReaderChromeVisible(false);
+    return true;
+};
 window.cancelManualCrop = () => window._view?._activeView?._pageFitting?.editor?.close();
 window.setDirectHighlight = enabled => window._view.setDirectHighlight(enabled);
 window.setReaderChromeVisible = visible => window._view?.setReaderChromeVisible(visible);

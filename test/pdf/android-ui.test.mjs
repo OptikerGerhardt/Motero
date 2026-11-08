@@ -1195,16 +1195,16 @@ test('Android PDF edge taps turn all three scroll modes and preserve zoom', () =
 
 test('Android PDF edge zones scale on phones and cap on wider viewports', () => {
 	let { view: phoneView } = createEdgePageTurnView({ width: 393 });
-	assert.equal(phoneView._getEdgePageTurnDirection({ pointerType: 'touch' }, 78), 'previous');
-	assert.equal(phoneView._getEdgePageTurnDirection({ pointerType: 'touch' }, 79), null);
-	assert.equal(phoneView._getEdgePageTurnDirection({ pointerType: 'touch' }, 314), null);
-	assert.equal(phoneView._getEdgePageTurnDirection({ pointerType: 'touch' }, 315), 'next');
+	assert.equal(phoneView._getEdgePageTurnDirection({ pointerType: 'touch' }, 47), 'previous');
+	assert.equal(phoneView._getEdgePageTurnDirection({ pointerType: 'touch' }, 48), null);
+	assert.equal(phoneView._getEdgePageTurnDirection({ pointerType: 'touch' }, 345), null);
+	assert.equal(phoneView._getEdgePageTurnDirection({ pointerType: 'touch' }, 346), 'next');
 
 	let { view: tabletView } = createEdgePageTurnView({ width: 1000 });
-	assert.equal(tabletView._getEdgePageTurnDirection({ pointerType: 'touch' }, 96), 'previous');
-	assert.equal(tabletView._getEdgePageTurnDirection({ pointerType: 'touch' }, 97), null);
-	assert.equal(tabletView._getEdgePageTurnDirection({ pointerType: 'touch' }, 903), null);
-	assert.equal(tabletView._getEdgePageTurnDirection({ pointerType: 'touch' }, 904), 'next');
+	assert.equal(tabletView._getEdgePageTurnDirection({ pointerType: 'touch' }, 64), 'previous');
+	assert.equal(tabletView._getEdgePageTurnDirection({ pointerType: 'touch' }, 65), null);
+	assert.equal(tabletView._getEdgePageTurnDirection({ pointerType: 'touch' }, 935), null);
+	assert.equal(tabletView._getEdgePageTurnDirection({ pointerType: 'touch' }, 936), 'next');
 });
 
 test('PDF edge taps fall through outside supported Android touch input', () => {
@@ -1388,10 +1388,10 @@ test('Android edge taps tolerate boundary drift and use the delayed pointer path
 		getSelectableAnnotations: () => [],
 	});
 	let event = createPointerEvent();
-	event.clientX = 91;
+	event.clientX = 59;
 
 	PDFView.prototype._handlePointerDown.call(fixture.view, event);
-	event.clientX = 99;
+	event.clientX = 67;
 	event.clientY = 19;
 	PDFView.prototype._handlePointerUp.call(fixture.view, event);
 	assert.deepEqual(calls, { backdrop: 0, manual: 0, previous: 0 });

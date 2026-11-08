@@ -107,8 +107,8 @@ import {
 // cost as scrolling to any unbuffered page
 const PAGE_BUFFER_KEEP_RECENT = 2;
 const CSS_UNITS = 96 / 72;
-const PAGE_TURN_TAP_MARGIN_FRACTION = 0.2;
-const PAGE_TURN_TAP_MAX_MARGIN_PX = 96;
+const PAGE_TURN_TAP_MARGIN_FRACTION = 0.12;
+const PAGE_TURN_TAP_MAX_MARGIN_PX = 64;
 const PAGE_TURN_TAP_AXIS_TOLERANCE_PX = 10;
 const VERTICAL_SCROLL_MODE = 0;
 const HORIZONTAL_SCROLL_MODE = 1;
@@ -462,7 +462,9 @@ class PDFView {
 		// PDF.js consumes pointer endings during pinch gestures. Observe them before
 		// its container listeners so no finger remains registered in our gesture.
 		this._iframeWindow.addEventListener('pointerup', event => {
-			if (!this._chromeTapGuard?.up(event)) this._directHighlight?.up(event);
+            this._pageFitting?.onUp(event);
+			if (this._tryPriorityReaderTap(event)) { this._readerPriorityHandled=event.pointerId; return; }
+            if (!this._chromeTapGuard?.up(event)) this._directHighlight?.up(event);
 		}, true);
 		this._iframeWindow.addEventListener('pointercancel', event => {
 			this._chromeTapGuard?.reset();
@@ -2718,8 +2720,18 @@ class PDFView {
 		try {
 			do {
 				if (direction) {
-					direction = request.directions.shift();
-					pageIndex = viewer.currentPageNumber - 1 + direction;
+                    if (request.directions.length > 1 && viewer.pagesCount && viewer.spreadMode === 0) {
+                        pageIndex = viewer.currentPageNumber - 1;
+                        const queued = request.directions.splice(0);
+                        for (const step of queued) pageIndex = Math.max(0,Math.min(viewer.pagesCount-1,pageIndex+step));
+                        direction = queued.at(-1);
+                        navigate = () => viewer.scrollPageIntoView({pageNumber:pageIndex+1});
+                    }
+                    else {
+                        direction = request.directions.shift();
+                        pageIndex = viewer.currentPageNumber - 1 + direction;
+                        navigate = () => viewer[direction > 0 ? 'nextPage' : 'previousPage']();
+                    }
 				}
 				let from = viewer.getPageView(viewer.currentPageNumber - 1);
 				let page = viewer.getPageView(pageIndex);
@@ -3541,7 +3553,10 @@ class PDFView {
 	}
 
 	_handlePointerDown(event) {
-		if (this._pageFitting?.editor) return;
+        if (this._pageFitting?.editor) return;
+        if (event.type==='pointerdown' && ['touch','pen'].includes(event.pointerType)) {
+            this._readerPriorityDown=event.isPrimary ? {x:event.clientX,y:event.clientY,time:Date.now()} : null;
+        }
 		// This listener runs on window during capture, before the palette stops
 		// propagation. Its pointerup never reaches us: don't start a page action
 		// for a palette button, or the next annotation tap only clears that action.
@@ -4288,8 +4303,32 @@ class PDFView {
 		return annotation;
 	}
 
+    _tryPriorityReaderTap(event) {
+        const down=this._readerPriorityDown;
+        this._readerPriorityDown=null;
+        if (!down || event.target?.closest?.('.boox-highlight-palette, .boox-manual-crop, input, textarea, [contenteditable=true]')
+            || this._options.platform!=='android' || this._tool.type!=='pointer'
+            || this._pageFitting?.zooming || Date.now()-down.time>=450
+            || Math.hypot(event.clientX-down.x,event.clientY-down.y)>8
+            || this._pageFitting?.pointers.size>1) return false;
+        const position=this.pointerEventToPosition(event);
+        const overlay=position && this._getSelectableOverlay(position);
+        const rect=this._iframeWindow.PDFViewerApplication.pdfViewer.container.getBoundingClientRect();
+        const bookmark=event.clientX-rect.left>=rect.width/2 && event.clientY-rect.top>=0 && event.clientY-rect.top<=rect.height/11;
+        const overview=this._booxReader?.isOverview();
+        const direction=this._getEdgePageTurnDirection(event,down.x);
+        if (!overview && !bookmark && (!direction || overlay)) return false;
+        this._directHighlight?.reset(); this._clearPendingBackdropTap(); this._clearPointerAction();
+        if (!this._booxReader?.handleTap(event,position) && direction && !overview) {
+            direction==='next' ? this.navigateToNextPage() : this.navigateToPreviousPage(); this._onEdgePageTurnTap?.();
+        }
+        event.preventDefault(); return true;
+    }
+
 	_handlePointerUp(event) {
-		if (this._pageFitting?.editor) return;
+        if (this._pageFitting?.editor) return;
+        if (this._readerPriorityHandled != null && this._readerPriorityHandled===event.pointerId) { this._readerPriorityHandled=null; return; }
+        if (this._tryPriorityReaderTap?.(event)) return;
 		if (this._chromeTapGuard?.up(event)) return;
 		if (this._directHighlight?.up(event)) {
 			return;

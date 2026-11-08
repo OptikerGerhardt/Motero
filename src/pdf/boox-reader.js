@@ -46,7 +46,7 @@ export class PDFBooxReader {
 					&& Math.abs(scale - fitting.applied.scale) > 0.002) {
 				this.zoomOrigin = { scale: fitting.applied.scale, mode: 'pageFit', fit: fitting.snapshot() };
 			}
-			if (this.isOverview()) {
+			if (fitting?.presentation === 'peek' || this.isOverview()) {
 				let origin = this.zoomOrigin || { scale: this.readingScale,
 					mode: this.readingModeForScale(this.readingScale), fit: this.readingFit };
 				if (origin.scale) { this.readingScale = origin.scale; this.readingMode = origin.mode; this.readingFit = origin.fit; }
@@ -98,7 +98,8 @@ export class PDFBooxReader {
 
 	isOverview(page = this.viewer.getPageView(this.viewer.currentPageNumber - 1)) {
 		let v = this.viewer, c = v.container;
-		if (!page?.pdfPage || !(v.currentScale > 0)) return false;
+		if (this.view._pageFitting?.presentation === 'overview') return true;
+        if (!page?.pdfPage || !(v.currentScale > 0)) return false;
 		let width = page.viewport.width, height = page.viewport.height;
 		let reading = this.readingScale || v.currentScale * (c.clientWidth - 32) / width;
 		return width < c.clientWidth * 0.86 && height < c.clientHeight * 0.94
@@ -117,15 +118,13 @@ export class PDFBooxReader {
 			this.enterPage(pageIndex).catch(error => console.error(error));
 			return true;
 		}
-		if (view._readOnly || (position && (view._getSelectableOverlay(position)
-				|| view.getSelectableAnnotations(position)?.length))) return false;
+		if (view._readOnly) return false;
 		let bounds = this.viewer.container.getBoundingClientRect();
 		let x = event.clientX - bounds.left, y = event.clientY - bounds.top;
 		// The upper-right half of the first 1/11 of the reading viewport is
 		// the bookmark target, including the outer page-turn strip.
 		if (x < bounds.width / 2 || x > bounds.width || y < 0 || y > bounds.height / 11) return false;
-		if (!page?.pdfPage) return false;
-		this.addBookmark(pageIndex).catch(console.error);
+		this.addBookmark(view._pageFitting?.centeredPageIndex() ?? this.viewer.currentPageNumber-1).catch(console.error);
 		return true;
 	}
 
@@ -140,15 +139,21 @@ export class PDFBooxReader {
 
 	async placeBookmark(pageIndex) {
 		let view = this.view, page = this.viewer.getPageView(pageIndex);
-		if (!page?.pdfPage || view._destroyed || view._readOnly) return;
+        if (!page || view._destroyed || view._readOnly) return;
 		let existing = view._annotations.find(a => a.type === 'note'
 			&& /^(Lesezeichen|Bookmark) · /.test(a.comment || '') && a.position.pageIndex === pageIndex);
 		if (existing) {
 			if (!existing.readOnly) view._onDeleteAnnotationsFromPalette([existing.id]);
 			return;
 		}
+        if (!page.pdfPage) {
+            const pdfPage = await this.viewer.pdfDocument.getPage(pageIndex+1);
+            if (view._destroyed) return;
+            page.setPdfPage(pdfPage);
+        }
 		let rotation = page.viewport.rotation;
 		// Always use the unpadded content frame, including when paper/manual fit is selected.
+		await view._pageFitting.ensureModel();
 		let bounds = await view._pageFitting.boundsFor(pageIndex);
 		if (view._destroyed || view._readOnly || page.viewport.rotation !== rotation) return;
 		let viewport = page.pdfPage.getViewport({ scale: 1, rotation });
@@ -161,7 +166,7 @@ export class PDFBooxReader {
 		let p1 = viewport.convertToPdfPoint(right, top + size);
 		let position = { pageIndex, rects: [[Math.min(p0[0], p1[0]), Math.min(p0[1], p1[1]),
 			Math.max(p0[0], p1[0]), Math.max(p0[1], p1[1])]] };
-		view._onAddAnnotation({ type: 'note', color: '#2ea8e5', position,
+		view._onAddAnnotation({ type: 'note', color: '#000000', position,
 			pageLabel: view._getPageLabel(pageIndex, true), sortIndex: getSortIndex(view._pdfPages, position),
 			comment: (this.de ? 'Lesezeichen' : 'Bookmark') + ' · '
 				+ new Intl.DateTimeFormat(this.de ? 'de-DE' : undefined,
@@ -183,7 +188,7 @@ export class PDFBooxReader {
 				let prepared = await view._pageFitting.prepare(pageIndex, restoreFit);
 				if (view._destroyed || this.entering !== request) return;
 				await view._pageFitting.configure(restoreFit, false);
-				view._pageFitting.active = true;
+				view._pageFitting.active = true; view._pageFitting.presentation='reading';
 				view._pageFitting.commit(prepared, { alignTop: true,
 					navigate: () => v.scrollPageIntoView({ pageNumber: pageIndex + 1 }) });
 				return;

@@ -93,9 +93,14 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
                 || Date.now() - start.time > 400 || Math.hypot(x - start.x, y - start.y) > 8
                 || x < this._iframeWindow.innerWidth / 2 || y > this._iframeWindow.innerHeight / 11
                 || start.x < this._iframeWindow.innerWidth / 2 || start.y > this._iframeWindow.innerHeight / 11
-                || target.closest('a, .clickable-image, [data-annotation-id], .annotation-container')
                 || !this._iframeWindow.getSelection()?.isCollapsed) return false;
         return this.addAndroidBookmark();
+    }
+
+    readerNavigationAllowed(): boolean { return this._options.platform !== 'android' || this._tool.type === 'pointer'; }
+    clearReaderNavigationSelection(): void {
+        this._options.onSelectAnnotations([]);
+        this._options.onSetAnnotationPopup(null);
     }
 
     addAndroidBookmark(): boolean {
@@ -127,7 +132,7 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
             range.setStart(node, offset);
             range.setEnd(node, offset + length);
         }
-        let annotation = this.getAnnotationFromRange(range, 'note', '#2ea8e5');
+        let annotation = this.getAnnotationFromRange(range, 'note', '#000000');
         if (!annotation) return false;
         let existing = this._annotations.find(a => a.type === 'note' && a.sortIndex === annotation!.sortIndex
                 && /^(Lesezeichen|Bookmark) · /.test(a.comment || ''));

@@ -105,7 +105,7 @@ test('Roman folios joined into one OCR item split only at a detached same-baseli
 });
 
 test('ordinary Roman numerals and words resembling numerals are not edition references', () => {
-	for (let text of ['IV','bill','B ILL','B VX','B IL','B', 'See B XLI']) {
+	for (let text of ['bill','B ILL','B VX','B IL','B', 'See B XLI']) {
 		let candidate=line(text,[.01,.3,.08,.315]);
 		assert.deepEqual(getReadingMarginalia([...body,candidate],buildReadingModel([]),132),[],text);
 	}
@@ -405,4 +405,20 @@ test('a detached numerical label beside a genuine footnote at the extreme bottom
     const exclusions=getReadingExclusions([...body,label,note],buildReadingModel([]),3);
     assert.ok(!exclusions.includes(label.rect));
     assert.ok(!exclusions.includes(note.rect));
+});
+
+test('Kant gutter folios beside a short heading use the page body column',()=>{
+ for (const text of ['B XI','BXI','IV','I']) {
+  const ref=line(text,[.01,.10,.07,.12]);
+  assert.ok(getReadingMarginalia([...body,line('Einleitung',[.45,.10,.65,.12]),ref],buildReadingModel([]),0).includes(ref.rect),text);
+ }
+ const heading=line('IV',[.46,.1,.50,.12]);
+ assert.ok(!getReadingMarginalia([...body,heading],buildReadingModel([]),0).includes(heading.rect));
+});
+test('a learned sequential bottom folio survives a tight gap while footnote text remains',()=>{
+ const foot=line('5 See this legitimate footnote and its explanation',[.08,.86,.88,.90]);
+ const pages=Array.from({length:4},(_,index)=>({index,lines:[...body,foot,line(String(238+index),[.90,.905,.94,.92])]}));
+ const model=buildReadingModel(pages), ref=pages[2].lines.at(-1);
+ const excluded=getReadingExclusions(pages[2].lines,model,2);
+ assert.ok(excluded.includes(ref.rect));assert.ok(!excluded.includes(foot.rect));
 });

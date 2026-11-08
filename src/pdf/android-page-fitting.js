@@ -3,6 +3,8 @@ import { getReadingSamples, getReadingTextLines, buildReadingModel, getReadingBo
 import { cropForPage, normalizeCrops } from './manual-crop.mjs';
 import { ManualCropEditor } from './manual-crop-editor.js';
 import { CroppedPageLayout } from './cropped-page-layout.mjs';
+import { ReadingWorkQueue } from './reading-work-queue.mjs';
+import { centeredPage, completePages } from './reading-interaction.mjs';
 
 // View-only fitting. PDF coordinates, annotations and the PDF file are untouched.
 export class AndroidPageFitting {
@@ -17,6 +19,9 @@ export class AndroidPageFitting {
 		this.inputEpoch = 0;
 		this.pointers = new Set();
 		this.cache = new Map();
+        this.work = new ReadingWorkQueue(2);
+        this.presentation = 'reading';
+        this.geometry = new Map();
 		this.marginaliaByPage = new Map();
 		this.preparedPages = new Map();
 		this.layout = new CroppedPageLayout(this);
@@ -36,14 +41,14 @@ export class AndroidPageFitting {
 				this.win.clearTimeout(this.timer);
 				return;
 			}
-			if (!this.pointers.size && (this.pendingPage || this.zooming)) this.schedule();
+			if (!this.pointers.size && !this.touches && (this.pendingPage || this.zooming)) this.finishGesture();
 		};
 		this.onTouch = event => {
 			this.touches = event.touches.length;
 			if (this.touches > 1) { this.touchZoom = true; this.beginPeek(); }
 			if (!this.touches) {
 				this.touchZoom = false;
-				if (this.zooming || this.pendingPage) this.schedule();
+				if (this.zooming || this.pendingPage) this.finishGesture();
 			}
 		};
 
@@ -83,7 +88,7 @@ export class AndroidPageFitting {
 		};
 		this.onRotation = () => {
 			this.token++; this.clearClips();
-			this.preparedPages.clear();
+			this.preparedPages.clear(); this.geometry.clear();
 			if (this.active) this.schedule();
 		};
 		this.onResize = () => { if (this.active) this.schedule(); };
@@ -108,6 +113,7 @@ export class AndroidPageFitting {
 			margin: Math.max(0, Math.min(0.2, Number(options?.margin) || 0)),
 			revision: options?.revision || 0,
 			manualCrop: normalizeCrops(options?.manualCrop === undefined ? this.options.manualCrop : options.manualCrop),
+            cropMode: options?.cropMode === 'automatic' ? 'automatic' : options?.cropMode === 'manual' ? 'manual' : (options?.manualCrop || Object.keys(this.options.manualCrop || {}).length ? 'manual' : 'automatic'),
 		};
 		this.configured = true;
 		if (!apply) return Promise.resolve(false);
@@ -115,10 +121,11 @@ export class AndroidPageFitting {
 		this.win.clearTimeout(this.timer);
 		this.pendingPage = false;
 		this.zooming = false;
+        this.presentation = 'reading';
 		this.peekAnchor = null;
 		this.peekPageIndex = null;
 		this.clearClips();
-		this.preparedPages.clear();
+		this.preparedPages.clear(); this.geometry.clear();
 		this.masks = null;
 		this.active = this.options.mode !== 'none';
 		this.applied = null;
@@ -127,27 +134,65 @@ export class AndroidPageFitting {
 		return this.active ? this.apply({ alignTop: true }) : Promise.resolve(true);
 	}
 
-	usesCropLayout() { return this.options.mode === 'content' || this.isCroppedWidth(); }
+	usesCropLayout() { return this.options.mode !== 'none'; }
 
 	estimatedBounds(index) {
-		const manual = cropForPage(this.options.manualCrop, index);
+		const manual = cropForPage(this.options.cropMode === 'manual' ? this.options.manualCrop : {}, index);
 		if (manual) return rotateReadingBounds(manual, this.viewer.pagesRotation);
 		const profile = this.profiles?.profiles[index % 2];
 		return profile ? rotateReadingBounds(profile, this.viewer.pagesRotation) : [0, 0, 1, 1];
 	}
 
 	beginPeek() {
-		if (!this.active || this.zooming || this.editor) return;
-		const c = this.viewer.container, index = this.viewer.currentPageNumber - 1, d = this.viewer.getPageView(index)?.div;
+		if ((!this.active && this.presentation !== 'overview') || this.zooming || this.editor) return;
+		const c = this.viewer.container, index = this.centeredPageIndex(), d = this.viewer.getPageView(index)?.div;
 		if (!d) return;
 		this.peekAnchor = { index, fraction: (c.scrollTop + c.clientHeight / 2 - d.offsetTop - d.clientTop) / d.clientHeight, screenY: c.clientHeight / 2 };
-		this.zooming = true; this.pendingPage = true; this.token++;
+		this.gestureOrigin = { scale: this.viewer.currentScale, presentation: this.presentation };
+        this.presentation = 'peek';
+        this.zooming = true; this.pendingPage = true; this.token++;
 		this.clearClips(); this.masks = null;
 		// Removing the view crop must keep the same PDF point under the fingers.
 		c.scrollTop = Math.max(0, d.offsetTop + d.clientTop + this.peekAnchor.fraction * d.clientHeight - this.peekAnchor.screenY);
 		c.scrollLeft = Math.max(0, d.offsetLeft + d.clientLeft + d.clientWidth / 2 - c.clientWidth / 2);
 		this.view._render();
 	}
+
+    pageFrames() {
+        const c = this.viewer.container, r = c.getBoundingClientRect?.() || {left:0,top:0};
+        return this.viewer._pages.map((page,index) => {
+            const box = this.layout.boxes?.[index];
+            if (box) return {index,left:r.left+box.x-c.scrollLeft,top:r.top+box.y-c.scrollTop,
+                right:r.left+box.x+box.width-c.scrollLeft,bottom:r.top+box.y+box.height-c.scrollTop};
+            const d = page.div, b = d.getBoundingClientRect();
+            return { index,left:b.left,top:b.top,right:b.right??b.left+d.clientWidth,bottom:b.bottom??b.top+d.clientHeight };
+        });
+    }
+    viewportFrame() {
+        const c=this.viewer.container, r=c.getBoundingClientRect?.()||{left:0,top:0};
+        return {left:r.left,top:r.top,right:r.left+c.clientWidth,bottom:r.top+c.clientHeight};
+    }
+    centeredPageIndex() { return centeredPage(this.pageFrames(),this.viewportFrame(),this.viewer.currentPageNumber-1); }
+    finishGesture() {
+        if (this.touches || this.pointers.size || this.editor) return;
+        if (this.zooming && this.gestureOrigin) {
+            const changed = Math.abs(this.viewer.currentScale-this.gestureOrigin.scale)>0.002;
+            if (changed && this.viewer.currentScale < (this.view._booxReader?.readingScale || this.gestureOrigin.scale)
+                    && completePages(this.pageFrames(),this.viewportFrame()) >= 2
+                    || !changed && this.gestureOrigin.presentation === 'overview') {
+                this.presentation='overview'; this.active=false; this.zooming=false; this.pendingPage=false;
+                this.peekAnchor=null; this.win.clearTimeout(this.timer); this.view._updateViewStats(); return;
+            }
+            this.active=this.options.mode !== 'none';
+            if (this.gestureOrigin.presentation==='overview' && this.peekAnchor) this.peekAnchor.index=this.centeredPageIndex();
+        }
+        if (this.active && (this.zooming || this.pendingPage)) this.schedule();
+    }
+    rememberPrepared(prepared) {
+        this.preparedPages.delete(prepared.index); this.preparedPages.set(prepared.index,prepared);
+        this.geometry.set(prepared.index, {fit:{bounds:prepared.fit.bounds},bounds:prepared.bounds});
+        while(this.preparedPages.size>32) this.preparedPages.delete(this.preparedPages.keys().next().value);
+    }
 
 	prefetchVisible() {
 		if (!this.active || !this.usesCropLayout() || this.zooming || this.editor || this.view._destroyed) return;
@@ -168,10 +213,13 @@ export class AndroidPageFitting {
 					if (!this.active || this.zooming || key !== this.key() || rotation !== this.viewer.pagesRotation || this.view._destroyed) break;
 					const prepared = await this.prepare(i, this.options, false);
 					if (!prepared || this.zooming || key !== this.key() || rotation !== this.viewer.pagesRotation) break;
-					this.preparedPages.set(i, prepared);
+					this.rememberPrepared(prepared);
 					if (this.layout.boxes && !this.applying) {
-						this.layout.apply(this.preparedPages, { preservePosition: true });
-						this.view._render();
+                        if (!this.layoutFrame) this.layoutFrame = this.win.requestAnimationFrame(() => {
+                            this.layoutFrame = null;
+                            if (!this.active || this.zooming || this.view._destroyed || !this.layout.boxes) return;
+                            this.layout.apply(this.geometry, { preservePosition:true }); this.view._render();
+                        });
 					}
 				}
 			}
@@ -184,7 +232,7 @@ export class AndroidPageFitting {
 
 	state() {
 		return this.configured && !this.applying && (this.applied || !this.active)
-			? { pageFitMode: this.options.mode, pageFitRevision: this.options.revision } : {};
+			? { pageFitMode: this.options.mode, pageFitRevision: this.options.revision, readingPresentation: this.presentation } : {};
 	}
 
 	suspend() {
@@ -203,8 +251,13 @@ export class AndroidPageFitting {
 		}, delay);
 	}
 
-	async readPage(index) {
+	readPage(index, priority = 0) {
+        return this.work.run(index, signal => this.renderAnalysis(index, signal), priority);
+    }
+
+    async renderAnalysis(index, signal) {
 		let page = await this.viewer.pdfDocument.getPage(index + 1);
+        if (signal?.aborted) throw this.work.abortError();
 		// Analyze in the PDF's natural reading orientation. Rotation of the view
 		// transforms the result, rather than turning headers into side columns.
 		let angle = page.rotate;
@@ -215,10 +268,14 @@ export class AndroidPageFitting {
 		let ctx = canvas.getContext('2d', { alpha: false, willReadFrequently: true });
 		try {
 			ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-			let [, text] = await Promise.all([
-				page.render({ canvasContext: ctx, viewport, annotationMode: 0 }).promise,
+			const task=page.render({ canvasContext: ctx, viewport, annotationMode: 0 });
+            const cancel=()=>task.cancel(); signal?.addEventListener('abort',cancel,{once:true});
+            this.analysisTasks ??= new Set(); this.analysisTasks.add(task);
+            let text;
+            try { [,text] = await Promise.all([
+                task.promise,
 				page.getTextContent().catch(() => ({ items: [] })),
-			]);
+            ]); } finally { signal?.removeEventListener('abort',cancel); this.analysisTasks.delete(task); }
 			return { index, aspect: base.width / base.height,
 				image: ctx.getImageData(0, 0, canvas.width, canvas.height), lines: getReadingTextLines(text, viewport) };
 		}
@@ -232,9 +289,10 @@ export class AndroidPageFitting {
 				let pages = [];
 				for (let index of getReadingSamples(this.viewer.pdfDocument.numPages)) {
 					if (this.view._destroyed) return null;
-					try { pages.push(await this.readPage(index, rotation)); }
+					try { pages.push(await this.readPage(index, 10)); }
 					catch (error) { console.error(error); }
 				}
+                if (this.view._destroyed) return null;
 				let model = buildReadingModel(pages);
 				for (let page of pages) {
 					page.marginalia = this.readMarginalia(page, model);
@@ -247,22 +305,41 @@ export class AndroidPageFitting {
 				let aspects = pages.map(p => p.aspect).sort((a, b) => a - b);
 				this.model = model;
 				this.profiles = buildReadingProfiles(pages);
-				return { ...model, ...this.profiles,
-					withMarginalia: buildReadingProfiles(pages.map(page => ({ ...page, bounds: page.withMarginalia }))),
-					aspect: aspects[Math.floor(aspects.length / 2)] };
+                this.readingModel = { ...model, ...this.profiles,
+                    withMarginalia: buildReadingProfiles(pages.map(page => ({ ...page, bounds: page.withMarginalia }))),
+                    aspect: aspects[Math.floor(aspects.length / 2)] };
+                // Results computed with the provisional local model are refined once.
+                this.cache.clear();
+                this.refineAfterLearning();
+                return this.readingModel;
 			})();
 		}
 		return this.modelPromise;
 	}
 
+    refineAfterLearning() {
+        this.win.clearTimeout(this.refineTimer);
+        this.refineTimer = this.win.setTimeout(() => {
+            if (this.view._destroyed) return;
+            if (this.view._pendingPageTurn || this.pointers.size || this.touches || this.zooming || this.applying || this.editor) {
+                this.cache.clear();
+                this.refineAfterLearning(); return;
+            }
+            this.cache.clear(); this.preparedPages.clear();
+            if (this.active) this.schedule(0);
+        }, 250);
+    }
 	async boundsFor(index, { includeMarginalia = false, manualCrop = this.options.manualCrop } = {}) {
-		let manual = cropForPage(manualCrop, index);
+		let manual = cropForPage(this.options.cropMode === 'automatic' ? {} : manualCrop, index);
 		if (manual) return rotateReadingBounds(manual, this.viewer.pagesRotation);
-		let model = await this.ensureModel();
-		if (!model) return [0, 0, 1, 1];
+        // Fit the requested page immediately; document learning runs behind it.
+        const learned = this.readingModel;
+        if (!this.modelPromise) this.ensureModel().catch(error => { if (!this.view._destroyed) console.error(error); });
+        let model = learned;
 		if (!this.cache.has(index)) {
 			let rotation = this.viewer.pagesRotation;
-			this.cache.set(index, this.readPage(index, rotation).then(page => {
+            this.cache.set(index, this.readPage(index).then(page => {
+                model ||= { ...buildReadingModel([page]), aspect:page.aspect };
 				let marginalia = this.readMarginalia(page, model);
 				// Keep a synchronous mask lookup beside the existing bounded promise
 				// cache, so visible neighboring pages share the Exclude setting.
@@ -270,17 +347,21 @@ export class AndroidPageFitting {
 				return { index, aspect: page.aspect, bounds: getReadingBounds(page.image, page.lines, model, page.index),
 					marginalia,
 					withMarginalia: getReadingBounds(page.image, page.lines, model, page.index, { includeMarginalia: true }) };
-			}).catch(error => { console.error(error); return { bounds: null }; }));
+			}).catch(error => { this.cache.delete(index); if(error.name === 'AbortError' || error.name === 'RenderingCancelledException') throw error; console.error(error); return { bounds: null }; }));
 			if (this.cache.size > 32) {
 				let oldest = this.cache.keys().next().value;
 				this.cache.delete(oldest); this.marginaliaByPage.delete(oldest);
 			}
 		}
-		let page = await this.cache.get(index);
+        const pending = this.cache.get(index);
+        let page = await pending;
+        model ||= this.readingModel || {aspect:page?.aspect};
+        if (!page) return [0,0,1,1];
 		let actual = includeMarginalia ? page.withMarginalia : page.bounds;
 		if (!actual) return [0, 0, 1, 1];
-		let bounds = Math.abs(page.aspect / model.aspect - 1) > 0.05 ? actual
-			: resolveReadingBounds(actual, index, includeMarginalia ? model.withMarginalia : model);
+		let profiles = includeMarginalia ? model.withMarginalia : model;
+        let bounds = !profiles?.profiles || Math.abs(page.aspect / model.aspect - 1) > 0.05 ? actual
+            : resolveReadingBounds(actual, index, profiles);
 		return rotateReadingBounds(bounds, this.viewer.pagesRotation);
 	}
 
@@ -292,7 +373,7 @@ export class AndroidPageFitting {
 	}
 
 	maskRectsFor(index) {
-		if (cropForPage(this.options.manualCrop, index)) return [];
+		if (cropForPage(this.options.cropMode === 'manual' ? this.options.manualCrop : {}, index)) return [];
 		if (!this.active || this.zooming || this.peekPageIndex === index || this.options.includeMarginalia
 			|| this.options.mode !== 'content' && this.options.reference === 'page') return [];
 		if (this.masks?.index === index && this.masks.rotation === this.viewer.pagesRotation) return this.masks.rects;
@@ -316,11 +397,7 @@ export class AndroidPageFitting {
 		let marginalia = cropForPage(options.manualCrop, index) ? []
 			: (page?.marginalia || []).map(r => rotateReadingBounds(r, rotation));
 		let prepared = { index, key: this.key(options), bounds, pdfPage, fit, rotation, inputEpoch, width, height, marginalia };
-		if (includeNeighbors && (options.mode === 'content' || options.reference === 'cropped-content')) {
-			prepared.neighbors = (await Promise.all([index - 4, index - 3, index - 2, index - 1, index + 1, index + 2, index + 3, index + 4]
-				.filter(i => i >= 0 && i < v.pdfDocument.numPages)
-				.map(i => this.prepare(i, options, false).catch(error => { console.error(error); return null; })))).filter(Boolean);
-		}
+        if (includeNeighbors) prepared.neighbors = [...this.preparedPages.values()].filter(p=>Math.abs(p.index-index)<=4 && p.key===prepared.key && p.rotation===rotation);
 		return prepared;
 	}
 
@@ -338,15 +415,15 @@ export class AndroidPageFitting {
 		try {
 			if (!this.usesCropLayout()) this.clearClips();
 			this.peekPageIndex = null;
-			this.zooming = false;
+			this.zooming = false; this.presentation = 'reading';
 			navigate?.();
 			if (!page.pdfPage) page.setPdfPage(pdfPage);
 			const preserveScroll = this.peekAnchor;
 			v.currentScale = fit.scale;
 			if (this.usesCropLayout()) {
-				this.preparedPages.set(index, prepared);
-				for (const neighbor of prepared.neighbors || []) this.preparedPages.set(neighbor.index, neighbor);
-				this.layout.apply(this.preparedPages);
+				this.rememberPrepared(prepared);
+				for (const neighbor of prepared.neighbors || []) this.rememberPrepared(neighbor);
+				this.layout.apply(this.geometry);
 			}
 			// Wrapped scale changes can put a different page at the old scroll
 			// offset. Resolve the requested page again after the new row layout.
@@ -383,7 +460,9 @@ export class AndroidPageFitting {
 		let v = this.viewer, c = v.container;
 		if (!this.active || !v.pdfDocument || this.view._destroyed) return false;
 		if (v.spreadMode !== 0) { this.suspend(); return false; }
-		let index = this.peekAnchor?.index ?? v.currentPageNumber - 1, token = ++this.token, scale = v.currentScale;
+        let index = this.peekAnchor?.index ?? v.currentPageNumber - 1, token = ++this.token, scale = v.currentScale;
+        const samples = new Set(getReadingSamples(v.pdfDocument.numPages));
+        this.work.cancelWhere(i => Math.abs(i-index)>5 && !samples.has(i));
 		let page = v.getPageView(index);
 		let topFraction = (c.scrollTop - page.div.offsetTop - page.div.clientTop) / page.div.clientHeight;
 		let prepared = await this.prepare(index);
@@ -402,7 +481,9 @@ export class AndroidPageFitting {
 
 	destroy() {
 		this.editor?.close();
-		this.suspend(); this.layout.destroy();
+		this.work.close(); this.win.clearTimeout(this.refineTimer); this.win.cancelAnimationFrame(this.layoutFrame); for(const task of this.analysisTasks || []) task.cancel();
+        this.suspend(); this.layout.destroy();
+        this.preparedPages.clear(); this.geometry.clear(); this.modelPromise=null; this.readingModel=null;
 		this.viewer.container.removeEventListener('scroll', this.onScroll);
 		this.cache.clear(); this.marginaliaByPage.clear(); this.win.clearTimeout(this.prefetchTimer);
 		this.win.removeEventListener('pointerdown', this.onDown, true);
@@ -417,10 +498,10 @@ export class AndroidPageFitting {
 		this.bus.off('rotationchanging', this.onRotation);
 	}
 
-	openCropEditor() {
+	openCropEditor(options) {
 		if (!this.view._destroyed && this.viewer.pdfDocument && !this.editor) {
 			this.view._clearPendingBackdropTap?.();
-			this.editor = new ManualCropEditor(this);
+			this.editor = new ManualCropEditor(this, options);
 		}
 	}
 }

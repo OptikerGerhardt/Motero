@@ -1,3 +1,6 @@
+function setStyles(element, styles) {
+    for (const [key,value] of Object.entries(styles)) if (element.style[key] !== value) element.style[key] = value;
+}
 // Keep the original full-size PDF coordinate plane. Only page positions and the
 // visible frame change; selection, annotation rectangles and PDF.js stay intact.
 export function layoutReadingPages(pages, { width, height, mode, gap = 12 }) {
@@ -61,7 +64,7 @@ export class CroppedPageLayout {
 		const pad = this.fitting.options.margin * Math.min(c.clientWidth, c.clientHeight);
 		for (const [index, prepared] of preparedPages) {
 			const page = v.getPageView(index);
-			if (page && !page.pdfPage) page.setPdfPage(prepared.pdfPage);
+			if (page && !page.pdfPage && prepared.pdfPage) page.setPdfPage(prepared.pdfPage);
 		}
 		const pages = v._pages.map((page, index) => {
 			const prepared = preparedPages.get(index);
@@ -72,7 +75,7 @@ export class CroppedPageLayout {
 			return { index, width: right - left, height: bottom - top, left, top, right: w - right, bottom: h - bottom, ready: !!prepared };
 		});
 		const result = layoutReadingPages(pages, { width: c.clientWidth, height: c.clientHeight, mode: v.scrollMode });
-		Object.assign(host.style, { position: 'relative', width: result.width + 'px', height: result.height + 'px', overflow: 'clip', padding: '0', margin: '0' });
+		setStyles(host, { position: 'relative', width: result.width + 'px', height: result.height + 'px', overflow: 'clip', padding: '0', margin: '0' });
 		for (const box of result.boxes) {
 			const d = v.getPageView(box.index).div;
 			if (!this.saved.has(d)) {
@@ -80,7 +83,7 @@ export class CroppedPageLayout {
 				for (let key of ['position', 'left', 'top', 'margin', 'clipPath', 'translate', 'visibility', 'border']) before[key] = d.style[key];
 				this.saved.set(d, before);
 			}
-			Object.assign(d.style, { position: 'absolute', left: (box.x - box.left) + 'px', top: (box.y - box.top) + 'px',
+			setStyles(d, { position: 'absolute', left: (box.x - box.left) + 'px', top: (box.y - box.top) + 'px',
 				margin: '0', border: '0', translate: 'none', visibility: box.ready ? '' : 'hidden',
 				clipPath: `inset(${box.top}px ${box.right}px ${box.bottom}px ${box.left}px)` });
 		}

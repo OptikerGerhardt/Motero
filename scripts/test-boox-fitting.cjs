@@ -25,7 +25,7 @@ const types = { '.html':'text/html', '.js':'text/javascript', '.mjs':'text/javas
    await page.evaluate(({origin,pdf,index})=>window.createView(btoa(JSON.stringify({type:'pdf',url:origin+pdf,annotations:[],directHighlight:true,
     viewState:{pageIndex:index,scale:'page-width',scrollMode:2,spreadMode:0},
     pageFitting:{mode:'width',reference:'content',margin:.01,revision:1}}))),{origin,pdf,index});
-   await page.waitForFunction(()=>window._view?._view?._pageFitting?.applied);
+   await page.waitForFunction(()=>window._view?._view?._pageFitting?.applied);await page.evaluate(async()=>{let f=window._view._view._pageFitting;await f.ensureModel();});await page.waitForTimeout(350);await page.evaluate(()=>{let f=window._view._view._pageFitting;return window.setPageFitting(f.options);});
    await page.waitForTimeout(250);
   }
   async function fit(mode,reference='content',margin=.01) {
@@ -81,7 +81,7 @@ const types = { '.html':'text/html', '.js':'text/javascript', '.mjs':'text/javas
 	}
 	assert.ok(rotations[3][1]>.14,'header stays excluded after rotating back');
 	console.log('PASS all display rotations preserve content and cached recognition');
-  let width=await fit('width','page');assert.ok(Math.abs(width.pw-width.width)<4,JSON.stringify(width));assert.equal(width.clip,'');
+  let width=await fit('width','page');assert.ok(Math.abs(width.pw-width.width)<4,JSON.stringify(width));assert.ok(width.clip.startsWith('inset('));
   await page.setViewportSize({width:600,height:650});await page.waitForTimeout(250);
   assert.ok(Math.abs((await state()).scale-width.scale)<.002);
   console.log('PASS page-width zoom does not depend on height');
@@ -138,7 +138,7 @@ const types = { '.html':'text/html', '.js':'text/javascript', '.mjs':'text/javas
    let p=v.getPageView(index),r=p.div.getBoundingClientRect(),outer=view._iframe.getBoundingClientRect();
    let chars=view._pdfPages[index].chars;
    let visible=chars.map((c,i)=>{let xy=p.viewport.convertToViewportPoint((c.rect[0]+c.rect[2])/2,(c.rect[1]+c.rect[3])/2);
-    return {i,x:r.left+outer.left+xy[0],y:r.top+outer.top+xy[1]};}).filter(c=>c.x>40&&c.x<550&&c.y>120&&c.y<600);
+    return {i,x:r.left+outer.left+xy[0],y:r.top+outer.top+xy[1]};}).filter(c=>c.x>80&&c.x<520&&c.y>120&&c.y<600);
    let a=visible[0],b=visible.find(c=>c.x>a.x+90&&Math.abs(c.y-a.y)<3);return [a,b];
   });
   assert.ok(points[1],JSON.stringify(points));

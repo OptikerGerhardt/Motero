@@ -59,7 +59,7 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   let before=await read();await editor();
   await page.waitForFunction(()=>window.messages.some(x=>x.message?.event==='onCropEditorChanged' && x.message.params.open===true));
   const editorFrame=modal();
-  for(const action of ['cancel','save','previous','next','automatic']) {
+  for(const action of ['cancel','save','previous','next']) {
    const box=await editorFrame.locator('[data-action='+action+']').boundingBox();
    assert.ok(box.x>=0 && box.y>=0 && box.x+box.width<=360 && box.y+box.height<=740,JSON.stringify({action,box}));
   }
@@ -113,9 +113,11 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
    // All-pages save now uses the current even-page crop, converted back from display rotation.
    close((await read()).options.manualCrop.all,even);
   }
-  await editor();await action('automatic');await settled();
-  assert.deepEqual((await read()).options.manualCrop,{});
-  console.log('PASS manual crop survives display rotation and can be reset to automatic detection');
+  const retained=(await read()).options.manualCrop;
+  await page.evaluate(()=>{const f=window._view._view._pageFitting;return window.setPageFitting({...f.options,cropMode:'automatic'});});await settled();
+  assert.deepEqual((await read()).options.manualCrop,retained);
+  assert.equal((await read()).options.cropMode,'automatic');
+  console.log('PASS manual crop survives display rotation and can switch to automatic detection without losing manual frames');
   assert.deepEqual(errors,[]);
   console.log('PASS: manual crop editor checks');
  } finally {if(browser) await browser.close();await new Promise(r=>server.close(r));}

@@ -170,6 +170,7 @@ class View {
 			onEdgePageTurnTap: this._options.onEdgePageTurnTap,
 			onManualCropChanged: this._options.onManualCropChanged,
 			onCropEditorChanged: this._options.onCropEditorChanged,
+            onCropEditorState: this._options.onCropEditorState,
 		};
 		return common;
 	}

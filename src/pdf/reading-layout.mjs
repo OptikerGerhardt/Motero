@@ -27,7 +27,7 @@ const abReference = '[AB]\\s*' + editionFolio + '(?:\\s*[/–-]\\s*[AB]?\\s*' + 
 const editionPattern = new RegExp('^(?:(?:(?:AA|Ak\\.?)\\s*)?(?:[IVXLC]+|\\d{1,3})\\s*[:,.]\\s*\\d{1,4}|'
 	+ abReference + '|\\[\\s*\\d{1,4}\\s*\\])$', 'i');
 const editionReference = text => editionPattern.test(text.trim());
-const romanReference = text => /^[IVXLCDM]{3,9}$/.test(text.trim())
+const romanReference = text => /^[IVXLCDM]{1,9}$/.test(text.trim())
     && new RegExp('^' + romanFolio + '$').test(text.trim());
 const marginalReference = text => editionReference(text) || romanReference(text);
 
@@ -92,6 +92,20 @@ export function getReadingTextLines(content, viewport) {
 			&& rect[2] - rect[0] < 0.1 && (/^\d{1,3}$/.test(text) || marginalReference(text));
 		spans.push({ text, rect, vertical: Math.abs(dy) > Math.abs(dx), sideCandidate });
 	}
+    // PDF text extraction can split “B XI” into independent items. Combine only
+    // short, horizontally adjacent gutter spans before ordinary row merging.
+    const consumed = new Set();
+    for (const a of spans) {
+        if (!/^[AB]$/i.test(a.text) || !(a.rect[2] < .2 || a.rect[0] > .8)) continue;
+        const b = spans.find(b => b !== a && !consumed.has(b) && romanReference(b.text)
+            && b.rect[0] >= a.rect[2] - .002 && b.rect[0] - a.rect[2] < .025
+            && Math.abs((a.rect[1]+a.rect[3]-b.rect[1]-b.rect[3])/2) < Math.max(a.rect[3]-a.rect[1],b.rect[3]-b.rect[1]) * .45);
+        if (!b) continue;
+        a.text += ' ' + b.text;
+        a.rect = [a.rect[0],Math.min(a.rect[1],b.rect[1]),b.rect[2],Math.max(a.rect[3],b.rect[3])];
+        a.sideCandidate = true; consumed.add(b);
+    }
+    spans = spans.filter(s => !consumed.has(s));
 	spans.sort((a, b) => a.rect[1] - b.rect[1] || a.rect[0] - b.rect[0]);
 	let lines = [];
 	for (let span of spans) {
@@ -208,7 +222,15 @@ export function buildReadingModel(pages) {
 	let footerBands = footerCandidates.filter(candidate => new Set(footerCandidates
 		.filter(other => sameHeaderBand(other, candidate)).map(other => other.index))
 		.size >= Math.max(3, Math.ceil(pages.length / 2)));
-	return { repeated, headerBands, footerBands, bodyHeight };
+	// A repeated lower-page lane with a sequential folio offset is stronger
+    // evidence than the whitespace gap alone (dense Fuchs footnote pages).
+    const folios = pages.flatMap(page => page.lines.filter(line => /^\d{1,5}$/.test(line.text.trim())
+        && line.rect[1] > .84 && line.rect[2]-line.rect[0] < .09
+        && !page.lines.some(other => other !== line && other.text.length > 2 && other.rect[1] < line.rect[3]
+            && other.rect[3] > line.rect[1] && Math.max(other.rect[0]-line.rect[2],line.rect[0]-other.rect[2]) < .09))
+        .map(line => ({index:page.index, offset:Number(line.text)-page.index, y0:line.rect[1], y1:line.rect[3]})));
+    const folioBands = folios.filter(f => new Set(folios.filter(g => g.offset===f.offset && sameHeaderBand(f,g)).map(g=>g.index)).size >= 3);
+    return { repeated, headerBands, footerBands, folioBands, bodyHeight };
 }
 
 export function getReadingExclusions(lines, model = { repeated: new Set() }, pageIndex = null, { includeMarginalia = false } = {}) {
@@ -229,7 +251,8 @@ export function getReadingExclusions(lines, model = { repeated: new Set() }, pag
                 && other.rect[1] < y1 && other.rect[3] > y0 && !downloadStamp(other.text)
                 && !(model.footerBands?.some(band => sameHeaderBand(band, { y0: other.rect[1], y1: other.rect[3] }))
                     && footerCandidatesFor(lines, model.bodyHeight).includes(other)));
-            if (y1 < 0.10 || y0 > 0.94 && !peer || y0 > 0.85 && detached && !peer) excluded.add(line);
+            const learned = pageIndex !== null && model.folioBands?.some(band => band.offset === Number(line.text)-pageIndex && sameHeaderBand(band,{y0,y1}));
+            if (y1 < 0.10 || y0 > 0.94 && !peer || y0 > 0.85 && detached && !peer || learned && !peer) excluded.add(line);
         }
 	}
 	let bodyHeight = bodyLineHeight(lines);
@@ -292,8 +315,20 @@ export function getReadingExclusions(lines, model = { repeated: new Set() }, pag
 		if (!marginalReference(line.text)) continue;
 		let [x0, y0, x1, y1] = line.rect;
 		if (x1 - x0 > 0.10) continue;
-		let body = lines.filter(other => !other.sideCandidate && other.text.length > 20 && other.rect[1] < y1 + 0.03 && other.rect[3] > y0 - 0.03);
-		if (body.length && body.every(other => other.rect[0] > x1 + 0.004 || other.rect[2] < x0 - 0.004)) excluded.add(line);
+        // Use the robust body column of the page, even beside a short chapter
+        // heading or a blank baseline. A centered “I.” remains a heading.
+        let body = lines.filter(other => !other.sideCandidate && !other.vertical && other.text.length > 30
+            && other.rect[2]-other.rect[0] > .35 && other.rect[1] > .12 && other.rect[3] < .9);
+        if (body.length >= 3) {
+            const quantile = values => values.sort((a,b)=>a-b)[Math.floor(values.length*.25)];
+            const left = quantile(body.map(l=>l.rect[0]));
+            const right = -quantile(body.map(l=>-l.rect[2]));
+            if (x1 < left-.004 && x1 < .22 || x0 > right+.004 && x0 > .78) excluded.add(line);
+        }
+        else {
+            body = lines.filter(other => !other.sideCandidate && other.text.length > 20 && other.rect[1] < y1 + .03 && other.rect[3] > y0 - .03);
+            if (body.length && body.every(other => other.rect[0] > x1+.004 || other.rect[2] < x0-.004)) excluded.add(line);
+        }
 	}
 	return [...excluded].map(line => line.rect);
 }
