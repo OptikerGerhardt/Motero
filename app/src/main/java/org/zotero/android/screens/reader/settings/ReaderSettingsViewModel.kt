@@ -187,6 +187,7 @@ internal class ReaderSettingsViewModel @Inject constructor(
         val option = ReaderSettingsOptions.entries[optionOrdinal]
 
         when (option) {
+            ReaderSettingsOptions.CropAutomatic, ReaderSettingsOptions.CropManual -> Unit
             ReaderSettingsOptions.AppearanceLight, ReaderSettingsOptions.AppearanceDark, ReaderSettingsOptions.AppearanceAutomatic -> {
                 updateState {
                     copy(selectedAppearanceOption = option)
@@ -323,6 +324,7 @@ internal class ReaderSettingsViewModel @Inject constructor(
 
     private fun updatePdfSettings(option: ReaderSettingsOptions) {
         when (option) {
+            ReaderSettingsOptions.CropAutomatic, ReaderSettingsOptions.CropManual -> Unit
             ReaderSettingsOptions.AppearanceLight -> {
                 readerSettings.appearanceMode = PageAppearanceMode.LIGHT
             }

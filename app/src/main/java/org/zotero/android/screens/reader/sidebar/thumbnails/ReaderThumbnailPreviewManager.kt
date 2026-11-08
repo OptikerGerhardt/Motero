@@ -1,32 +1,22 @@
 package org.zotero.android.screens.reader.sidebar.thumbnails
 
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Base64
+import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.flow.*
 import org.zotero.android.architecture.Result
 import org.zotero.android.architecture.coroutines.Dispatchers
+import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.screens.reader.data.ReaderWebData
 import org.zotero.android.screens.reader.sidebar.data.ReaderRequestThumbnailRenderEventStream
 import org.zotero.android.screens.reader.sidebar.thumbnails.cache.ReaderThumbnailPreviewCacheSnapshotEventStream
 import org.zotero.android.screens.reader.sidebar.thumbnails.cache.ReaderThumbnailPreviewMemoryCache
 import org.zotero.android.screens.reader.web.ReaderWebCallChainEventStream
-import timber.log.Timber
 import java.util.Collections
 import javax.inject.Inject
 
@@ -36,225 +26,130 @@ class ReaderThumbnailPreviewManager @Inject constructor(
     private val memoryCache: ReaderThumbnailPreviewMemoryCache,
     private val readerThumbnailPreviewCacheSnapshotEventStream: ReaderThumbnailPreviewCacheSnapshotEventStream,
     private val readerRequestThumbnailRenderEventStream: ReaderRequestThumbnailRenderEventStream,
-    private val webCallChainEventStream: ReaderWebCallChainEventStream
-
+    private val webCallChainEventStream: ReaderWebCallChainEventStream,
+    private val theme: PdfReaderCurrentThemeEventStream,
 ) {
     private lateinit var viewModelScope: CoroutineScope
     private var coroutineScope: CoroutineScope? = null
-
-    private val currentlyProcessingThumbnails = Collections.synchronizedSet(mutableSetOf<Int>())
-
-    private val batchBitmapsForPostFlow = Channel<Pair<Int, Bitmap>>(Channel.UNLIMITED)
-
-    private var numOfPagesInDocument = 0
-
-    private val requestThumbnailDebounceFlow = MutableStateFlow(0)
-    private val isReaderInitializedFlow = MutableStateFlow(false)
+    private val processing = Collections.synchronizedSet(mutableSetOf<Int>())
+    private data class Preview(val key: String, val page: Int, val image: String, val scheme: String)
+    private var queue = Channel<Preview>(16)
+    @Volatile private var renderKey = ""
+    @Volatile private var numOfPagesInDocument = 0
+    private val requestedCenter = MutableStateFlow(0)
+    private val initialized = MutableStateFlow(false)
+    private var requestedExact: List<Int> = emptyList()
 
     fun init(viewModelScope: CoroutineScope) {
         this.viewModelScope = viewModelScope
-        setupWebCallChainEventStream()
-        resetManagerState()
-    }
-
-    fun setupWebCallChainEventStream() {
-        webCallChainEventStream.flow()
-            .onEach { result ->
-                process(result)
+        resetWorker()
+        webCallChainEventStream.flow().onEach { result ->
+            if (result is Result.Success) when (val value = result.value) {
+                is ReaderWebData.onInitThumbnails -> initialize(value.thumbnailsJsonArray)
+                is ReaderWebData.onRenderThumbnail -> store(value.thumbnailJsonObject)
+                else -> Unit
             }
-            .launchIn(viewModelScope)
+        }.launchIn(viewModelScope)
+        requestedCenter.debounce(150).combine(initialized) { center, ready ->
+            if (ready) requestNearby(center)
+        }.launchIn(viewModelScope)
     }
 
-    private fun process(result: Result<ReaderWebData>) {
-        if (result !is Result.Success) {
-            return
-        }
-
-        when (val successValue = result.value) {
-            is ReaderWebData.onRenderThumbnail -> {
-                store(
-                    successValue.thumbnailJsonObject
-                )
-            }
-
-            is ReaderWebData.onInitThumbnails -> {
-                initNumOfPages(successValue.thumbnailsJsonArray.size())
-            }
-
-            else -> {
-                //no-op
-            }
-        }
+    private fun initialize(thumbnails: JsonArray) {
+        val nextKey = thumbnails.firstOrNull()?.asJsonObject?.get("renderKey")?.asString.orEmpty()
+        if (renderKey.isNotEmpty() && renderKey.substringBefore(':') != nextKey.substringBefore(':')) requestedExact = emptyList()
+        renderKey = nextKey
+        numOfPagesInDocument = thumbnails.size()
+        resetWorker()
+        processing.clear()
+        memoryCache.clear()
+        publish()
+        initialized.value = numOfPagesInDocument > 0
+        requestNearby(requestedCenter.value)
+        requestIndices(requestedExact)
     }
 
-    private fun initNumOfPages(numberOfPages: Int) {
-        isReaderInitializedFlow.tryEmit(true)
-        if (this.numOfPagesInDocument != 0) {
-            return
-        }
-        this.numOfPagesInDocument = numberOfPages
-        sendEmptyCacheState()
-    }
-
-
-    private fun resetManagerState() {
-        this.coroutineScope?.cancel()
-        this.coroutineScope = CoroutineScope(
-            SupervisorJob(viewModelScope.coroutineContext[Job]) +
-                    dispatchers.default
-        )
-
-        setupBatchBitmapsForPostFlow()
-        setupRequestThumbnailDebounceFlow()
-    }
-
-    private fun setupRequestThumbnailDebounceFlow() {
-        this.coroutineScope?.let { scope ->
-            requestThumbnailDebounceFlow
-                .debounce(150)
-                .combine(
-                    isReaderInitializedFlow
-                ) { centerVisibleItemIndex, isReaderInitialized ->
-                    if (isReaderInitialized) {
-                        requestThumbnailAfterDebounce(centerVisibleItemIndex)
+    private fun resetWorker() {
+        coroutineScope?.cancel()
+        queue.cancel()
+        val input = Channel<Preview>(16)
+        queue = input
+        val scope = CoroutineScope(SupervisorJob(viewModelScope.coroutineContext[Job]) + dispatchers.default)
+        coroutineScope = scope
+        scope.launch {
+            for (preview in input) {
+                try {
+                    if (!accept(preview)) continue
+                    val bytes = Base64.decode(preview.image.substringAfter(','), Base64.DEFAULT)
+                    val dimensions = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, dimensions)
+                    // Reject pathological input before allocating bitmap pixels.
+                    if (dimensions.outWidth <= 0 || dimensions.outHeight <= 0 ||
+                        dimensions.outWidth.toLong() * dimensions.outHeight > 2_000_000) continue
+                    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: continue
+                    withContext(dispatchers.main) {
+                        if (accept(preview) && isActive) {
+                            memoryCache.addToCache(listOf(preview.page to bitmap))
+                            publish()
+                        }
                     }
-                }.launchIn(scope)
-        }
-
-    }
-
-    private fun requestThumbnailAfterDebounce(centerVisibleItemIndex: Int) {
-        val indicesToRequest = centerVisibleItemIndex.let { centerIndex ->
-            val start = (centerIndex - 10).coerceAtLeast(0)
-            val end = (centerIndex + 10).coerceAtMost(this.numOfPagesInDocument - 1)
-            (start..end)
-        }.filter { index -> !memoryCache.isInCache(index) }
-            .filter { index -> !isCurrentlyProcessing(index) }
-        if (indicesToRequest.isNotEmpty()) {
-            currentlyProcessingThumbnails.addAll(indicesToRequest)
-            Timber.d("ReaderThumbnailProcessing: indicesToRequest = ${indicesToRequest}")
-            readerRequestThumbnailRenderEventStream.emitAsync(indicesToRequest)
-        }
-    }
-
-    fun requestThumbnail(centerVisibleItemIndex: Int) {
-        println()
-        coroutineScope?.launch {
-            requestThumbnailDebounceFlow.tryEmit(centerVisibleItemIndex)
-        }
-    }
-
-    fun requestExactThumbnails(indices: List<Int>) {
-        coroutineScope?.launch {
-            if (numOfPagesInDocument == 0) {
-                return@launch
-            }
-            val indicesToRequest = indices
-                .filter { it in 0 until numOfPagesInDocument }
-                .filter { index -> !memoryCache.isInCache(index) }
-                .filter { index -> !isCurrentlyProcessing(index) }
-            if (indicesToRequest.isNotEmpty()) {
-                currentlyProcessingThumbnails.addAll(indicesToRequest)
-                readerRequestThumbnailRenderEventStream.emitAsync(indicesToRequest)
+                } catch (_: IllegalArgumentException) {
+                    // A malformed image must not stop subsequent preview requests.
+                } finally {
+                    if (preview.key == renderKey) processing.remove(preview.page)
+                }
             }
         }
     }
+
+    private fun accept(preview: Preview) = preview.key == renderKey && preview.page in 0 until numOfPagesInDocument &&
+        preview.scheme == if (theme.currentValue()?.isDark == true) "dark" else "light"
 
     fun store(thumbnailJsonObject: JsonObject) {
-        val pageIndex = thumbnailJsonObject["pageIndex"].asInt
-        val encodedImageBase64String = thumbnailJsonObject["image"].asString
-
-//        if (currentlyProcessingThumbnails.contains(pageIndex)) {
-//            Timber.d("HtmlEpubThumbnailProcessing: tried to store already processed: $pageIndex")
-//            return
-//        }
-        Timber.d("ReaderThumbnailProcessing: store - $pageIndex")
-        enqueue(
-            pageIndex = pageIndex,
-            encodedImageBase64String = encodedImageBase64String,
-        )
-    }
-
-    private fun enqueue(
-        encodedImageBase64String: String,
-        pageIndex: Int,
-    ) = coroutineScope?.launch {
-        val resultBitmap = convertBase64ToBitmap(encodedImageBase64String)
-        batchBitmapsForPostFlow.trySend(pageIndex to resultBitmap)
-    }
-
-    private fun convertBase64ToBitmap(encodedImageBase64String: String): Bitmap {
-        val cleanString = encodedImageBase64String.substringAfter(",")
-        val decodedBytes = Base64.decode(cleanString, Base64.DEFAULT)
-        val resultBitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
-        return resultBitmap
-    }
-
-    private fun convertAndPostResults(
-        pageToBitmapList: List<Pair<Int, Bitmap>>,
-    ) {
-        val cacheSnapshot = memoryCache.addToCache(pageToBitmapList)
-
-        val resultThumbnailCache = generateEmptySnapshot()
-        cacheSnapshot.map {
-            resultThumbnailCache[it.key] = it.value
+        val key = thumbnailJsonObject["renderKey"]?.asString ?: return
+        val page = thumbnailJsonObject["pageIndex"]?.asInt ?: return
+        if (key == renderKey && thumbnailJsonObject["canceled"]?.asBoolean == true) {
+            processing.remove(page)
+            return
         }
-
-        pageToBitmapList.forEach {
-            currentlyProcessingThumbnails.remove(it.first)
-        }
-        Timber.d("ReaderThumbnailProcessing: convertAndPostResults: ${pageToBitmapList.map { it.first }}")
-        readerThumbnailPreviewCacheSnapshotEventStream.emitAsync(resultThumbnailCache.toImmutableList())
+        val image = thumbnailJsonObject["image"]?.asString ?: return
+        val scheme = thumbnailJsonObject["colorScheme"]?.asString ?: return
+        val preview = Preview(key, page, image, scheme)
+        if (!accept(preview)) return
+        if (image.length > 4_000_000 || queue.trySend(preview).isFailure) processing.remove(page)
     }
 
-    fun generateEmptySnapshot(): MutableList<Bitmap?> =
-        MutableList(numOfPagesInDocument) { null }
-
-
-    private fun setupBatchBitmapsForPostFlow() {
-        coroutineScope?.launch {
-
-            val batch = mutableListOf<Pair<Int, Bitmap>>()
-
-            while (isActive) {
-
-                // Wait for first item
-                val first = batchBitmapsForPostFlow.receive()
-                batch += first
-
-                // Collect additional items until timeout
-                while (true) {
-                    val next = withTimeoutOrNull(200) {
-                        batchBitmapsForPostFlow.receive()
-                    }
-
-                    if (next == null) {
-                        // silence for 300ms -> flush batch
-                        break
-                    }
-
-                    batch += next
-                }
-                convertAndPostResults(batch.toList())
-                batch.clear()
-            }
-        }
+    private fun requestNearby(center: Int) {
+        if (!initialized.value) return
+        requestIndices(((center - 3).coerceAtLeast(0)..(center + 3).coerceAtMost(numOfPagesInDocument - 1)).toList())
     }
 
-    fun isCurrentlyProcessing(index: Int): Boolean {
-        return currentlyProcessingThumbnails.contains(index)
+    fun requestThumbnail(centerVisibleItemIndex: Int) { requestedCenter.value = centerVisibleItemIndex }
+
+    fun requestExactThumbnails(indices: List<Int>) {
+        requestedExact = indices.distinct().take(32)
+        requestIndices(requestedExact)
     }
 
+    private fun requestIndices(indices: List<Int>) {
+        if (!initialized.value) return
+        val missing = indices.distinct().filter { it in 0 until numOfPagesInDocument && !memoryCache.isInCache(it) && !processing.contains(it) }.take(32).filter { processing.add(it) }
+        if (missing.isNotEmpty()) readerRequestThumbnailRenderEventStream.emitAsync(missing)
+    }
+
+    private fun publish() {
+        val snapshot = generateEmptySnapshot()
+        memoryCache.snapshot().forEach { (index, bitmap) -> if (index in snapshot.indices) snapshot[index] = bitmap }
+        readerThumbnailPreviewCacheSnapshotEventStream.emitAsync(snapshot.toImmutableList())
+    }
+    fun generateEmptySnapshot(): MutableList<android.graphics.Bitmap?> = MutableList(numOfPagesInDocument) { null }
+    fun isCurrentlyProcessing(index: Int) = processing.contains(index)
     fun cancelProcessing() {
-        isReaderInitializedFlow.tryEmit(false)
-        resetManagerState()
-        currentlyProcessingThumbnails.clear()
+        initialized.value = false
+        renderKey = ""
+        resetWorker()
+        processing.clear()
         memoryCache.clear()
-        sendEmptyCacheState()
-    }
-
-    private fun sendEmptyCacheState() {
-        val thumbnailCache = generateEmptySnapshot().toImmutableList()
-        readerThumbnailPreviewCacheSnapshotEventStream.emitAsync(thumbnailCache)
+        publish()
     }
 }

@@ -41,7 +41,7 @@ internal fun ReaderAnnotationsSidebarHeaderSection(
 ) {
     val title = stringResource(Strings.page) + " " + annotation.pageLabel
     val icon = when (annotation.type) {
-        AnnotationType.note -> Drawables.annotate_note
+        AnnotationType.note -> if (annotation.isReaderBookmark() && annotation.color.removePrefix("#").equals("000000", ignoreCase = true)) org.zotero.android.R.drawable.ic_reader_bookmark else Drawables.annotate_note
         AnnotationType.highlight -> Drawables.annotate_highlight
         AnnotationType.image -> Drawables.annotate_area
         AnnotationType.ink -> Drawables.annotate_ink
@@ -71,7 +71,7 @@ internal fun ReaderAnnotationsSidebarHeaderSection(
         Spacer(modifier = Modifier.weight(1f))
         if (viewState.bookmarksOnly && annotation.isReaderBookmark() && !viewState.isAnnotationSelected(annotation.key)) {
             IconButton(onClick = { viewModel.focusBookmark(annotation.key) }) {
-                Icon(painterResource(Drawables.chevron_right_24px), stringResource(R.string.reader_go_to_bookmark),
+                Icon(painterResource(Drawables.redo_24px), stringResource(R.string.reader_go_to_bookmark),
                     modifier = Modifier.size(22.dp), tint = MaterialTheme.colorScheme.primary)
             }
             IconButton(onClick = { viewModel.deleteBookmark(annotation.key) }, enabled = viewModel.canDeleteBookmark(annotation)) {

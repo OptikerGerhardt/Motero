@@ -45,11 +45,11 @@ class ReaderWebCallChainExecutor @Inject constructor(
         dispatchers.io.limitedParallelism(1)
     private var webViewExecutorScope = CoroutineScope(limitedParallelismDispatcher)
 
-    fun start(webView: WebView, file: File) {
+    fun start(webView: WebView, file: File, isDark: Boolean) {
         webViewExecutorScope.cancel()
         webViewExecutorScope = CoroutineScope(limitedParallelismDispatcher)
         try {
-            val filePath = "file://" + file.absolutePath
+            val filePath = "file://" + file.absolutePath + "?readerColorScheme=" + if (isDark) "dark" else "light"
 
             readerWebViewHandler.load(
                 webView = webView,
@@ -229,6 +229,9 @@ class ReaderWebCallChainExecutor @Inject constructor(
                             observable.emitAsync(Result.Success(ReaderWebData.setManualCrop(data["params"].asJsonObject)))
                         }
 
+                        "onHistoryChanged" -> {
+                            observable.emitAsync(Result.Success(ReaderWebData.setHistoryState(data["params"].asJsonObject["canUndo"].asBoolean)))
+                        }
                         "onCropEditorState" -> {
                             observable.emitAsync(Result.Success(ReaderWebData.setCropEditorState(data["params"].asJsonObject)))
                         }
@@ -414,9 +417,9 @@ class ReaderWebCallChainExecutor @Inject constructor(
         }
     }
 
-    suspend fun renderThumbnails(index: Int) {
+    suspend fun renderThumbnails(indices: List<Int>) {
         return suspendCancellableCoroutine { cont ->
-            readerWebViewHandler.evaluateJavascript("renderThumbnails([$index])") {
+            readerWebViewHandler.evaluateJavascript("renderThumbnails([${indices.joinToString(",")}])") {
                 cont.resume(Unit)
             }
         }
@@ -586,6 +589,10 @@ class ReaderWebCallChainExecutor @Inject constructor(
             }
         }
 
+    }
+
+    suspend fun undoAnnotation() = suspendCancellableCoroutine<Unit> { cont ->
+        readerWebViewHandler.evaluateJavascript("window.undoReaderAnnotation?.();") { cont.resume(Unit) }
     }
 
     suspend fun updateInterface(isDark: Boolean) {

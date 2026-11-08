@@ -19,16 +19,16 @@ import org.zotero.android.uicomponents.Drawables
 @Composable
 internal fun ReaderCropControls(viewModel: ReaderViewModel, state: ReaderViewState) {
     val density = LocalDensity.current
-    Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 2.dp) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+    Surface(color = MaterialTheme.colorScheme.surface) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp)
             .onSizeChanged { viewModel.cropInsets(it.height.toDouble() / density.density, 12.0) }) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = { viewModel.cropAction("cancel") }) {
                     Text(stringResource(R.string.reader_crop_cancel))
                 }
                 Text(stringResource(R.string.reader_crop_title), Modifier.weight(1f),
-                    style = MaterialTheme.typography.titleMedium)
-                TextButton(enabled = !state.cropEditorBusy, onClick = { viewModel.cropAction("save") }) {
+                    style = MaterialTheme.typography.titleLarge)
+                FilledTonalButton(enabled = !state.cropEditorBusy, onClick = { viewModel.cropAction("save") }) {
                     Text(stringResource(R.string.reader_crop_apply))
                 }
             }

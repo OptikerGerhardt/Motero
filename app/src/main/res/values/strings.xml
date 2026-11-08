@@ -128,4 +128,6 @@
     <string name="settings_reverse_page_buttons">Reverse page button direction</string>
     <string name="settings_hardware_scroll_step">Scroll step (screen height)</string>
     <string name="settings_hardware_page_only">Page</string>
+    <string name="reader_undo_annotation">Undo annotation</string>
+    <string name="reader_tool_options">Tool color and size</string>
 </resources>

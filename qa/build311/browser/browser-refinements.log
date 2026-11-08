@@ -1,0 +1,6 @@
+PASS a top fragment never receives the centered page bookmark; corner toggles black bookmarks
+PASS native crop commands, measured insets, parity, save, cancel and preserved fitting/crops
+PASS bookmark focus navigates without selection or reader chrome
+PASS rapid alternating turns retain the final target with bounded analysis/cache
+PASS a drag returning to its starting edge is never mistaken for a tap
+PASS: Build 309 reader refinements

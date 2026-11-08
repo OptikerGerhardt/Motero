@@ -9,8 +9,8 @@ import javax.inject.Inject
 class ReaderThumbnailPreviewMemoryCache @Inject constructor(
 ){
     private val maxMemory = (Runtime.getRuntime().maxMemory() / 1024).toInt()
-    //TODO TEST ON LOW MEMORY!
-    private val cacheSize = maxMemory / 2
+    // Bound previews independently of PDF/WebView memory, including low-RAM devices.
+    private val cacheSize = (maxMemory / 16).coerceIn(1024, 24 * 1024)
     private val memoryCache: LruCache<Int, Bitmap> = object : LruCache<Int, Bitmap>(cacheSize) {
         override fun sizeOf(key: Int, bitmap: Bitmap): Int {
             return bitmap.byteCount / 1024
@@ -27,6 +27,8 @@ class ReaderThumbnailPreviewMemoryCache @Inject constructor(
     fun isInCache(index: Int): Boolean {
         return memoryCache.get(index) != null
     }
+
+    fun snapshot(): Map<Int, Bitmap> = memoryCache.snapshot()
 
     fun clear() {
         memoryCache.evictAll()

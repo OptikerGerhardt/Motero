@@ -428,3 +428,10 @@ Lesezeichen ändern die EPUB-Datei nicht. Sie sind graue Zotero-Notizen mit Datu
 Schriftgröße wird pro Anhang lokal gespeichert. Der synchronisierte Lesestand bleibt ein CFI. Zusätzliche lokale Zustände sind bibliotheksgetrennt und werden bei Abmeldung gelöscht. Für schmalere Ränder die vorhandene breite Textbreite speichern; die Korrektur sorgt für deren Anwendung beim Öffnen. Im gescrollten EPUB verwenden die Tasten den bestehenden Schritt mit leichter Überlappung; der PDF-SmartScroll-Prozentwert verändert diesen EPUB-Schritt nicht.
 
 PDF-Fitting, PDF.js, vorhandene Markierungswerkzeuge, Tags und Sync-/Datenformate bleiben erhalten. F19 Tag-Autocomplete, F22 manuelles All/Odd/Even-Cropping, F23 Randtippen und Stifterweiterungen bleiben anschlussfähig. Kein physischer Test und keine öffentliche Veröffentlichung behauptet.
+
+
+## Build 311 — Reader-Konsistenz und begrenzte Hintergrundarbeit
+
+Umgesetzt: Theme vor dem ersten Bild und konsistente Systemleisten/Vorschaubilder; unteres PDF-Werkzeug-Dock mit Undo und Farbfeld; einheitliche Cropping-Auswahl und kompakter Editor; gebogener Bookmark-Sprungpfeil und schwarzes Fähnchen mit 70 % Deckkraft im PDF. Breiter verteilte und lokale Cropping-Stichproben, persistente Geometrie/numerisches Lernen, Pixel-/Speicher-/Warteschlangengrenzen und gezielte Stiftkorrekturen aus den Ansätzen von F03.
+
+[Recherche, Quellen und verbleibende Kandidaten](docs/READER_OPTIMIZATIONS.md). F03 ist gezielt adaptiert, nicht als vollständiger Upstream-PR gemerged. Hardware-Radierertasten, variable Druckbreite und BOOX-SDK bleiben eigene Geräteprüfungen; direkte Forenlektüre bleibt wegen der Netzwerkregel offen.

@@ -1,6 +1,6 @@
 # Incorporated upstream contributions
 
-Reviewed on November 7, 2026 against Git history and GitHub pull-request metadata. Original authorship and co-author notices are preserved. The statement that Motero's own changes were programmed with ChatGPT/Codex does not attribute these upstream contributions to ChatGPT.
+Reviewed on November 8, 2026 against Git history and GitHub pull-request metadata. Original authorship and co-author notices are preserved. The statement that Motero's own changes were programmed with ChatGPT/Codex does not attribute these upstream contributions to ChatGPT.
 
 | Contribution | Inclusion in Motero | Upstream status at review |
 | --- | --- | --- |
@@ -10,6 +10,7 @@ Reviewed on November 7, 2026 against Git history and GitHub pull-request metadat
 | [Zotero Reader #254 — Preserve position across scroll-mode changes](https://github.com/zotero/reader/pull/254) | Upstream merge `2a0bc655` is included in the reader history. | Merged upstream. |
 | [Zotero Reader #256 — Zoom and position offsets during navigation](https://github.com/zotero/reader/pull/256) | Upstream merge `a94045fe` is included; Motero extends navigation behavior. | Merged upstream. |
 | [Zotero Reader #260 — Fit to Content](https://github.com/zotero/reader/pull/260) | Its content-fitting work forms a basis for Motero's extended fitting geometry. | Open; not merged upstream. |
+| [Zotero Reader #263 — Preserve short ink strokes and reduce handwriting redraw work](https://github.com/zotero/reader/pull/263) | Build 311 contains targeted Motero adaptations informed by AI-Kyo-er’s PR: short strokes/endpoints, coalesced samples, frame batching and overlay reuse. The complete PR was not merged. | Open; not merged upstream. |
 
 Inclusion in Motero does not mean a change has been merged into official Zotero. Not every PR linked in the feature plan was incorporated: some are research references or approaches that were later implemented independently. For example, Android #205 is a reference for attachment sharing; Motero uses its own adaptations of the current downloader and FileProvider.
 

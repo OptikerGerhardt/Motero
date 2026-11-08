@@ -325,11 +325,11 @@ class ReaderViewModel @Inject constructor(
         this.pdfReaderThemeCancellable = pdfReaderCurrentThemeEventStream.flow()
             .drop(1)
             .onEach { data ->
-                val isDark = data!!.isDark
-                updateState {
-                    copy(isDark = isDark)
+                // Ignore stale queued values from the shared theme of a previous reader.
+                val resolved = initialReaderIsDark(readerOsDark)
+                if (data?.isDark == resolved && viewState.isDark != resolved) {
+                    updateState { copy(isDark = resolved) }
                 }
-                triggerEffect(ReaderViewEffect.ScreenRefresh)
             }
             .launchIn(viewModelScope)
     }
@@ -359,9 +359,7 @@ class ReaderViewModel @Inject constructor(
         readerRequestThumbnailRenderEventStream.flow()
             .onEach { pageIndices ->
                 Timber.d("ReaderThumbnailProcessing: requesting thumbnails on scroll: ${pageIndices}")
-                for (i in pageIndices) {
-                    readerWebCallChainExecutor.renderThumbnails(i)
-                }
+                readerWebCallChainExecutor.renderThumbnails(pageIndices)
             }
 
             .launchIn(viewModelScope)
@@ -431,7 +429,7 @@ class ReaderViewModel @Inject constructor(
     fun onReaderRendererGone() {
         updateState { copy(manualCropOpen = false, isReaderLoading = true, selectedAnnotationKey = null,
             readerAnnotationArgs = null, readerAnnotationMoreArgs = null, showCreationToolbar = false, selectedText = null, rendererFailed = automaticRecoveryUsed,
-            rendererGeneration = if (automaticRecoveryUsed) rendererGeneration else rendererGeneration + 1) }
+            canUndoAnnotation = false, rendererGeneration = if (automaticRecoveryUsed) rendererGeneration else rendererGeneration + 1) }
         automaticRecoveryUsed = true
     }
     fun retryReaderRenderer() {
@@ -457,7 +455,7 @@ class ReaderViewModel @Inject constructor(
 
             override fun onCopy(): Boolean = copySelectedTextToClipboard()
         }
-        readerWebCallChainExecutor.start(webView = webView, file = this.readerFile)
+        readerWebCallChainExecutor.start(webView = webView, file = this.readerFile, isDark = initialReaderIsDark(readerOsDark))
     }
 
     private fun copyReaderFiles() {
@@ -496,7 +494,10 @@ class ReaderViewModel @Inject constructor(
     }
 
     private var readerThemeInitialized = false
+    private var readerOsDark = false
     fun setOsTheme(isDark: Boolean) {
+        val previous = initialReaderIsDark(readerOsDark)
+        readerOsDark = isDark
         if (!readerThemeInitialized) {
             readerThemeInitialized = true
             val mode = when(defaults.getReaderSettings().appearanceMode) {
@@ -506,7 +507,14 @@ class ReaderViewModel @Inject constructor(
             }
             pdfReaderThemeDecider.initialize(mode, isDark)
             updateState { copy(isDark = initialReaderIsDark(isDark)) }
-        } else pdfReaderThemeDecider.setCurrentOsTheme(isOsThemeDark = isDark)
+        } else {
+            pdfReaderThemeDecider.setCurrentOsTheme(isOsThemeDark = isDark)
+            val resolved = initialReaderIsDark(isDark)
+            if (viewState.isDark != resolved) updateState { copy(isDark = resolved) }
+            if (previous != resolved && !viewState.isReaderLoading) viewModelScope.launch {
+                readerWebCallChainExecutor.updateInterface(resolved)
+            }
+        }
     }
 
     fun turnPage(next: Boolean) {
@@ -1740,6 +1748,7 @@ class ReaderViewModel @Inject constructor(
             ReaderWebData.clearSelectedTextParams -> {
                 clearSelectedTextParams()
             }
+            is ReaderWebData.setHistoryState -> updateState { copy(canUndoAnnotation = successValue.canUndo) }
             is ReaderWebData.setCropEditorState -> {
                 val state = successValue.state
                 readerWebCallChainExecutor.cropEditorAction("insets", top = cropTopInset, bottom = 12.0)
@@ -2049,6 +2058,10 @@ class ReaderViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    fun undoAnnotation() {
+        if (viewState.canUndoAnnotation && !viewState.isReaderLoading) viewModelScope.launch { readerWebCallChainExecutor.undoAnnotation() }
     }
 
     fun toggleToolbarButton() {
@@ -3017,6 +3030,7 @@ data class ReaderViewState(
     val showPdfSearch: Boolean = false,
     val showSideBar: Boolean = false,
     val showCreationToolbar: Boolean = false,
+    val canUndoAnnotation: Boolean = false,
     val commentFocusKey: String? = null,
     val commentFocusText: String = "",
     val sidebarSliderSelectedOption: ReaderSliderOptions = ReaderSliderOptions.Annotations,

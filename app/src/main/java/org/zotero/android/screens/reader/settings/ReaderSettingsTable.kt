@@ -44,17 +44,12 @@ internal fun ReaderSettingsTable(
         }
         // Fitting applies to the PDF pages, not to Reading Mode's reflowed text
         if (viewState.fileType == ReaderFileType.PDF && !viewState.readingModeEnabled) {
-            item {
-                Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-                    Text(stringResource(R.string.reader_content_cropping), style = MaterialTheme.typography.titleSmall)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FilterChip(selected = viewState.cropMode == "automatic", onClick = viewModel::useAutomaticCrop,
-                            label = { Text(stringResource(R.string.reader_crop_automatic)) })
-                        FilterChip(selected = viewState.cropMode == "manual", onClick = onManualCrop,
-                            label = { Text(stringResource(R.string.reader_crop_manual)) })
-                    }
-                }
-            }
+            readerSettingsSettingRow(
+                titleResId = R.string.reader_content_cropping,
+                options = listOf(ReaderSettingsOptions.CropAutomatic, ReaderSettingsOptions.CropManual),
+                selectedOption = if (viewState.cropMode == "manual") ReaderSettingsOptions.CropManual else ReaderSettingsOptions.CropAutomatic,
+                optionSelected = { if (it == ReaderSettingsOptions.CropManual.ordinal) onManualCrop() else viewModel.useAutomaticCrop() },
+            )
             readerSettingsSettingRow(
                 titleResId = Strings.pdf_settings_page_fitting_title,
                 options = viewState.fitToContentOptions,

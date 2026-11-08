@@ -164,7 +164,7 @@ internal fun ReaderPageScrubber(
                 .widthIn(max = maxAllowedWidth)
                 .padding(bottom = 12.dp)
                 .windowInsetsPadding(NavigationBarDefaults.windowInsets)
-                .clip(RoundedCornerShape(24.dp))
+                .clip(RoundedCornerShape(16.dp))
                 .background(MaterialTheme.colorScheme.surfaceContainer),
         ) {
             val fastLongPressViewConfiguration = rememberFastLongPressViewConfiguration()

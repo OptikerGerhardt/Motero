@@ -1,3 +1,9 @@
+# Build 311 — lokaler Prüfstand, 8. November 2026
+
+Release-APK lokal gebaut. Bestanden: 299 Reader-Tests, 118 native Tests, zwölf Browser-Suites und elf Release-/Signierhelfer-Prüfungen. Die neuen Prüfungen decken Theme vor dem ersten HTML-Bild, korrekte Vorschau-Pixel, veraltete Render-Ergebnisse, Bookmark-Fähnchen/Undo, wiederverwendete Zeichenobjekte, persistente Geometrie sowie echte Chromium-Stifteingabe mit Abbruch und zweitem Pointer ab.
+
+Nachweise: [qa/build311](qa/build311/README.md). Signierung und echte API-31/35-Updates von 303 und 310 werden vor Veröffentlichung von GitHub geprüft. Physische BOOX-/GrapheneOS- und Kontosync-Tests sind gesondert auszuweisen.
+
 # Motero 308: Reader-Überarbeitung
 
 **Veröffentlicht:** [Build 308](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.0-308). GitHub-Lauf [42413319376](https://github.com/OptikerGerhardt/Motero/actions/runs/42413319376) hat Build, 282 Reader-Tests, 113 native Tests in 26 Suiten, zehn Browserprüfungen sowie Veröffentlichungs-/Signierprüfungen erfolgreich abgeschlossen. Vor dem Release bestanden zusätzlich die echten Updateprüfungen auf Android API 31 und 35 mit privatem Testdatensatz, unveränderter UID, App-Start und Abweisung des alten Schlüssels.

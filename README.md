@@ -8,10 +8,12 @@ This fork is maintained independently and is not affiliated with or endorsed by 
 
 ## Features
 
-- Direct text highlighting, annotation tools, Zotero tags, and a bookmark filter with jump and delete shortcuts.
+- Direct text highlighting, Zotero tags, and a bottom PDF tool dock with annotation Undo and color/size controls.
+- Black bookmark flags, a bookmark filter, and direct jump/delete shortcuts.
+- Reader appearance applied at startup, matching system-bar contrast and page previews.
 - Continuous cropped PDF pages, temporary two-finger access to full pages, and an overview that stays open when two complete pages are visible.
 - Font-size controls with a percentage display for EPUBs and Reading Mode.
-- Automatic content fitting with controls for margins and marginal notes.
+- Automatic content fitting with controls for margins and marginal notes, local layout learning, and a bounded geometry cache.
 - Automatic or manual content cropping, shared by the page-fitting modes. Manual frames for all, odd, or even pages are saved per attachment.
 - SmartScroll, hardware-button navigation, and edge taps in vertical, horizontal, and wrapped PDF layouts.
 - A top-right bookmark shortcut for the centered reading page: tap to add a black bookmark, then tap again to remove it. Existing bookmark colors are preserved.

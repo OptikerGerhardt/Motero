@@ -1,0 +1,12 @@
+gestures: PASS
+features: PASS
+fitting: PASS
+stability: PASS
+controls: PASS
+annotation-tools: PASS
+fit-recovery: PASS
+reader-update: PASS
+manual-crop: PASS
+edge-taps: PASS
+refinements: PASS
+ui-consistency: PASS

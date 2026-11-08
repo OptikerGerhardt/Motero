@@ -1,0 +1,170 @@
+{
+  "build": 311,
+  "reader_commit": "e820640f4a43a1dd42c4be24b7fb411e76f5dec0",
+  "suites": [
+    {
+      "name": "org.zotero.android.api.mappers.LinkResponseMapperTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.attachmentdownloader.AttachmentDownloaderTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.screens.reader.PdfEngineIndependenceTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.api.mappers.CreatorSchemaMapperTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.screens.reader.ReaderManualCropsTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.screens.reader.ReaderBookmarkAndTextSizeTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.screens.reader.ReaderQuickControlActionsTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.screens.tagpicker.TagSuggestionsTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.screens.reader.ReaderInitialThemeTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.api.mappers.CreatorResponseMapperTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.screens.reader.ReaderOptionLabelsTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.api.mappers.FieldSchemaMapperTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.screens.reader.ReaderManualCropStorageTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.screens.reader.ReaderPageFittingSettingsTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.sync.UrlDetectorTest",
+      "tests": 14,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.screens.reader.DocumentSharingThreadTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.api.mappers.LinksResponseMapperTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.api.mappers.ItemSchemaMapperTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.screens.reader.ReaderClipboardTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.sync.DateParserTest",
+      "tests": 12,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.sync.CreatorSummaryFormatterTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.screens.tagpicker.TagPickerConfirmationTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.api.mappers.LibraryResponseMapperTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.sync.NotePreviewGeneratorTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.sync.ActionsCreatorTest",
+      "tests": 11,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.attachmentdownloader.AttachmentDownloadOperationTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.zotero.android.screens.reader.DocumentSharingTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0
+    }
+  ],
+  "tests": 118,
+  "failures": 0
+}

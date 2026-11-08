@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.0.0-311 — 8. November 2026
+
+- Gespeichertes Reader-Theme gilt vor dem ersten HTML-Bild; explizites Light/Dark wird nicht mehr vom System-Theme überschrieben. Status- und Navigationssymbole folgen dem Reader, Vorschaubilder werden bei Themewechsel zuverlässig erneuert.
+- Unteres PDF-Werkzeug-Dock ersetzt bei aktiviertem Stift Seitenvorschau und Seitenzahl: Notiz, Text, Stift, Radierer, Bereich, Undo und Farbfeld. Einheitliche Außenrundung und erreichbare Touchflächen.
+- Content-Cropping-Auswahl im Stil der übrigen Einstellungen. Kompakter nativer Crop-Kopf, neutraler Hintergrund und auf die PDF-Seite begrenzte Abdunklung; größere unsichtbare Greifflächen am Rahmen.
+- Bookmark-Sprung mit gebogenem Rechtspfeil. Nur schwarze semantische Bookmarks erhalten das Fähnchen, auf der PDF mit 70 % und in der Liste mit voller Deckkraft. Normale Notizen und vorhandene andere Bookmark-Farben bleiben erhalten.
+- Zuschnitt lernt aus verteilten und lokalen Seiten. Geometrie und numerisches Modell werden begrenzt zwischengespeichert. Analyse-Pixel, Vorschau-Speicher und Warteschlangen sind begrenzt; gültige Ergebnisse bleiben beim Nachlernen erhalten.
+- Stifteingabe erhält kurze Striche, Endpunkte und gesammelte Eingabe bei Abbruch; veränderte Zeichenobjekte werden pro Frame aktualisiert und unveränderte wiederverwendet. Forschungsstand und weitere gerätespezifische Schritte: [Reader-Review](docs/READER_OPTIMIZATIONS.md).
+
 ## 1.0.0-310 — 8. November 2026
 
 - Verhindert einen verzögerten, künstlichen Pointer-down nach priorisierten Randtipps oder Lesezeichen-Shortcuts bei sichtbarer Reader-Leiste. Der wartende Toolbar-Tap wird dabei vollständig abgebrochen; er startet nach dem Seitenwechsel keine neue Geste.

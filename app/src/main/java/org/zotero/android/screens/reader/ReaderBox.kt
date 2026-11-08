@@ -122,7 +122,7 @@ internal fun ReaderBox(
             }
             val readingModifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface).windowInsetsPadding(readingInsets)
             ReaderWebView(viewModel = viewModel, modifier = readingModifier)
-            if (viewState.showCreationToolbar && viewState.isTopBarVisible && !viewState.manualCropOpen) {
+            if ((viewState.fileType != ReaderFileType.PDF || viewState.readingModeEnabled) && viewState.showCreationToolbar && viewState.isTopBarVisible && !viewState.manualCropOpen) {
                 ReaderAnnotationCreationToolbar(
                     viewState = viewState,
                     viewModel = viewModel,
@@ -134,7 +134,14 @@ internal fun ReaderBox(
             }
             if (viewState.manualCropOpen) Box(Modifier.fillMaxSize().windowInsetsPadding(readingInsets)) { ReaderCropControls(viewModel, viewState) }
             if (viewState.fileType == ReaderFileType.PDF && !viewState.manualCropOpen) {
-                val isScrubberVisible = viewState.isScrubberVisible()
+                val toolsVisible = viewState.showCreationToolbar && viewState.isScrubberVisible() && !(isOverlayMode && viewState.showSideBar)
+                val isScrubberVisible = viewState.isScrubberVisible() && !viewState.showCreationToolbar
+                if (toolsVisible) {
+                    Box(Modifier.align(Alignment.BottomCenter)
+                        .windowInsetsPadding(NavigationBarDefaults.windowInsets).padding(horizontal = 8.dp, vertical = 8.dp)) {
+                        org.zotero.android.screens.reader.toolbar.ReaderPdfAnnotationToolbar(viewModel, viewState)
+                    }
+                }
                 Column(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)

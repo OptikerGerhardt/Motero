@@ -48,6 +48,7 @@ class ReaderWebViewHandler @Inject constructor(
         if (::webViewPort.isInitialized) webViewPort.close()
         uiMainCoroutineScope.launch {
             webView.settings.javaScriptEnabled = true
+            webView.settings.domStorageEnabled = true
             if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
                 WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.settings, false)
             }

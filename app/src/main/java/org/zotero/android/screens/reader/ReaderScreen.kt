@@ -109,7 +109,7 @@ internal fun ReaderScreen(
         }
     }
     AppThemeM3(darkTheme = viewState.isDark) {
-        ReaderSystemBars(activity.window, currentView, viewState.isTopBarVisible)
+        ReaderSystemBars(activity.window, currentView, viewState.isTopBarVisible || viewState.manualCropOpen, viewState.isDark)
 
         val annotationMaxSideSize = annotationMaxSideSize()
 
@@ -329,12 +329,14 @@ private fun annotationMaxSideSize(): Int {
 // Apply after Compose commits, and again when an editor/dialog returns focus.
 // The PDF itself stays edge-to-edge; system bars only overlay it while visible.
 @Composable
-private fun ReaderSystemBars(window: Window, view: View, chromeVisible: Boolean) {
+private fun ReaderSystemBars(window: Window, view: View, chromeVisible: Boolean, isDark: Boolean) {
     val bars = WindowInsetsCompat.Type.systemBars()
     val controller = WindowCompat.getInsetsController(window, window.decorView)
-    val synchronize = remember(window, view, chromeVisible) {
+    val synchronize = remember(window, view, chromeVisible, isDark) {
         Runnable {
             if (view.hasWindowFocus()) {
+                controller.isAppearanceLightStatusBars = !isDark
+                controller.isAppearanceLightNavigationBars = !isDark
                 controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                 if (chromeVisible) controller.show(bars) else controller.hide(bars)
             }
@@ -360,6 +362,14 @@ private fun ReaderSystemBars(window: Window, view: View, chromeVisible: Boolean)
         }
     }
     DisposableEffect(window) {
-        onDispose { controller.show(bars) }
+        val statusLight = controller.isAppearanceLightStatusBars
+        val navigationLight = controller.isAppearanceLightNavigationBars
+        val behavior = controller.systemBarsBehavior
+        onDispose {
+            controller.isAppearanceLightStatusBars = statusLight
+            controller.isAppearanceLightNavigationBars = navigationLight
+            controller.systemBarsBehavior = behavior
+            controller.show(bars)
+        }
     }
 }

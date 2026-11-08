@@ -35,4 +35,6 @@ enum class ReaderSettingsOptions(@StringRes val optionStringId: Int) {
     FitReferenceCroppedText(Strings.pdf_settings_fit_reference_cropped_text),
     MarginaliaExclude(Strings.pdf_settings_marginalia_exclude),
     MarginaliaInclude(Strings.pdf_settings_marginalia_include),
+    CropAutomatic(org.zotero.android.R.string.reader_crop_automatic),
+    CropManual(org.zotero.android.R.string.reader_crop_manual),
 }
