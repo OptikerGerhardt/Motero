@@ -5,6 +5,7 @@
 - Verhindert einen verzögerten, künstlichen Pointer-down nach priorisierten Randtipps oder Lesezeichen-Shortcuts bei sichtbarer Reader-Leiste. Der wartende Toolbar-Tap wird dabei vollständig abgebrochen; er startet nach dem Seitenwechsel keine neue Geste.
 - Zusätzliche Timer-Regression reproduziert den Fehler vor der Korrektur und verhindert ein Wiederauftreten. Die Funktionen aus Build 309 bleiben enthalten.
 - Update-Prüfungen umfassen nun Build 309 als aktuelle Vorgängerversion; Signierer und Paketkennung bleiben unverändert.
+- Veröffentlicht und unabhängig heruntergeladen geprüft: 290 Reader-Tests, 118 native Tests, elf Browserprüfungen und beide API-31/35-Update-Prüfungen erfolgreich. Signatur, Quellen und Prüfsummen stimmen überein.
 
 ## 1.0.0-309 — 8. November 2026
 
