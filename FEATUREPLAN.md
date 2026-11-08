@@ -1,6 +1,6 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 8. November 2026. Build 309 setzt die nächste Reader-Überarbeitung um.
+Stand: 8. November 2026. Build 310 enthält die Reader-Überarbeitung aus Build 309 und die zusätzliche Korrektur für verzögerte Toolbar-Tipps nach einem priorisierten Shortcut.
 
 ## Reader-Überarbeitung: Build 309
 
