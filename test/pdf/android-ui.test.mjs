@@ -2010,3 +2010,22 @@ test('long edge presses and moved pointers do not turn a page', () => {
   assert.equal(PDFView.prototype._shouldHandleBackdropTap.call(f.view,f.event,f.position,10),false);
  }
 });
+
+test('a priority edge tap cancels deferred chrome input rather than replaying a ghost down', async t => {
+ t.mock.timers.enable({apis:['setTimeout','Date'],now:3000});
+ const {PDFChromeTapGuard}=await import('../../src/pdf/chrome-tap-guard.mjs');
+ let replayed=0,turns=0;
+ const target={closest:selector=>selector==='#viewerContainer'?{}:null};
+ const view={_options:{platform:'android'},_tool:{type:'pointer'},_readerChromeVisible:true,
+  _iframeWindow:{setTimeout,clearTimeout,PDFViewerApplication:{pdfViewer:{container:{getBoundingClientRect:()=>({left:0,top:0,width:600,height:800})}}}},
+  _readerPriorityDown:{x:599,y:799,time:Date.now()},_handlePointerDown:()=>replayed++,
+  pointerEventToPosition:()=>null,_getEdgePageTurnDirection:()=> 'next',
+  _booxReader:{isOverview:()=>false,handleTap:()=>false},
+  _clearPendingBackdropTap(){},_clearPointerAction(){},navigateToNextPage:()=>turns++};
+ view._chromeTapGuard=new PDFChromeTapGuard(view);
+ const event={type:'pointerdown',pointerType:'touch',isPrimary:true,button:0,pointerId:1,clientX:599,clientY:799,target,preventDefault(){}};
+ assert.equal(view._chromeTapGuard.down(event),true);
+ assert.equal(PDFView.prototype._tryPriorityReaderTap.call(view,event),true);
+ t.mock.timers.tick(500);
+ assert.equal(turns,1);assert.equal(replayed,0);
+});

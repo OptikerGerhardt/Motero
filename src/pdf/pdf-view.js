@@ -4325,7 +4325,7 @@ class PDFView {
         const overview=this._booxReader?.isOverview();
         const direction=this._getEdgePageTurnDirection(event,down.x);
         if (!overview && !bookmark && (!direction || overlay)) return false;
-        this._directHighlight?.reset(); this._clearPendingBackdropTap(); this._clearPointerAction();
+        this._chromeTapGuard?.reset(); this._directHighlight?.reset(); this._clearPendingBackdropTap(); this._clearPointerAction();
         if (!this._booxReader?.handleTap(event,position) && direction && !overview) {
             direction==='next' ? this.navigateToNextPage() : this.navigateToPreviousPage(); this._onEdgePageTurnTap?.();
         }
