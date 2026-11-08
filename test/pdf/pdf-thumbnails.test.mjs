@@ -37,7 +37,8 @@ function createThumbnails() {
 	};
 	let thumbnails = Object.create(PDFThumbnails.prototype);
 	Object.assign(thumbnails, {
-		_pdfView: { renderPageAnnotationsOnCanvas: async () => {} },
+		_pdfView: { renderPageAnnotationsOnCanvas: async () => {}, _colorScheme: "light" },
+        _epoch: 0, _documentID: "test", _pending: new Map(), _runningJob: null, _onInit: () => {},
 		_onRender: thumbnail => rendered.push(thumbnail),
 		_renderOptions: [],
 		_thumbnails: [{ pageIndex: 0, width: 120, height: 160 }],
@@ -55,6 +56,7 @@ function createThumbnails() {
 test('thumbnail dimensions preserve aspect ratio within optional bounds', () => {
 	let cases = [
 		[{ width: 600, height: 800 }, undefined, [120, 160]],
+        [{ width: 600, height: 60000 }, undefined, [4, 480]],
 		[{ width: 600, height: 800 }, { maxHeight: 64 }, [48, 64]],
 		[{ width: 800, height: 600 }, { maxWidth: 80, maxHeight: 64 }, [80, 60]],
 	];
@@ -101,14 +103,36 @@ test('annotation rerenders preserve the requested thumbnail bounds', async () =>
 	let options = { maxWidth: 80, maxHeight: 64 };
 	await thumbnails._render(0, options);
 
-	let tasks = [];
-	thumbnails._renderQueue = {
-		end() {},
-		unshift: task => tasks.push(task),
-	};
-	thumbnails.rerender([0]);
-	await tasks[0]();
+	await thumbnails.rerender([0]);
 
 	assert.equal(renderContexts.length, 2);
 	assert.deepEqual(dimensions(rendered.at(-1)), [80, 60]);
+});
+
+
+test('theme change discards an in-flight thumbnail instead of caching its old pixels', async () => {
+    globalThis.window = { devicePixelRatio: 1 };
+    const { thumbnails, pdfPage, rendered } = createThumbnails();
+    let complete;
+    pdfPage.render = () => ({ promise: new Promise(resolve => complete = resolve) });
+    const pending = thumbnails._render(0);
+    await new Promise(resolve => setImmediate(resolve));
+    const key = thumbnails.renderKey;
+    thumbnails.clear();
+    assert.notEqual(thumbnails.renderKey, key);
+    complete(); await pending;
+    assert.equal(rendered.length, 0);
+    assert.equal(thumbnails._thumbnails[0].image, undefined);
+});
+
+test('pending thumbnail work is bounded and reports cancellations to its host', async () => {
+    const { thumbnails, rendered } = createThumbnails();
+    thumbnails._thumbnails = Array.from({length:70}, (_,pageIndex)=>({pageIndex}));
+    let resume;
+    thumbnails._render = () => new Promise(resolve => resume=resolve);
+    const pending=thumbnails.render(Array.from({length:70},(_,i)=>i));
+    assert.ok(thumbnails._pending.size <= 32);
+    assert.equal(rendered.filter(t=>t.canceled).length,38);
+    thumbnails.clear(); resume(); await pending;
+    assert.equal(thumbnails._pending.size,0);
 });

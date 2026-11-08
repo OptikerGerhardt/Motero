@@ -88,6 +88,7 @@ class View {
 				}
 				this._sdtView?.setAnnotations(this._getSDTAnnotations(annotations));
 			},
+			onChangeHistory: options.onChangeHistory,
 			onChangeFilter: nop
 		});
 	}
@@ -661,6 +662,7 @@ class View {
 	 * @param {'light' | 'dark' | null} scheme
 	 */
 	setColorScheme(scheme) {
+		if (scheme === this._colorScheme) return;
 		this._colorScheme = scheme;
 		if (this._options.platform === 'android') {
 			if (['light', 'dark'].includes(this._colorScheme)) document.documentElement.dataset.colorScheme = this._colorScheme;

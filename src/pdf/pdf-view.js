@@ -1,3 +1,4 @@
+import { appendInkSamples } from './ink-samples.mjs';
 import Page from './page';
 import { p2v, v2p } from './lib/coordinates';
 import {
@@ -135,6 +136,7 @@ class PDFView {
 		this._lightTheme = options.lightTheme;
 		this._darkTheme = options.darkTheme;
 		this._preferedColorTheme = options.colorScheme;
+        this._forcedColorScheme = options.colorScheme;
 		this._onRequestPassword = options.onRequestPassword;
 		this._onInitThumbnails = options.onInitThumbnails;
 		this._onSetThumbnails = options.onSetThumbnails;
@@ -467,6 +469,7 @@ class PDFView {
 		// PDF.js consumes pointer endings during pinch gestures. Observe them before
 		// its container listeners so no finger remains registered in our gesture.
 		this._iframeWindow.addEventListener('pointerup', event => {
+            if (this.action?.type === 'ink' && this.action.pointerID !== undefined && event.pointerId !== this.action.pointerID) { event.stopImmediatePropagation(); return; }
             this._pageFitting?.onUp(event);
 			if (this._tryPriorityReaderTap(event)) { this._readerPriorityHandled=event.pointerId; return; }
             if (!this._chromeTapGuard?.up(event)) this._directHighlight?.up(event);
@@ -478,7 +481,10 @@ class PDFView {
 		}, true);
 		this._iframeWindow.addEventListener('pointerup', this._handlePointerUp.bind(this));
 		this._iframeWindow.addEventListener('pointercancel', this._handlePointerCancel.bind(this));
-		this._iframeWindow.addEventListener('lostpointercapture', this._handleTouchTransformInterrupted.bind(this));
+		this._iframeWindow.addEventListener('lostpointercapture', event => {
+            if (this.action?.type === 'ink') this._handlePointerCancel(event);
+            else this._handleTouchTransformInterrupted(event);
+        });
 		this._iframeWindow.addEventListener('resize', this._handleTouchTransformInterrupted.bind(this));
 		this._iframeWindow.addEventListener('resize', this._handleContentFitResize.bind(this));
 		this._iframeWindow.addEventListener('resize', () => this._directHighlight?.reset());
@@ -660,7 +666,7 @@ class PDFView {
 			},
 			onUpdate: (thumbnails) => {
 				// TODO: When rendering thumbnails it's also a good chance to getPageData with extracted pageLabel
-				this._onSetThumbnails(thumbnails);
+				this._onSetThumbnails?.(thumbnails);
 			},
 			onRender: this._onRenderThumbnail && ((thumbnail) => this._onRenderThumbnail(thumbnail))
 		});
@@ -681,6 +687,12 @@ class PDFView {
 			this._iframeWindow.document.documentElement.dataset.colorScheme = this._colorScheme;
 
 			let root = this._iframeWindow.document.documentElement;
+            const nextTheme = this._colorScheme === 'dark' ? this._darkTheme : this._lightTheme;
+            if (this._appliedThemeDocument === root && this._appliedTheme === nextTheme
+                    && this._appliedColorScheme === this._colorScheme) return;
+            this._appliedThemeDocument = root;
+            this._appliedTheme = nextTheme;
+            this._appliedColorScheme = this._colorScheme;
 
 			if (this._colorScheme === 'light' && this._lightTheme) {
 				this._iframeWindow.theme = this._lightTheme;
@@ -1242,7 +1254,26 @@ class PDFView {
 	}
 
 
+    _appendInkEvent(action, event) {
+        if (action.pointerID !== undefined && event.pointerId !== action.pointerID) return;
+        appendInkSamples(action.annotation.position.paths[0], event, sample =>
+            this.pointerEventToAltPosition(sample, action.annotation.position.pageIndex)?.rects[0]?.slice(0, 2));
+    }
+
 	_render(pageIndexes) {
+        if (this.action?.type === 'ink' && this._iframeWindow?.requestAnimationFrame) {
+            if (this._inkFrame == null) this._inkFrame = this._iframeWindow.requestAnimationFrame(() => {
+                this._inkFrame = null;
+                if (!this._destroyed) this._renderPages();
+            });
+            return;
+        }
+        if (this._inkFrame != null) this._iframeWindow.cancelAnimationFrame(this._inkFrame);
+        this._inkFrame = null;
+        this._renderPages(pageIndexes);
+    }
+
+    _renderPages(pageIndexes) {
 		for (let page of this._pages) {
 			if (!pageIndexes || pageIndexes.includes(page.pageIndex)) {
 				page.render();
@@ -1258,6 +1289,7 @@ class PDFView {
 			return;
 		}
 		this._destroyed = true;
+        if (this._inkFrame != null) this._iframeWindow?.cancelAnimationFrame(this._inkFrame);
 		this._cancelPendingPageTurn();
 		window.removeEventListener('webviewerloaded', this._handleWebViewerLoaded);
 		this._sdtIntegration?.destroy();
@@ -3559,6 +3591,7 @@ class PDFView {
 	}
 
 	_handlePointerDown(event) {
+        if (this.action?.type === 'ink' && this.action.pointerID !== undefined && event.pointerId !== this.action.pointerID) { event.stopImmediatePropagation?.(); return; }
         if (this._pageFitting?.editor) return;
         if (event.type==='pointerdown' && ['touch','pen'].includes(event.pointerType)) {
             this._readerPriorityDown=event.isPrimary ? {x:event.clientX,y:event.clientY,time:Date.now()} : null;
@@ -3743,6 +3776,7 @@ class PDFView {
 			}
 		}
 		else if (action.type === 'ink') {
+            action.pointerID = event.pointerId;
 			let point = position.rects[0].slice(0, 2);
 			action.annotation = {
 				type: 'ink',
@@ -3865,6 +3899,7 @@ class PDFView {
 	}
 
 	_handlePointerMove = throttle((event) => {
+        if (this.action?.type === 'ink' && this.action.pointerID !== undefined && event.pointerId !== this.action.pointerID) { event.stopImmediatePropagation?.(); return; }
 		if (this._pageFitting?.editor) return;
 		if (this._chromeTapGuard?.move(event)) return;
 		if (this._directHighlight?.move(event)) {
@@ -4206,8 +4241,7 @@ class PDFView {
 			action.triggered = true;
 		}
 		else if (action.type === 'ink') {
-			let point = originalPagePosition.rects[0].slice(0, 2);
-			action.annotation.position.paths[0].push(...point);
+            this._appendInkEvent(action, event);
 			// Already triggered on pointerdown
 		}
 		else if (action.type === 'erase') {
@@ -4333,6 +4367,7 @@ class PDFView {
     }
 
 	_handlePointerUp(event) {
+        if (this.action?.type === 'ink' && this.action.pointerID !== undefined && event.pointerId !== this.action.pointerID) { event.stopImmediatePropagation?.(); return; }
         if (this._pageFitting?.editor) return;
         if (this._readerPriorityHandled != null && this._readerPriorityHandled===event.pointerId) { this._readerPriorityHandled=null; return; }
         if (this._tryPriorityReaderTap?.(event)) return;
@@ -4428,37 +4463,9 @@ class PDFView {
 						}
 					}
 					else if (action.type === 'ink' && action.annotation) {
-						let lastInkAnnotation = this._annotations.find(x => x.id === this._lastAddedInkAnnotationID);
-						let path = action.annotation.position.paths[0];
-						path = smoothPath(path);
-						path = path.map(value => parseFloat(value.toFixed(3)));
-						action.annotation.position.paths[0] = path;
-						let dist;
-						if (lastInkAnnotation) {
-							let r1 = getPositionBoundingRect(lastInkAnnotation.position);
-							let r2 = getPositionBoundingRect(action.annotation.position);
-							dist = distanceBetweenRects(r1, r2);
-						}
-
-						if (lastInkAnnotation
-							&& lastInkAnnotation.position.pageIndex === action.annotation.position.pageIndex
-							&& lastInkAnnotation.position.width === action.annotation.position.width
-							&& lastInkAnnotation.color === action.annotation.color
-							&& Date.now() - Date.parse(lastInkAnnotation.dateModified) < 10 * 1000 && dist < 50) {
-							let { id, position } = lastInkAnnotation;
-							let paths = lastInkAnnotation.position.paths.slice();
-							paths.push(action.annotation.position.paths[0]);
-							position = { ...position, paths };
-							let sortIndex = getSortIndex(this._pdfPages, position);
-							this._onUpdateAnnotations([{ id, position, sortIndex }]);
-						}
-						else {
-							action.annotation.sortIndex = getSortIndex(this._pdfPages, action.annotation.position);
-							// Can return null when the file is read-only
-							let addedAnnotation = this._onAddAnnotation(action.annotation);
-							this._lastAddedInkAnnotationID = addedAnnotation?.id;
-						}
-					}
+                        this._appendInkEvent(action, event);
+                        this._commitInkAction(action);
+                    }
 					else if (action.type === 'erase' && action.triggered) {
 						let annotations = [...action.annotations.values()];
 						let updated = annotations.filter( x => x.position.paths.length);
@@ -4579,7 +4586,45 @@ class PDFView {
 		this._updateViewStats();
 	}
 
+    _commitInkAction(action) {
+	let lastInkAnnotation = this._annotations.find(x => x.id === this._lastAddedInkAnnotationID);
+	let path = action.annotation.position.paths[0];
+	path = smoothPath(path);
+	path = path.map(value => parseFloat(value.toFixed(3)));
+	action.annotation.position.paths[0] = path;
+	let dist;
+	if (lastInkAnnotation) {
+		let r1 = getPositionBoundingRect(lastInkAnnotation.position);
+		let r2 = getPositionBoundingRect(action.annotation.position);
+		dist = distanceBetweenRects(r1, r2);
+	}
+
+	if (lastInkAnnotation
+		&& lastInkAnnotation.position.pageIndex === action.annotation.position.pageIndex
+		&& lastInkAnnotation.position.width === action.annotation.position.width
+		&& lastInkAnnotation.color === action.annotation.color
+		&& Date.now() - Date.parse(lastInkAnnotation.dateModified) < 10 * 1000 && dist < 50) {
+		let { id, position } = lastInkAnnotation;
+		let paths = lastInkAnnotation.position.paths.slice();
+		paths.push(action.annotation.position.paths[0]);
+		position = { ...position, paths };
+		let sortIndex = getSortIndex(this._pdfPages, position);
+		this._onUpdateAnnotations([{ id, position, sortIndex }]);
+	}
+	else {
+		action.annotation.sortIndex = getSortIndex(this._pdfPages, action.annotation.position);
+		// Can return null when the file is read-only
+		let addedAnnotation = this._onAddAnnotation(action.annotation);
+		this._lastAddedInkAnnotationID = addedAnnotation?.id;
+	}
+    }
+
 	_handlePointerCancel(event) {
+        if (event && this.action?.type === 'ink') {
+            if (this.action.pointerID !== undefined && this.action.pointerID !== event.pointerId) return;
+            // Cancellation coordinates can be zero or stale; keep only collected input.
+            this._commitInkAction(this.action);
+        }
 		this._chromeTapGuard?.reset();
 		if (event) {
 			this._directHighlight?.gesture.interrupted(event);

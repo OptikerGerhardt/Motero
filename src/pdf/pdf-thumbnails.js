@@ -17,7 +17,6 @@
 /** @typedef {import("./interfaces").IPDFLinkService} IPDFLinkService */
 /** @typedef {import("./interfaces").IRenderableView} IRenderableView */
 // eslint-disable-next-line max-len
-import queue from 'queue';
 
 /** @typedef {import("./pdf_rendering_queue").PDFRenderingQueue} PDFRenderingQueue */
 
@@ -31,6 +30,7 @@ const THUMBNAIL_WIDTH = 120; // px
 function getThumbnailDimensions({ width, height }, { maxWidth, maxHeight } = {}) {
 	if (maxWidth === undefined && maxHeight === undefined) {
 		maxWidth = THUMBNAIL_WIDTH;
+        maxHeight = 480;
 	}
 	const scale = Math.min(
 		maxWidth === undefined ? Infinity : maxWidth / width,
@@ -49,7 +49,7 @@ function getThumbnailDimensions({ width, height }, { maxWidth, maxHeight } = {})
  */
 class OutputScale {
 	constructor() {
-		const pixelRatio = window.devicePixelRatio || 1;
+		const pixelRatio = Math.min(2, window.devicePixelRatio || 1);
 
 		/**
 		 * @type {number} Horizontal scale.
@@ -114,11 +114,11 @@ class PDFThumbnails {
 		this._window = options.window;
 		this._thumbnails = [];
 		this._renderOptions = [];
+        this._epoch = 0;
+        this._documentID = Date.now().toString(36) + Math.random().toString(36).slice(2);
 		this._initialized = false;
-		this._renderQueue = queue({
-			concurrency: 1,
-			autostart: true
-		});
+        this._pending = new Map();
+        this._runningJob = null;
 		this._init();
 	}
 
@@ -134,6 +134,7 @@ class PDFThumbnails {
 		for (let pageNum = 1; pageNum <= pagesCount; ++pageNum) {
 			this._thumbnails.push({
 				pageIndex: pageNum - 1,
+                renderKey: this.renderKey,
 				width,
 				height
 			});
@@ -141,10 +142,16 @@ class PDFThumbnails {
 		this._onInit(this._thumbnails);
 	}
 
+    get renderKey() { return this._documentID + ':' + this._epoch; }
+
 	async _render(pageIndex, options) {
+        const epoch = this._epoch;
+        const colorScheme = this._pdfView._colorScheme;
+        const renderKey = this.renderKey;
 		let { pdfDocument } = this._window.PDFViewerApplication;
 
 		let pdfPage = await pdfDocument.getPage(pageIndex + 1);
+		if (epoch !== this._epoch) return;
 		let viewport = pdfPage.getViewport({ scale: 1 });
 		let { width: canvasWidth, height: canvasHeight, scale }
 			= getThumbnailDimensions(viewport, options);
@@ -173,6 +180,7 @@ class PDFThumbnails {
 		const renderContext = {
 			canvasContext: ctx,
 			transform,
+			background: this._window.theme?.background || "#FFFFFF",
 			viewport: drawViewport
 		};
 		const renderTask = pdfPage.render(renderContext);
@@ -185,13 +193,17 @@ class PDFThumbnails {
 			console.log(e);
 		}
 		finally {
+            if (epoch !== this._epoch) { canvas.width = canvas.height = 0; return; }
+			canvas.readerBookmarkFlags = true;
 			await this._pdfView.renderPageAnnotationsOnCanvas(canvas, drawViewport, pageIndex);
+            if (epoch !== this._epoch) { canvas.width = canvas.height = 0; return; }
 			const reducedCanvas = this._reduceImage(canvas, canvasWidth, canvasHeight);
 			renderedThumbnail = {
 				pageIndex,
 				width: canvasWidth,
 				height: canvasHeight,
-				image: reducedCanvas.toDataURL()
+				image: reducedCanvas.toDataURL(),
+                renderKey, colorScheme
 			};
 			this._thumbnails = this._thumbnails.slice();
 			this._thumbnails[pageIndex] = renderedThumbnail;
@@ -217,45 +229,53 @@ class PDFThumbnails {
 	}
 
 	render(pageIndexes = [], options) {
-		this._queueRender(pageIndexes, options);
+		return this._queueRender(pageIndexes, options);
 	}
 
 	rerender(pageIndexes = []) {
-		this._queueRender(pageIndexes, undefined, true);
+		return this._queueRender(pageIndexes, undefined, true);
 	}
 
-	_queueRender(pageIndexes, options, rerenderOnly = false) {
-		// If there are no thumbnails being rerendered due to annotation changes,
-		// clear the rendering queue to only render the thumbnails that were recently
-		// scrolled into view in the sidebar thumbnails view
-		if (!this._thumbnails.some(x => x.forceRerender)) {
-			this._renderQueue.end();
-		}
-		for (let pageIndex of pageIndexes) {
-			let thumbnail = this._thumbnails[pageIndex];
-			// Only already rendered thumbnails will be re-rendered, which means
-			// if thumbnails view isn't actively used, it won't waste resources to
-			// re-render thumbnails whenever annotations are updated
-			if (rerenderOnly) {
-				if (thumbnail.image) {
-					thumbnail.forceRerender = true;
-				}
-				else {
-					continue;
-				}
-			}
-			let pageOptions = rerenderOnly
-				? this._renderOptions[pageIndex]
-				: options;
-			this._renderQueue.unshift(async () => this._render(pageIndex, pageOptions));
-		}
-	}
+    _queueRender(pageIndexes, options, rerenderOnly = false) {
+        for (const pageIndex of pageIndexes) {
+            const thumbnail = this._thumbnails[pageIndex];
+            if (!thumbnail || rerenderOnly && !thumbnail.image) continue;
+            if (rerenderOnly) thumbnail.forceRerender = true;
+            const pageOptions = rerenderOnly ? this._renderOptions[pageIndex] : options;
+            if (!rerenderOnly && this._runningJob?.pageIndex === pageIndex
+                && JSON.stringify(this._runningJob.options) === JSON.stringify(pageOptions)) continue;
+            this._pending.delete(pageIndex);
+            this._pending.set(pageIndex, { pageIndex, options: pageOptions });
+        }
+        while (this._pending.size > 32) {
+            const index = this._pending.keys().next().value;
+            this._pending.delete(index);
+            this._onRender?.({ pageIndex: index, renderKey: this.renderKey, colorScheme: this._pdfView._colorScheme, canceled: true });
+        }
+        return this._drain();
+    }
+
+    async _drain() {
+        if (this._runningJob) return;
+        while (this._pending.size) {
+            const index = [...this._pending.keys()].at(-1);
+            const job = this._pending.get(index);
+            this._pending.delete(index);
+            this._runningJob = job;
+            try { await this._render(job.pageIndex, job.options); }
+            catch (error) {
+                console.error(error);
+                this._onRender?.({ pageIndex: index, renderKey: this.renderKey, colorScheme: this._pdfView._colorScheme, canceled: true });
+            } finally { this._runningJob = null; }
+        }
+    }
 
 	clear() {
-		this._renderQueue.end();
-		this._thumbnails = this._thumbnails.map(x => ({ ...x, image: undefined }));
+        this._epoch++;
+		this._pending.clear();
+		this._thumbnails = this._thumbnails.map(x => ({ ...x, image: undefined, renderKey: this.renderKey }));
 		this._renderOptions = [];
-		this._onUpdate(this._thumbnails);
+		this._onInit(this._thumbnails);
 	}
 
 	_getPageDrawContext(upscaleFactor = 1, canvasWidth, canvasHeight) {

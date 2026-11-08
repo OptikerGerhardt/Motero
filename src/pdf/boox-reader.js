@@ -153,7 +153,6 @@ export class PDFBooxReader {
         }
 		let rotation = page.viewport.rotation;
 		// Always use the unpadded content frame, including when paper/manual fit is selected.
-		await view._pageFitting.ensureModel();
 		let bounds = await view._pageFitting.boundsFor(pageIndex);
 		if (view._destroyed || view._readOnly || page.viewport.rotation !== rotation) return;
 		let viewport = page.pdfPage.getViewport({ scale: 1, rotation });

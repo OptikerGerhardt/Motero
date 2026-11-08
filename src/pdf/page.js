@@ -23,6 +23,8 @@ import {
 } from '../common/defines';
 import { getRectRotationOnText } from './selection';
 
+import { isBlackReaderBookmark, BOOKMARK_FLAG_PATH } from '../common/reader-bookmark.mjs';
+
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 // Note icon geometry, shared by the SVG and canvas renderers
@@ -236,7 +238,9 @@ export default class Page {
 			y: round(viewRect[1]),
 			// Fit the icon into the annotation rect (22 pt)
 			scale: round((viewRect[2] - viewRect[0]) / NOTE_ICON_SIZE),
-			color: annotation.color
+			color: annotation.color,
+            bookmark: isBlackReaderBookmark(annotation),
+            opacity: isBlackReaderBookmark(annotation) ? 0.7 : 1
 		});
 	}
 
@@ -742,6 +746,15 @@ export default class Page {
 		if (item.opacity !== undefined) {
 			g.setAttribute('opacity', item.opacity);
 		}
+        if (item.bookmark) {
+            const path = doc.createElementNS(SVG_NS, 'path');
+            path.setAttribute('d', BOOKMARK_FLAG_PATH);
+            path.setAttribute('fill', '#000000');
+            // Note coordinates use a 22-point box; the flag uses a 24-unit viewBox.
+            path.setAttribute('transform', `scale(${NOTE_ICON_SIZE / 24})`);
+            g.append(path);
+            return g;
+        }
 		let addPolygon = (points, fill) => {
 			let polygon = doc.createElementNS(SVG_NS, 'polygon');
 			polygon.setAttribute('points', points.join(' '));
@@ -833,6 +846,8 @@ export default class Page {
 		let doc = pageDiv.ownerDocument;
 		let overlay = pageDiv.querySelector(':scope > .annotationOverlay');
 		if (!items.length) {
+            this._overlayItems = null;
+            this._overlayBlocks = null;
 			overlay?.remove();
 			return;
 		}
@@ -845,25 +860,45 @@ export default class Page {
 			overlay.className = 'annotationOverlay';
 			pageDiv.append(overlay);
 		}
-		let { width, height } = this._originalPage.viewport;
-		let children = [];
-		let svg = null;
-		for (let item of items) {
-			if (item.kind === 'rect') {
-				children.push(this._createRectElement(doc, item));
-				svg = null;
-			}
-			else {
-				if (!svg) {
-					svg = doc.createElementNS(SVG_NS, 'svg');
-					svg.setAttribute('class', 'overlayVector');
-					svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-					children.push(svg);
-				}
-				svg.append(this._createVectorElement(doc, item));
-			}
-		}
-		overlay.replaceChildren(...children);
+        const { width, height } = this._originalPage.viewport;
+        const previous = this._overlayItems || new Map();
+        const next = new Map();
+        const oldBlocks = this._overlayBlocks || [];
+        const blocks = [];
+        const synchronize = (parent, children) => {
+            children.forEach((child, i) => {
+                if (parent.childNodes[i] !== child) parent.insertBefore(child, parent.childNodes[i] || null);
+            });
+            while (parent.childNodes.length > children.length) parent.lastChild.remove();
+        };
+        let vectors = null;
+        for (const item of items) {
+            const signature = JSON.stringify(item);
+            const existing = previous.get(signature)?.shift();
+            const node = existing?.ownerDocument === doc ? existing
+                : item.kind === 'rect' ? this._createRectElement(doc, item) : this._createVectorElement(doc, item);
+            if (!next.has(signature)) next.set(signature, []);
+            next.get(signature).push(node);
+            if (item.kind === 'rect') {
+                blocks.push({ kind: 'rect', node });
+                vectors = null;
+            } else {
+                if (!vectors) {
+                    const old = oldBlocks[blocks.length];
+                    const svg = old?.kind === 'vector' ? old.node : doc.createElementNS(SVG_NS, 'svg');
+                    svg.setAttribute('class', 'overlayVector');
+                    const viewBox = `0 0 ${width} ${height}`;
+                    if (svg.getAttribute('viewBox') !== viewBox) svg.setAttribute('viewBox', viewBox);
+                    vectors = { kind: 'vector', node: svg, children: [] };
+                    blocks.push(vectors);
+                }
+                vectors.children.push(node);
+            }
+        }
+        for (const block of blocks) if (block.children) synchronize(block.node, block.children);
+        synchronize(overlay, blocks.map(b => b.node));
+        this._overlayItems = next;
+        this._overlayBlocks = blocks;
 	}
 
 	// DOM-based text annotations (editable textareas), diffed in place so that

@@ -42,24 +42,24 @@ export class ManualCropEditor {
 			const value = theme.getPropertyValue(name); if (value) this.root.style.setProperty(name, value);
 		}
 		this.root.innerHTML = `<style>
-.boox-manual-crop{position:fixed;inset:0;z-index:2147483647;background:var(--color-background,#fff);color:var(--fill-primary,#222);display:flex;flex-direction:column;font:15px system-ui,sans-serif;overflow:hidden;box-sizing:border-box;padding:12px;gap:12px}
+.boox-manual-crop{position:fixed;inset:0;z-index:2147483647;background:var(--color-background,#fff);color:var(--fill-primary,#222);display:flex;flex-direction:column;font:15px system-ui,sans-serif;overflow:hidden;box-sizing:border-box;padding:12px;gap:8px}
 .boox-manual-crop *{box-sizing:border-box}.boox-manual-crop .crop-toolbar{display:flex;align-items:center;gap:8px;flex-shrink:0}.boox-manual-crop .crop-heading{flex:1;font-size:17px;font-weight:600;margin:0}
 .boox-manual-crop button,.boox-manual-crop select{font:inherit;color:var(--accent-blue,#3468d3);background:transparent;border:0;border-radius:8px;min-height:44px;padding:8px 12px;touch-action:manipulation}
 .boox-manual-crop button:focus-visible,.boox-manual-crop select:focus-visible{outline:2px solid var(--accent-blue,#3468d3);outline-offset:2px}
 .boox-manual-crop button:disabled{opacity:.4}.boox-manual-crop button[data-action=save]{background:var(--accent-blue,#3468d3);color:#fff;font-weight:600}.boox-manual-crop select{color:inherit;background:var(--fill-quinary,#eee);min-width:0;max-width:100%}
 .boox-manual-crop .crop-range{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.boox-manual-crop .crop-pages{display:flex;align-items:center;gap:4px}.boox-manual-crop .crop-page{font-variant-numeric:tabular-nums;font-size:13px;white-space:nowrap}
-.boox-manual-crop .crop-help,.boox-manual-crop .crop-status{font-size:13px;color:var(--fill-secondary,#666);line-height:1.35;flex-shrink:0}.boox-manual-crop .crop-preview{flex:1;min-height:100px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--fill-quinary,#eee);border-radius:10px}
+.boox-manual-crop .crop-help,.boox-manual-crop .crop-status{font-size:13px;color:var(--fill-secondary,#666);line-height:1.35;flex-shrink:0}.boox-manual-crop .crop-preview{flex:1;min-height:100px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--color-background,#fff);border-radius:0}
 .boox-manual-crop .crop-sheet{position:relative;max-width:100%;max-height:100%;touch-action:none;user-select:none}.boox-manual-crop canvas{display:block;width:100%;height:100%}
-.boox-manual-crop .crop-selection{position:absolute;border:2px solid var(--accent-blue,#3468d3);box-shadow:0 0 0 2000px #0005;touch-action:none;cursor:move}
-.boox-manual-crop .crop-handle{position:absolute;width:28px;height:28px;background:#fff;border:2px solid var(--accent-blue,#3468d3);border-radius:50%;touch-action:none}
-.boox-manual-crop [data-handle=nw]{left:-14px;top:-14px;cursor:nw-resize}.boox-manual-crop [data-handle=ne]{right:-14px;top:-14px;cursor:ne-resize}.boox-manual-crop [data-handle=sw]{left:-14px;bottom:-14px;cursor:sw-resize}.boox-manual-crop [data-handle=se]{right:-14px;bottom:-14px;cursor:se-resize}
+.boox-manual-crop .crop-shade{position:absolute;inset:0;background:#0005;pointer-events:none}.boox-manual-crop .crop-selection{position:absolute;border:2px solid var(--accent-blue,#3468d3);touch-action:none;cursor:move}
+.boox-manual-crop .crop-handle{position:absolute;width:44px;height:44px;background:transparent;border:0;touch-action:none}
+.boox-manual-crop .crop-handle:after{content:"";position:absolute;inset:11px;background:#fff;border:2px solid var(--accent-blue,#3468d3);border-radius:50%}.boox-manual-crop [data-handle=nw]{left:-22px;top:-22px;cursor:nw-resize}.boox-manual-crop [data-handle=ne]{right:-22px;top:-22px;cursor:ne-resize}.boox-manual-crop [data-handle=sw]{left:-22px;bottom:-22px;cursor:sw-resize}.boox-manual-crop [data-handle=se]{right:-22px;bottom:-22px;cursor:se-resize}
 .boox-manual-crop .crop-footer{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0px)}
 @media(max-height:450px){.boox-manual-crop{gap:4px;padding:6px 12px}.boox-manual-crop .crop-help,.boox-manual-crop .crop-status{display:none}.boox-manual-crop .crop-footer{position:absolute;bottom:8px;right:12px}.boox-manual-crop .crop-footer button{background:var(--color-background,#fff)}}
 </style>
 <div class="crop-toolbar"><button data-action="cancel">${t.cancel}</button><h1 class="crop-heading">${t.title}</h1><button data-action="save">${t.save}</button></div>
 <div class="crop-range"><select aria-label="${t.scope}"><option value="all">${t.all}</option><option value="odd">${t.odd}</option><option value="even">${t.even}</option></select><div class="crop-pages"><button data-action="previous" aria-label="${t.previous}">‹</button><span class="crop-page"></span><button data-action="next" aria-label="${t.next}">›</button></div></div>
 <div class="crop-help">${t.help}</div>
-<div class="crop-preview"><div class="crop-sheet"><canvas></canvas><div class="crop-selection" data-handle="move"><i class="crop-handle" data-handle="nw"></i><i class="crop-handle" data-handle="ne"></i><i class="crop-handle" data-handle="sw"></i><i class="crop-handle" data-handle="se"></i></div></div></div>
+<div class="crop-preview"><div class="crop-sheet"><canvas></canvas><div class="crop-shade"></div><div class="crop-selection" data-handle="move"><i class="crop-handle" data-handle="nw"></i><i class="crop-handle" data-handle="ne"></i><i class="crop-handle" data-handle="sw"></i><i class="crop-handle" data-handle="se"></i></div></div></div>
 <div class="crop-footer"><div class="crop-status" role="status"></div></div>`;
         if (nativeControls) {
             for (const element of this.root.querySelectorAll('.crop-toolbar,.crop-range,.crop-help,.crop-footer')) element.style.display = 'none';
@@ -175,6 +175,8 @@ export class ManualCropEditor {
 		if (!this.rect) return;
 		let [x0, y0, x1, y1] = this.rect;
 		Object.assign(this.selection.style, { left: x0 * 100 + '%', top: y0 * 100 + '%', width: (x1 - x0) * 100 + '%', height: (y1 - y0) * 100 + '%' });
+        const shade = this.root.querySelector('.crop-shade');
+        shade.style.clipPath = `polygon(evenodd, 0% 0%,100% 0%,100% 100%,0% 100%,0% 0%,${x0*100}% ${y0*100}%,${x0*100}% ${y1*100}%,${x1*100}% ${y1*100}%,${x1*100}% ${y0*100}%,${x0*100}% ${y0*100}%)`;
 	}
 	down(event) {
 		if (this.busy || event.isPrimary === false || event.button !== 0 || this.drag) return;

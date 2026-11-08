@@ -162,10 +162,11 @@ function image(rectangles) {
 	}
 	return { width, height, data };
 }
-test('middle samples contain four adjacent odd/even pairs, excluding covers', () => {
+test('document samples cover front matter, middle and final sections in paired pages', () => {
 	let indexes = getReadingSamples(499);
 	assert.equal(indexes.length, 8);
-	assert.ok(indexes.every(i => i >= 220 && i <= 278));
+	assert.ok(indexes[0] < 30 && indexes.at(-1) > 450);
+    assert.ok(indexes.some(i => i > 150 && i < 350));
 	for (let i = 0; i < indexes.length; i += 2) {
 		assert.equal(indexes[i] % 2, 0); assert.equal(indexes[i + 1], indexes[i] + 1);
 	}

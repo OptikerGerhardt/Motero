@@ -3,6 +3,17 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Zotero Reader View</title>
+    <script>
+        // Android supplies the resolved reader appearance before any stylesheet paints.
+        const readerColorScheme = new URLSearchParams(location.search).get('readerColorScheme');
+        if (readerColorScheme === 'light' || readerColorScheme === 'dark') {
+            document.documentElement.dataset.colorScheme = readerColorScheme;
+        }
+    </script>
+    <style>
+        html[data-color-scheme="light"] { color-scheme: light; background: var(--color-background, #fff); }
+        html[data-color-scheme="dark"] { color-scheme: dark; background: var(--color-background, #1e1e1e); }
+    </style>
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 </head>
 <body>

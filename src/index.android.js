@@ -67,6 +67,7 @@ window.createView = (encodedOptions) => {
 		onInitialized: () => {
 			postMessage('onViewContentInitialized');
 		},
+        onChangeHistory: ({ undoSteps }) => postMessage('onHistoryChanged', { canUndo: undoSteps.length > 0 }),
 		onSaveAnnotations: (annotations) => {
 			postMessage('onSaveAnnotations', { annotations });
 
@@ -176,6 +177,14 @@ window.setReaderChromeVisible = visible => window._view?.setReaderChromeVisible(
 window.setContentFit = (options) => {
 	log("Set content fit: " + JSON.stringify(options));
 	window._view.setContentFit(options);
+};
+
+window.undoReaderAnnotation = () => {
+    if (!window._view || window._view._options.readOnly) return false;
+    window._view.finishTextAnnotationEditing();
+    window._view.undo();
+    postMessage('onHistoryChanged', { canUndo: window._view.canUndo });
+    return true;
 };
 
 window.setTool = (options) => {

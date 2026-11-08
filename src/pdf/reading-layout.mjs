@@ -3,14 +3,12 @@ import { getInkBounds } from './content-fit.mjs';
 // PDF page indexes, not printed folios. Always sample adjacent odd/even pairs.
 export function getReadingSamples(count) {
 	if (count <= 8) return Array.from({ length: count }, (_, i) => i);
-	let span = Math.max(8, Math.round(count * 0.1));
-	let first = Math.max(0, Math.floor((count - span) / 4) * 2);
-	let last = Math.min(count - 2, first + Math.max(6, span - 2));
-	let indexes = new Set();
-	for (let i = 0; i < 4; i++) {
-		let start = Math.min(count - 2, Math.round((first + (last - first) * i / 3) / 2) * 2);
-		indexes.add(start); indexes.add(start + 1);
-	}
+    // Spread paired samples across front matter, body and final sections.
+    let indexes = new Set();
+    for (const fraction of [0.03, 0.33, 0.66, 0.95]) {
+        const start = Math.max(0, Math.min(count - 2, Math.round(count * fraction / 2) * 2));
+        indexes.add(start); indexes.add(start + 1);
+    }
 	return [...indexes].sort((a, b) => a - b);
 }
 

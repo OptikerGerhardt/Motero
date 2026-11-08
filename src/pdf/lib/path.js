@@ -13,7 +13,7 @@ function filterClosePoints(points, minThreshold) {
 		const currentPoint = [points[i], points[i + 1]];
 		const distance = euclideanDistance(prevPoint, currentPoint);
 
-		if (distance >= minThreshold) {
+		if (distance >= minThreshold || i === points.length - 2) {
 			filteredPoints.push(currentPoint[0], currentPoint[1]);
 		}
 	}
@@ -40,6 +40,7 @@ function chaikinSmoothing(points) {
 }
 
 export function smoothPath(points) {
+    if (points.length <= 4) return points.slice();
 	let iterations = 2;
 	for (let i = 0; i < iterations; i++) {
 		points = chaikinSmoothing(points);
