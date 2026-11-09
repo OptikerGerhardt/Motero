@@ -1,10 +1,12 @@
-# Build 315 / Motero 1.0 — lokale Prüfung abgeschlossen
+# Build 315 / Motero 1.0 — veröffentlicht und unabhängig geprüft
 
-- Reader `80a4cf6695e18faac38fe418623903c742ab7641`; 314 Reader-Tests, 123 Android-Tests, 13 Browser-Suiten und elf Release-Infrastrukturtests bestanden.
-- Jumped/Continuous, Redo per langem Undo-Druck, runde Farbflächen mit weißem Auswahlring, Hashtags ohne Haken, adaptive Dock-Breite und Statusleisten-Abdeckung umgesetzt.
-- Wrapped-Rücksprung hält die gewählte Seite auch nach dem Reflow; verdeckte Nachbarn werden im Einzelseitenmodus nicht als aktuelle Seite gewählt. Letzter Touch-Pointer löst den Fit auch bei ausgeblendetem altem Touch-Ziel.
-- Unveränderte Paket- und Signieridentität; GitHub-Workflow veröffentlicht erst nach Signatur-/Quellenprüfung und echten API-31/35-Updates von Build 303 und 314.
-- Native Sicht-/Animationsprüfung auf physischen Geräten und Kontosync separat. Nachweise: `qa/build315/`.
+- Release: https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.0-315 ; GitHub-Lauf: https://github.com/OptikerGerhardt/Motero/actions/runs/42608990281 .
+- Quelle: `6f44539324d6794cd3de194fdd01100fa751c671`; Reader: `80a4cf6695e18faac38fe418623903c742ab7641`.
+- 314 Reader-Tests, 123 Android-Tests und 13 Browser-Suiten in der GitHub-Pipeline bestanden; lokal zusätzlich elf Release-Infrastrukturtests und APK-Build erfolgreich.
+- Öffentliche APK unabhängig heruntergeladen und geprüft: privater Motero-Signierer, nicht debuggbar, Rotation, Receiver-Berechtigung, 99 Reader-Quellen, 207 PDF.js- und 45 Runtime-Dateien. SHA-256: `9ff51d3cf40791e98a021cddd23286a61123d013f60dac8e0d4142c932ba62cf`.
+- API 31/35: Updates von Build 303 und 314 erhalten Datenmarker und UID, starten die App und verweigern Updates/geschützte Berechtigungen für den alten Schlüssel. Anonyme Obtainium-Latest-Abfrage liefert Build 315.
+- Jumped/Continuous einschließlich zentriertem Moduswechsel und stabilem Wrapped-Rücksprung, langes Undo für Redo, runde Farbflächen mit weißem Auswahlring, Hashtags ohne Haken, adaptive Dock-Breite und Statusleisten-Abdeckung umgesetzt.
+- Native Sicht-/Animationsprüfung auf physischen Geräten und Kontosync separat; kein nativer visueller Pass behauptet. Nachweise: `qa/build315/`.
 
 # Build 314 — veröffentlicht und unabhängig geprüft
 

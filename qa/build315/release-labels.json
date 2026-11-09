@@ -1,0 +1,164 @@
+{
+  "latest": "https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.0-315",
+  "latest_title": "Motero 1.0",
+  "previous_releases": [
+    {
+      "tag": "v1.0.0-305",
+      "title": "Motero Alpha \u2013 Build 305",
+      "draft": true,
+      "prerelease": false,
+      "assets_and_notes_unchanged": true
+    },
+    {
+      "tag": "Release",
+      "title": "Motero Alpha \u2013 Build 302",
+      "draft": true,
+      "prerelease": false,
+      "assets_and_notes_unchanged": true
+    },
+    {
+      "tag": "v1.0.0-314",
+      "title": "Motero Alpha \u2013 Build 314",
+      "draft": false,
+      "prerelease": true,
+      "assets_and_notes_unchanged": true
+    },
+    {
+      "tag": "v1.0.0-313",
+      "title": "Motero Alpha \u2013 Build 313",
+      "draft": false,
+      "prerelease": true,
+      "assets_and_notes_unchanged": true
+    },
+    {
+      "tag": "v1.0.0-312",
+      "title": "Motero Alpha \u2013 Build 312",
+      "draft": false,
+      "prerelease": true,
+      "assets_and_notes_unchanged": true
+    },
+    {
+      "tag": "v1.0.0-311",
+      "title": "Motero Alpha \u2013 Build 311",
+      "draft": false,
+      "prerelease": true,
+      "assets_and_notes_unchanged": true
+    },
+    {
+      "tag": "v1.0.0-310",
+      "title": "Motero Alpha \u2013 Build 310",
+      "draft": false,
+      "prerelease": true,
+      "assets_and_notes_unchanged": true
+    },
+    {
+      "tag": "v1.0.0-309",
+      "title": "Motero Alpha \u2013 Build 309",
+      "draft": false,
+      "prerelease": true,
+      "assets_and_notes_unchanged": true
+    },
+    {
+      "tag": "v1.0.0-308",
+      "title": "Motero Alpha \u2013 Build 308",
+      "draft": false,
+      "prerelease": true,
+      "assets_and_notes_unchanged": true
+    },
+    {
+      "tag": "v1.0.0-307",
+      "title": "Motero Alpha \u2013 Build 307",
+      "draft": false,
+      "prerelease": true,
+      "assets_and_notes_unchanged": true
+    },
+    {
+      "tag": "v1.0.0-306",
+      "title": "Motero Alpha \u2013 Build 306",
+      "draft": false,
+      "prerelease": true,
+      "assets_and_notes_unchanged": true
+    }
+  ],
+  "all_assets_preserved": true,
+  "git_tags": [
+    {
+      "tag": "v1.0.0-305",
+      "git_object": "a41f072678fd332ca08fd5f571501a0411ad8998",
+      "commit": "a41f072678fd332ca08fd5f571501a0411ad8998",
+      "original_release_target": "a41f072678fd332ca08fd5f571501a0411ad8998",
+      "matches_original_release_commit": true
+    },
+    {
+      "tag": "Release",
+      "git_object": "84b6ba464a73687538ac17aea03dce1daec58cc5",
+      "commit": "84b6ba464a73687538ac17aea03dce1daec58cc5",
+      "original_release_target": "main",
+      "matches_original_release_commit": false
+    },
+    {
+      "tag": "v1.0.0-314",
+      "git_object": "7eac431651ab4c4e621a2072396cac48f3555645",
+      "commit": "7eac431651ab4c4e621a2072396cac48f3555645",
+      "original_release_target": "7eac431651ab4c4e621a2072396cac48f3555645",
+      "matches_original_release_commit": true
+    },
+    {
+      "tag": "v1.0.0-313",
+      "git_object": "9be88d7e3b1c76467db9e251a1c34a3928b04a4e",
+      "commit": "9be88d7e3b1c76467db9e251a1c34a3928b04a4e",
+      "original_release_target": "9be88d7e3b1c76467db9e251a1c34a3928b04a4e",
+      "matches_original_release_commit": true
+    },
+    {
+      "tag": "v1.0.0-312",
+      "git_object": "aa3ddb6756f0f47f4753cdcce27f9a3013aa8d66",
+      "commit": "aa3ddb6756f0f47f4753cdcce27f9a3013aa8d66",
+      "original_release_target": "aa3ddb6756f0f47f4753cdcce27f9a3013aa8d66",
+      "matches_original_release_commit": true
+    },
+    {
+      "tag": "v1.0.0-311",
+      "git_object": "4fb06b1e4dbf88ce1e321f5a18f786d5238d812b",
+      "commit": "4fb06b1e4dbf88ce1e321f5a18f786d5238d812b",
+      "original_release_target": "4fb06b1e4dbf88ce1e321f5a18f786d5238d812b",
+      "matches_original_release_commit": true
+    },
+    {
+      "tag": "v1.0.0-310",
+      "git_object": "0aa3ea1bda2b167392802e95b92faa6cdf7419ad",
+      "commit": "0aa3ea1bda2b167392802e95b92faa6cdf7419ad",
+      "original_release_target": "0aa3ea1bda2b167392802e95b92faa6cdf7419ad",
+      "matches_original_release_commit": true
+    },
+    {
+      "tag": "v1.0.0-309",
+      "git_object": "3eca80bb37b2aeb4efd620c7fffefbda81f0670b",
+      "commit": "3eca80bb37b2aeb4efd620c7fffefbda81f0670b",
+      "original_release_target": "3eca80bb37b2aeb4efd620c7fffefbda81f0670b",
+      "matches_original_release_commit": true
+    },
+    {
+      "tag": "v1.0.0-308",
+      "git_object": "ccd337cacfc2611dd065189e183c724fa3a3eee5",
+      "commit": "ccd337cacfc2611dd065189e183c724fa3a3eee5",
+      "original_release_target": "ccd337cacfc2611dd065189e183c724fa3a3eee5",
+      "matches_original_release_commit": true
+    },
+    {
+      "tag": "v1.0.0-307",
+      "git_object": "7f9b3a41a338c1badb7b72d1b1bab4b0035f7358",
+      "commit": "7f9b3a41a338c1badb7b72d1b1bab4b0035f7358",
+      "original_release_target": "7f9b3a41a338c1badb7b72d1b1bab4b0035f7358",
+      "matches_original_release_commit": true
+    },
+    {
+      "tag": "v1.0.0-306",
+      "git_object": "4629ce31f9d1597ce5c8b0dc227b8b06d40a1600",
+      "commit": "4629ce31f9d1597ce5c8b0dc227b8b06d40a1600",
+      "original_release_target": "4629ce31f9d1597ce5c8b0dc227b8b06d40a1600",
+      "matches_original_release_commit": true
+    }
+  ],
+  "public_release_tag_commits_verified": true
+}

@@ -2,6 +2,8 @@
 
 ## 1.0.0-315 — 9. November 2026 — Motero 1.0
 
+- Veröffentlicht und unabhängig geprüft: 314 Reader-Tests, 123 Android-Tests, 13 Browser-Suiten und beide API-31/35-Updates bestanden. Prüfsummen, Quellen und Produktionssignatur stimmen; physische Sicht-/Animations- und Kontosync-Prüfung separat.
+
 - „Jumped“ und „Continuous“ direkt unter Scrolling: freie Bewegung wie bisher oder vollständige Seitenwechsel per Wischgeste, mit einer sichtbaren Leseseite. Zwei-Finger-Zoom und antippbare Seitenübersicht bleiben erhalten, unabhängig von Scrollrichtung und Zuschnitt.
 - Undo ganz links im Annotationsdock, Redo per langem Druck und barrierefreier Langdruck-Aktion. Verlauf und Redo-Verfügbarkeit werden zwischen Reader und Android übertragen.
 - Runde Farbfeld-Rückmeldung und weißer Auswahlring wie im Annotationsdialog; keine zusätzlichen Haken auf den Hashtag-Kürzeln. Vier verschiebbare Farben und ein dauerhaft erreichbares violettes Feld, mit einrastender Palette und adaptiver Breite.

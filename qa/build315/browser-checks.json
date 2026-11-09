@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "suites": 13,
+  "logs": [
+    "browser-annotation-tools.log",
+    "browser-controls.log",
+    "browser-edge-taps.log",
+    "browser-features.log",
+    "browser-fit-recovery.log",
+    "browser-fitting.log",
+    "browser-gestures.log",
+    "browser-manual-crop.log",
+    "browser-page-navigation.log",
+    "browser-reader-update.log",
+    "browser-refinements.log",
+    "browser-stability.log",
+    "browser-ui-consistency.log"
+  ],
+  "source": "Motero_TestReports.zip in the Build 315 release"
+}
