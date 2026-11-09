@@ -1,14 +1,17 @@
-# Build 318 / Motero 1.0.3 — Randmasken-Korrektur, Releaseprüfung ausstehend
+# Build 318 / Motero 1.0.3 — veröffentlicht und unabhängig geprüft
 
-- 333 Reader-Tests bestanden. Neuer Test reproduziert und behebt fehlendes Neuzeichnen einer Randmaskierung bei unverändertem Seitenrahmen.
-- Alle Änderungen aus Build 317 enthalten; Paket, Schlüssel und Nutzerdatenpfade bleiben erhalten. Frischer Build und API-31/35-Update-Prüfungen von 303 und 317 folgen im geschützten Workflow.
+- Release: https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.3-318 ; erfolgreicher Prüflauf: https://github.com/OptikerGerhardt/Motero/actions/runs/42708855081 .
+- Quelle: `a4ca1dc9da11b385958c7b16b2e4c31046c5a6b5`; Reader: `e215e5bfb420ea562f4c1c8f7154fabdb6740376`.
+- 333 Reader-Tests, 125 native Release-Tests in 30 Suiten und 14 Browser-Suiten bestanden. Signierte öffentliche APK unabhängig heruntergeladen, Quellen, Signierpolitik und Prüfsummen verifiziert.
+- APK-SHA-256: `46b2430a47b362577717f51cfc37541733bce1f636b20bd5ab40477893e2cc3e`. Unveränderter privater Signierer; 100 Reader-Quellen, 207 PDF.js- und 45 Runtime-Dateien stimmen.
+- API 31/35: Updates von Build 303 und 317 erhalten private Datenmarker und UID und starten die App. Alte Schlüssel werden für Updates und interne Berechtigungen abgewiesen. Latest-Release liefert Build 318; kein unabhängig anonymer API-Zugriff behauptet.
+- Randmasken bei unverändertem Seitenrahmen werden wieder sofort gezeichnet. Alle Cropping-, Performance- und Bedienungsänderungen aus 317 sind enthalten. [Algorithmus/Quellen](docs/CROPPING_AND_SCROLLING.md), [Prüfberichte](qa/build318/).
+- Physische BOOX-/Pixel-Bedienung und Kontosync separat. Original-Kant-/Fuchs-PDFs der Screenshots lagen nicht vor; entsprechende Muster synthetisch geprüft.
 
-# Build 317 / Motero 1.0.2 — veröffentlicht, Randmasken-Nachbesserung in 318
+## Build 317 / Motero 1.0.2
 
-- Lokale Release-APK gebaut, Paket `org.zotero.android.debug`, Code 317, Mindest-API 28 und Receiver-Namespace geprüft.
-- 332 Reader-Tests, 125 native Release-Tests in 30 Suiten und elf Release-Infrastrukturtests bestanden. Alle 14 Browser-Suiten bestanden.
-- Eingebettete Quellen der unsignierten lokalen APK stimmen: 100 Reader-, 207 PDF.js- und 45 Runtime-Dateien. Produktionssignatur und Android-Update-Gates folgen ausschließlich im geschützten Release-Job.
-- [Änderungen und Recherche](docs/CROPPING_AND_SCROLLING.md), [Prüfberichte](qa/build317/). Physische BOOX-/Pixel-Bedienung und echter Kontosync separat.
+- Enthält die gesammelten Cropping-/Performance-/UI-Änderungen mit 332 Reader-, 125 nativen Tests und 14 Browser-Suiten. Beide Update-Gates bestanden.
+- Wurde während der Bearbeitung eines Abbruchwunsches vom Workflow veröffentlicht. Ein danach bestätigter Randmasken-Neuzeichnungsfehler ist in 318 korrigiert; Tag und Assets von 317 bleiben unverändert. [Historische Berichte](qa/build317/).
 
 # Build 316 / Motero 1.0.1 — veröffentlicht und unabhängig geprüft
 

@@ -1,0 +1,6 @@
+PASS cancelling manual crop preserves document settings; hardware navigation is blocked inside the editor
+PASS touch-created all-pages crop applies to neighbors, subsequent pages and a reopened reader
+PASS odd and even PDF page crops override all-pages crop independently
+PASS manual crop survives display rotation and can switch to automatic detection without losing manual frames
+PASS native crop preview and all handles fit small, tall, landscape and tablet viewports
+PASS: manual crop editor checks

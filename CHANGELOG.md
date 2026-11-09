@@ -3,7 +3,7 @@
 ## 1.0.3-318 — 9. November 2026 — Motero 1.0.3
 
 - Neue Randmaskierungen gepufferter Seiten werden auch bei unverändertem Seitenrahmen sofort gezeichnet. Die Layout-Optimierung behält ihre gezielten Stiländerungen; der inkrementelle Renderer erhält weiterhin die erforderliche Aktualisierung.
-- Zusätzliche Regression reproduziert den Fehler aus Build 317 und besteht mit der Korrektur. 333 Reader-Tests; erneute Releaseprüfung einschließlich Update von Build 317. Alle Cropping-, Performance- und Bedienungsänderungen aus 317 enthalten.
+- Veröffentlicht und unabhängig geprüft: 333 Reader-Tests, 125 native Tests und 14 Browser-Suiten bestanden. Signatur, Quellen und Prüfsummen stimmen; beide API-31/35-Gates erhalten Daten und UID bei Updates von 303 und 317. Alle Cropping-, Performance- und Bedienungsänderungen aus 317 enthalten.
 
 ## 1.0.2-317 — 9. November 2026 — Motero 1.0.2
 

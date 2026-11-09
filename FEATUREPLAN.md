@@ -4,6 +4,8 @@ Stand: 9. November 2026. Build 318 / Motero 1.0.3 ergänzt die in Build 317 ver�
 
 ## Korrektur: Build 318 / 1.0.3
 
+Veröffentlicht und unabhängig geprüft: 333 Reader-, 125 native Tests, 14 Browser-Suiten und beide API-31/35-Update-Gates bestanden. [Prüfberichte](qa/build318/).
+
 - Neue Randmasken auf gepufferten Nachbarseiten aktualisieren sich auch bei unverändertem Seitenrahmen. Inkrementelles Zeichnen und die schnelleren Layout-Schreibvorgänge bleiben erhalten. Ein zusätzlicher Regressionstest sichert diesen Fall ab.
 
 ## Reader-Nachbesserungen: Build 317 / 1.0.2

@@ -1,0 +1,93 @@
+PASS pan /fixture.pdf 0 80 80
+PASS pan /fixture.pdf 2 80 80
+PASS reading edge {
+  expected: 267,
+  actual: 267,
+  page: 1,
+  pointerEvents: 'none',
+  opacity: '0.5'
+}
+PASS reading edge survives native-bar height changes
+PASS reverse reading edge { expected: 267, actual: 267 }
+PASS reading edge after free swipe without accidental annotation
+PASS immediate palette, same annotation ID
+PASS first tap after palette color opens annotation popup
+PASS first tap after touch palette selection opens annotation popup
+PASS annotation reopens after selection-clear bridge
+PASS dated bookmarks, repeated tap, multiple pages, restoration and standard deletion
+PASS fixed bookmark PDF position independent of tap and zoom
+PASS upper right edge bookmarks; lower right edge still turns pages
+PASS rotated page bookmark remains at visual upper right { top: 4.871435483870961, right: 8.000249999999937 }
+Overview before manual {
+  page: 1,
+  scale: 0.28,
+  mode: 2,
+  x: -71,
+  y: 0,
+  overview: true,
+  reading: 1.6
+}
+PASS overview selection manual {
+  page: 4,
+  scale: 1.6,
+  mode: 2,
+  x: 340,
+  y: 0,
+  overview: false,
+  reading: 1.6
+}
+Overview before content {
+  page: 1,
+  scale: 0.28,
+  mode: 2,
+  x: -71,
+  y: 0,
+  overview: true,
+  reading: 1.2427254817599236
+}
+PASS overview selection content {
+  page: 4,
+  scale: 1.2410128649771803,
+  mode: 2,
+  x: 83,
+  y: 0,
+  overview: false,
+  reading: 1.2410128649771803
+}
+Overview before width {
+  page: 1,
+  scale: 0.28,
+  mode: 2,
+  x: -71,
+  y: 0,
+  overview: true,
+  reading: 0.7
+}
+PASS overview selection width {
+  page: 4,
+  scale: 0.7,
+  mode: 2,
+  x: -21,
+  y: 0,
+  overview: false,
+  reading: 0.7
+}
+Overview before manual-with-content-setting {
+  page: 1,
+  scale: 0.28,
+  mode: 2,
+  x: -71,
+  y: 0,
+  overview: true,
+  reading: 1.6
+}
+PASS overview selection manual-with-content-setting {
+  page: 4,
+  scale: 1.6,
+  mode: 2,
+  x: 340,
+  y: 0,
+  overview: false,
+  reading: 1.6
+}
+PASS: all new Reader features
