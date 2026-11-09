@@ -9,6 +9,8 @@
     <string name="reader_progress_position">Position</string>
     <string name="reader_progress_percent">Percentage</string>
     <string name="reader_go_to_bookmark">Go to bookmark</string>
+    <string name="reader_go_to_annotation">Go to annotation</string>
+    <string name="reader_annotation_more_options">Annotation options</string>
     <string name="reader_delete_bookmark">Delete bookmark</string>
     <string name="reader_crop_title">Manual crop</string>
     <string name="reader_crop_all">All pages</string>

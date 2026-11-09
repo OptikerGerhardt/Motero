@@ -1,7 +1,6 @@
 package org.zotero.android.screens.reader.sidebar.annotations.sections
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -13,9 +12,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
 import org.zotero.android.screens.reader.data.isReaderBookmark
 import org.zotero.android.R
-import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,7 +27,6 @@ import org.zotero.android.screens.reader.ReaderViewState
 import org.zotero.android.screens.reader.data.ReaderAnnotation
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.foundation.safeClickable
 
 @Composable
 internal fun ReaderAnnotationsSidebarHeaderSection(
@@ -66,31 +62,23 @@ internal fun ReaderAnnotationsSidebarHeaderSection(
             color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.titleSmall,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
         )
-        Spacer(modifier = Modifier.weight(1f))
+        IconButton(onClick = { viewModel.focusAnnotation(annotation.key) }) {
+            Icon(painterResource(R.drawable.reader_go_to_bookmark), stringResource(R.string.reader_go_to_annotation),
+                modifier = Modifier.size(22.dp), tint = MaterialTheme.colorScheme.primary)
+        }
         if (viewState.bookmarksOnly && annotation.isReaderBookmark() && !viewState.isAnnotationSelected(annotation.key)) {
-            IconButton(onClick = { viewModel.focusBookmark(annotation.key) }) {
-                Icon(painterResource(R.drawable.reader_go_to_bookmark), stringResource(R.string.reader_go_to_bookmark),
-                    modifier = Modifier.size(22.dp), tint = MaterialTheme.colorScheme.primary)
-            }
             IconButton(onClick = { viewModel.deleteBookmark(annotation.key) }, enabled = viewModel.canDeleteBookmark(annotation)) {
                 Icon(painterResource(Drawables.delete_24px), stringResource(R.string.reader_delete_bookmark),
                     modifier = Modifier.size(22.dp), tint = if(viewModel.canDeleteBookmark(annotation)) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(alpha = .38f))
             }
-        } else if (viewState.isAnnotationSelected(annotation.key)) {
-                Image(
-                    modifier = Modifier
-                        .size(22.dp)
-                        .safeClickable(
-                            onClick = viewModel::onMoreOptionsForItemClicked,
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = ripple(bounded = false)
-                        ),
-                    painter = painterResource(id = Drawables.more_horiz_24px),
-                    contentDescription = null,
-                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant),
-                )
+        } else {
+            IconButton(onClick = { viewModel.onMoreOptionsForItemClicked(annotation.key) }) {
+                Icon(painterResource(Drawables.more_horiz_24px), stringResource(R.string.reader_annotation_more_options),
+                    modifier = Modifier.size(22.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
     }
 }

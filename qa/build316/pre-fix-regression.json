@@ -1,0 +1,12 @@
+{
+  "baseline": "Motero_Build315.apk, verified public release",
+  "regression": "Width-fit page must remain vertically centered in Jumped",
+  "before_fix_failed": true,
+  "before_fix_vertical_offset_px": -401.5,
+  "fixed_browser_test_passed": true,
+  "layouts": [
+    0,
+    1,
+    2
+  ]
+}

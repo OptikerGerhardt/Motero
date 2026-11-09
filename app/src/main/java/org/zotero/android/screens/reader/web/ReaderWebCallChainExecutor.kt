@@ -680,8 +680,8 @@ class ReaderWebCallChainExecutor @Inject constructor(
         val json = gson.toJson(mapOf("action" to action, "scope" to scope, "top" to top, "bottom" to bottom))
         readerWebViewHandler.evaluateJavascript("window.cropEditorAction?.($json);") {}
     }
-    suspend fun focusBookmark(key: String) = suspendCancellableCoroutine { cont ->
-        readerWebViewHandler.evaluateJavascript("window.focusReaderBookmark?.(${gson.toJson(key)});") { cont.resume(Unit) }
+    suspend fun focusAnnotation(key: String) = suspendCancellableCoroutine { cont ->
+        readerWebViewHandler.evaluateJavascript("window.focusReaderAnnotation?.(${gson.toJson(key)});") { cont.resume(Unit) }
     }
 
     suspend fun cancelManualCrop() = suspendCancellableCoroutine { cont ->

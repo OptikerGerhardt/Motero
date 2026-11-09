@@ -9,6 +9,8 @@
     <string name="reader_progress_position">Position</string>
     <string name="reader_progress_percent">Prozent</string>
     <string name="reader_go_to_bookmark">Zum Lesezeichen</string>
+    <string name="reader_go_to_annotation">Zur Annotation</string>
+    <string name="reader_annotation_more_options">Annotationsoptionen</string>
     <string name="reader_delete_bookmark">Lesezeichen löschen</string>
     <string name="reader_crop_title">Manueller Zuschnitt</string>
     <string name="reader_crop_all">Alle Seiten</string>

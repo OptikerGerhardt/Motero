@@ -1,6 +1,18 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 9. November 2026. Build 315 ist der erste als „Motero 1.0“ benannte Release.
+Stand: 9. November 2026. Build 316 / Motero 1.0.1 behebt Jumped-Ausrichtung und erweitert die Annotationsaktionen.
+
+## Reader-Nachbesserungen: Build 316 / 1.0.1
+
+- Jumped: aktuelle Seite vertikal zentriert nach Wischen, Randtippen und Übersichtssprüngen, einschließlich Breitenanpassung; erste/letzte ungecroppte Seiten werden ebenfalls mittig dargestellt.
+- Alle Annotationskarten zeigen Jump-to links neben dem Menü, in beiden Auswahlzuständen. Menüs verwenden die Identität der angeklickten Karte.
+- Bookmark-Filter: nicht ausgewählt Jump-to + Löschen, ausgewählt Jump-to + Menü. Andere Ansichten behalten das Menü.
+- Der vollständige Sidebar-Kopf einschließlich der freien Mitte fängt Berührungen ab. Symbolaktionen bleiben bedienbar; der schwebende Kopf bleibt unverändert.
+- Höhere Buildnummer, unveränderter privater Signierer und Android-Update-Prüfung von 303 und 315.
+
+## Vorheriger Stand
+
+Build 315 ist der erste als „Motero 1.0“ benannte Release.
 
 ## Reader-Nachbesserungen: Build 315 / 1.0
 

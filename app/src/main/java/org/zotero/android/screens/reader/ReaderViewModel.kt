@@ -2111,12 +2111,12 @@ class ReaderViewModel @Inject constructor(
         val bookmark = annotation(key) ?: return
         if (canDeleteBookmark(bookmark)) removeAnnotation(key)
     }
-    fun focusBookmark(key: String) {
-        if (annotation(key)?.isReaderBookmark() != true) return
+    fun focusAnnotation(key: String) {
+        if (annotation(key) == null) return
         updateState { copy(isTopBarVisible = false, showSideBar = false, showCreationToolbar = false,
             selectedAnnotationKey = null, readerAnnotationArgs = null, readerAnnotationMoreArgs = null) }
         previousSidebarVisibilityState = false
-        viewModelScope.launch { readerWebCallChainExecutor.focusBookmark(key) }
+        viewModelScope.launch { readerWebCallChainExecutor.focusAnnotation(key) }
     }
 
     fun toggleBookmarksOnly() {
@@ -2357,10 +2357,10 @@ class ReaderViewModel @Inject constructor(
         }
     }
 
-    fun onMoreOptionsForItemClicked() {
-        annotationEditReaderKey = viewState.selectedAnnotationKey
+    fun onMoreOptionsForItemClicked(key: String) {
+        val selectedAnnotation = annotation(key) ?: return
+        annotationEditReaderKey = key
 
-        val selectedAnnotation = annotationEditReaderKey?.let { this.annotations[it] }
         val args = ReaderAnnotationMoreArgs(
             selectedAnnotation = selectedAnnotation,
             library = this.library,

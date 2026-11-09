@@ -22,7 +22,7 @@ config = (root / 'buildSrc/src/main/kotlin/BuildConfig.kt').read_text()
 code = int(re.search(r'const val versionCode = (\d+)', config).group(1))
 version = '.'.join(re.search(r'\b' + key + r'\s*=\s*(\d+)', config).group(1) for key in ['major', 'minor', 'patch']) + '-' + str(code)
 metadata = dict(version=version, version_code=code, tag='v' + version, apk=f'Motero_Build{code}.apk', source=f'Motero_Build{code}_Source.zip')
-metadata['release_title'] = 'Motero 1.0' if code == 315 else f'Motero {version}'
+metadata['release_title'] = 'Motero 1.0' if code == 315 else 'Motero ' + version.rsplit('-', 1)[0]
 if args.metadata_only:
     print(json.dumps(metadata))
     raise SystemExit()

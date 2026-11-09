@@ -1,3 +1,11 @@
+# Build 316 / Motero 1.0.1 — lokale Prüfung abgeschlossen
+
+- Reader `ffa59d7e414d8a1be46f5b17605189a39be8cb78`; 314 Reader-Tests, 125 Android-Tests in 30 Suiten, 13 Browser-Suiten und elf Release-Infrastrukturtests bestanden.
+- Geometrie-Regressionsprüfung reproduziert in der bisherigen APK 401,5 CSS-Pixel Versatz nach oben. Korrektur prüft zentrierte Breitenanpassung nach Wischen, Randtippen, Hardware-Tasten und Übersichtssprüngen in allen drei Layouts, außerdem erste/letzte Seiten ohne Zuschnitt.
+- Jump-to und Menü im Kopf aller Karten; Bookmark-Filter mit zustandsabhängigem Löschen/Menü. Menü-Ziel bei anderer ausgewählter Annotation und Sprung aller Annotationstypen nativ getestet.
+- Freie Mitte des Sidebar-Kopfs fängt Berührungen ab. Isolierte Android-Eingabeprüfung wird separat dokumentiert; keine native Sichtprüfung oder physische Geräteprüfung behauptet.
+- Unveränderter Signierer und Paketkennung. GitHub veröffentlicht erst nach Signatur-/Quellenprüfung und echten API-31/35-Updates von 303 und 315. Nachweise: `qa/build316/`.
+
 # Build 315 / Motero 1.0 — veröffentlicht und unabhängig geprüft
 
 - Release: https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.0-315 ; GitHub-Lauf: https://github.com/OptikerGerhardt/Motero/actions/runs/42608990281 .

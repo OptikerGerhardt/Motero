@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.0.1-316 — 9. November 2026 — Motero 1.0.1
+
+- Jumped zentriert die Leseseite nach Wischen, Randtippen, direktem Seitensprung und Rückkehr aus der Übersicht. Breitenanpassung richtet nicht mehr am oberen Rand aus; ohne Zuschnitt erhalten erste/letzte kurze Seiten genügend Darstellungsraum zum Zentrieren.
+- Jump-to im Kopf aller Annotationskarten, ausgewählt und nicht ausgewählt, direkt links neben den drei Punkten. Sprung schließt Sidebar, Werkzeugleisten und Annotationsdialoge und erhält die Fit-Einstellung.
+- Im Bookmark-Schnellfilter ersetzt bei nicht ausgewählten Bookmarks der rote Löschknopf die drei Punkte; nach Auswahl stehen wieder Jump-to und die drei Punkte bereit. Löschberechtigungen bleiben wirksam.
+- Menüaktionen richten sich ausdrücklich an die angeklickte Karte, auch wenn eine andere Annotation ausgewählt ist. Lange Seitenlabels lassen beide Aktionen sichtbar.
+- Die freie Fläche im Sidebar-Kopf fängt Berührungen ab; darunterliegende PDFs erhalten dort keine Klicks. Im schwebenden Reader-Kopf bleiben die freien Zwischenräume unverändert.
+- Patch-Release mit unveränderter Paket- und Signieridentität, höherem Android-Code 316 und Update-Prüfung von Build 315.
+
 ## 1.0.0-315 — 9. November 2026 — Motero 1.0
 
 - Veröffentlicht und unabhängig geprüft: 314 Reader-Tests, 123 Android-Tests, 13 Browser-Suiten und beide API-31/35-Updates bestanden. Prüfsummen, Quellen und Produktionssignatur stimmen; physische Sicht-/Animations- und Kontosync-Prüfung separat.

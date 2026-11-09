@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -14,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 
 /** One hierarchy keeps icon groups and focus intact as the sidebar opens. */
@@ -33,6 +35,11 @@ internal fun ReaderToolbarSurface(
         if (it) Color.Transparent else MaterialTheme.colorScheme.surface
     }
     Row(Modifier.fillMaxWidth().background(backdrop)
+        .then(if (!floating) Modifier.pointerInput(Unit) {
+            // Empty space in the full-width sidebar header is also chrome.
+            // Child buttons consume their own taps before this parent handler.
+            detectTapGestures(onTap = {}, onLongPress = {}, onDoubleTap = {})
+        } else Modifier)
         .windowInsetsPadding(WindowInsets.statusBarsIgnoringVisibility.union(WindowInsets.displayCutout)
             .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
         .padding(horizontal = inset, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
