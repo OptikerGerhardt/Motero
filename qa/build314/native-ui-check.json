@@ -1,0 +1,26 @@
+{
+  "environment": "Android API 35 QEMU software emulator; no /dev/kvm; SwiftShader with Vulkan enabled and disabled",
+  "fixture_compiled": true,
+  "production_presentation_files": 15,
+  "source_sha256": {
+    "screens/reader/toolbar/ReaderPdfBottomDock.kt": "28b1abcfc2add6d1c75af7781bb77f6defe77d486c3a45cce1b92b48927e4a02",
+    "screens/reader/toolbar/ReaderPdfAnnotationToolbar.kt": "bf719fc0aa16fbc60937b04d3405176570751a898be4ff4d5d7f4cf7d64b77bd",
+    "screens/reader/scrubber/ReaderPageScrubber.kt": "ca111999450d9c55c4b1d57a43b7f013d60c39da118e049b5ff7f40531b76368",
+    "screens/reader/topbar/ReaderToolbarSurface.kt": "90887d4648302609cbd2123a138c0e2c4a6b4c35c680fc6c9f878ddfdc16766a",
+    "screens/reader/ReaderSystemBars.kt": "398aa964b2486d67ef35481081cabde41785ebcc38ce07d47515ddb6c1e488a2",
+    "screens/reader/data/ReaderAnnotationTool.kt": "3ce0967d395e632debe9ff4b6c0d4b6b92d61e565ec7b0d1450be1596be27af0",
+    "screens/reader/data/ReaderFileType.kt": "40075cac2fde651722c9ff500fbbb44df321fed45ef68aa4118dd43f99a7da53",
+    "screens/reader/settings/ReaderSettingsTable.kt": "8e16734572c6ced521ee2c6a1fd70dd0b4a721d257f7fab782988aa5418ce04e",
+    "screens/reader/settings/ReaderSettingsSettingRow.kt": "bff1a10d040541a2cb45d266907396f8c9ff5d66e6342f47fe610a09b3bd7003",
+    "screens/reader/settings/ReaderOptionLabels.kt": "483b787c45a4d8b4697c4306d042b204a31ecd58da70a86020bf14216bdd762a",
+    "screens/reader/settings/data/ReaderSettingsOptions.kt": "411e170606f92c5ef367f0a0a32d920791e49d5bc95449bcd797f6a1a1dd2d63",
+    "screens/reader/settings/data/MultiSelectorOption.kt": "26dfbabad2d71a1fe6c2177a4a9d4e53a7c96df2135b5011701a3ba8c5a7027f",
+    "uicomponents/themem3/ThemeM3.kt": "eef6f2d62415da4e1f3d748bf5f950e6b7094c629de2b1a49a7e94325277ec45",
+    "uicomponents/themem3/ColorM3.kt": "6be083939fb2f3b6e9b7c559ed14563780e98544a418303fb1f8ea088f9aaaa1",
+    "uicomponents/themem3/TypeM3.kt": "778ee75e06fe885456e19eab79fe3954786c722b90b2fed87d87a48ca0d31d3a"
+  },
+  "visual_checks_passed": false,
+  "status": "blocked",
+  "reason": "Emulator reported invalid color buffers and returned black frames despite the test activity being focused and the display being awake. Native toolbar/scroll/fullscreen visual coverage is not claimed.",
+  "production_apk_contains_fixture": false
+}

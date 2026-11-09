@@ -1,6 +1,12 @@
-# Build 314 — Prüfung läuft
+# Build 314 — veröffentlicht und unabhängig geprüft
 
-312 Reader-Tests, 122 native Tests und zwölf Browser-Suites bestanden; lokaler APK-Build erfolgreich. Visuelle Nachweise und öffentliche APK-/Update-Prüfung folgen vor Abschluss. Alle 13 Punkte stehen im Featureplan.
+- Release: https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.0-314
+- Quelle: `7eac431651ab4c4e621a2072396cac48f3555645`; Reader: `60d20ed573f73cf14efc18a7dbb7fab9157612d1`.
+- 312 Reader-Tests, 122 native Tests und zwölf Browser-Suites bestanden; lokaler APK-Build und GitHub-Pipeline erfolgreich. Zwei neue Regressionen reproduzierten die bisherigen Dark-Vorschau-/Radierfehler vor der Korrektur.
+- Öffentliche APK heruntergeladen und geprüft: Signatur, Quellen, Paketdaten, Receiver-Berechtigung und Prüfsummen stimmen überein. SHA-256: `c57939a0d8099eb85bb4e976de82784acb854b8f1df811660f6088a448bd5cf6`.
+- API 31/35: Updates von Build 303 und 313 erhalten Testdaten und UID; App-Start und Ablehnung des alten Schlüssels erfolgreich. Obtainium-Zugriff anonym geprüft.
+- Alle 13 gesammelten Nachbesserungen umgesetzt; Details im Featureplan und Changelog.
+- Native Sichtprüfung lokal durch schwarzen Emulator-Grafikoutput begrenzt und ausdrücklich nicht als bestanden gewertet. Physische BOOX-/GrapheneOS-Animationen und Kontosync separat. Nachweise: `qa/build314/`.
 
 # Build 313 — veröffentlicht und unabhängig geprüft
 

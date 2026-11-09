@@ -2,6 +2,8 @@
 
 ## 1.0.0-314 — 9. November 2026
 
+- Veröffentlicht und unabhängig heruntergeladen geprüft: 312 Reader-Tests, 122 native Tests, zwölf Browser-Suites und beide API-31/35-Update-Prüfungen bestanden. Signatur, Quellen und Prüfsummen stimmen überein; native Sichtprüfung wegen lokaler Emulator-Grafikprobleme begrenzt.
+
 - Vollständig radierte Striche werden sofort im lokalen Annotationsmodell und Undo-Verlauf entfernt; die Rückmeldung aus Android ist keine Voraussetzung mehr für die sichtbare Löschung.
 - Reihenfolge im Dock: Notiz, Text, Undo, Bereich, Stift, Radierer, Farbe. Bereich direkt links vom Stift; Stift/Radierer/Farbe bilden eine zusammenhängende Gruppe.
 - Vorschau bleibt beim Werkzeugwechsel montiert; Breite und Unterkante bleiben beim Zurückwechseln stabil.
