@@ -1,6 +1,20 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 9. November 2026. Build 314 setzt die 13 gesammelten Reader-Nachbesserungen um.
+Stand: 9. November 2026. Build 315 ist der erste als „Motero 1.0“ benannte Release.
+
+## Reader-Nachbesserungen: Build 315 / 1.0
+
+- Jumped / Continuous als zweite Knopfreihe unter Scrolling ohne neue Rubrik. Continuous bleibt Standard; Jumped zeigt eine Leseseite und blättert bei deutlicher Wischgeste vollständig weiter. Herauszoomen und Übersicht bleiben zugänglich.
+- Weißer innerer Auswahlring im Highlight-Schnellmenü und bei Annotationsfarben, runde Tipp-Rückmeldung; ausgewählte Hashtag-Kürzel ohne Haken.
+- Farbzeile mit fünf sichtbaren Plätzen: vier horizontal verschiebbar, Violett fest erreichbar. Stiftbreite und Radierergrößen bleiben in derselben zweiten Dockzeile.
+- Undo ganz links, langer Druck für Redo. Native Verfügbarkeit folgt dem Annotationsverlauf; neue Änderungen leeren den Redo-Verlauf.
+- Dock-Breite zuerst ändern, dann Vorschau/Werkzeuge austauschen; funktioniert bei schmalerer und breiterer Zielfläche.
+- Deckende Statusleisten-Unterlage im Reader-Theme, gemeinsam mit den Toolbars ein-/ausgeblendet. Vollbild ohne Unterlage und ohne reservierten Statusbereich; kein Gradient.
+- GitHub: erster stabiler Titel „Motero 1.0“, bisherige Releases als Alpha. Technische Tags und APK-Namen bleiben für Obtainium erhalten; keine alten Downloads werden ersetzt.
+
+## Vorheriger Stand
+
+Build 314 setzt die 13 gesammelten Reader-Nachbesserungen um.
 
 ## Reader-Nachbesserungen: Build 314
 

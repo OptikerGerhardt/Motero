@@ -430,7 +430,7 @@ class ReaderViewModel @Inject constructor(
     fun onReaderRendererGone() {
         updateState { copy(manualCropOpen = false, isReaderLoading = true, selectedAnnotationKey = null,
             readerAnnotationArgs = null, readerAnnotationMoreArgs = null, showCreationToolbar = false, selectedText = null, rendererFailed = automaticRecoveryUsed,
-            canUndoAnnotation = false, rendererGeneration = if (automaticRecoveryUsed) rendererGeneration else rendererGeneration + 1) }
+            canUndoAnnotation = false, canRedoAnnotation = false, rendererGeneration = if (automaticRecoveryUsed) rendererGeneration else rendererGeneration + 1) }
         automaticRecoveryUsed = true
     }
     fun retryReaderRenderer() {
@@ -1749,7 +1749,7 @@ class ReaderViewModel @Inject constructor(
             ReaderWebData.clearSelectedTextParams -> {
                 clearSelectedTextParams()
             }
-            is ReaderWebData.setHistoryState -> updateState { copy(canUndoAnnotation = successValue.canUndo) }
+            is ReaderWebData.setHistoryState -> updateState { copy(canUndoAnnotation = successValue.canUndo, canRedoAnnotation = successValue.canRedo) }
             is ReaderWebData.setCropEditorState -> {
                 val state = successValue.state
                 readerWebCallChainExecutor.cropEditorAction("insets", top = cropTopInset, bottom = 12.0)
@@ -2063,6 +2063,10 @@ class ReaderViewModel @Inject constructor(
 
     fun undoAnnotation() {
         if (viewState.canUndoAnnotation && !viewState.isReaderLoading) viewModelScope.launch { readerWebCallChainExecutor.undoAnnotation() }
+    }
+
+    fun redoAnnotation() {
+        if (viewState.canRedoAnnotation && !viewState.isReaderLoading) viewModelScope.launch { readerWebCallChainExecutor.redoAnnotation() }
     }
 
     fun toggleToolbarButton() {
@@ -2883,6 +2887,7 @@ class ReaderViewModel @Inject constructor(
                 }
                 if (viewState.fileType == ReaderFileType.PDF) {
                     readerWebCallChainExecutor.setScrollMode(readerSettings.scrollMode)
+                    readerWebCallChainExecutor.setPageNavigation(readerSettings.effectivePageNavigation())
                     readerWebCallChainExecutor.setDirectHighlight(!readerSettings.nativeTextSelection)
                     readerWebCallChainExecutor.setPageFitting(readerSettings, applyFit)
                 }
@@ -3067,6 +3072,7 @@ data class ReaderViewState(
     val showSideBar: Boolean = false,
     val showCreationToolbar: Boolean = false,
     val canUndoAnnotation: Boolean = false,
+    val canRedoAnnotation: Boolean = false,
     val commentFocusKey: String? = null,
     val commentFocusText: String = "",
     val sidebarSliderSelectedOption: ReaderSliderOptions = ReaderSliderOptions.Annotations,

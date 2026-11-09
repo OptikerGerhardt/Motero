@@ -22,6 +22,7 @@ config = (root / 'buildSrc/src/main/kotlin/BuildConfig.kt').read_text()
 code = int(re.search(r'const val versionCode = (\d+)', config).group(1))
 version = '.'.join(re.search(r'\b' + key + r'\s*=\s*(\d+)', config).group(1) for key in ['major', 'minor', 'patch']) + '-' + str(code)
 metadata = dict(version=version, version_code=code, tag='v' + version, apk=f'Motero_Build{code}.apk', source=f'Motero_Build{code}_Source.zip')
+metadata['release_title'] = 'Motero 1.0' if code == 315 else f'Motero {version}'
 if args.metadata_only:
     print(json.dumps(metadata))
     raise SystemExit()
@@ -69,7 +70,7 @@ with zipfile.ZipFile(source) as archive:
 changelog = (root / 'CHANGELOG.md').read_text()
 match = re.search(r'^## ' + re.escape(version) + r'[^\n]*\n(.*?)(?=^## |\Z)', changelog, re.M | re.S)
 changes = match.group(1).strip() if match else 'Änderungen stehen im Changelog und in den Commits dieses Tags.'
-notes = f"Motero {version}\n\n{changes}\n\nAPK als Update über die bestehende Motero-Testversion installieren. Paket org.zotero.android.debug; eigener privater Motero-Signierer mit V3-Zertifikatsrotation, Android 9+. Die tatsächliche Installation und Datenübernahme auf einem Gerät müssen gesondert geprüft werden.\n\nDie vollständigen Quellen einschließlich Submodulen sind beigefügt. Automatische Tests und Build-Prüfungen ersetzen keinen physischen Geräte-/BOOX-Tastatur- oder Kontosync-Test.\n"
+notes = f"{metadata['release_title']} (Build {code})\n\n{changes}\n\nAPK als Update über die bestehende Motero-Version installieren. Paket org.zotero.android.debug; unveränderter privater Motero-Signierer mit V3-Zertifikatsrotation, Android 9+. Die beigefügten Berichte dokumentieren die automatischen API-31/35-Update-Prüfungen; physische Geräteprüfungen sind separat.\n\nDie vollständigen Quellen einschließlich Submodulen sind beigefügt. Automatische Tests und Build-Prüfungen ersetzen keinen physischen Geräte-/BOOX-Tastatur- oder Kontosync-Test.\n"
 (args.output / 'RELEASE_NOTES.md').write_text(notes)
 (args.output / 'release-metadata.json').write_text(json.dumps(metadata, indent=2) + '\n')
 (args.output / 'SHA256SUMS.txt').write_text(''.join(sha(path.read_bytes()) + '  ' + path.name + '\n'

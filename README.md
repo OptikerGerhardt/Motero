@@ -8,7 +8,7 @@ This fork is maintained independently and is not affiliated with or endorsed by 
 
 ## Features
 
-- Direct text highlighting, Zotero tags, and an animated bottom PDF dock with annotation Undo, inline color/size controls, and area/stroke erasing.
+- Direct text highlighting, Zotero tags, and an animated bottom PDF dock with annotation Undo, long-press Redo, inline color/size controls, and area/stroke erasing.
 - Black bookmark flags, a bookmark filter, and direct jump/delete shortcuts.
 - Reader appearance applied at startup, matching system-bar contrast and page previews.
 - Continuous cropped PDF pages, temporary two-finger access to full pages, and an overview that stays open when two complete pages are visible.
@@ -16,6 +16,7 @@ This fork is maintained independently and is not affiliated with or endorsed by 
 - Automatic content fitting with controls for margins and marginal notes, local layout learning, and a bounded geometry cache.
 - Automatic or manual content cropping, shared by the page-fitting modes. Manual frames for all, odd, or even pages are saved per attachment.
 - SmartScroll, hardware-button navigation, and edge taps in vertical, horizontal, and wrapped PDF layouts.
+- Continuous scrolling or single-page swipe navigation, with two-finger access to the page overview.
 - A top-right bookmark shortcut for the centered reading page: tap to add a black bookmark, then tap again to remove it. Existing bookmark colors are preserved.
 - Tag suggestions ranked by use in the current document and library, with explicit creation of new tags.
 - EPUB navigation, local reading-position restoration, and a persistent choice of progress display, including hidden.
@@ -31,6 +32,8 @@ Release APKs are signed with a dedicated Motero key. The public certificate and 
 Use **Build 307 or later** when updating an earlier Motero test build. Build 306 has a receiver-permission conflict that prevents this migration. The corrected update retains the application ID and uses a new internal permission alongside signing-key rotation. Back up your data before updating. A successful Build 307 update has been reported on a Pixel 8 running GrapheneOS; BOOX confirmation is still pending. See [SECURITY.md](SECURITY.md).
 
 You can also track this repository with [Obtainium](https://github.com/ImranR98/Obtainium). Use the APK filename filter `^Motero_Build[0-9]+\.apk$`.
+
+**Motero 1.0** starts with Build 315. Earlier releases are labeled Alpha. Release titles are separate from the retained build tags and increasing Android version codes, so existing Obtainium installations can continue updating. Keep the default tag-based version detection; custom filters matching old release titles may need updating.
 
 ## Development with ChatGPT
 

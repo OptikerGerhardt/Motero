@@ -1,5 +1,13 @@
 # Änderungen
 
+## 1.0.0-315 — 9. November 2026 — Motero 1.0
+
+- „Jumped“ und „Continuous“ direkt unter Scrolling: freie Bewegung wie bisher oder vollständige Seitenwechsel per Wischgeste, mit einer sichtbaren Leseseite. Zwei-Finger-Zoom und antippbare Seitenübersicht bleiben erhalten, unabhängig von Scrollrichtung und Zuschnitt.
+- Undo ganz links im Annotationsdock, Redo per langem Druck und barrierefreier Langdruck-Aktion. Verlauf und Redo-Verfügbarkeit werden zwischen Reader und Android übertragen.
+- Runde Farbfeld-Rückmeldung und weißer Auswahlring wie im Annotationsdialog; keine zusätzlichen Haken auf den Hashtag-Kürzeln. Vier verschiebbare Farben und ein dauerhaft erreichbares violettes Feld, mit einrastender Palette und adaptiver Breite.
+- Dock-Breite wird vor dem Werkzeugwechsel angepasst, auch beim Verkleinern auf breiten E-Readern. Statusleisten-Abdeckung folgt Reader-Theme und Toolbars; im Vollbild bleibt kein reservierter oder abgedeckter PDF-Streifen zurück.
+- Erster stabil benannter Release „Motero 1.0“. Ältere Releases werden als Alpha gekennzeichnet; bestehende Tags, APK-Dateien und Signaturen bleiben erhalten. Android-Buildnummer steigt auf 315, aktuelle Update-Basis ist Build 314.
+
 ## 1.0.0-314 — 9. November 2026
 
 - Veröffentlicht und unabhängig heruntergeladen geprüft: 312 Reader-Tests, 122 native Tests, zwölf Browser-Suites und beide API-31/35-Update-Prüfungen bestanden. Signatur, Quellen und Prüfsummen stimmen überein; native Sichtprüfung wegen lokaler Emulator-Grafikprobleme begrenzt.

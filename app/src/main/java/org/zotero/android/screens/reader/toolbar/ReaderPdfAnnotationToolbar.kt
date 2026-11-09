@@ -1,6 +1,12 @@
 package org.zotero.android.screens.reader.toolbar
 
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,7 +16,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.foundation.border
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.ui.semantics.Role
 import org.zotero.android.database.objects.AnnotationsConfig
@@ -43,13 +50,16 @@ internal fun ReaderPdfAnnotationToolbar(viewModel: ReaderViewModel, state: Reade
     )
     Row(modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-        tools.forEachIndexed { index, (type, icon, title) ->
-            if (index == 2) {
-                IconButton(onClick = viewModel::undoAnnotation, enabled = enabled && state.canUndoAnnotation && !state.isReaderLoading,
-                    modifier = Modifier.size(48.dp)) {
-                    Icon(painterResource(Drawables.undo_24px), stringResource(R.string.reader_undo_annotation), Modifier.size(24.dp))
-                }
-            }
+        val historyEnabled = enabled && !state.isReaderLoading
+        Box(Modifier.size(48.dp).clip(CircleShape)
+            .combinedClickable(enabled = historyEnabled && (state.canUndoAnnotation || state.canRedoAnnotation),
+                onClickLabel = stringResource(R.string.reader_undo_annotation),
+                onLongClickLabel = stringResource(R.string.reader_redo_annotation),
+                onClick = viewModel::undoAnnotation, onLongClick = viewModel::redoAnnotation), contentAlignment = Alignment.Center) {
+            Icon(painterResource(Drawables.undo_24px), stringResource(R.string.reader_undo_annotation), Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (historyEnabled && (state.canUndoAnnotation || state.canRedoAnnotation)) 1f else .38f))
+        }
+        tools.forEach { (type, icon, title) ->
             IconToggleButton(checked = state.activeTool == type, onCheckedChange = { viewModel.togglePdfTool(type) }, enabled = enabled,
                 modifier = Modifier.size(48.dp)) {
                 Icon(painterResource(icon), stringResource(title), Modifier.size(24.dp))
@@ -89,17 +99,20 @@ internal fun ReaderPdfToolOptions(viewModel: ReaderViewModel, state: ReaderViewS
                 ReaderAnnotationTool.image -> AnnotationType.image
                 else -> AnnotationType.note
             }
-            Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()), verticalAlignment = Alignment.CenterVertically) {
-                AnnotationsConfig.colors(type).forEach { hex ->
-                    val selected = state.toolColors[tool].equals(hex, ignoreCase = true)
-                    Box(Modifier.size(40.dp).selectable(selected, role = Role.RadioButton,
-                        onClick = { viewModel.setPdfToolColor(hex) })
-                        .semantics { contentDescription = hex }, contentAlignment = Alignment.Center) {
-                        Surface(Modifier.size(26.dp).then(if (selected) Modifier.border(2.dp,
-                            MaterialTheme.colorScheme.primary, RoundedCornerShape(13.dp)) else Modifier)
-                            .padding(if (selected) 3.dp else 0.dp),
-                            shape = RoundedCornerShape(13.dp), color = Color(android.graphics.Color.parseColor(hex))) {}
+            BoxWithConstraints(Modifier.weight(1f)) {
+                val colors = AnnotationsConfig.colors(type)
+                // Four scrolling slots and an anchored purple slot. Extra
+                // colors remain reachable without changing the dock geometry.
+                val purple = colors.firstOrNull { it.equals("#a28ae5", true) } ?: colors.getOrNull(4)
+                val scrolling = colors.filter { it != purple }
+                val slot = minOf(40.dp, maxWidth / 5)
+                val paletteScroll = rememberLazyListState()
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                    LazyRow(Modifier.width(slot * 4), state = paletteScroll,
+                        flingBehavior = rememberSnapFlingBehavior(paletteScroll)) {
+                        items(scrolling.size) { i -> ReaderToolColor(scrolling[i], state.toolColors[tool], slot, viewModel::setPdfToolColor) }
                     }
+                    purple?.let { ReaderToolColor(it, state.toolColors[tool], slot, viewModel::setPdfToolColor) }
                 }
             }
         }
@@ -107,7 +120,7 @@ internal fun ReaderPdfToolOptions(viewModel: ReaderViewModel, state: ReaderViewS
             Slider(value = draftSize, onValueChange = { draftSize = it },
                 onValueChangeFinished = { viewModel.setPdfToolSize(draftSize) },
                 valueRange = if (tool == ReaderAnnotationTool.text) 6f..72f else .5f..25f,
-                modifier = (if (eraser) Modifier.weight(1f) else Modifier.width(88.dp))
+                modifier = (if (eraser) Modifier.weight(1f) else Modifier.width(68.dp))
                     .semantics { contentDescription = sizeLabel })
             Text(String.format(Locale.getDefault(), "%.1f", draftSize),
                 style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(30.dp),
@@ -122,6 +135,19 @@ internal fun ReaderPdfToolOptions(viewModel: ReaderViewModel, state: ReaderViewS
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ReaderToolColor(hex: String, current: String?, slot: androidx.compose.ui.unit.Dp, onSelect: (String) -> Unit) {
+    val selected = current.equals(hex, ignoreCase = true)
+    Box(Modifier.width(slot).height(40.dp).clip(CircleShape)
+        .selectable(selected, role = Role.RadioButton, onClick = { onSelect(hex) })
+        .semantics { contentDescription = hex }, contentAlignment = Alignment.Center) {
+        Canvas(Modifier.size(26.dp)) {
+            drawCircle(Color(android.graphics.Color.parseColor(hex)))
+            if (selected) drawCircle(Color.White, radius = 10.dp.toPx(), style = Stroke(2.dp.toPx()))
         }
     }
 }

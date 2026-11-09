@@ -231,7 +231,8 @@ class ReaderWebCallChainExecutor @Inject constructor(
                         }
 
                         "onHistoryChanged" -> {
-                            observable.emitAsync(Result.Success(ReaderWebData.setHistoryState(data["params"].asJsonObject["canUndo"].asBoolean)))
+                            val history = data["params"].asJsonObject
+                            observable.emitAsync(Result.Success(ReaderWebData.setHistoryState(history["canUndo"].asBoolean, history["canRedo"]?.asBoolean ?: false)))
                         }
                         "onCropEditorState" -> {
                             observable.emitAsync(Result.Success(ReaderWebData.setCropEditorState(data["params"].asJsonObject)))
@@ -501,6 +502,7 @@ class ReaderWebCallChainExecutor @Inject constructor(
             } else null,
             directHighlight = !defaults.getReaderSettings().nativeTextSelection,
             readerChromeVisible = chromeVisible,
+            pageNavigation = defaults.getReaderSettings().effectivePageNavigation(),
         )
 
         val flowModeString = when (defaults.getReaderSettings().pageLayoutFlowMode) {
@@ -600,6 +602,15 @@ class ReaderWebCallChainExecutor @Inject constructor(
 
     suspend fun undoAnnotation() = suspendCancellableCoroutine<Unit> { cont ->
         readerWebViewHandler.evaluateJavascript("window.undoReaderAnnotation?.();") { cont.resume(Unit) }
+    }
+
+    suspend fun redoAnnotation() = suspendCancellableCoroutine<Unit> { cont ->
+        readerWebViewHandler.evaluateJavascript("window.redoReaderAnnotation?.();") { cont.resume(Unit) }
+    }
+
+    suspend fun setPageNavigation(mode: String) = suspendCancellableCoroutine<Unit> { cont ->
+        val value = if (mode == "jumped") "jumped" else "continuous"
+        readerWebViewHandler.evaluateJavascript("window.setPageNavigation?.('$value');") { cont.resume(Unit) }
     }
 
     suspend fun updateInterface(isDark: Boolean) {

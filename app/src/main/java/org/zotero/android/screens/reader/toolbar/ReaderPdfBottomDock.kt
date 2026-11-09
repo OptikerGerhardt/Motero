@@ -34,15 +34,15 @@ internal fun ReaderPdfBottomDock(viewModel: ReaderViewModel, state: ReaderViewSt
         .padding(horizontal = 8.dp, vertical = 12.dp), contentAlignment = Alignment.BottomCenter) {
         val previewWidth = minOf(maxWidth * .8f, 560.dp,
             (previews.thumbnailCache.size.coerceAtLeast(1) * 38 + 10).dp).coerceAtLeast(48.dp)
-        val toolWidth = maxOf(previewWidth, minOf(maxWidth, 344.dp))
+        val toolWidth = minOf(maxWidth, 344.dp)
         val transition = updateTransition(tools, label = "reader dock mode")
-        // Expand first on entry; slide down before contracting on exit. Both
-        // layers share a 60dp baseline and remain clipped by the same surface.
+        // Complete the width change before swapping layers, whether the target
+        // is wider (phone) or narrower (tablet/e-reader).
         val width by transition.animateDp(transitionSpec = {
-            tween(durationMillis = 140, delayMillis = if (targetState) 0 else 180)
+            tween(durationMillis = 140)
         }, label = "dock width") { if (it) toolWidth else previewWidth }
         val slide by transition.animateFloat(transitionSpec = {
-            tween(durationMillis = 180, delayMillis = if (targetState) 140 else 0)
+            tween(durationMillis = 180, delayMillis = 140)
         }, label = "dock tools slide") { if (it) 1f else 0f }
         val optionsHeight by animateDpAsState(
             if (tools && state.pdfToolOptionsVisible) 60.dp else 0.dp,

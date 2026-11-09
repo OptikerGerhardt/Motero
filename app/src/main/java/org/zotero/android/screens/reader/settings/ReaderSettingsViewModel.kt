@@ -81,6 +81,7 @@ internal class ReaderSettingsViewModel @Inject constructor(
             copy(
                 selectedAppearanceOption = convert(readerSettings.appearanceMode),
                 selectedScrollModeOption = convert(readerSettings.scrollMode),
+                pageNavigation = readerSettings.effectivePageNavigation(),
                 selectedSpreadsOption = convert(readerSettings.spreadsMode),
                 selectedPageLayoutFlowMode = convert(readerSettings.pageLayoutFlowMode),
                 lineHeight = readerSettings.lineHeight,
@@ -193,6 +194,9 @@ internal class ReaderSettingsViewModel @Inject constructor(
         val option = ReaderSettingsOptions.entries[optionOrdinal]
 
         when (option) {
+            ReaderSettingsOptions.NavigationJumped, ReaderSettingsOptions.NavigationContinuous -> {
+                updateState { copy(pageNavigation = if (option == ReaderSettingsOptions.NavigationJumped) "jumped" else "continuous") }
+            }
             ReaderSettingsOptions.CropAutomatic, ReaderSettingsOptions.CropManual -> Unit
             ReaderSettingsOptions.AppearanceLight, ReaderSettingsOptions.AppearanceDark, ReaderSettingsOptions.AppearanceAutomatic -> {
                 updateState {
@@ -352,6 +356,8 @@ internal class ReaderSettingsViewModel @Inject constructor(
             ReaderSettingsOptions.ScrollModeWrapped -> {
                 readerSettings.scrollMode = PageScrollMode.WRAPPED
             }
+            ReaderSettingsOptions.NavigationJumped -> readerSettings.pageNavigation = "jumped"
+            ReaderSettingsOptions.NavigationContinuous -> readerSettings.pageNavigation = "continuous"
 
             ReaderSettingsOptions.PageSpreadsNone -> {
                 readerSettings.spreadsMode = PageSpreadsMode.NONE
@@ -433,6 +439,7 @@ internal data class ReaderSettingsViewState(
     val lineHeight: Float = 1.2f,
     val textScale: Float = 1f,
     val cropMode: String = "automatic",
+    val pageNavigation: String = "continuous",
     val progressMode: String = "both",
     val wordSpacing: Float = 0f,
     val letterSpacing: Float = 0f,

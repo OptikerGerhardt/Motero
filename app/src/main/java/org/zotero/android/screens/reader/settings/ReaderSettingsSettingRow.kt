@@ -42,7 +42,7 @@ import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.foundation.safeStringResource
 
 internal fun LazyListScope.readerSettingsSettingRow(
-    @StringRes titleResId: Int,
+    @StringRes titleResId: Int? = null,
     options: List<ReaderSettingsOptions>,
     selectedOption: ReaderSettingsOptions,
     optionSelected: (Int) -> Unit,
@@ -50,13 +50,15 @@ internal fun LazyListScope.readerSettingsSettingRow(
 ) {
     item {
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = safeStringResource(id = titleResId),
-                color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(if (titleResId == null) 6.dp else 12.dp))
+            if (titleResId != null) {
+                Text(
+                    text = safeStringResource(id = titleResId),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
 
             val optionsList = options.map { opt ->
                 MultiSelectorOption(

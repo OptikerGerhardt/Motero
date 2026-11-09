@@ -6,6 +6,18 @@ import org.junit.Test
 import org.zotero.android.screens.reader.settings.data.ReaderSettings
 
 class ReaderPageFittingSettingsTest {
+    @Test fun `navigation defaults migrate and persist independently of scrolling direction`() {
+        val gson = Gson()
+        val old = gson.fromJson("""{"fitToWidth":true}""", ReaderSettings::class.java)
+        assertEquals("continuous", old.effectivePageNavigation())
+        for (direction in org.zotero.android.screens.reader.settings.data.PageScrollMode.entries) {
+            val settings = ReaderSettings.default().apply { scrollMode = direction; pageNavigation = "jumped" }
+            val restored = gson.fromJson(gson.toJson(settings), ReaderSettings::class.java)
+            assertEquals("jumped", restored.effectivePageNavigation())
+            assertEquals(direction, restored.scrollMode)
+        }
+        assertEquals("continuous", ReaderSettings.default().apply { pageNavigation = "unknown" }.effectivePageNavigation())
+    }
     @Test fun `older settings keep their fitting mode and use the selected crop`() {
         val old = Gson().fromJson("""{"fitToWidth":true,"fitToContent":false}""", ReaderSettings::class.java)
         assertEquals("width", old.pageFitMode())

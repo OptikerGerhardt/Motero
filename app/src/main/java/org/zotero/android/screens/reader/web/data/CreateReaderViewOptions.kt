@@ -14,6 +14,7 @@ data class CreateReaderViewOptions(
     var pageWidthFit: Boolean = false,
     var directHighlight: Boolean = false,
     var readerChromeVisible: Boolean = false,
+    var pageNavigation: String = "continuous",
 
     var colorScheme: String = "light",
 )

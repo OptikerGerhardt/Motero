@@ -42,6 +42,11 @@ internal fun ReaderSettingsTable(
                 selectedOption = viewState.selectedScrollModeOption,
                 optionSelected = viewModel::onOptionSelected
             )
+            readerSettingsSettingRow(
+                options = listOf(ReaderSettingsOptions.NavigationJumped, ReaderSettingsOptions.NavigationContinuous),
+                selectedOption = if (viewState.pageNavigation == "jumped") ReaderSettingsOptions.NavigationJumped else ReaderSettingsOptions.NavigationContinuous,
+                optionSelected = viewModel::onOptionSelected,
+            )
         }
         // Fitting applies to the PDF pages, not to Reading Mode's reflowed text
         if (viewState.fileType == ReaderFileType.PDF && !viewState.readingModeEnabled) {

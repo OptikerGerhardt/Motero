@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the ten portable reader browser regressions using the project's fixtures."""
+"""Run portable reader browser regressions using the project's fixtures."""
 import argparse
 import os
 from pathlib import Path
@@ -12,7 +12,8 @@ checks = {'gestures': 'test-boox-browser.cjs', 'features': 'test-boox-features.c
     'fitting': 'test-boox-fitting.cjs', 'stability': 'test-boox-stability.cjs',
     'controls': 'test-boox-reader-controls.cjs', 'annotation-tools': 'test-boox-annotation-tools.cjs',
     'fit-recovery': 'test-boox-fit-recovery.cjs', 'reader-update': 'test-boox-reader-update.cjs',
-    'manual-crop': 'test-boox-manual-crop.cjs', 'edge-taps': 'test-boox-edge-taps.cjs', 'refinements': 'test-boox-refinements.cjs', 'ui-consistency': 'test-boox-ui-consistency.cjs'}
+    'manual-crop': 'test-boox-manual-crop.cjs', 'edge-taps': 'test-boox-edge-taps.cjs', 'refinements': 'test-boox-refinements.cjs', 'ui-consistency': 'test-boox-ui-consistency.cjs',
+    'page-navigation': 'test-boox-page-navigation.cjs'}
 parser = argparse.ArgumentParser()
 parser.add_argument('checks', nargs='*', help='Optional check names: ' + ', '.join(checks))
 parser.add_argument('--browser', default=os.environ.get('BOOX_TEST_BROWSER') or shutil.which('chromium') or shutil.which('google-chrome'))

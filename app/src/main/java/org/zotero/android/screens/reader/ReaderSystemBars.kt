@@ -3,6 +3,8 @@ package org.zotero.android.screens.reader
 import android.view.View
 import android.view.Window
 import android.view.ViewTreeObserver
+import android.os.Build
+import android.graphics.Color
 import androidx.compose.runtime.*
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -19,6 +21,11 @@ internal fun ReaderSystemBars(window: Window, view: View, chromeVisible: Boolean
     val synchronize = remember(window, view, chromeVisible, isDark) {
         Runnable {
             if (view.hasWindowFocus()) {
+                // ReaderBox paints the theme-correct cover. OEM/system contrast
+                // scrims must not leave an opaque strip behind in fullscreen.
+                @Suppress("DEPRECATION")
+                window.statusBarColor = Color.TRANSPARENT
+                if (Build.VERSION.SDK_INT >= 29) window.isStatusBarContrastEnforced = false
                 controller.isAppearanceLightStatusBars = !isDark
                 controller.isAppearanceLightNavigationBars = !isDark
                 controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
@@ -46,10 +53,16 @@ internal fun ReaderSystemBars(window: Window, view: View, chromeVisible: Boolean
         }
     }
     DisposableEffect(window) {
+        @Suppress("DEPRECATION")
+        val statusColor = window.statusBarColor
+        val statusContrast = if (Build.VERSION.SDK_INT >= 29) window.isStatusBarContrastEnforced else false
         val statusLight = controller.isAppearanceLightStatusBars
         val navigationLight = controller.isAppearanceLightNavigationBars
         val behavior = controller.systemBarsBehavior
         onDispose {
+            @Suppress("DEPRECATION")
+            window.statusBarColor = statusColor
+            if (Build.VERSION.SDK_INT >= 29) window.isStatusBarContrastEnforced = statusContrast
             controller.isAppearanceLightStatusBars = statusLight
             controller.isAppearanceLightNavigationBars = navigationLight
             controller.systemBarsBehavior = behavior

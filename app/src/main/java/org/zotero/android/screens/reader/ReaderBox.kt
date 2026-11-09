@@ -124,6 +124,18 @@ internal fun ReaderBox(
             val readingModifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)
                 .then(if (viewState.fileType == ReaderFileType.PDF) Modifier else Modifier.windowInsetsPadding(readingInsets))
             ReaderWebView(viewModel = viewModel, modifier = readingModifier)
+            // This is an overlay, never a reserved strip in the PDF viewport.
+            // Stable insets avoid a second layout jump as Android shows its bars.
+            androidx.compose.animation.AnimatedVisibility(
+                visible = viewState.isTopBarVisible || viewState.manualCropOpen,
+                enter = slideInVertically(tween(220)) { -it } + fadeIn(tween(160)),
+                exit = slideOutVertically(tween(180)) { -it } + fadeOut(tween(140)),
+                modifier = Modifier.align(Alignment.TopCenter),
+            ) {
+                Box(Modifier.fillMaxWidth().height(with(density) {
+                    WindowInsets.statusBarsIgnoringVisibility.union(WindowInsets.displayCutout).getTop(this).toDp()
+                }).background(MaterialTheme.colorScheme.surface))
+            }
             if ((viewState.fileType != ReaderFileType.PDF || viewState.readingModeEnabled) && viewState.showCreationToolbar && viewState.isTopBarVisible && !viewState.manualCropOpen) {
                 ReaderAnnotationCreationToolbar(
                     viewState = viewState,
