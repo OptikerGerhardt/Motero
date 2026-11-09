@@ -108,13 +108,31 @@ function removeIntersectingPoints(circleCenterX, circleCenterY, circleWidth, pos
 	return position;
 }
 
-export function eraseInk(circleCenterX, circleCenterY, circleWidth, annotations) {
+// Intersect segments as well as sample points: fast pen strokes can have a
+// long segment that crosses the eraser without either endpoint being inside.
+function strokeIntersectsCircle(path, x, y, radius) {
+    const radius2 = radius * radius;
+    for (let i = 0; i < path.length; i += 2) {
+        const ax = path[i], ay = path[i + 1];
+        const bx = path[i + 2] ?? ax, by = path[i + 3] ?? ay;
+        const dx = bx - ax, dy = by - ay;
+        const length2 = dx * dx + dy * dy;
+        const t = length2 ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / length2)) : 0;
+        if ((ax + t * dx - x) ** 2 + (ay + t * dy - y) ** 2 <= radius2) return true;
+    }
+    return false;
+}
+
+export function eraseInk(circleCenterX, circleCenterY, circleWidth, annotations, mode = 'area') {
 	const modifiedAnnotations = [];
 
 	annotations.forEach(annotation => {
 		const originalTotalPoints = annotation.position.paths.reduce((total, path) => total + path.length, 0);
 		let { position } = annotation;
-		position = removeIntersectingPoints(circleCenterX, circleCenterY, circleWidth, position);
+        position = mode === 'stroke'
+            ? { ...position, paths: position.paths.filter(path => !strokeIntersectsCircle(path,
+                circleCenterX, circleCenterY, circleWidth / 2 + (Number(position.width) || 0) / 2)) }
+            : removeIntersectingPoints(circleCenterX, circleCenterY, circleWidth, position);
 		const newTotalPoints = position.paths.reduce((total, path) => total + path.length, 0);
 
 		if (newTotalPoints !== originalTotalPoints) {

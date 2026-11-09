@@ -81,6 +81,8 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   await page.waitForFunction(()=>window.messages.some(x=>x.message?.event==='onManualCropChanged' && x.message.params.crop?.all));
   const saved=await page.evaluate(()=>window.messages.filter(x=>x.message?.event==='onManualCropChanged').at(-1).message.params.crop);
   close(saved.all,chosen);
+  assert.equal(saved.mode,'manual');
+  assert.equal((await read()).options.cropMode,'manual');
   await page.evaluate(()=>window.turnPageWithHardwareButton(true,0));
   close((await read()).bounds,chosen);
   await open('pdf','/fixture.pdf',{viewState:{pageIndex:1,scale:'page-width',scrollMode:0,spreadMode:0},pageFitting:{...fit,manualCrop:saved}});

@@ -3802,7 +3802,7 @@ class PDFView {
 			}
 			annotations.push(...action.annotations.values());
 			let [x, y] = position.rects[0];
-			let updatedAnnotations = eraseInk(x, y, this._tool.size, annotations);
+			let updatedAnnotations = eraseInk(x, y, this._tool.size, annotations, this._tool.eraserMode);
 			for (let annotation of updatedAnnotations) {
 				action.annotations.set(annotation.id, annotation);
 			}
@@ -4255,7 +4255,7 @@ class PDFView {
 			}
 			annotations.push(...action.annotations.values());
 			let [x, y] = originalPagePosition.rects[0];
-			let updatedAnnotations = eraseInk(x, y, this._tool.size, annotations);
+			let updatedAnnotations = eraseInk(x, y, this._tool.size, annotations, this._tool.eraserMode);
 			for (let annotation of updatedAnnotations) {
 				action.annotations.set(annotation.id, annotation);
 			}
