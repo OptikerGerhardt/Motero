@@ -1,6 +1,6 @@
 # Build 315 / Motero 1.0 — lokale Prüfung abgeschlossen
 
-- Reader `24cbc406763caeda648451248e9f61cf5517a041`; 314 Reader-Tests, 123 Android-Tests, 13 Browser-Suiten und elf Release-Infrastrukturtests bestanden.
+- Reader `80a4cf6695e18faac38fe418623903c742ab7641`; 314 Reader-Tests, 123 Android-Tests, 13 Browser-Suiten und elf Release-Infrastrukturtests bestanden.
 - Jumped/Continuous, Redo per langem Undo-Druck, runde Farbflächen mit weißem Auswahlring, Hashtags ohne Haken, adaptive Dock-Breite und Statusleisten-Abdeckung umgesetzt.
 - Wrapped-Rücksprung hält die gewählte Seite auch nach dem Reflow; verdeckte Nachbarn werden im Einzelseitenmodus nicht als aktuelle Seite gewählt. Letzter Touch-Pointer löst den Fit auch bei ausgeblendetem altem Touch-Ziel.
 - Unveränderte Paket- und Signieridentität; GitHub-Workflow veröffentlicht erst nach Signatur-/Quellenprüfung und echten API-31/35-Updates von Build 303 und 314.

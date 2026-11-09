@@ -1,12 +1,12 @@
 # Build 315 / Motero 1.0 verification
 
-Reader commit: `24cbc406763caeda648451248e9f61cf5517a041`.
+Reader commit: `80a4cf6695e18faac38fe418623903c742ab7641`.
 
 Local validation before publication:
 
 - 314 reader unit tests, 123 Android unit tests in 29 suites, and 13 Chromium browser suites passed.
 - Eleven release-infrastructure/signing tests passed. Development APK built with the final reader bundle; this APK is not distributed.
-- New browser regression uses real touch input for Jumped/Continuous in vertical, horizontal and wrapped layouts, including swipe/tap discrimination, two-finger overview, exact destination/fit restoration, and cleared touch state. It also covers wheel navigation without cropping.
+- New browser regression uses real touch input for Jumped/Continuous in vertical, horizontal and wrapped layouts, including swipe/tap discrimination, centering the reading page when enabling Jumped, two-finger overview, exact destination/fit restoration, and cleared touch state. It also covers wheel navigation without cropping.
 - Redo crosses the Android bridge and restores the annotation through the existing undo history. Quick-palette selection uses a white inner ring.
 - A 2500-page unit fixture guards against document-wide DOM updates during scroll and invisible neighbors taking the active page after a Wrapped reflow.
 
