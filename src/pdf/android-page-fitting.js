@@ -288,7 +288,10 @@ export class AndroidPageFitting {
             }
             this.win.clearTimeout(this.layoutRetryTimer); this.layoutRetryTimer = null;
             const start=this.metrics.now();
-            if (this.layout.apply(this.geometry, { preservePosition:true })) this.view._render();
+            this.layout.apply(this.geometry, { preservePosition:true });
+            // Reference masks can change without changing the page frame.
+            // The view's incremental renderer still needs that notification.
+            this.view._render();
             this.metrics.record('layout',start);
         });
     }

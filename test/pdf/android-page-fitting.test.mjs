@@ -241,3 +241,11 @@ test('a cancelled PDF.js analysis recovers a current fit without rejecting the U
  assert.equal(await fitting.apply(),false);await flush();
  assert.ok(fitting.applied);assert.ok(calls>1);
 });
+
+test('buffered reference masks repaint even when their page-frame geometry is unchanged',async()=>{
+ const {fitting,flush}=fixture();await fitting.configure({mode:'content',reference:'content',margin:0});
+ let painted=[];fitting.view._render=()=>{painted=fitting.maskRectsFor(0);};
+ const reference=[.05,.3,.08,.32];fitting.marginaliaByPage.set(0,[reference]);
+ fitting.queueGeometryRefresh();await flush();
+ assert.deepEqual(painted,[reference],'a newly detected reference must disappear from an already visible neighbor');
+});
