@@ -1,4 +1,4 @@
-# Cropping and scrolling in Build 317
+# Cropping and scrolling in Builds 317–318
 
 Motero changes reader geometry only. PDF files, annotation coordinates, package identity and signing policy are preserved.
 
@@ -42,4 +42,4 @@ The direct Zotero forum request remained blocked by HTTP 403 in the managed envi
 
 Reader/native unit tests and real Chromium suites are release prerequisites. `crop-performance` checks the text-only path, graphics fallback, cold/warm work counts and directional entry in all three scrolling layouts. It reports local stage timings, stable-frame turn times and browser long tasks. These synthetic browser results do not establish physical BOOX speed, display latency or live account synchronization.
 
-The protected release workflow additionally verifies production signing, embedded sources and API 31/35 updates from Builds 303 and 316 with data/UID retention and old-key refusal.
+Build 318 additionally repaints changed reference masks even when page frames are unchanged. The protected release workflow verifies production signing, embedded sources and API 31/35 updates from Builds 303 and 317 with data/UID retention and old-key refusal.

@@ -1,6 +1,10 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 9. November 2026. Build 317 / Motero 1.0.2 setzt die gesammelten Cropping-, Performance- und Bedienungskorrekturen um; Veröffentlichung nach den Prüfungen.
+Stand: 9. November 2026. Build 318 / Motero 1.0.3 ergänzt die in Build 317 veröffentlichten Cropping-, Performance- und Bedienungskorrekturen um die sofortige Aktualisierung von Randmasken.
+
+## Korrektur: Build 318 / 1.0.3
+
+- Neue Randmasken auf gepufferten Nachbarseiten aktualisieren sich auch bei unverändertem Seitenrahmen. Inkrementelles Zeichnen und die schnelleren Layout-Schreibvorgänge bleiben erhalten. Ein zusätzlicher Regressionstest sichert diesen Fall ab.
 
 ## Reader-Nachbesserungen: Build 317 / 1.0.2
 

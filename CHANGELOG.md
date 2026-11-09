@@ -1,5 +1,10 @@
 # Änderungen
 
+## 1.0.3-318 — 9. November 2026 — Motero 1.0.3
+
+- Neue Randmaskierungen gepufferter Seiten werden auch bei unverändertem Seitenrahmen sofort gezeichnet. Die Layout-Optimierung behält ihre gezielten Stiländerungen; der inkrementelle Renderer erhält weiterhin die erforderliche Aktualisierung.
+- Zusätzliche Regression reproduziert den Fehler aus Build 317 und besteht mit der Korrektur. 333 Reader-Tests; erneute Releaseprüfung einschließlich Update von Build 317. Alle Cropping-, Performance- und Bedienungsänderungen aus 317 enthalten.
+
 ## 1.0.2-317 — 9. November 2026 — Motero 1.0.2
 
 - Jumped: kurze Seiten bleiben zentriert; lange Seiten beginnen vorwärts oben und rückwärts unten. SmartScroll und erneutes Fitting behalten den Lesebereich statt die Mitte der nächsten Seite zu übernehmen.

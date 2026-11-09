@@ -1,4 +1,9 @@
-# Build 317 / Motero 1.0.2 — lokale Prüfungen abgeschlossen, Releaseprüfung ausstehend
+# Build 318 / Motero 1.0.3 — Randmasken-Korrektur, Releaseprüfung ausstehend
+
+- 333 Reader-Tests bestanden. Neuer Test reproduziert und behebt fehlendes Neuzeichnen einer Randmaskierung bei unverändertem Seitenrahmen.
+- Alle Änderungen aus Build 317 enthalten; Paket, Schlüssel und Nutzerdatenpfade bleiben erhalten. Frischer Build und API-31/35-Update-Prüfungen von 303 und 317 folgen im geschützten Workflow.
+
+# Build 317 / Motero 1.0.2 — veröffentlicht, Randmasken-Nachbesserung in 318
 
 - Lokale Release-APK gebaut, Paket `org.zotero.android.debug`, Code 317, Mindest-API 28 und Receiver-Namespace geprüft.
 - 332 Reader-Tests, 125 native Release-Tests in 30 Suiten und elf Release-Infrastrukturtests bestanden. Alle 14 Browser-Suiten bestanden.

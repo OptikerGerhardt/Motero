@@ -1,0 +1,61 @@
+DIAG odd {
+  page: 9,
+  scale: 1.2115384615384615,
+  active: true,
+  mode: 'width',
+  reference: 'content',
+  bounds: [ 0.21999999999999997, 0.1525, 0.8266666666666667, 0.9 ],
+  x: 207,
+  y: 191,
+  visible: [ 5.961249999999978, 5.951875000000001, 593.82125, 971.721875 ],
+  width: 600,
+  height: 800,
+  pw: 969,
+  ph: 1292,
+  clip: 'inset(191.077px 162px 123.231px 207.231px)',
+  cache: 14,
+  reported: {
+    pageFitMode: 'width',
+    pageFitRevision: 1,
+    readingPresentation: 'reading'
+  },
+  overview: false
+}
+DIAG even {
+  page: 10,
+  scale: 1.2115384615384615,
+  active: true,
+  mode: 'width',
+  reference: 'content',
+  bounds: [ 0.13, 0.1525, 0.7366666666666667, 0.9 ],
+  x: 120,
+  y: 191,
+  visible: [ 5.969999999999999, 5.951875000000001, 593.83, 971.721875 ],
+  width: 600,
+  height: 800,
+  pw: 969,
+  ph: 1292,
+  clip: 'inset(191.077px 249.231px 123.231px 120px)',
+  cache: 14,
+  reported: {
+    pageFitMode: 'width',
+    pageFitRevision: 1,
+    readingPresentation: 'reading'
+  },
+  overview: false
+}
+PASS separate odd/even alignment with stable text size and footnotes
+PASS complete content rectangle visible; clipping and view settle
+PASS content fit and first hardware press across Vertical, Horizontal and Wrapped
+PASS all display rotations preserve content and cached recognition
+PASS page-width zoom does not depend on height
+PASS true page-height zoom
+PASS adjustable content margins, full vertical paper access in width mode
+PASS manual zoom suspends fitting, selecting same mode reapplies, Off preserves zoom
+PASS wider tables, deep footnotes, landscape and blank page fallbacks
+PASS Wrapped overview restores fitting on selected page
+PASS new touch cancels pending fitting without late zoom
+PASS touch highlighting, palette and first annotation tap with active fitting width
+PASS touch highlighting, palette and first annotation tap with active fitting content
+PASS touch highlighting, palette and first annotation tap with active fitting height
+PASS: all Android fitting checks
