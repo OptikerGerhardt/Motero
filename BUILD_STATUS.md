@@ -1,10 +1,13 @@
-# Build 316 / Motero 1.0.1 — lokale Prüfung abgeschlossen
+# Build 316 / Motero 1.0.1 — veröffentlicht und unabhängig geprüft
 
-- Reader `ffa59d7e414d8a1be46f5b17605189a39be8cb78`; 314 Reader-Tests, 125 Android-Tests in 30 Suiten, 13 Browser-Suiten und elf Release-Infrastrukturtests bestanden.
-- Geometrie-Regressionsprüfung reproduziert in der bisherigen APK 401,5 CSS-Pixel Versatz nach oben. Korrektur prüft zentrierte Breitenanpassung nach Wischen, Randtippen, Hardware-Tasten und Übersichtssprüngen in allen drei Layouts, außerdem erste/letzte Seiten ohne Zuschnitt.
+- Release: https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.1-316 ; Prüflauf: https://github.com/OptikerGerhardt/Motero/actions/runs/42690410151 .
+- Quelle: `da33b516d603a72b05ea692a6198bcfadccf61c3`; Reader: `ffa59d7e414d8a1be46f5b17605189a39be8cb78`.
+- 314 Reader-Tests, 125 Android-Tests in 30 Suiten und 13 Browser-Suiten bestanden; lokal zusätzlich elf Infrastrukturtests. Signierte öffentliche APK unabhängig heruntergeladen und gegen Quellen, Signatur und Prüfsummen geprüft.
+- APK-SHA-256: `04e8f145a60bf95739b65297dd11c8b5d11c314f703553fa034040f31c2b7d43`. Unveränderter privater Motero-Signierer; 99 Reader-Quellen, 207 PDF.js- und 45 Runtime-Dateien geprüft. Latest-Release liefert Build 316.
+- API 31/35: Updates von 303 und 315 erhalten Datenmarker und UID und starten die App. Alter Schlüssel kann weder zurückinstallieren noch die interne Berechtigung nutzen.
+- Zentrierungs-Regressionsprüfung reproduziert in Build 315 401,5 CSS-Pixel Versatz nach oben. Korrektur besteht in allen drei Layouts nach Wischen, Randtippen, Hardware-Tasten und Übersichtssprüngen, auch ohne Zuschnitt an den Dokumenträndern.
 - Jump-to und Menü im Kopf aller Karten; Bookmark-Filter mit zustandsabhängigem Löschen/Menü. Menü-Ziel bei anderer ausgewählter Annotation und Sprung aller Annotationstypen nativ getestet.
-- Freie Mitte des Sidebar-Kopfs fängt Berührungen ab. Isolierte Android-Eingabeprüfung wird separat dokumentiert; keine native Sichtprüfung oder physische Geräteprüfung behauptet.
-- Unveränderter Signierer und Paketkennung. GitHub veröffentlicht erst nach Signatur-/Quellenprüfung und echten API-31/35-Updates von 303 und 315. Nachweise: `qa/build316/`.
+- Freie Mitte des Sidebar-Kopfs fängt Berührungen ab. Zusätzlicher nativer Eingabetest ist durch schwarzen Emulator-Output und Startzeitüberschreitungen blockiert; deshalb kein nativer Input-/Sicht-Pass. Physische BOOX-/Pixel-Prüfung und Kontosync separat. Nachweise: `qa/build316/`.
 
 # Build 315 / Motero 1.0 — veröffentlicht und unabhängig geprüft
 

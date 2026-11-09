@@ -1,0 +1,19 @@
+{
+  "release": "https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.1-316",
+  "release_title": "Motero 1.0.1",
+  "release_run": "https://github.com/OptikerGerhardt/Motero/actions/runs/42690410151",
+  "release_commit": "da33b516d603a72b05ea692a6198bcfadccf61c3",
+  "reader_commit": "ffa59d7e414d8a1be46f5b17605189a39be8cb78",
+  "reader_tests": 314,
+  "native_tests": 125,
+  "browser_checks": 13,
+  "android_update_apis": [
+    31,
+    35
+  ],
+  "downloaded_apk_sha256": "04e8f145a60bf95739b65297dd11c8b5d11c314f703553fa034040f31c2b7d43",
+  "checksums_and_migration_reports_match_downloaded_apk": true,
+  "latest_release_api_verified": true,
+  "repository_visibility": "public",
+  "physical_device_confirmation_for_this_build": false
+}

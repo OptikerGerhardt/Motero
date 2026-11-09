@@ -1,0 +1,29 @@
+{
+  "passed": false,
+  "results": [
+    {
+      "floating": false,
+      "counts": {
+        "LEFT_TAP": 0,
+        "RIGHT_TAP": 0,
+        "UNDERLAY_TAP": 0
+      },
+      "passed": false
+    },
+    {
+      "floating": true,
+      "counts": {
+        "LEFT_TAP": 0,
+        "RIGHT_TAP": 0,
+        "UNDERLAY_TAP": 0
+      },
+      "passed": false
+    }
+  ],
+  "production_header_sha256": "c86e9cd1ac09a775795ff30894beaaf916eaf6385ce3098900eba4abd5bb48af",
+  "scope": "Production header over native AndroidView; tap routing only, not visual appearance.",
+  "status": "blocked",
+  "reason": "Software emulator launch timed out, returned a fully black screenshot and no positive-control button events. Native input/visual coverage is not established.",
+  "fixture_compiled": true,
+  "production_apk_contains_fixture": false
+}
