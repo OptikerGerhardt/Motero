@@ -561,6 +561,7 @@ export class AndroidPageFitting {
 				c.scrollTop = Math.max(0, d.offsetTop + d.clientTop + preserveScroll.fraction * d.clientHeight - preserveScroll.screenY);
 			}
 			this.peekAnchor = null;
+			this.view._pageNavigation?.centerCurrentPage();
 			this.applied = { scale: v.currentScale, bounds, pageIndex: index, left: c.scrollLeft, top: c.scrollTop };
 			this.view._booxReader?.rememberReadingView();
 		}

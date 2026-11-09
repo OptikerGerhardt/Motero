@@ -156,7 +156,7 @@ window.fitToWidth = () => window._view.fitToWidth();
 window.setPageFitting = (options, apply = true) => window._view.setPageFitting(options, apply);
 window.beginManualCrop = options => window._view?._activeView?._pageFitting?.openCropEditor(options);
 window.cropEditorAction = options => window._view?._activeView?._pageFitting?.editor?.action(options);
-window.focusReaderBookmark = async id => {
+window.focusReaderAnnotation = async id => {
     const reader = window._view, view = reader?._activeView;
     const annotation = view?._annotations?.find(a => a.id === id);
     if (!annotation) return false;
@@ -170,6 +170,8 @@ window.focusReaderBookmark = async id => {
     reader.setReaderChromeVisible(false);
     return true;
 };
+// Retain the original bridge alias for callers using the bookmark shortcut.
+window.focusReaderBookmark = window.focusReaderAnnotation;
 window.cancelManualCrop = () => window._view?._activeView?._pageFitting?.editor?.close();
 window.setDirectHighlight = enabled => window._view.setDirectHighlight(enabled);
 window.setReaderChromeVisible = visible => window._view?.setReaderChromeVisible(visible);

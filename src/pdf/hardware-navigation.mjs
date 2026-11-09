@@ -91,6 +91,10 @@ export async function navigateWithHardwareButton(view, next, fraction = 2 / 3) {
 	view._onManualNavigation?.();
 	await view._navigateToPage({ direction: next ? 1 : -1 });
 	if (view._destroyed || viewer.currentPageNumber - 1 !== targetIndex) return 'ignored';
+    if (view._pageNavigation?.mode === 'jumped') {
+        view._pageNavigation.centerCurrentPage();
+        return 'page';
+    }
 	// Keep the existing zoom and horizontal pan. Only choose the vertical entry
 	// point: top going forward, bottom going backward. No animated scrolling.
 	limits = getHardwareScrollLimits(view, viewer, viewer.getPageView(targetIndex));

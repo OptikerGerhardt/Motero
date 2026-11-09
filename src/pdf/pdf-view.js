@@ -2833,6 +2833,10 @@ class PDFView {
 				}
 				// Failed loads still advance, without applying pan to placeholder geometry.
 				navigate();
+                if (this._pageNavigation?.mode === 'jumped' && !this._booxReader?.isOverview()) {
+                    this._pageNavigation.centerCurrentPage();
+                    continue;
+                }
 				if (!preservePan || !page.pdfPage || viewer.currentPageNumber !== page.id) {
 					continue;
 				}

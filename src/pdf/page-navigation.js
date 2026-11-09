@@ -17,7 +17,8 @@ export class PDFPageNavigation {
         };
         this.viewer._getVisiblePages = this.visible;
         this.style = this.win.document.createElement('style');
-        this.style.textContent = '.motero-jumped .page:not(.motero-current-page){visibility:hidden!important;pointer-events:none!important}';
+        this.style.textContent = '.motero-jumped .page:not(.motero-current-page){visibility:hidden!important;pointer-events:none!important}'
+            + '.motero-page-spacing{padding-block:var(--motero-page-gap,0px)!important}';
         this.win.document.head.append(this.style);
         this.onStart = event => {
             if (event.touches.length > 1) {
@@ -105,6 +106,7 @@ export class PDFPageNavigation {
         // releases the visual restriction. No page nodes or canvases are removed.
         const single = this.mode === 'jumped' && !this.multitouch && !this.view._pageFitting?.zooming
             && !this.view._booxReader?.isOverview() && !this.view._pageFitting?.editor;
+        if (!single || this.view._pageFitting?.layout.boxes) this.clearSpacing();
         const current = single ? this.viewer.getPageView(this.viewer.currentPageNumber - 1)?.div : null;
         if (this.single === single && this.current === current) return;
         this.single = single;
@@ -119,10 +121,37 @@ export class PDFPageNavigation {
         this.view._onManualNavigation();
         this.view._navigateToAdjacentPage(direction)?.catch(error => console.error(error));
     }
+    centerCurrentPage() {
+        if (this.mode !== 'jumped' || this.view._pageFitting?.zooming || this.view._pageFitting?.editor
+                || this.view._booxReader?.isOverview()) return;
+        const v = this.viewer, c = v.container, index = v.currentPageNumber - 1;
+        const page = v.getPageView(index), box = this.view._pageFitting?.layout.boxes?.[index];
+        if (!page) return;
+        if (box) {
+            this.clearSpacing();
+            c.scrollLeft = Math.max(0, box.x + (box.width - c.clientWidth) / 2);
+            c.scrollTop = Math.max(0, box.y + (box.height - c.clientHeight) / 2);
+        }
+        else {
+            // Without a crop layout, the first/last short page also needs room
+            // above/below it so centering is possible at the document edges.
+            v.viewer.style.setProperty('--motero-page-gap', Math.max(0, (c.clientHeight - page.div.clientHeight) / 2) + 'px');
+            v.viewer.classList.add('motero-page-spacing');
+            const r = page.div.getBoundingClientRect(), viewport = c.getBoundingClientRect();
+            c.scrollLeft += r.left + r.width / 2 - viewport.left - c.clientWidth / 2;
+            c.scrollTop += r.top + r.height / 2 - viewport.top - c.clientHeight / 2;
+        }
+    }
+    clearSpacing() {
+        if (!this.viewer.viewer.classList.contains('motero-page-spacing')) return;
+        this.viewer.viewer.classList.remove('motero-page-spacing');
+        this.viewer.viewer.style.removeProperty('--motero-page-gap');
+    }
     destroy() {
         for (const [name, listener] of [['touchstart',this.onStart],['touchmove',this.onMove],['touchend',this.onEnd],['touchcancel',this.onEnd],['wheel',this.onWheel]]) this.win.removeEventListener(name, listener, true);
         for (const name of ['pagechanging','pagesinit','scalechanging','updateviewarea']) this.bus.off(name, this.onChange);
         this.viewer.viewer.classList.remove('motero-jumped');
+        this.clearSpacing();
         if (this.viewer._getVisiblePages === this.visible) this.viewer._getVisiblePages = this.originalVisible;
         this.current?.classList.remove('motero-current-page');
         this.style.remove();

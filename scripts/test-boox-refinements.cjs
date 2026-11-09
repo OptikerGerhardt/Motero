@@ -86,6 +86,18 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   assert.deepEqual(await page.evaluate(()=>window._view.getSelectedAnnotationIDs()),[]);
   assert.equal(await page.evaluate(()=>window._view._view._readerChromeVisible),false);
   console.log('PASS bookmark focus navigates without selection or reader chrome');
+  for(const type of ['highlight','underline','note','text','image','ink']){
+   const key=await page.evaluate(type=>{
+    const m=window._view._annotationManager;
+    return m.addAnnotation({type,color:'#2ea8e5',comment:'Ordinary annotation',pageLabel:'7',sortIndex:'00006|000100|00000',text:'Annotation text',
+     position:type==='ink'?{pageIndex:6,width:2,paths:[[100,300,150,350]]}:{pageIndex:6,rects:[[100,300,150,350]],fontSize:12,rotation:0}}).id;
+   },type);
+   await page.evaluate(id=>window.focusReaderAnnotation(id),key);
+   await page.waitForFunction(()=>{const v=window._view._view;return v._pageFitting.viewer.currentPageNumber===7&&!v._pendingPageTurn;});
+   assert.deepEqual(await page.evaluate(()=>window._view.getSelectedAnnotationIDs()),[]);
+   assert.equal(await page.evaluate(()=>window._view._view._readerChromeVisible),false);
+  }
+  console.log('PASS direct focus for all six annotation types preserves fitting without selection or reader chrome');
 
   // Rapid alternating requests keep the final target and bound analysis state.
   const rapid=await page.evaluate(async()=>{const w=window._view._view,f=w._pageFitting,v=f.viewer;
