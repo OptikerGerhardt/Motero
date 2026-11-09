@@ -12,7 +12,7 @@ Local validation before publication:
 
 The [release workflow](https://github.com/OptikerGerhardt/Motero/actions/runs/42608990281) passed production signing, embedded-source verification, public-source audit and API 31/35 updates from Builds 303 and 314, retaining private data/UID and refusing old-key updates/internal permission access. Its public test archive independently confirms 314 reader tests, 123 native tests and all 13 browser suites.
 
-[Motero 1.0](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.0-315) was downloaded independently and verified against its public asset digest, checksums and migration reports. APK SHA-256: `9ff51d3cf40791e98a021cddd23286a61123d013f60dac8e0d4142c932ba62cf`. The pinned private signing identity, receiver permission, all 99 reader sources, 207 PDF.js files and 45 runtime files match. Anonymous latest-release discovery returns this APK for Obtainium.
+[Motero 1.0](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.0-315) was downloaded independently and verified against its public asset digest, checksums and migration reports. APK SHA-256: `9ff51d3cf40791e98a021cddd23286a61123d013f60dac8e0d4142c932ba62cf`. The pinned private signing identity, receiver permission, all 99 reader sources, 207 PDF.js files and 45 runtime files match. The latest-release API returns this APK for Obtainium and the repository visibility is public. The managed proxy returns authorized drafts even without a client Authorization header, so this check does not independently establish anonymous API behavior.
 
 The release's source commit is `6f44539324d6794cd3de194fdd01100fa751c671`. Reports in this directory describe the actual published APK, not the local development build.
 
