@@ -1752,7 +1752,7 @@ class ReaderViewModel @Inject constructor(
             is ReaderWebData.setHistoryState -> updateState { copy(canUndoAnnotation = successValue.canUndo, canRedoAnnotation = successValue.canRedo) }
             is ReaderWebData.setCropEditorState -> {
                 val state = successValue.state
-                readerWebCallChainExecutor.cropEditorAction("insets", top = cropTopInset, bottom = 12.0)
+                readerWebCallChainExecutor.cropEditorAction("insets", top = cropTopInset, bottom = cropBottomInset, left = cropLeftInset, right = cropRightInset)
                 updateState { copy(cropEditorPage = state["page"]?.asInt ?: 1, cropEditorCount = state["count"]?.asInt ?: 1,
                     cropEditorScope = state["scope"]?.asString ?: "all", cropEditorBusy = state["busy"]?.asBoolean ?: true) }
             }
@@ -2100,10 +2100,15 @@ class ReaderViewModel @Inject constructor(
         updateState { copy(progressMode = mode) }
     }
     fun cropAction(action: String, scope: String? = null) = readerWebCallChainExecutor.cropEditorAction(action, scope)
-    private var cropTopInset = 180.0
-    fun cropInsets(top: Double, bottom: Double) {
+    private var cropTopInset = 0.0
+    private var cropBottomInset = 12.0
+    private var cropLeftInset = 0.0
+    private var cropRightInset = 0.0
+    fun cropInsets(top: Double, bottom: Double, left: Double = 0.0, right: Double = 0.0) {
         cropTopInset = top
-        readerWebCallChainExecutor.cropEditorAction("insets", top = top, bottom = bottom)
+        cropBottomInset = bottom
+        cropLeftInset = left; cropRightInset = right
+        readerWebCallChainExecutor.cropEditorAction("insets", top = top, bottom = bottom, left = left, right = right)
     }
     fun canDeleteBookmark(annotation: ReaderAnnotation): Boolean = annotation.isReaderBookmark() &&
         annotation.editability(userId, library) == org.zotero.android.pdf.data.AnnotationEditability.editable

@@ -1,5 +1,15 @@
 # Änderungen
 
+## 1.0.2-317 — 9. November 2026 — Motero 1.0.2
+
+- Jumped: kurze Seiten bleiben zentriert; lange Seiten beginnen vorwärts oben und rückwärts unten. SmartScroll und erneutes Fitting behalten den Lesebereich statt die Mitte der nächsten Seite zu übernehmen.
+- Zuschnitt erkennt Kopf-/Fußzeilen anhand Position, Schriftmerkmalen, Abständen und Seitenfolgen; römische Folien und lokale Kapitelwechsel ergänzt. Fußnoten und größere Überschriften bleiben geschützt. Neue Geometrie-Cachegeneration verwirft veraltete Automatik-Ergebnisse.
+- Reine Textseiten umgehen die zusätzliche Rasteranalyse, sobald PDF.js-Zeichenoperationen Grafiken, Scans und komplexe Inhalte ausschließen. Bei fehlenden optionalen Randverweisen genügt ein gemeinsames Analyseergebnis. Raster-Fallback und Pixelgrenzen bleiben erhalten.
+- Aktuelle/sichtbare Seiten vor Nachbarn vorbereiten, einen Analyseplatz für Vordergrundarbeit freihalten und vorhandene gültige Zuschnitte bei neuer Layout-Erkennung erhalten. Unveränderte Seiten benötigen keine erneuten Stiländerungen; Positionskorrektur vermeidet erzwungene Layout-Lesezugriffe.
+- Manueller Editor berücksichtigt gemessene Bedienelemente, Systemabstände und seitliche Ausschnitte, bricht schmale Bedienzeilen um und begrenzt Vorschaupixel auch bei ungewöhnlichen Formaten.
+- PDF-Tipp bei offener Drag-Highlight-Leiste schließt ausschließlich diese Leiste; keine zusätzliche Toolbar-, Bookmark- oder Blätteraktion. Gemeinsame Symbolspalte richtet alle Annotations-Seitenlabels gleich aus.
+- Zusätzliche Regressionen und lokale, begrenzte Performance-Messwerte. Details und Quellen: [Cropping and scrolling](docs/CROPPING_AND_SCROLLING.md). Physische BOOX-/Pixel-Prüfung und Kontosync bleiben separat.
+
 ## 1.0.1-316 — 9. November 2026 — Motero 1.0.1
 
 - Veröffentlicht und unabhängig geprüft: 314 Reader-Tests, 125 Android-Tests, 13 Browser-Suiten und beide API-31/35-Updates bestanden. Signatur, Quellen und Prüfsummen stimmen. Zusätzlicher nativer Eingabetest durch Emulator-Start-/Grafikprobleme blockiert; physische UI-Prüfung und Kontosync separat.

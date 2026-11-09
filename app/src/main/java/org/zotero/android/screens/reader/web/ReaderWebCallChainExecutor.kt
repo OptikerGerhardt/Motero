@@ -676,8 +676,8 @@ class ReaderWebCallChainExecutor @Inject constructor(
         readerWebViewHandler.evaluateJavascript("javascript:window.beginManualCrop({nativeControls:true});") { cont.resume(Unit) }
     }
 
-    fun cropEditorAction(action: String, scope: String? = null, top: Double? = null, bottom: Double? = null) {
-        val json = gson.toJson(mapOf("action" to action, "scope" to scope, "top" to top, "bottom" to bottom))
+    fun cropEditorAction(action: String, scope: String? = null, top: Double? = null, bottom: Double? = null, left: Double? = null, right: Double? = null) {
+        val json = gson.toJson(mapOf("action" to action, "scope" to scope, "top" to top, "bottom" to bottom, "left" to left, "right" to right))
         readerWebViewHandler.evaluateJavascript("window.cropEditorAction?.($json);") {}
     }
     suspend fun focusAnnotation(key: String) = suspendCancellableCoroutine { cont ->

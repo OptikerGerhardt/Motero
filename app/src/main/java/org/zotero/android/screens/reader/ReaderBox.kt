@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.navigationBarsIgnoringVisibility
 import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.fillMaxSize
@@ -146,7 +147,11 @@ internal fun ReaderBox(
                     shouldShowSnapTargetAreas = shouldShowSnapTargetAreas
                 )
             }
-            if (viewState.manualCropOpen) Box(Modifier.fillMaxSize().windowInsetsPadding(readingInsets)) { ReaderCropControls(viewModel, viewState) }
+            if (viewState.manualCropOpen) Box(Modifier.fillMaxSize().windowInsetsPadding(readingInsets)) { ReaderCropControls(viewModel, viewState,
+                topInset = readingInsets.getTop(density).toDouble() / density.density,
+                bottomInset = 12.0 + maxOf(WindowInsets.navigationBarsIgnoringVisibility.getBottom(density), readingInsets.getBottom(density)) / density.density,
+                leftInset = readingInsets.getLeft(density, LocalLayoutDirection.current).toDouble() / density.density,
+                rightInset = readingInsets.getRight(density, LocalLayoutDirection.current).toDouble() / density.density) }
             if (viewState.fileType == ReaderFileType.PDF && !viewState.manualCropOpen) {
                 val isScrubberVisible = viewState.isScrubberVisible() && !viewState.showCreationToolbar
                 androidx.compose.animation.AnimatedVisibility(

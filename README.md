@@ -13,10 +13,10 @@ This fork is maintained independently and is not affiliated with or endorsed by 
 - Reader appearance applied at startup, matching system-bar contrast and page previews.
 - Continuous cropped PDF pages, temporary two-finger access to full pages, and an overview that stays open when two complete pages are visible.
 - Font-size controls with a percentage display for EPUBs and Reading Mode.
-- Automatic content fitting with controls for margins and marginal notes, local layout learning, and a bounded geometry cache.
+- Automatic content fitting with controls for margins and marginal notes, local chapter/layout learning, Roman and Arabic folio detection, a text-only analysis shortcut, and a bounded geometry cache.
 - Automatic or manual content cropping, shared by the page-fitting modes. Manual frames for all, odd, or even pages are saved per attachment.
 - SmartScroll, hardware-button navigation, and edge taps in vertical, horizontal, and wrapped PDF layouts.
-- Continuous scrolling or centered single-page swipe navigation, with two-finger access to the page overview.
+- Continuous scrolling or single-page swipe navigation: short pages are centered and tall pages enter at the reading edge, with two-finger access to the page overview.
 - A top-right bookmark shortcut for the centered reading page: tap to add a black bookmark, then tap again to remove it. Existing bookmark colors are preserved.
 - Tag suggestions ranked by use in the current document and library, with explicit creation of new tags.
 - EPUB navigation, local reading-position restoration, and a persistent choice of progress display, including hidden.

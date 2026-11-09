@@ -1,6 +1,16 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 9. November 2026. Build 316 / Motero 1.0.1 behebt Jumped-Ausrichtung und erweitert die Annotationsaktionen.
+Stand: 9. November 2026. Build 317 / Motero 1.0.2 setzt die gesammelten Cropping-, Performance- und Bedienungskorrekturen um; Veröffentlichung nach den Prüfungen.
+
+## Reader-Nachbesserungen: Build 317 / 1.0.2
+
+- Gleiche Symbolspaltenbreite für Bookmark-Fähnchen und andere Annotationen; Seitenlabels bleiben ausgerichtet.
+- Jumped/SmartScroll: vorwärts am Anfang, rückwärts am Ende langer Seiten; kurze Seiten weiter zentriert, in allen Layouts und Eingabewegen.
+- Manueller Crop-Editor mit gemessener Bedienhöhe, vollständigen sicheren Abständen, umbrechenden Bedienzeilen und Vorschaugrenzen für kleine/hohe/querformatige/große Bildschirme.
+- Kombinierte Kopf-/Fußzeilenerkennung einschließlich Romanfolien, Schriftmerkmalen, lokalen Kapitelgrenzen und konservativem Erhalt von Fußnoten/Überschriften. Textgeometrie nur bei geprüften reinen Textseiten, sonst Rasteranalyse.
+- Vorbereitung in Leserichtung ohne Timer-Verhungern, priorisierte Analyse mit reserviertem Vordergrundplatz, gezielte Cache-Verfeinerung, weniger Pixelanalysen und unveränderte Seiten ohne zusätzliche DOM-Layout-Lesezugriffe.
+- Offene Drag-Highlight-Leiste zuerst schließen; der gleiche Tipp löst keine weitere PDF-/Toolbar-Aktion aus.
+- Reproduzierbare Vergleichsfälle, bounded lokale Zeitmessungen und kalte/warme Browser-Prüfung. [Algorithmus, Recherchequellen und Prüfumfang](docs/CROPPING_AND_SCROLLING.md). Direkter Forumabruf weiterhin HTTP 403, keine vollständige Forumrecherche behauptet.
 
 ## Reader-Nachbesserungen: Build 316 / 1.0.1
 

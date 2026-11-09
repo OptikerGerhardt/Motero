@@ -1,3 +1,10 @@
+# Build 317 / Motero 1.0.2 — lokale Prüfungen abgeschlossen, Releaseprüfung ausstehend
+
+- Lokale Release-APK gebaut, Paket `org.zotero.android.debug`, Code 317, Mindest-API 28 und Receiver-Namespace geprüft.
+- 332 Reader-Tests, 125 native Release-Tests in 30 Suiten und elf Release-Infrastrukturtests bestanden. Alle 14 Browser-Suiten bestanden.
+- Eingebettete Quellen der unsignierten lokalen APK stimmen: 100 Reader-, 207 PDF.js- und 45 Runtime-Dateien. Produktionssignatur und Android-Update-Gates folgen ausschließlich im geschützten Release-Job.
+- [Änderungen und Recherche](docs/CROPPING_AND_SCROLLING.md), [Prüfberichte](qa/build317/). Physische BOOX-/Pixel-Bedienung und echter Kontosync separat.
+
 # Build 316 / Motero 1.0.1 — veröffentlicht und unabhängig geprüft
 
 - Release: https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.1-316 ; Prüflauf: https://github.com/OptikerGerhardt/Motero/actions/runs/42690410151 .

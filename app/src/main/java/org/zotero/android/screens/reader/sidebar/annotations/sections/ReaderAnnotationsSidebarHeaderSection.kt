@@ -1,6 +1,7 @@
 package org.zotero.android.screens.reader.sidebar.annotations.sections
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -50,12 +51,15 @@ internal fun ReaderAnnotationsSidebarHeaderSection(
             .sectionHorizontalPadding(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(
-            modifier = Modifier.size(if (annotation.isReaderBookmark()) 26.dp else 24.dp),
-            painter = painterResource(id = icon),
-            contentDescription = null,
-            colorFilter = ColorFilter.tint(annotationColor),
-        )
+        // One shared column keeps every page label aligned, including the larger flag.
+        Box(Modifier.size(26.dp), contentAlignment = Alignment.Center) {
+            Image(
+                modifier = Modifier.size(if (annotation.isReaderBookmark()) 26.dp else 24.dp),
+                painter = painterResource(id = icon),
+                contentDescription = null,
+                colorFilter = ColorFilter.tint(annotationColor),
+            )
+        }
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = title,
