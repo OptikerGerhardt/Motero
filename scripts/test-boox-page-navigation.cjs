@@ -52,7 +52,10 @@ const root=path.resolve(__dirname,'../build/android'),fixture=path.resolve(__dir
    await page.evaluate(()=>window.setPageNavigation('continuous'));
    assert.equal((await snapshot()).single,false);
    if(mode===0)assert.ok((await snapshot()).visible.length>1,'short cropped pages are continuous');
+   const centered=await page.evaluate(()=>window._view._view._pageFitting.centeredPageIndex());
    await page.evaluate(()=>window.setPageNavigation('jumped'));
+   await page.waitForFunction(i=>{const v=window._view._view;return v._pageFitting.viewer.currentPageNumber===i+1&&!v._pendingPageTurn;},centered);
+   assert.equal((await snapshot()).visible.length,1,'mode switch centers the reading page');
    // A genuine two-finger handoff reveals the full page and its neighbors.
    await touch('touchStart',[{x:100,y:350},{x:290,y:650}]);
    assert.equal((await snapshot()).single,false);

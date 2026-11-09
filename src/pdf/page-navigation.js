@@ -87,9 +87,18 @@ export class PDFPageNavigation {
         return this.viewer.container.contains(target) && !target.closest?.('a,button,input,textarea,select,.boox-highlight-palette,.boox-manual-crop');
     }
     configure(mode) {
+        const previous = this.mode;
         this.mode = mode === 'jumped' ? 'jumped' : 'continuous';
         this.gesture = null; this.multitouch = false;
         this.wheelDistance = 0; this.wheelLockedUntil = 0; this.sync();
+        if (previous === 'continuous' && this.mode === 'jumped' && this.viewer.pdfDocument
+                && !this.view._booxReader?.isOverview()) {
+            // Continuous may show several short pages. Start Jumped on the
+            // centered reading page, rather than a fragment at the upper edge.
+            const pageIndex = this.view._pageFitting.centeredPageIndex();
+            this.view._onManualNavigation();
+            this.view._navigateToPage({pageIndex})?.catch(error => console.error(error));
+        }
     }
     sync() {
         // Drawing tools still show the single reading page; only pinch/overview
