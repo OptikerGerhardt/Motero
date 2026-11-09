@@ -33,3 +33,13 @@ test('obsolete work and document close reject pending jobs and cancel active wor
  const stopped=assert.rejects(a,{name:'AbortError'});q.close();await stopped;
  await new Promise(setImmediate);assert.equal(q.jobs.size,0);assert.equal(q.running,0);
 });
+
+test('background learning leaves a worker for a new reading target and promotes queued targets',async()=>{
+ const q=new ReadingWorkQueue(2), starts=[], release=new Map();
+ const op=n=>()=>new Promise(r=>{starts.push(n);release.set(n,r);});
+ const background=q.run(1,op(1),10), queued=q.run(2,op(2),5);
+ await new Promise(setImmediate);assert.deepEqual(starts,[1]);
+ assert.equal(q.run(2,op(99),0),queued);
+ await new Promise(setImmediate);assert.deepEqual(starts,[1,2]);
+ release.get(1)(1);release.get(2)(2);await Promise.all([background,queued]);q.close();
+});

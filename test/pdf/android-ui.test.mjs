@@ -2029,3 +2029,18 @@ test('a priority edge tap cancels deferred chrome input rather than replaying a 
  t.mock.timers.tick(500);
  assert.equal(turns,1);assert.equal(replayed,0);
 });
+
+test('a PDF tap dismissing the highlight palette is consumed before chrome, bookmark or edge handling',()=>{
+ let closed=0,cleared=0,consumed=0;
+ const view={_options:{platform:'android'},_booxReader:{palette:{},closePalette(){closed++;this.palette=null;}},
+  _iframeWindow:{PDFViewerApplication:{pdfViewer:{container:{contains:()=>true}}}},
+  _clearPendingBackdropTap(){cleared++;},_clearPointerAction(){},_chromeTapGuard:{reset(){}},_directHighlight:{reset(){}}};
+ const event=type=>({type,pointerId:4,target:{closest:()=>null},preventDefault(){consumed++;},stopImmediatePropagation(){}});
+ const dismiss=e=>PDFView.prototype._consumePaletteDismissal.call(view,e);
+ assert.equal(dismiss(event('pointerdown')),true);assert.equal(closed,1);assert.equal(cleared,1);
+ assert.equal(dismiss(event('pointerup')),true);assert.equal(consumed,2);
+ assert.equal(dismiss({...event('mousedown'),pointerId:undefined,sourceCapabilities:{firesTouchEvents:true}}),true);
+ assert.equal(dismiss({...event('mousedown'),pointerId:undefined}),false,'a new real mouse click is independent');
+ view._paletteDismissUntil=0;
+ assert.equal(dismiss(event('pointerdown')),false,'the following PDF tap is handled normally');
+});

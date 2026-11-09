@@ -28,3 +28,9 @@ test('cached learning contains only validated geometry, never repeated header te
     assert.ok(![...s.values.values()][0].includes('personal'));
     assert.ok(![...s.values.values()][0].includes('private'));
 });
+
+
+test('the revised detector never reuses previous-generation crop geometry',()=>{
+ const s=storage();s.setItem('motero.reading-geometry.v2',JSON.stringify({version:2,documents:{'id:300':{pages:[page(4)]}}}));
+ assert.equal(new ReadingGeometryCache(s,'id',300).get(4),undefined);
+});

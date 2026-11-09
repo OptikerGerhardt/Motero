@@ -78,6 +78,15 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   assert.equal(await page.evaluate(()=>window._view._view._pageFitting.options.cropMode),'automatic');
   console.log('PASS native crop commands, measured insets, parity, save, cancel and preserved fitting/crops');
 
+  for(const point of [{x:300,y:400},{x:4,y:500},{x:590,y:25}]) {
+   const initial=await page.evaluate(()=>{const v=window._view._view;v._booxReader.showPalette([{id:'preview',type:'highlight',color:'#ffd400',position:{pageIndex:8,rects:[[100,200,200,220]]}}]);
+    return {page:v._pageFitting.viewer.currentPageNumber,count:v._annotations.length,taps:window.messages.filter(m=>m.message?.event==='onBackdropTap').length};});
+   await touch('touchStart',[point]);await touch('touchEnd',[]);await page.waitForTimeout(400);
+   const after=await page.evaluate(()=>{const v=window._view._view;return {page:v._pageFitting.viewer.currentPageNumber,count:v._annotations.length,taps:window.messages.filter(m=>m.message?.event==='onBackdropTap').length,palette:!!v._booxReader.palette};});
+   assert.deepEqual(after,{...initial,palette:false},'dismissing a palette cannot reveal chrome, turn a page, or bookmark');
+  }
+  console.log('PASS PDF palette dismissal consumes center, edge and bookmark taps');
+
   // Jump by position, without selecting a note or showing an annotation popup.
   await page.evaluate(async()=>{const v=window._view._view;await v._booxReader.addBookmark(8);});
   const id=await page.evaluate(()=>window._view._view._annotations.find(a=>a.type==='note').id);

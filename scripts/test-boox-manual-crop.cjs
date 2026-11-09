@@ -120,6 +120,18 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   assert.deepEqual((await read()).options.manualCrop,retained);
   assert.equal((await read()).options.cropMode,'automatic');
   console.log('PASS manual crop survives display rotation and can switch to automatic detection without losing manual frames');
+  for(const [width,height] of [[240,320],[360,740],[740,360],[1280,800]]) {
+   await page.setViewportSize({width,height});
+   await page.evaluate(()=>window.beginManualCrop({nativeControls:true}));
+   await page.waitForFunction(()=>{const e=window._view._view._pageFitting.editor;return e&&!e.busy;});
+   const top=height<400?100:180;
+   await page.evaluate(top=>window.cropEditorAction({action:'insets',top,bottom:32,left:24,right:16}),top);
+   await page.waitForTimeout(50);
+   const geometry=await page.evaluate(()=>{const e=window._view._view._pageFitting.editor;return [...e.root.querySelectorAll('.crop-sheet,.crop-handle')].map(d=>{const r=d.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom};});});
+   for(const box of geometry) assert.ok(box.left>=24&&box.right<=width-16&&box.top>=top&&box.bottom<=height-32,JSON.stringify({width,height,box}));
+   await page.evaluate(()=>window.cropEditorAction({action:'cancel'}));
+  }
+  console.log('PASS native crop preview and all handles fit small, tall, landscape and tablet viewports');
   assert.deepEqual(errors,[]);
   console.log('PASS: manual crop editor checks');
  } finally {if(browser) await browser.close();await new Promise(r=>server.close(r));}

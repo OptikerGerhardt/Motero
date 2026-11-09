@@ -48,8 +48,8 @@ export class ManualCropEditor {
 .boox-manual-crop button:focus-visible,.boox-manual-crop select:focus-visible{outline:2px solid var(--accent-blue,#3468d3);outline-offset:2px}
 .boox-manual-crop button:disabled{opacity:.4}.boox-manual-crop button[data-action=save]{background:var(--accent-blue,#3468d3);color:#fff;font-weight:600}.boox-manual-crop select{color:inherit;background:var(--fill-quinary,#eee);min-width:0;max-width:100%}
 .boox-manual-crop .crop-range{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.boox-manual-crop .crop-pages{display:flex;align-items:center;gap:4px}.boox-manual-crop .crop-page{font-variant-numeric:tabular-nums;font-size:13px;white-space:nowrap}
-.boox-manual-crop .crop-help,.boox-manual-crop .crop-status{font-size:13px;color:var(--fill-secondary,#666);line-height:1.35;flex-shrink:0}.boox-manual-crop .crop-preview{flex:1;min-height:100px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--color-background,#fff);border-radius:0}
-.boox-manual-crop .crop-sheet{position:relative;max-width:100%;max-height:100%;touch-action:none;user-select:none}.boox-manual-crop canvas{display:block;width:100%;height:100%}
+.boox-manual-crop .crop-help,.boox-manual-crop .crop-status{font-size:13px;color:var(--fill-secondary,#666);line-height:1.35;flex-shrink:0}.boox-manual-crop .crop-preview{flex:1 1 0;min-height:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--color-background,#fff);border-radius:0}
+.boox-manual-crop .crop-sheet{position:relative;flex:none;max-width:100%;max-height:100%;touch-action:none;user-select:none}.boox-manual-crop canvas{display:block;width:100%;height:100%}
 .boox-manual-crop .crop-shade{position:absolute;inset:0;background:#0005;pointer-events:none}.boox-manual-crop .crop-selection{position:absolute;border:2px solid var(--accent-blue,#3468d3);touch-action:none;cursor:move}
 .boox-manual-crop .crop-handle{position:absolute;width:44px;height:44px;background:transparent;border:0;touch-action:none}
 .boox-manual-crop .crop-handle:after{content:"";position:absolute;inset:11px;background:#fff;border:2px solid var(--accent-blue,#3468d3);border-radius:50%}.boox-manual-crop [data-handle=nw]{left:-22px;top:-22px;cursor:nw-resize}.boox-manual-crop [data-handle=ne]{right:-22px;top:-22px;cursor:ne-resize}.boox-manual-crop [data-handle=sw]{left:-22px;bottom:-22px;cursor:sw-resize}.boox-manual-crop [data-handle=se]{right:-22px;bottom:-22px;cursor:se-resize}
@@ -63,7 +63,7 @@ export class ManualCropEditor {
 <div class="crop-footer"><div class="crop-status" role="status"></div></div>`;
         if (nativeControls) {
             for (const element of this.root.querySelectorAll('.crop-toolbar,.crop-range,.crop-help,.crop-footer')) element.style.display = 'none';
-            this.root.style.paddingTop = '180px';
+            this.root.style.paddingTop = '0';
         }
 		doc.body.append(this.root);
 		this.beforeFocus = doc.activeElement;
@@ -101,10 +101,12 @@ export class ManualCropEditor {
 		let next = this.index + direction * (this.scope === 'all' ? 1 : 2);
 		if (next >= 0 && next < this.viewer.pdfDocument.numPages) { this.index = next; this.load(); }
 	}
-    action({ action, scope, top, bottom }) {
+    action({ action, scope, top, bottom, left, right }) {
         if (action === 'insets') {
-            this.root.style.paddingTop = Math.max(0, top || 0) + 'px';
-            this.root.style.paddingBottom = Math.max(0, bottom || 0) + 'px';
+            this.root.style.paddingTop = Math.max(0, Math.min(Number(top) || 0, this.root.clientHeight - 64)) + 'px';
+            this.root.style.paddingBottom = Math.max(0, Math.min(Number(bottom) || 0, this.root.clientHeight / 4)) + 'px';
+            this.root.style.paddingLeft = 12 + Math.max(0, Number(left) || 0) + 'px';
+            this.root.style.paddingRight = 12 + Math.max(0, Number(right) || 0) + 'px';
             this.sizePreview();
         }
         else if (action === 'scope' && ['all','odd','even'].includes(scope)) {
@@ -139,7 +141,7 @@ export class ManualCropEditor {
 			if (token !== this.token || this.closed) return;
 			let natural = page.getViewport({ scale: 1, rotation: page.rotate + this.rotation });
 			this.aspect = natural.width / natural.height;
-			let viewport = page.getViewport({ scale: Math.min(2, 1200 / natural.width), rotation: page.rotate + this.rotation });
+			let viewport = page.getViewport({ scale: Math.min(2, 1200 / natural.width, Math.sqrt(1600000 / (natural.width * natural.height))), rotation: page.rotate + this.rotation });
 			let canvas = this.win.document.createElement('canvas');
 			canvas.width = Math.ceil(viewport.width); canvas.height = Math.ceil(viewport.height);
 			this.canvas.replaceWith(canvas); this.canvas = canvas;
@@ -167,7 +169,7 @@ export class ManualCropEditor {
 	sizePreview() {
 		if (!this.aspect || this.closed) return;
 		let box = this.root.querySelector('.crop-preview');
-		let width = Math.max(1, Math.min(box.clientWidth - 32, (box.clientHeight - 32) * this.aspect));
+		let width = Math.max(1, Math.min(box.clientWidth - 48, (box.clientHeight - 48) * this.aspect));
 		this.sheet.style.width = width + 'px';
 		this.sheet.style.height = width / this.aspect + 'px';
 	}

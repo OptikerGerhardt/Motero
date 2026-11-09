@@ -92,7 +92,7 @@ export async function navigateWithHardwareButton(view, next, fraction = 2 / 3) {
 	await view._navigateToPage({ direction: next ? 1 : -1 });
 	if (view._destroyed || viewer.currentPageNumber - 1 !== targetIndex) return 'ignored';
     if (view._pageNavigation?.mode === 'jumped') {
-        view._pageNavigation.centerCurrentPage();
+        view._pageNavigation.centerCurrentPage({ direction: next ? 1 : -1 });
         return 'page';
     }
 	// Keep the existing zoom and horizontal pan. Only choose the vertical entry

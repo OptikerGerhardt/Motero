@@ -1,6 +1,7 @@
+import { canUseTextBounds, ReadingMetrics } from './reading-analysis.mjs';
 import { ReadingGeometryCache } from './reading-geometry-cache.mjs';
 import { getReadingSamples, getReadingTextLines, buildReadingModel, getReadingBounds,
-	buildReadingProfiles, resolveReadingBounds, getReadingFit, rotateReadingBounds, getReadingMarginalia } from './reading-layout.mjs';
+	buildReadingProfiles, resolveReadingBounds, getReadingFit, rotateReadingBounds, getReadingMarginalia, getReadingTextBounds, localReadingPages } from './reading-layout.mjs';
 import { cropForPage, normalizeCrops } from './manual-crop.mjs';
 import { ManualCropEditor } from './manual-crop-editor.js';
 import { CroppedPageLayout } from './cropped-page-layout.mjs';
@@ -24,6 +25,7 @@ export class AndroidPageFitting {
         this.provisionalPages = new Set();
         this.analysisLines = new Map();
         this.work = new ReadingWorkQueue(2);
+        this.metrics = new ReadingMetrics(this.win.performance);
         this.presentation = 'reading';
         this.geometry = new Map();
 		this.marginaliaByPage = new Map();
@@ -236,34 +238,40 @@ export class AndroidPageFitting {
     }
 
 	prefetchVisible() {
-		if (!this.active || !this.usesCropLayout() || this.zooming || this.editor || this.view._destroyed) return;
-		this.win.clearTimeout(this.prefetchTimer);
-		this.prefetchTimer = this.win.setTimeout(async () => {
-			if (!this.active || this.zooming || this.applying || this.prefetching) return;
-			this.prefetching = true;
-			const key = this.key(), rotation = this.viewer.pagesRotation;
-			try {
-				const visible = this.layout.boxes ? this.layout.getVisiblePages().views : [];
-				const indexes = new Set([this.viewer.currentPageNumber - 1, ...visible.map(p => p.id - 1)]);
-				const wanted = new Set();
-				for (const index of indexes) for (let delta = -4; delta <= 4; delta++) {
-					const i = index + delta;
-					if (i >= 0 && i < this.viewer.pagesCount && !this.preparedPages.has(i)) wanted.add(i);
-				}
-				for (const i of wanted) {
-					if (!this.active || this.zooming || key !== this.key() || rotation !== this.viewer.pagesRotation || this.view._destroyed) break;
-					const prepared = await this.prepare(i, this.options, false);
-					if (!prepared || this.zooming || key !== this.key() || rotation !== this.viewer.pagesRotation) break;
-					this.rememberPrepared(prepared);
-					if (this.layout.boxes && !this.applying) {
-                        this.queueGeometryRefresh();
-					}
-				}
-			}
-			catch (error) { console.error(error); }
-			finally { this.prefetching = false; }
-		}, 20);
-	}
+        if (!this.active || !this.usesCropLayout() || this.zooming || this.editor || this.view._destroyed) return;
+        this.prefetchWanted = true;
+        // Throttle rather than restarting a trailing timer on every scroll event.
+        if (this.prefetchTimer || this.prefetching) return;
+        this.prefetchTimer = this.win.setTimeout(async () => {
+            this.prefetchTimer = null;
+            if (!this.active || this.zooming || this.applying || this.view._destroyed) return;
+            this.prefetching = true; this.prefetchWanted = false;
+            const key=this.key(), rotation=this.viewer.pagesRotation;
+            const center=this.viewer.currentPageNumber-1;
+            const direction=center < (this.prefetchCenter ?? center) ? -1 : 1;
+            this.prefetchCenter=center;
+            const visible=this.layout.boxes ? this.layout.getVisiblePages().views.map(p=>p.id-1) : [];
+            const indexes=new Set([center,...visible]);
+            const wanted=new Set();
+            for (const index of indexes) for (let delta=-4;delta<=4;delta++) {
+                const i=index+delta;
+                if (i>=0 && i<this.viewer.pagesCount && !this.preparedPages.has(i)) wanted.add(i);
+            }
+            const rank=i=>indexes.has(i) ? Math.abs(i-center)-20 : Math.abs(i-center)*2+(Math.sign(i-center)===direction ? 0 : 1);
+            try {
+                for (const i of [...wanted].sort((a,b)=>rank(a)-rank(b))) {
+                    if (!this.active || this.zooming || this.editor || key!==this.key() || rotation!==this.viewer.pagesRotation
+                            || center!==this.viewer.currentPageNumber-1 || this.view._destroyed) break;
+                    const prepared=await this.prepare(i,this.options,false,5);
+                    if (!prepared || this.zooming || key!==this.key() || rotation!==this.viewer.pagesRotation) break;
+                    this.rememberPrepared(prepared);
+                    if (this.layout.boxes && !this.applying) this.queueGeometryRefresh();
+                }
+            }
+            catch(error) { if (!['AbortError','RenderingCancelledException'].includes(error.name)) console.error(error); }
+            finally { this.prefetching=false; if (this.prefetchWanted) this.prefetchVisible(); }
+        }, 20);
+    }
 
     queueGeometryRefresh() {
         if (this.layoutFrame) return;
@@ -279,7 +287,9 @@ export class AndroidPageFitting {
                 return;
             }
             this.win.clearTimeout(this.layoutRetryTimer); this.layoutRetryTimer = null;
-            this.layout.apply(this.geometry, { preservePosition:true }); this.view._render();
+            const start=this.metrics.now();
+            if (this.layout.apply(this.geometry, { preservePosition:true })) this.view._render();
+            this.metrics.record('layout',start);
         });
     }
 
@@ -308,50 +318,75 @@ export class AndroidPageFitting {
 	}
 
 	readPage(index, priority = 0) {
-        return this.work.run(index, signal => this.renderAnalysis(index, signal), priority);
+        const start=this.metrics.now();
+        return this.work.run(index, signal => {
+            this.metrics.record('queue',start);
+            return this.renderAnalysis(index,signal);
+        }, priority);
     }
 
     async renderAnalysis(index, signal) {
-		let page = await this.viewer.pdfDocument.getPage(index + 1);
+        const cached=this.analysisLines.get(index);
+        if (cached?.textOnly) return cached;
+        const page=await this.viewer.pdfDocument.getPage(index+1);
         if (signal?.aborted) throw this.work.abortError();
-		// Analyze in the PDF's natural reading orientation. Rotation of the view
-		// transforms the result, rather than turning headers into side columns.
-		let angle = page.rotate;
-		let base = page.getViewport({ scale: 1, rotation: angle });
-		// Cap total pixels as well as width (very tall or custom-size PDFs).
-        const scale = Math.min(600 / base.width, Math.sqrt(800000 / (base.width * base.height)));
-		let viewport = page.getViewport({ scale, rotation: angle });
-		let canvas = this.win.document.createElement('canvas');
-		canvas.width = Math.ceil(viewport.width); canvas.height = Math.ceil(viewport.height);
-		let ctx = canvas.getContext('2d', { alpha: false, willReadFrequently: true });
-        ctx.skipBlender = true; // Crop analysis always measures the original light page.
-		try {
-			ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-			const task=page.render({ canvasContext: ctx, viewport, annotationMode: 0 });
-            const cancel=()=>task.cancel(); signal?.addEventListener('abort',cancel,{once:true});
-            this.analysisTasks ??= new Set(); this.analysisTasks.add(task);
-            let text;
-            try { [,text] = await Promise.all([
-                task.promise,
-				page.getTextContent().catch(() => ({ items: [] })),
-            ]); } finally { signal?.removeEventListener('abort',cancel); this.analysisTasks.delete(task); }
-            const lines = getReadingTextLines(text, viewport);
-            this.analysisLines.delete(index);
-            this.analysisLines.set(index, { index, aspect: base.width / base.height, lines });
-            while (this.analysisLines.size > 32) this.analysisLines.delete(this.analysisLines.keys().next().value);
-            if (this.readingModel && this.provisionalPages.size && [...this.provisionalPages].some(i => this.hasLocalEvidence(i))) this.refineAfterLearning();
-			return { index, aspect: base.width / base.height,
-				image: ctx.getImageData(0, 0, canvas.width, canvas.height), lines };
-		}
-		finally { canvas.width = canvas.height = 0; }
-	}
+        const base=page.getViewport({scale:1,rotation:page.rotate});
+        const scale=Math.min(600/base.width,Math.sqrt(800000/(base.width*base.height)));
+        const viewport=page.getViewport({scale,rotation:page.rotate});
+        const textStart=this.metrics.now();
+        let lines=cached?.lines, textOnly=cached?.textOnly;
+        if (!lines) {
+            const [text,operators]=await Promise.all([
+                page.getTextContent().catch(()=>({items:[]})),
+                page.getOperatorList?.().catch(()=>null),
+            ]);
+            if (signal?.aborted) throw this.work.abortError();
+            lines=getReadingTextLines(text,viewport);
+            textOnly=canUseTextBounds(operators,lines);
+        }
+        this.metrics.record('text',textStart);
+        const analysis={index,aspect:base.width/base.height,lines,textOnly,width:viewport.width,height:viewport.height};
+        this.analysisLines.delete(index); this.analysisLines.set(index,analysis);
+        while(this.analysisLines.size>32) this.analysisLines.delete(this.analysisLines.keys().next().value);
+        if(this.readingModel && this.provisionalPages.size && [...this.provisionalPages].some(i=>this.hasLocalEvidence(i))) this.refineAfterLearning();
+        if(textOnly) return analysis;
+        const canvas=this.win.document.createElement('canvas');
+        canvas.width=Math.ceil(viewport.width); canvas.height=Math.ceil(viewport.height);
+        const ctx=canvas.getContext('2d',{alpha:false,willReadFrequently:true});
+        ctx.skipBlender=true;
+        let task;
+        const cancel=()=>task?.cancel();
+        signal?.addEventListener('abort',cancel,{once:true});
+        try {
+            if(signal?.aborted) throw this.work.abortError();
+            ctx.fillStyle='#fff'; ctx.fillRect(0,0,canvas.width,canvas.height);
+            const start=this.metrics.now();
+            task=page.render({canvasContext:ctx,viewport,annotationMode:0});
+            this.analysisTasks??=new Set(); this.analysisTasks.add(task);
+            await task.promise;
+            this.metrics.record('raster',start);
+            if(signal?.aborted) throw this.work.abortError();
+            return {...analysis,image:ctx.getImageData(0,0,canvas.width,canvas.height)};
+        }
+        finally {
+            signal?.removeEventListener('abort',cancel); this.analysisTasks?.delete(task);
+            canvas.width=canvas.height=0;
+        }
+    }
+
+    readingBounds(page,model,options={}) {
+        const start=this.metrics.now();
+        const bounds=page.textOnly ? getReadingTextBounds(page.lines,model,page.index,options)
+            : getReadingBounds(page.image,page.lines,model,page.index,options);
+        this.metrics.record(page.textOnly ? 'textBounds' : 'pixels',start);
+        return bounds;
+    }
 
     inkActive() { return this.penPointers.size > 0 || this.view.action?.type === 'ink'; }
 
     nearbyLines(index) {
         const aspect = this.analysisLines.get(index)?.aspect;
-        return [...this.analysisLines.values()].filter(p => Math.abs(p.index-index) <= 4
-            && (!aspect || Math.abs(p.aspect/aspect - 1) < .05));
+        return localReadingPages([...this.analysisLines.values()].filter(p => !aspect || Math.abs(p.aspect/aspect - 1) < .05),index);
     }
     hasLocalEvidence(index) {
         const required = Math.min(3, Math.ceil((this.viewer.pdfDocument.numPages - index % 2) / 2));
@@ -369,21 +404,19 @@ export class AndroidPageFitting {
 				let pages = [];
                 const count = this.viewer.pdfDocument.numPages;
                 const center = this.centeredPageIndex();
-                const local = [center - 2, center - 1, center, center + 1, center + 2].filter(i => i >= 0 && i < count);
+                const local = [center, center + 1, center - 1, center + 2, center - 2].filter(i => i >= 0 && i < count);
                 const samples = [...new Set([...local, ...getReadingSamples(count)])];
 				for (let index of samples) {
 					if (this.view._destroyed) return null;
-					try { pages.push(await this.readPage(index, 10)); }
+					try { pages.push({...await this.readPage(index, 10)}); }
 					catch (error) { console.error(error); }
 				}
                 if (this.view._destroyed) return null;
 				let model = buildReadingModel(pages);
 				for (let page of pages) {
                     const pageModel = this.localModel(page.index, model);
-					page.marginalia = this.readMarginalia(page, pageModel);
-					this.marginaliaByPage.set(page.index, page.marginalia);
-					page.bounds = getReadingBounds(page.image, page.lines, pageModel, page.index);
-					page.withMarginalia = getReadingBounds(page.image, page.lines, pageModel, page.index, { includeMarginalia: true });
+                    Object.assign(page,this.readGeometry(page,pageModel));
+                    this.marginaliaByPage.set(page.index,page.marginalia);
 					delete page.image; delete page.lines;
 					if (rotation === this.viewer.pagesRotation) {
                         this.cache.set(page.index, Promise.resolve(page));
@@ -422,20 +455,22 @@ export class AndroidPageFitting {
             for (const index of this.provisionalPages) {
                 if (!this.hasLocalEvidence(index)) continue;
                 this.cache.delete(index); this.marginaliaByPage.delete(index);
-                this.provisionalPages.delete(index); changed = true;
+                this.provisionalPages.delete(index); this.preparedPages.delete(index); changed = true;
             }
             if (changed) {
-                this.preparedPages.clear();
+                // Only provisional pages that gained usable evidence are rebuilt.
+                // Valid buffered crops and their coordinates remain available.
                 if (this.active) this.schedule(0);
             }
         }, 250);
     }
-	async boundsFor(index, { includeMarginalia = false, manualCrop = this.options.manualCrop } = {}) {
+	async boundsFor(index, { includeMarginalia = false, manualCrop = this.options.manualCrop, priority = 0 } = {}) {
 		let manual = cropForPage(this.options.cropMode === 'automatic' ? {} : manualCrop, index);
 		if (manual) return rotateReadingBounds(manual, this.viewer.pagesRotation);
         // Fit the requested page immediately; document learning runs behind it.
         this.persistent;
         const learned = this.readingModel;
+        this.metrics.record(this.cache.has(index) || this.persistent.get(index) ? 'cacheHit' : 'cacheMiss',this.metrics.now());
         if (!this.modelPromise) this.ensureModel().catch(error => { if (!this.view._destroyed) console.error(error); });
         let model = learned;
         if (!this.cache.has(index) && this.persistent.get(index)) {
@@ -446,18 +481,13 @@ export class AndroidPageFitting {
 		if (!this.cache.has(index)) {
             if (!learned) this.provisionalPages.add(index);
 			let rotation = this.viewer.pagesRotation;
-            this.cache.set(index, this.readPage(index).then(page => {
+            this.cache.set(index, this.readPage(index,priority).then(page => {
                 // Keep the profile's original aspect: an unusual landscape page must
                 // use its actual content bounds instead of inheriting portrait width.
                 model = { aspect: page.aspect, ...model, ...(this.localModel(index, model) || buildReadingModel([page])) };
                 if (!this.hasLocalEvidence(index) && !this.persistent.get(index)) this.provisionalPages.add(index);
-				let marginalia = this.readMarginalia(page, model);
-				// Keep a synchronous mask lookup beside the existing bounded promise
-				// cache, so visible neighboring pages share the Exclude setting.
-				if (this.cache.has(index)) this.marginaliaByPage.set(index, marginalia);
-                const geometry = { index, aspect: page.aspect, bounds: getReadingBounds(page.image, page.lines, model, page.index),
-					marginalia,
-					withMarginalia: getReadingBounds(page.image, page.lines, model, page.index, { includeMarginalia: true }) };
+                const geometry=this.readGeometry(page,model);
+                if (this.cache.has(index)) this.marginaliaByPage.set(index,geometry.marginalia);
                 if (learned && !this.provisionalPages.has(index)) {
                     this.persistent.put(geometry);
                     this.win.clearTimeout(this.persistTimer);
@@ -470,6 +500,7 @@ export class AndroidPageFitting {
 				this.cache.delete(oldest); this.marginaliaByPage.delete(oldest);
 			}
 		}
+        if (this.work.jobs.has(index)) this.work.run(index, signal=>this.renderAnalysis(index,signal),priority).catch(()=>{});
         const pending = this.cache.get(index);
         let page = await pending;
         model ||= this.readingModel || {aspect:page?.aspect};
@@ -482,10 +513,17 @@ export class AndroidPageFitting {
 		return rotateReadingBounds(bounds, this.viewer.pagesRotation);
 	}
 
+    readGeometry(page,model) {
+        const marginalia=this.readMarginalia(page,model);
+        const bounds=this.readingBounds(page,model);
+        return {index:page.index,aspect:page.aspect,bounds,marginalia,
+            withMarginalia:marginalia.length ? this.readingBounds(page,model,{includeMarginalia:true}) : bounds};
+    }
+
 	readMarginalia(page, model) {
 		return getReadingMarginalia(page.lines, model, page.index).map(r => [
-			Math.max(0, r[0] - 2 / page.image.width), Math.max(0, r[1] - 2 / page.image.height),
-			Math.min(1, r[2] + 2 / page.image.width), Math.min(1, r[3] + 2 / page.image.height),
+			Math.max(0, r[0] - 2 / (page.width || page.image.width)), Math.max(0, r[1] - 2 / (page.height || page.image.height)),
+			Math.min(1, r[2] + 2 / (page.width || page.image.width)), Math.min(1, r[3] + 2 / (page.height || page.image.height)),
 		]);
 	}
 
@@ -500,13 +538,13 @@ export class AndroidPageFitting {
 
 	key(options = this.options) { return JSON.stringify(options); }
 
-	async prepare(index, options = this.options, includeNeighbors = true) {
+	async prepare(index, options = this.options, includeNeighbors = true, priority = 0) {
 		let v = this.viewer, c = v.container;
 		if (!v.pdfDocument || this.view._destroyed || v.spreadMode !== 0) return null;
 		let rotation = v.pagesRotation, inputEpoch = this.inputEpoch;
 		let width = c.clientWidth, height = c.clientHeight;
 		let bounds = options.mode === 'content' || options.reference !== 'page'
-			? await this.boundsFor(index, options) : [0, 0, 1, 1];
+			? await this.boundsFor(index, { ...options, priority }) : [0, 0, 1, 1];
 		let pdfPage = await v.pdfDocument.getPage(index + 1);
 		let base = pdfPage.getViewport({ scale: 96 / 72, rotation: pdfPage.rotate + rotation });
 		let fit = getReadingFit({ ...options, bounds, width, height, pageWidth: base.width, pageHeight: base.height });
@@ -514,11 +552,11 @@ export class AndroidPageFitting {
 		let marginalia = cropForPage(options.manualCrop, index) ? []
 			: (page?.marginalia || []).map(r => rotateReadingBounds(r, rotation));
 		let prepared = { index, key: this.key(options), bounds, pdfPage, fit, rotation, inputEpoch, width, height, marginalia };
-        if (includeNeighbors) prepared.neighbors = [...this.preparedPages.values()].filter(p=>Math.abs(p.index-index)<=4 && p.key===prepared.key && p.rotation===rotation);
+        if (includeNeighbors) prepared.neighbors = [...this.preparedPages.values()].filter(p=>p.index!==index && Math.abs(p.index-index)<=4 && p.key===prepared.key && p.rotation===rotation);
 		return prepared;
 	}
 
-	commit(prepared, { alignTop = false, topFraction = 0, navigate } = {}) {
+	commit(prepared, { alignTop = false, topFraction = 0, direction = 0, navigate } = {}) {
 		let v = this.viewer, c = v.container;
 		if (!prepared || !this.active || this.inkActive() || this.view._pendingPageTurn && !navigate || this.view._destroyed || v.spreadMode !== 0
 				|| prepared.key !== this.key() || prepared.rotation !== v.pagesRotation
@@ -561,7 +599,7 @@ export class AndroidPageFitting {
 				c.scrollTop = Math.max(0, d.offsetTop + d.clientTop + preserveScroll.fraction * d.clientHeight - preserveScroll.screenY);
 			}
 			this.peekAnchor = null;
-			this.view._pageNavigation?.centerCurrentPage();
+			this.view._pageNavigation?.centerCurrentPage({ direction, preservePosition: !navigate && !alignTop });
 			this.applied = { scale: v.currentScale, bounds, pageIndex: index, left: c.scrollLeft, top: c.scrollTop };
 			this.view._booxReader?.rememberReadingView();
 		}
@@ -584,7 +622,13 @@ export class AndroidPageFitting {
         this.work.cancelWhere(i => Math.abs(i-index)>5 && !samples.has(i));
 		let page = v.getPageView(index);
 		let topFraction = (c.scrollTop - page.div.offsetTop - page.div.clientTop) / page.div.clientHeight;
-		let prepared = await this.prepare(index);
+		let prepared;
+        try { prepared = await this.prepare(index); }
+        catch (error) {
+            if (!['AbortError','RenderingCancelledException'].includes(error.name)) throw error;
+            if (this.active && !this.view._destroyed && token === this.token && v.currentPageNumber === index+1) this.schedule(50);
+            return false;
+        }
 		if (token !== this.token || !this.zooming && v.currentPageNumber !== index + 1 || v.currentScale !== scale) return false;
 		return this.commit(prepared, { alignTop, topFraction });
 	}

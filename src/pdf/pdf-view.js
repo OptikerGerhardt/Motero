@@ -471,12 +471,14 @@ class PDFView {
 		// PDF.js consumes pointer endings during pinch gestures. Observe them before
 		// its container listeners so no finger remains registered in our gesture.
 		this._iframeWindow.addEventListener('pointerup', event => {
+            if (this._consumePaletteDismissal?.(event)) return;
             if (this.action?.type === 'ink' && this.action.pointerID !== undefined && event.pointerId !== this.action.pointerID) { event.stopImmediatePropagation(); return; }
             this._pageFitting?.onUp(event);
 			if (this._tryPriorityReaderTap(event)) { this._readerPriorityHandled=event.pointerId; return; }
             if (!this._chromeTapGuard?.up(event)) this._directHighlight?.up(event);
 		}, true);
 		this._iframeWindow.addEventListener('pointercancel', event => {
+            if (this._consumePaletteDismissal?.(event)) return;
             this._readerPriorityDown=null;
 			this._chromeTapGuard?.reset();
 			this._directHighlight?.gesture.interrupted(event);
@@ -2736,6 +2738,7 @@ class PDFView {
 	}
 
 	async _navigateToPage({ pageIndex, direction, save }) {
+        const navigationStart=this._pageFitting?.metrics?.now();
 		if (this._destroyed) return false;
 		this._booxReader?.clearNavigation(true);
 		let viewer = this._iframeWindow.PDFViewerApplication.pdfViewer;
@@ -2828,13 +2831,13 @@ class PDFView {
 					let cancelled = new Promise(resolve => request.cancel = resolve);
 					let prepared = await Promise.race([this._pageFitting.prepare(pageIndex), cancelled]);
 					if (!request.isCurrent()) return false;
-					if (!this._pageFitting.commit(prepared, { alignTop: true, navigate })) return false;
+					if (!this._pageFitting.commit(prepared, { alignTop: true, direction, navigate })) return false;
 					continue;
 				}
 				// Failed loads still advance, without applying pan to placeholder geometry.
 				navigate();
                 if (this._pageNavigation?.mode === 'jumped' && !this._booxReader?.isOverview()) {
-                    this._pageNavigation.centerCurrentPage();
+                    this._pageNavigation.centerCurrentPage({ direction });
                     continue;
                 }
 				if (!preservePan || !page.pdfPage || viewer.currentPageNumber !== page.id) {
@@ -2870,6 +2873,7 @@ class PDFView {
 			return false;
 		}
 		finally {
+            if (navigationStart !== undefined) this._pageFitting?.metrics?.record('navigation',navigationStart);
 			if (this._pendingPageTurn === request) {
 				this._pendingPageTurn = null;
 			}
@@ -3597,9 +3601,30 @@ class PDFView {
 
 	}
 
+    _consumePaletteDismissal(event) {
+        if (this._options.platform !== 'android') return false;
+        const outside = this._booxReader?.palette && !event.target?.closest?.('.boox-highlight-palette')
+            && this._iframeWindow.PDFViewerApplication.pdfViewer.container.contains(event.target);
+        if (outside && event.type === 'pointerdown') {
+            this._paletteDismissPointer = event.pointerId;
+            this._booxReader.closePalette();
+            this._readerPriorityDown = null;
+            this._chromeTapGuard?.reset(); this._directHighlight?.reset();
+            this._clearPendingBackdropTap(); this._clearPointerAction();
+            this._paletteDismissUntil = this._suppressCompatibilityMouseUntil = Date.now() + 600;
+        }
+        if (!(this._paletteDismissPointer != null && this._paletteDismissPointer === event.pointerId)
+                && !(event.type === 'mousedown' && event.sourceCapabilities?.firesTouchEvents
+                    && Date.now() <= this._paletteDismissUntil)) return false;
+        if (event.type === 'pointerup' || event.type === 'pointercancel') this._paletteDismissPointer = null;
+        event.preventDefault(); event.stopImmediatePropagation();
+        return true;
+    }
+
 	_handlePointerDown(event) {
         if (this.action?.type === 'ink' && this.action.pointerID !== undefined && event.pointerId !== this.action.pointerID) { event.stopImmediatePropagation?.(); return; }
         if (this._pageFitting?.editor) return;
+        if (this._consumePaletteDismissal?.(event)) return;
         if (event.type==='pointerdown' && ['touch','pen'].includes(event.pointerType)) {
             this._readerPriorityDown=event.isPrimary ? {x:event.clientX,y:event.clientY,time:Date.now()} : null;
         }

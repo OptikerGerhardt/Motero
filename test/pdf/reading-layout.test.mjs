@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { getReadingSamples, buildReadingModel, getReadingExclusions, getReadingBounds,
-	buildReadingProfiles, resolveReadingBounds, getReadingFit, getReadingTextLines, rotateReadingBounds, getReadingMarginalia } from '../../src/pdf/reading-layout.mjs';
+	buildReadingProfiles, resolveReadingBounds, getReadingFit, getReadingTextLines, rotateReadingBounds, getReadingMarginalia, getReadingTextBounds, localReadingPages } from '../../src/pdf/reading-layout.mjs';
 
 const line = (text, rect) => ({ text, rect });
 const body = [line('This is a complete line of ordinary text.', [.2, .2, .8, .22]),
@@ -422,4 +422,68 @@ test('a learned sequential bottom folio survives a tight gap while footnote text
  const model=buildReadingModel(pages), ref=pages[2].lines.at(-1);
  const excluded=getReadingExclusions(pages[2].lines,model,2);
  assert.ok(excluded.includes(ref.rect));assert.ok(!excluded.includes(foot.rect));
+});
+
+test('sequential Roman folios in a tight lower band are distinct from section titles and footnotes',()=>{
+ const roman=['XX','XXI','XXII','XXIII','XXIV','XXV'];
+ const pages=roman.map((text,index)=>({index,lines:[...body,line('2 A genuine footnote remains intact.',[.2,.82,.8,.84]),
+  line(text,[.47,.855,.53,.87])]}));
+ const model=buildReadingModel(pages);
+ assert.ok(model.folioBands.some(b=>b.kind===1));
+ const exclusions=getReadingExclusions(pages[4].lines,model,4);
+ assert.ok(exclusions.includes(pages[4].lines.at(-1).rect));
+ assert.ok(!exclusions.includes(pages[4].lines.at(-2).rect));
+ const title=line('XXIV',[.4,.3,.6,.34]);
+ assert.ok(!getReadingExclusions([...body,title],model,4).includes(title.rect));
+});
+test('learned footer lanes above the old fixed edge keep nearby note lines',()=>{
+ const pages=Array.from({length:6},(_,index)=>({index,lines:[...body,
+  line('3 Complete footnote text with a source.',[.1,.75,.88,.77]),
+  line('Book title',[.1,.885,.4,.897]),line(String(index+20),[.9,.885,.93,.897])]}));
+ const model=buildReadingModel(pages), exclusions=getReadingExclusions(pages[2].lines,model,2);
+ assert.ok(exclusions.includes(pages[2].lines.at(-2).rect));
+ assert.ok(exclusions.includes(pages[2].lines.at(-1).rect));
+ assert.ok(!exclusions.includes(pages[2].lines.at(-3).rect));
+});
+test('font-distinct running heads below the old top band require learned position and whitespace',()=>{
+ const main=body.map(l=>({...l,font:'Body'}));
+ const header=line('Running chapter title',[.2,.19,.7,.208]);header.font='Header';
+ const lowerBody=main.map(l=>({...l,rect:[l.rect[0],l.rect[1]+.08,l.rect[2],l.rect[3]+.08]}));
+ const lines=[header,...lowerBody];const model=buildReadingModel(Array.from({length:6},(_,index)=>({index,lines})));
+ assert.ok(getReadingExclusions(lines,model,1).includes(header.rect));
+ const title={...header,text:'A real chapter heading',rect:[.2,.19,.7,.24]};
+ assert.ok(!getReadingExclusions([title,...lowerBody],model,1).includes(title.rect));
+});
+
+
+test('local evidence stays within a chapter even when alternating running heads have different labels',()=>{
+ const pages=Array.from({length:9},(_,index)=>({index,lines:[...body,
+  line(index%2 ? (index<5 ? 'Chapter One':'Chapter Two') : 'Book title',[.2,.04,.7,.056])]}));
+ assert.ok(localReadingPages(pages,7).every(p=>p.index>3));
+ assert.ok(localReadingPages(pages,1).every(p=>p.index<5));
+});
+test('text-only geometry applies exclusions and keeps the complete final footnote',()=>{
+ const note=line('9 A complete final note, not a running footer.',[.15,.9,.85,.92]);
+ const header=line('Repeated running head',[.2,.04,.7,.055]);
+ const lines=[header,...body,note];
+ const model=buildReadingModel(Array.from({length:6},(_,index)=>({index,lines})));
+ const bounds=getReadingTextBounds(lines,model,2);
+ assert.ok(bounds[1]>=.19 && bounds[1]<.21);
+ assert.ok(bounds[3]>=.92);
+});
+
+
+test('normalized repeated body lines within the expanded header band remain content',()=>{
+ const main=Array.from({length:25},(_,row)=>line('Page 09, line '+(row+1)+': this is ordinary running body text.',[.2,.15+row*.018,.8,.16+row*.018]));
+ const lines=[line('A small repeated running head',[.2,.04,.7,.048]),...main];
+ const model=buildReadingModel(Array.from({length:6},(_,index)=>({index,lines})));
+ const excluded=getReadingExclusions(lines,model,2);
+ assert.ok(excluded.includes(lines[0].rect));
+ assert.ok(main.every(l=>!excluded.includes(l.rect)));
+});
+
+
+test('continuously changing running titles do not destroy usable local geometric evidence',()=>{
+ const pages=Array.from({length:9},(_,index)=>({index,lines:[...body,line('Author: unique title '+index,[.2,.04,.7,.056])]}));
+ assert.equal(localReadingPages(pages,4).length,9);
 });

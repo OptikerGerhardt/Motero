@@ -1,6 +1,6 @@
 // View geometry only. No PDF text, images, annotation data or credentials.
-const KEY = 'motero.reading-geometry.v2';
-const VERSION = 2;
+const KEY = 'motero.reading-geometry.v3';
+const VERSION = 3;
 const validBounds = b => Array.isArray(b) && b.length === 4 && b.every(n => Number.isFinite(n) && n >= 0 && n <= 1)
     && b[0] < b[2] && b[1] < b[3];
 export function validGeometry(page) {
@@ -17,7 +17,7 @@ function numericLearning(value) {
     if (!normal || !margins) return null;
     const bands = name => (Array.isArray(value.model?.[name]) ? value.model[name] : []).slice(0, 128)
         .filter(b => Number.isFinite(b.y0) && Number.isFinite(b.y1) && b.y0 >= 0 && b.y1 <= 1 && b.y0 < b.y1)
-        .map(b => Object.fromEntries(Object.entries(b).filter(([k,v]) => ['y0','y1','parity','offset','index'].includes(k) && Number.isFinite(v))));
+        .map(b => Object.fromEntries(Object.entries(b).filter(([k,v]) => ['y0','y1','parity','offset','index','kind'].includes(k) && Number.isFinite(v))));
     return { aspect: value.aspect, profiles: normal, withMarginalia: margins,
         model: { bodyHeight: Number.isFinite(value.model?.bodyHeight) ? value.model.bodyHeight : 0,
             headerBands: bands('headerBands'), footerBands: bands('footerBands'), folioBands: bands('folioBands') } };

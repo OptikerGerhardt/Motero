@@ -191,3 +191,53 @@ test('manual fitting uses its saved frame even after an automatic paper referenc
     assert.equal(fitting.options.reference, 'page');
     assert.deepEqual(fitting.options.manualCrop.all, [.1,.1,.9,.9]);
 });
+
+
+test('scroll events do not starve the scheduled prefetch and the centered page comes first',async()=>{
+ const {fitting,viewer,flush,timers}=fixture();fitting.active=true;fitting.options.mode='width';
+ fitting.prepare=async index=>{seen.push(index);return null;};const seen=[];
+ viewer.currentPageNumber=2;
+ fitting.prefetchVisible();const scheduled=[...timers.keys()];
+ for(let i=0;i<50;i++)fitting.prefetchVisible();
+ assert.deepEqual([...timers.keys()],scheduled,'continuous scroll must not restart its prefetch timer');
+ await flush();assert.equal(seen[0],1,'current page must precede backward neighbors');
+});
+test('refinement retains prepared crops for valid pages and only invalidates provisional pages',async()=>{
+ const {fitting,viewer,flush}=fixture();viewer.pdfDocument.numPages=12;
+ fitting.preparedPages.set(2,{index:2});fitting.preparedPages.set(5,{index:5});
+ fitting.cache.set(5,Promise.resolve({}));fitting.provisionalPages.add(5);
+ for(const index of [3,5,7])fitting.analysisLines.set(index,{index,aspect:.75,lines:[]});
+ fitting.refineAfterLearning();await flush();
+ assert.ok(fitting.preparedPages.has(2));assert.ok(!fitting.preparedPages.has(5));
+});
+test('unchanged compact geometry requires no DOM layout reads or additional page writes',async()=>{
+ const {fitting,pages}=fixture();await fitting.configure({mode:'width',reference:'content',margin:0});
+ let reads=0,writes=0;
+ for(const page of pages) {
+  page.div.getBoundingClientRect=()=>{reads++;throw Error('forced layout');};
+  page.div.style=new Proxy(page.div.style,{set(target,key,value){writes++;target[key]=value;return true;}});
+ }
+ assert.equal(fitting.layout.apply(fitting.geometry,{preservePosition:true}),false);
+ assert.equal(reads,0);assert.equal(writes,0);
+});
+
+
+test('a cached neighbor can never overwrite a newly prepared current-page crop',async()=>{
+ const {fitting}=fixture();await fitting.configure({mode:'width',reference:'content',margin:0});
+ const old=fitting.preparedPages.get(1);
+ fitting.boundsFor=async()=>[.2,.15,.8,.9];
+ const fresh=await fitting.prepare(1);
+ assert.ok(!fresh.neighbors.some(p=>p.index===1));
+ assert.notDeepEqual(fresh.bounds,old.bounds);
+ fitting.commit(fresh);
+ assert.deepEqual(fitting.geometry.get(1).fit.bounds,fresh.fit.bounds);
+});
+
+
+test('a cancelled PDF.js analysis recovers a current fit without rejecting the UI command',async()=>{
+ const {fitting,flush}=fixture();await fitting.configure({mode:'width',reference:'content',margin:0});
+ const prepare=fitting.prepare.bind(fitting);let calls=0;
+ fitting.prepare=async(...args)=>{if(!calls++){const e=new Error('cancelled');e.name='RenderingCancelledException';throw e;}return prepare(...args);};
+ assert.equal(await fitting.apply(),false);await flush();
+ assert.ok(fitting.applied);assert.ok(calls>1);
+});

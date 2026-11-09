@@ -55,8 +55,8 @@ export class CroppedPageLayout {
 	}
 	apply(preparedPages, { preservePosition = false } = {}) {
 		const v = this.viewer, c = v.container, host = v.viewer;
-		const anchor = v.getPageView(v.currentPageNumber - 1)?.div;
-		const before = preservePosition && anchor?.getBoundingClientRect();
+		const previousBox = preservePosition && this.boxes?.[v.currentPageNumber - 1];
+        const before = previousBox && {left:previousBox.x-previousBox.left,top:previousBox.y-previousBox.top};
 		if (!this.hostBefore) {
 			this.hostBefore = {};
 			for (let key of ['position', 'width', 'height', 'overflow', 'padding', 'margin']) this.hostBefore[key] = host.style[key];
@@ -76,7 +76,11 @@ export class CroppedPageLayout {
 		});
 		const result = layoutReadingPages(pages, { width: c.clientWidth, height: c.clientHeight, mode: v.scrollMode });
 		setStyles(host, { position: 'relative', width: result.width + 'px', height: result.height + 'px', overflow: 'clip', padding: '0', margin: '0' });
+        let changed = !this.boxes || result.width !== this.width || result.height !== this.height;
 		for (const box of result.boxes) {
+            const old=this.boxes?.[box.index];
+            if (old && ['x','y','left','top','right','bottom','width','height','ready'].every(k=>old[k]===box[k])) continue;
+            changed=true;
 			const d = v.getPageView(box.index).div;
 			if (!this.saved.has(d)) {
 				const before = {};
@@ -88,11 +92,13 @@ export class CroppedPageLayout {
 				clipPath: `inset(${box.top}px ${box.right}px ${box.bottom}px ${box.left}px)` });
 		}
 		host.scrollLeft = host.scrollTop = 0;
-		this.boxes = result.boxes;
+		this.boxes = result.boxes; this.width=result.width; this.height=result.height;
 		if (before) {
-			const after = anchor.getBoundingClientRect();
-			c.scrollLeft += after.left - before.left; c.scrollTop += after.top - before.top;
+			const after=this.boxes[v.currentPageNumber-1];
+            c.scrollLeft += after.x-after.left-before.left;
+            c.scrollTop += after.y-after.top-before.top;
 		}
+        return changed;
 	}
 	getVisiblePages() {
 		const v = this.viewer, c = v.container;

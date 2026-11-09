@@ -88,7 +88,7 @@ export function getReadingTextLines(content, viewport) {
 		// box. Keep outer reference spans separate before merging body words.
 		let sideCandidate = (rect[2] < 0.20 || rect[0] > 0.80)
 			&& rect[2] - rect[0] < 0.1 && (/^\d{1,3}$/.test(text) || marginalReference(text));
-		spans.push({ text, rect, vertical: Math.abs(dy) > Math.abs(dx), sideCandidate });
+		spans.push({ text, rect, font: item.fontName || style.fontFamily || null, vertical: Math.abs(dy) > Math.abs(dx), sideCandidate });
 	}
     // PDF text extraction can split “B XI” into independent items. Combine only
     // short, horizontally adjacent gutter spans before ordinary row merging.
@@ -113,6 +113,7 @@ export function getReadingTextLines(content, viewport) {
 			&& x0 >= line.rect[2] - 0.005 && x0 - line.rect[2] < Math.max(0.025, (y1 - y0) * 2));
 		if (row) {
 			row.text += ' ' + span.text;
+            if (row.font !== span.font) row.font = null;
 			row.rect = [Math.min(row.rect[0], x0), Math.min(row.rect[1], y0), Math.max(row.rect[2], x1), Math.max(row.rect[3], y1)];
 		}
 		else lines.push({ ...span, rect: [...span.rect] });
@@ -131,10 +132,17 @@ function bodyLineHeight(lines) {
 	return heights[Math.floor(heights.length / 2)] || 0;
 }
 
+function bodyFont(lines) {
+    const counts = new Map();
+    for (const line of lines) if (line.font && line.text.length > 30 && line.rect[1] > .2 && line.rect[3] < .8)
+        counts.set(line.font, (counts.get(line.font) || 0) + line.text.length);
+    return [...counts].sort((a,b) => b[1]-a[1])[0]?.[0];
+}
+
 function headerCandidatesFor(lines) {
 	let bodyHeight = bodyLineHeight(lines);
 	if (!bodyHeight) return [];
-	let upper = lines.filter(l => !l.sideCandidate && !l.vertical && l.rect[3] < 0.18 && l.text.length > 3
+	let upper = lines.filter(l => !l.sideCandidate && !l.vertical && l.rect[3] < 0.23 && l.text.length > 3
 		&& l.rect[3] - l.rect[1] <= bodyHeight * 1.05).sort((a, b) => a.rect[1] - b.rect[1]);
 	let groups = [];
 	for (let line of upper) {
@@ -149,7 +157,8 @@ function headerCandidatesFor(lines) {
 		if (rows.size > 3 || group.reduce((n, l) => n + l.text.length, 0) > 180) continue;
 		// Lower candidates need smaller type; ordinary first paragraphs and
 		// large chapter titles must remain content even at repeatable positions.
-		if (last >= 0.10 && group.some(l => l.rect[3] - l.rect[1] > bodyHeight * 0.92)) continue;
+		if (last >= 0.10 && group.some(l => l.rect[3] - l.rect[1] > bodyHeight * 0.92
+            && !(l.font && bodyFont(lines) && l.font !== bodyFont(lines) && l.text.length < 90))) continue;
 		let next = lines.filter(l => !group.includes(l) && l.rect[1] > last && l.text.length > 15)
 			.sort((a, b) => a.rect[1] - b.rect[1])[0];
 		if (next && next.rect[1] - last > Math.max(bodyHeight * 0.45, Math.max(...group.map(l => l.rect[3] - l.rect[1])) * 0.8)) result.push(...group);
@@ -166,13 +175,13 @@ function footerCandidatesFor(lines, fallbackHeight = 0) {
 	if (!bodyHeight) return [];
 	return lines.filter(line => {
 		let [x0, y0, x1, y1] = line.rect, text = line.text.trim();
-		if (line.vertical || y0 < 0.92 || text.length < 3 || text.length > 120
+		if (line.vertical || y0 < 0.82 || text.length < 3 || text.length > 120
 				|| y1 - y0 > bodyHeight * 0.9 || pageNumber(text)
 				|| /^(?:\d+[.)]?\s|[*†‡]|ibid\b|ebd\b|vgl\b|cf\b)/i.test(text)) return false;
 		// A separate folio on the same baseline supplies evidence beyond small
 		// type or repetition. Sources within notes must never become footers.
 		let folio = lines.some(other => other !== line && pageNumber(other.text)
-			&& other.rect[1] > 0.94 && Math.abs(other.rect[1] - y0) < bodyHeight * 0.4
+			&& other.rect[1] > 0.82 && Math.abs(other.rect[1] - y0) < bodyHeight * 0.4
 			&& Math.max(other.rect[0] - x1, x0 - other.rect[2]) > 0.12);
 		if (!folio) return false;
 		let above = lines.filter(other => other !== line && other.rect[3] <= y0
@@ -222,12 +231,16 @@ export function buildReadingModel(pages) {
 		.size >= Math.max(3, Math.ceil(pages.length / 2)));
 	// A repeated lower-page lane with a sequential folio offset is stronger
     // evidence than the whitespace gap alone (dense Fuchs footnote pages).
-    const folios = pages.flatMap(page => page.lines.filter(line => /^\d{1,5}$/.test(line.text.trim())
-        && line.rect[1] > .84 && line.rect[2]-line.rect[0] < .09
+    const folios = pages.flatMap(page => page.lines.filter(line => folioNumber(line.text)
+        && (line.rect[1] > .78 || line.rect[3] < .23) && line.rect[2]-line.rect[0] < .09
+        && !(line.sideCandidate && romanReference(line.text))
+        && (!bodyHeight || line.rect[3]-line.rect[1] <= bodyHeight*1.1)
         && !page.lines.some(other => other !== line && other.text.length > 2 && other.rect[1] < line.rect[3]
             && other.rect[3] > line.rect[1] && Math.max(other.rect[0]-line.rect[2],line.rect[0]-other.rect[2]) < .09))
-        .map(line => ({index:page.index, offset:Number(line.text)-page.index, y0:line.rect[1], y1:line.rect[3]})));
-    const folioBands = folios.filter(f => new Set(folios.filter(g => g.offset===f.offset && sameHeaderBand(f,g)).map(g=>g.index)).size >= 3);
+        .map(line => ({index:page.index, offset:folioNumber(line.text).value-page.index,
+            kind:folioNumber(line.text).kind, y0:line.rect[1], y1:line.rect[3]})));
+    const folioBands = folios.filter(f => new Set(folios.filter(g => g.kind===f.kind
+        && g.offset===f.offset && sameHeaderBand(f,g)).map(g=>g.index)).size >= 3);
     return { repeated, headerBands, footerBands, folioBands, bodyHeight };
 }
 
@@ -249,8 +262,9 @@ export function getReadingExclusions(lines, model = { repeated: new Set() }, pag
                 && other.rect[1] < y1 && other.rect[3] > y0 && !downloadStamp(other.text)
                 && !(model.footerBands?.some(band => sameHeaderBand(band, { y0: other.rect[1], y1: other.rect[3] }))
                     && footerCandidatesFor(lines, model.bodyHeight).includes(other)));
-            const learned = pageIndex !== null && model.folioBands?.some(band => band.offset === Number(line.text)-pageIndex && sameHeaderBand(band,{y0,y1}));
-            if (y1 < 0.10 || y0 > 0.94 && !peer || y0 > 0.85 && detached && !peer || learned && !peer) excluded.add(line);
+            const learned = pageIndex !== null && model.folioBands?.some(band => band.offset === (folioNumber(line.text)?.value ?? NaN)-pageIndex
+                && (band.kind ?? 0) === folioNumber(line.text)?.kind && sameHeaderBand(band,{y0,y1}));
+            if (y1 < 0.10 && (!model.bodyHeight || y1-y0 <= model.bodyHeight*1.1) || y0 > 0.94 && !peer || y0 > 0.85 && detached && !peer || learned && !peer) excluded.add(line);
         }
 	}
 	let bodyHeight = bodyLineHeight(lines);
@@ -259,13 +273,14 @@ export function getReadingExclusions(lines, model = { repeated: new Set() }, pag
 			excluded.add(line);
 		}
 	}
+	const headerCandidates = new Set(headerCandidatesFor(lines));
 	let headers = lines.filter(line => {
 		let [ , y0, , y1] = line.rect;
 		if (line.sideCandidate && marginalReference(line.text)) return false;
-		if (line.vertical || y1 >= 0.18 || bodyHeight && y1 - y0 > bodyHeight * 1.1) return false;
+		if (line.vertical || y1 >= 0.23 || bodyHeight && y1 - y0 > bodyHeight * 1.1) return false;
 		let knownBand = model.headerBands?.some(band => (band.parity === undefined
 			|| pageIndex !== null && band.parity === pageIndex % 2) && sameHeaderBand(band, { y0, y1 }));
-		return knownBand || model.repeated.has(normalize(line.text))
+		return knownBand || headerCandidates.has(line) && model.repeated.has(normalize(line.text))
 			&& (bodyHeight ? y1 - y0 <= bodyHeight * 1.1 : y1 < 0.1);
 	}).sort((a, b) => a.rect[1] - b.rect[1]);
 	let blocks = [];
@@ -373,7 +388,7 @@ export function getReadingBounds(image, lines, model, pageIndex = null, options 
 	// Running heads can contain vector separators (Höffe: page number — author)
 	// which are absent from the text layer. Clear their band only if no retained
 	// text overlaps it; a marginal reference beside body text never clears a row.
-	for (let rect of ignored.filter(rect => rect[3] < 0.18)) {
+	for (let rect of ignored.filter(rect => rect[3] < 0.23)) {
 		if (lines.some(line => !ignored.includes(line.rect)
 			&& line.rect[1] < rect[3] && line.rect[3] > rect[1])) continue;
 		let y0 = Math.max(0, Math.floor(rect[1] * height) - 2);
@@ -382,7 +397,7 @@ export function getReadingBounds(image, lines, model, pageIndex = null, options 
 	}
 	// Remove a thin rule belonging to an excluded running header, while keeping
 	// the rules above footnotes and tables intact.
-	for (let rect of ignored.filter(rect => rect[3] < 0.18)) {
+	for (let rect of ignored.filter(rect => rect[3] < 0.23)) {
 		let next = lines.filter(l => !ignored.includes(l.rect) && l.rect[1] > rect[3] && l.text.length > 15)
 			.sort((a, b) => a.rect[1] - b.rect[1])[0];
 		if (!next) continue;
@@ -395,7 +410,7 @@ export function getReadingBounds(image, lines, model, pageIndex = null, options 
 	// No vertical band trimming: even a one-line footnote is part of the page.
 	// A footer may also have a vector rule above it. Search only the small empty
 	// strip below ALL retained text, so a real footnote and its separator survive.
-	let footers = ignored.filter(rect => rect[1] > 0.92 && lines.some(line => line.rect === rect && !pageNumber(line.text)));
+	let footers = ignored.filter(rect => rect[1] > 0.82 && lines.some(line => line.rect === rect && !pageNumber(line.text)));
 	if (footers.length) {
 		let top = Math.min(...footers.map(r => r[1]));
 		let retainedBottom = Math.max(0, ...lines.filter(l => !ignored.includes(l.rect)
@@ -463,4 +478,52 @@ export function rotateReadingBounds(b, degrees) {
 		case 270: return [b[1], 1 - b[2], b[3], 1 - b[0]];
 		default: return b;
 	}
+}
+
+// A canonical Roman numeral is a folio only with matching page-position and
+// sequence evidence. Ordinary words and A/B edition references never parse.
+function folioNumber(text) {
+    const value = text.trim().replace(/^[-–—]\s*|\s*[-–—]$/g, '');
+    if (/^\d{1,5}$/.test(value)) return { value:Number(value), kind:0 };
+    if (!new RegExp('^' + romanFolio + '$','i').test(value)) return null;
+    const digits = {I:1,V:5,X:10,L:50,C:100,D:500,M:1000};
+    let number=0, previous=0;
+    for (const letter of [...value.toUpperCase()].reverse()) {
+        const digit=digits[letter]; number += digit < previous ? -digit : digit; previous=digit;
+    }
+    return number > 0 ? {value:number,kind:1} : null;
+}
+
+// Split local evidence when a running chapter label changes, comparing each
+// parity independently (left and right pages often have different titles).
+export function localReadingPages(pages, index) {
+    let nearby = pages.filter(p => Math.abs(p.index-index) <= 4);
+    for (let parity=0;parity<2;parity++) {
+        const labels = nearby.filter(p=>p.index%2===parity).map(p=>({index:p.index,
+            key:headerCandidatesFor(p.lines).filter(l=>!pageNumber(l.text)).map(l=>normalize(l.text)).join('|')}));
+        // A real chapter label recurs across pages of the same parity.
+        // Unique or continuously changing running titles are not boundaries.
+        const anchor = labels.filter(p=>p.key && labels.filter(other=>other.key===p.key).length>=2).sort((a,b)=>Math.abs(a.index-index)-Math.abs(b.index-index))[0];
+        if (!anchor) continue;
+        const before=labels.filter(p=>p.index<anchor.index && p.key && p.key!==anchor.key).map(p=>p.index);
+        const after=labels.filter(p=>p.index>anchor.index && p.key && p.key!==anchor.key).map(p=>p.index);
+        const low=Math.max(-Infinity,...before), high=Math.min(Infinity,...after);
+        nearby=nearby.filter(p=>p.index>low && p.index<high);
+    }
+    return nearby;
+}
+
+// Only used after the operator list proves that the page paints text alone.
+// Scans, diagrams, rules and complex graphics retain the raster fallback.
+export function getReadingTextBounds(lines, model, index, options = {}) {
+    const ignored=new Set(getReadingExclusions(lines,model,index,options));
+    const kept=lines.filter(l=>!ignored.has(l.rect));
+    if (!kept.length) return null;
+    // Advance widths can understate italic overhang; retain a small font-sized
+    // guard instead of treating extracted text boxes as exact ink rectangles.
+    const heights=kept.map(l=>l.rect[3]-l.rect[1]).sort((a,b)=>a-b);
+    const typical=heights[Math.floor(heights.length/2)] || 0;
+    const padX=Math.max(.002,typical*.35),padY=Math.max(.002,typical*.15);
+    return [clamp(Math.min(...kept.map(l=>l.rect[0]))-padX),clamp(Math.min(...kept.map(l=>l.rect[1]))-padY),
+        clamp(Math.max(...kept.map(l=>l.rect[2]))+padX),clamp(Math.max(...kept.map(l=>l.rect[3]))+padY)];
 }

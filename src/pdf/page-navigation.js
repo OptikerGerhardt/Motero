@@ -121,7 +121,7 @@ export class PDFPageNavigation {
         this.view._onManualNavigation();
         this.view._navigateToAdjacentPage(direction)?.catch(error => console.error(error));
     }
-    centerCurrentPage() {
+    centerCurrentPage({ direction = 0, preservePosition = false } = {}) {
         if (this.mode !== 'jumped' || this.view._pageFitting?.zooming || this.view._pageFitting?.editor
                 || this.view._booxReader?.isOverview()) return;
         const v = this.viewer, c = v.container, index = v.currentPageNumber - 1;
@@ -130,7 +130,9 @@ export class PDFPageNavigation {
         if (box) {
             this.clearSpacing();
             c.scrollLeft = Math.max(0, box.x + (box.width - c.clientWidth) / 2);
-            c.scrollTop = Math.max(0, box.y + (box.height - c.clientHeight) / 2);
+            const start = box.y, end = box.y + box.height - c.clientHeight;
+            c.scrollTop = Math.max(0, box.height <= c.clientHeight ? (start + end) / 2
+                : preservePosition ? Math.max(start, Math.min(end, c.scrollTop)) : direction < 0 ? end : start);
         }
         else {
             // Without a crop layout, the first/last short page also needs room
@@ -139,7 +141,10 @@ export class PDFPageNavigation {
             v.viewer.classList.add('motero-page-spacing');
             const r = page.div.getBoundingClientRect(), viewport = c.getBoundingClientRect();
             c.scrollLeft += r.left + r.width / 2 - viewport.left - c.clientWidth / 2;
-            c.scrollTop += r.top + r.height / 2 - viewport.top - c.clientHeight / 2;
+            const start = c.scrollTop + r.top - viewport.top - c.clientTop;
+            const end = start + r.height - c.clientHeight;
+            c.scrollTop = Math.max(0, r.height <= c.clientHeight ? (start + end) / 2
+                : preservePosition ? Math.max(start, Math.min(end, c.scrollTop)) : direction < 0 ? end : start);
         }
     }
     clearSpacing() {
