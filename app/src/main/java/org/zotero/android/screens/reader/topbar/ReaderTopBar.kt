@@ -243,17 +243,9 @@ internal fun ReaderTopBar(
 
             }
     }
-    if (floating) {
-        Row(Modifier.fillMaxWidth().windowInsetsPadding(TopAppBarDefaults.windowInsets).padding(horizontal = 8.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically) {
-            Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceContainer) {
-                Row(Modifier.padding(4.dp), verticalAlignment = Alignment.CenterVertically) { navigation(); leading() }
-            }
-            Spacer(Modifier.weight(1f))
-            Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceContainer) {
-                Row(Modifier.padding(4.dp), verticalAlignment = Alignment.CenterVertically) { trailing() }
-            }
-        }
+    if (viewState.isPdfOrHtml()) {
+        ReaderToolbarSurface(floating = floating,
+            leading = { navigation(); leading() }, trailing = { trailing() })
     } else {
         TopAppBar(
             colors = TopAppBarDefaults.topAppBarColors(

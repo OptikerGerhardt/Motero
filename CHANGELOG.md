@@ -1,5 +1,22 @@
 # Änderungen
 
+## 1.0.0-314 — 9. November 2026
+
+- Vollständig radierte Striche werden sofort im lokalen Annotationsmodell und Undo-Verlauf entfernt; die Rückmeldung aus Android ist keine Voraussetzung mehr für die sichtbare Löschung.
+- Reihenfolge im Dock: Notiz, Text, Undo, Bereich, Stift, Radierer, Farbe. Bereich direkt links vom Stift; Stift/Radierer/Farbe bilden eine zusammenhängende Gruppe.
+- Vorschau bleibt beim Werkzeugwechsel montiert; Breite und Unterkante bleiben beim Zurückwechseln stabil.
+- Obere Symbolgruppen gleiten beim Öffnen/Schließen der Sidebar in derselben Komponentenstruktur zum Rand; Hintergrund und Ecken werden mitgeführt.
+- „Fit relative to“ direkt unter „Content cropping“ und vor „Page fitting“, nur bei Automatic und Breiten-/Höhenanpassung. Manual verwendet immer den gewählten Rahmen; die automatische Bezugswahl bleibt gespeichert.
+- Appearance-Menü mit Systemabstand und zusätzlichem unteren Scrollraum.
+- Bookmark-Sprung mit oberem Kreisbogen; Spiegelung an einer vertikalen Achse kehrt die Richtung um und lässt den Bogen oben.
+- Bookmark-Fähnchen etwas größer, bei gleichen PDF-/Sync-Koordinaten und bisheriger Deckkraft.
+- PDF-Vollbild ohne reservierten Statusleistenbereich; native Bedienelemente behalten ihre sicheren Abstände.
+- Unteres Dock fährt mit festem Navigationsleistenabstand direkt an die endgültige Position.
+- Dark-Mode-Miniaturen: weißes Originalpapier wird genau einmal durch den PDF.js-Theme-Blender eingefärbt; Browserprüfung misst Textkontrast.
+- Gestrichelte Scroll-Hilfslinie verschwindet nach fünf Sekunden; ein neuer Hinweis startet eine neue Frist.
+- Farbauswahl im Schnellmenü mit hervorgehobener Farbkachel nach Zotero Desktop, ohne fontabhängigen Haken im Farbkreis.
+
+
 ## 1.0.0-313 — 9. November 2026
 
 - Veröffentlicht und unabhängig heruntergeladen geprüft: 308 Reader-Tests, 122 native Tests, zwölf Browser-Suites und beide API-31/35-Update-Prüfungen bestanden; Produktionssignatur, Quellen und Prüfsummen stimmen überein.

@@ -8,7 +8,6 @@ import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -31,7 +30,7 @@ internal fun ReaderPdfBottomDock(viewModel: ReaderViewModel, state: ReaderViewSt
     val previews by scrubber.viewStates.observeAsState(ReaderScrubberViewState())
     val tools = state.showCreationToolbar
     val density = LocalDensity.current
-    BoxWithConstraints(Modifier.fillMaxWidth().windowInsetsPadding(NavigationBarDefaults.windowInsets)
+    BoxWithConstraints(Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.navigationBarsIgnoringVisibility)
         .padding(horizontal = 8.dp, vertical = 12.dp), contentAlignment = Alignment.BottomCenter) {
         val previewWidth = minOf(maxWidth * .8f, 560.dp,
             (previews.thumbnailCache.size.coerceAtLeast(1) * 38 + 10).dp).coerceAtLeast(48.dp)
@@ -59,7 +58,9 @@ internal fun ReaderPdfBottomDock(viewModel: ReaderViewModel, state: ReaderViewSt
                         }
                     }
                     Box(Modifier.fillMaxWidth().height(60.dp).clipToBounds()) {
-                        if (slide < 1f) ReaderPageScrubber(viewModel = scrubber,
+                        // Keep the scrubber mounted while tools are visible:
+                        // measured slots and landmark requests survive the return.
+                        ReaderPageScrubber(viewModel = scrubber,
                             enabled = !tools,
                             modifier = Modifier.align(Alignment.Center).width(previewWidth)
                                 .graphicsLayer { translationY = -travelPx * slide })

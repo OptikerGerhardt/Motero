@@ -1,6 +1,10 @@
 package org.zotero.android.screens.reader
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.background
@@ -105,8 +109,8 @@ internal fun ReaderBox(
                     )
                 }
         ) {
-            // Reserve a stable reading viewport even when system bars are
-            // hidden. Fits, page turns and SmartScroll all use this same area.
+            // PDF pages use the full viewport; native chrome overlays them.
+            // Only the crop editor and reflowable documents reserve safe insets.
             val readingInsets = run {
                 val cutout = WindowInsets.displayCutout
                 val direction = LocalLayoutDirection.current
@@ -117,7 +121,8 @@ internal fun ReaderBox(
                 } else WindowInsets(0, 0, 0, 0)
                 safeInsets
             }
-            val readingModifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface).windowInsetsPadding(readingInsets)
+            val readingModifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)
+                .then(if (viewState.fileType == ReaderFileType.PDF) Modifier else Modifier.windowInsetsPadding(readingInsets))
             ReaderWebView(viewModel = viewModel, modifier = readingModifier)
             if ((viewState.fileType != ReaderFileType.PDF || viewState.readingModeEnabled) && viewState.showCreationToolbar && viewState.isTopBarVisible && !viewState.manualCropOpen) {
                 ReaderAnnotationCreationToolbar(
@@ -132,10 +137,13 @@ internal fun ReaderBox(
             if (viewState.manualCropOpen) Box(Modifier.fillMaxSize().windowInsetsPadding(readingInsets)) { ReaderCropControls(viewModel, viewState) }
             if (viewState.fileType == ReaderFileType.PDF && !viewState.manualCropOpen) {
                 val isScrubberVisible = viewState.isScrubberVisible() && !viewState.showCreationToolbar
-                if (viewState.isScrubberVisible() && !(isOverlayMode && viewState.showSideBar)) {
-                    Box(Modifier.align(Alignment.BottomCenter)) {
-                        org.zotero.android.screens.reader.toolbar.ReaderPdfBottomDock(viewModel, viewState, scrubberViewModel)
-                    }
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = viewState.isScrubberVisible() && !(isOverlayMode && viewState.showSideBar),
+                    enter = slideInVertically(tween(220)) { it } + fadeIn(tween(160)),
+                    exit = slideOutVertically(tween(180)) { it } + fadeOut(tween(140)),
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                ) {
+                    org.zotero.android.screens.reader.toolbar.ReaderPdfBottomDock(viewModel, viewState, scrubberViewModel)
                 }
                 if (isScrubberVisible) {
                     ReaderPageHistoryBackArrow(

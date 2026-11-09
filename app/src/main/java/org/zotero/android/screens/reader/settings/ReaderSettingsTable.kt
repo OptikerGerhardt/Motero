@@ -23,10 +23,11 @@ internal fun ReaderSettingsTable(
     viewState: ReaderSettingsViewState,
     viewModel: ReaderSettingsViewModel,
     onManualCrop: () -> Unit = {},
+    modifier: Modifier = Modifier,
 ) {
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(bottom = 24.dp),
     ) {
         readerSettingsSettingRow(
             titleResId = Strings.pdf_settings_appearance_title,
@@ -50,16 +51,9 @@ internal fun ReaderSettingsTable(
                 selectedOption = if (viewState.cropMode == "manual") ReaderSettingsOptions.CropManual else ReaderSettingsOptions.CropAutomatic,
                 optionSelected = { if (it == ReaderSettingsOptions.CropManual.ordinal) onManualCrop() else viewModel.useAutomaticCrop() },
             )
-            readerSettingsSettingRow(
-                titleResId = Strings.pdf_settings_page_fitting_title,
-                options = viewState.fitToContentOptions,
-                selectedOption = viewState.selectedFitToContentOption,
-                columns = 2,
-                optionSelected = viewModel::onOptionSelected
-            )
             val axisFit = viewState.selectedFitToContentOption == ReaderSettingsOptions.FitToWidth
                 || viewState.selectedFitToContentOption == ReaderSettingsOptions.FitToHeight
-            if (axisFit) {
+            if (axisFit && viewState.cropMode != "manual") {
                 readerSettingsSettingRow(
                     titleResId = Strings.pdf_settings_fit_reference_title,
                     options = viewState.widthReferenceOptions,
@@ -67,8 +61,15 @@ internal fun ReaderSettingsTable(
                     optionSelected = viewModel::onOptionSelected,
                 )
             }
+            readerSettingsSettingRow(
+                titleResId = Strings.pdf_settings_page_fitting_title,
+                options = viewState.fitToContentOptions,
+                selectedOption = viewState.selectedFitToContentOption,
+                columns = 2,
+                optionSelected = viewModel::onOptionSelected
+            )
             if (viewState.selectedFitToContentOption == ReaderSettingsOptions.FitToContentOn
-                || (axisFit && viewState.selectedFitReferenceOption != ReaderSettingsOptions.FitReferencePage)) {
+                || (axisFit && (viewState.cropMode == "manual" || viewState.selectedFitReferenceOption != ReaderSettingsOptions.FitReferencePage))) {
                 readerSettingsSettingRow(
                     titleResId = Strings.pdf_settings_content_margin_title,
                     options = viewState.contentMarginOptions,

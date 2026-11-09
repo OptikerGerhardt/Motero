@@ -37,21 +37,23 @@ internal fun ReaderPdfAnnotationToolbar(viewModel: ReaderViewModel, state: Reade
     val tools = listOf(
         Triple(ReaderAnnotationTool.note, Drawables.annotate_note, Strings.pdf_annotation_toolbar_note),
         Triple(ReaderAnnotationTool.text, Drawables.annotate_text, Strings.pdf_annotation_toolbar_text),
+        Triple(ReaderAnnotationTool.image, Drawables.annotate_area, Strings.pdf_annotation_toolbar_image),
         Triple(ReaderAnnotationTool.ink, Drawables.annotate_ink, Strings.pdf_annotation_toolbar_ink),
         Triple(ReaderAnnotationTool.eraser, Drawables.annotate_eraser, Strings.pdf_annotation_toolbar_eraser),
-        Triple(ReaderAnnotationTool.image, Drawables.annotate_area, Strings.pdf_annotation_toolbar_image),
     )
     Row(modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-        tools.forEach { (type, icon, title) ->
+        tools.forEachIndexed { index, (type, icon, title) ->
+            if (index == 2) {
+                IconButton(onClick = viewModel::undoAnnotation, enabled = enabled && state.canUndoAnnotation && !state.isReaderLoading,
+                    modifier = Modifier.size(48.dp)) {
+                    Icon(painterResource(Drawables.undo_24px), stringResource(R.string.reader_undo_annotation), Modifier.size(24.dp))
+                }
+            }
             IconToggleButton(checked = state.activeTool == type, onCheckedChange = { viewModel.togglePdfTool(type) }, enabled = enabled,
                 modifier = Modifier.size(48.dp)) {
                 Icon(painterResource(icon), stringResource(title), Modifier.size(24.dp))
             }
-        }
-        IconButton(onClick = viewModel::undoAnnotation, enabled = enabled && state.canUndoAnnotation && !state.isReaderLoading,
-            modifier = Modifier.size(48.dp)) {
-            Icon(painterResource(Drawables.undo_24px), stringResource(R.string.reader_undo_annotation), Modifier.size(24.dp))
         }
         // A stable seventh slot keeps the dock from moving when tools change.
         val hex = state.activeTool?.let { state.toolColors[it] }

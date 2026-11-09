@@ -1,3 +1,7 @@
+# Build 314 — Prüfung läuft
+
+312 Reader-Tests, 122 native Tests und zwölf Browser-Suites bestanden; lokaler APK-Build erfolgreich. Visuelle Nachweise und öffentliche APK-/Update-Prüfung folgen vor Abschluss. Alle 13 Punkte stehen im Featureplan.
+
 # Build 313 — veröffentlicht und unabhängig geprüft
 
 - Release: https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.0-313

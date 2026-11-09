@@ -55,7 +55,7 @@ internal fun ReaderAnnotationsSidebarHeaderSection(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier.size(if (annotation.isReaderBookmark()) 26.dp else 24.dp),
             painter = painterResource(id = icon),
             contentDescription = null,
             colorFilter = ColorFilter.tint(annotationColor),

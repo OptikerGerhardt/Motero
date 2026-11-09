@@ -1,0 +1,10 @@
+{
+  "tested_previous_behavior": "Build 313 Reader sources before the fixes",
+  "failures_reproduced": [
+    "Full erasure delegated directly to Android instead of the local annotation model",
+    "Dark thumbnail render context passed already themed background instead of original white paper"
+  ],
+  "reader_tests_after_fix": 312,
+  "native_tests": 122,
+  "browser_suites": 12
+}

@@ -1,5 +1,26 @@
 # Motero auf BOOX: Featureplan
 
+Stand: 9. November 2026. Build 314 setzt die 13 gesammelten Reader-Nachbesserungen um.
+
+## Reader-Nachbesserungen: Build 314
+
+- Vollständig radierte Striche werden sofort im lokalen Annotationsmodell und Undo-Verlauf entfernt; die Rückmeldung aus Android ist keine Voraussetzung mehr für die sichtbare Löschung.
+- Reihenfolge im Dock: Notiz, Text, Undo, Bereich, Stift, Radierer, Farbe. Bereich direkt links vom Stift; Stift/Radierer/Farbe bilden eine zusammenhängende Gruppe.
+- Vorschau bleibt beim Werkzeugwechsel montiert; Breite und Unterkante bleiben beim Zurückwechseln stabil.
+- Obere Symbolgruppen gleiten beim Öffnen/Schließen der Sidebar in derselben Komponentenstruktur zum Rand; Hintergrund und Ecken werden mitgeführt.
+- „Fit relative to“ direkt unter „Content cropping“ und vor „Page fitting“, nur bei Automatic und Breiten-/Höhenanpassung. Manual verwendet immer den gewählten Rahmen; die automatische Bezugswahl bleibt gespeichert.
+- Appearance-Menü mit Systemabstand und zusätzlichem unteren Scrollraum.
+- Bookmark-Sprung mit oberem Kreisbogen; Spiegelung an einer vertikalen Achse kehrt die Richtung um und lässt den Bogen oben.
+- Bookmark-Fähnchen etwas größer, bei gleichen PDF-/Sync-Koordinaten und bisheriger Deckkraft.
+- PDF-Vollbild ohne reservierten Statusleistenbereich; native Bedienelemente behalten ihre sicheren Abstände.
+- Unteres Dock fährt mit festem Navigationsleistenabstand direkt an die endgültige Position.
+- Dark-Mode-Miniaturen: weißes Originalpapier wird genau einmal durch den PDF.js-Theme-Blender eingefärbt; Browserprüfung misst Textkontrast.
+- Gestrichelte Scroll-Hilfslinie verschwindet nach fünf Sekunden; ein neuer Hinweis startet eine neue Frist.
+- Farbauswahl im Schnellmenü mit hervorgehobener Farbkachel nach Zotero Desktop, ohne fontabhängigen Haken im Farbkreis.
+
+## Vorheriger Stand
+
+
 Stand: 9. November 2026. Build 313 behebt die rückständige Crop-Auswahl und erweitert das gemeinsame Reader-Dock.
 
 ## Reader-Nachbesserungen: Build 313

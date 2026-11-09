@@ -1,6 +1,8 @@
 package org.zotero.android.screens.reader.settings
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Modifier
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,8 +43,8 @@ internal fun ReaderSettingsScreen(
                     onSave = applyParamsAndBack,
                 )
             },
-        ) {
-            ReaderSettingsTable(viewState, viewModel, onManualCrop = {
+        ) { insets ->
+            ReaderSettingsTable(viewState, viewModel, modifier = Modifier.padding(bottom = insets.calculateBottomPadding()), onManualCrop = {
                 onBack()
                 viewModel.applyChangesImmediately(startManualCrop = true)
             })
