@@ -1,6 +1,12 @@
-# Build 313 — Prüfung läuft
+# Build 313 — veröffentlicht und unabhängig geprüft
 
-308 Reader-Tests, 122 native Tests und zwölf Browser-Suites erfolgreich. „Fit relative to“ wieder sichtbar und mit gespeicherter Bezugsfläche wirksam. Release- und Update-Nachweise folgen vor Abschluss.
+- Release: https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.0-313
+- Quelle: `9be88d7e3b1c76467db9e251a1c34a3928b04a4e`; Reader: `d439d2c315dd142208ead007f698cd8af85a8e0d`.
+- 308 Reader-Tests, 122 native Tests und zwölf Browser-Suites bestanden; lokaler APK-Build und GitHub-Pipeline erfolgreich.
+- Öffentliche APK heruntergeladen: Signatur, Quellen, Paketdaten, Receiver-Berechtigung und Prüfsummen stimmen überein. SHA-256: `5ddf7311546822a91f8dfe97a3deae6ce9b82af514988a5a00669d06103719a0`.
+- API 31/35: Updates von 303 und 312 mit Datenmarker- und UID-Erhalt, App-Start und Ablehnung des alten Schlüssels erfolgreich. Obtainium-Zugriff anonym geprüft.
+- Crop-Auswahl und aktuelle Vorschau korrigiert; gemeinsame Annotationsleiste mit Inline-Optionen und Strich-/Flächenradierer; „Fit relative to“ wieder wählbar und gespeichert.
+- Vollständige visuelle Dock-Prüfung lokal durch Emulator-/Runtime-Probleme begrenzt; echte GrapheneOS-/BOOX- und Kontosync-Prüfung separat. Nachweise: `qa/build313/`.
 
 # Build 312 — veröffentlicht und unabhängig geprüft, 8. November 2026
 

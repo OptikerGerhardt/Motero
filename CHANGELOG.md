@@ -2,6 +2,8 @@
 
 ## 1.0.0-313 — 9. November 2026
 
+- Veröffentlicht und unabhängig heruntergeladen geprüft: 308 Reader-Tests, 122 native Tests, zwölf Browser-Suites und beide API-31/35-Update-Prüfungen bestanden; Produktionssignatur, Quellen und Prüfsummen stimmen überein.
+
 - „Fit relative to“ bei Breiten-/Höhenanpassung wieder sichtbar und wirksam; explizite Bezugsfläche wird gespeichert. Bestehende Fit-Einstellungen bleiben bis zu einer neuen Auswahl erhalten.
 - Manual-Cropping-Auswahl zeigt beim erneuten Öffnen den gespeicherten Dokumentmodus; veraltete Einstellungswerte werden nicht erneut angewendet.
 - Die aktuelle Seite erhält auch nach normalen Seitenwechseln ein Vorschaubild und wird bevorzugt gerendert. Feste Vorschauplätze verhindern nachträgliche Breitenänderungen.

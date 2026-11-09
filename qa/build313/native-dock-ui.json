@@ -1,0 +1,12 @@
+{
+  "environment": "Isolated Android API 35 software emulator; copied production Dock and Scrubber composables with synthetic images",
+  "initial_preview_rendered": true,
+  "full_visual_validation": false,
+  "limitation": "System UI stopped responding after display reconfiguration; a subsequent cloud-runtime restart interrupted the repeated UI test. Full tool/palette/transition visual coverage was not obtained.",
+  "production_source_sha256": {
+    "toolbar/ReaderPdfBottomDock.kt": "e87435934fdd4793ec19bb674343d3a4f376ced34a4cb3a7befbc6e6ec1fe11c",
+    "toolbar/ReaderPdfAnnotationToolbar.kt": "0b8c3e6171bb8f699cba1847629109b14712ee7b858157b58caf6e1fc7671a12",
+    "scrubber/ReaderPageScrubber.kt": "ca111999450d9c55c4b1d57a43b7f013d60c39da118e049b5ff7f40531b76368",
+    "data/ReaderAnnotationTool.kt": "3ce0967d395e632debe9ff4b6c0d4b6b92d61e565ec7b0d1450be1596be27af0"
+  }
+}
