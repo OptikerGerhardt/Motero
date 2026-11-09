@@ -1,0 +1,4 @@
+<resources>
+    <string name="reader_area_eraser">Fläche</string>
+    <string name="reader_stroke_eraser">Strich</string>
+</resources>

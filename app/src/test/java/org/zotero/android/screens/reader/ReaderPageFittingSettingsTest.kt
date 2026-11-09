@@ -65,4 +65,16 @@ class ReaderPageFittingSettingsTest {
         }
         assertEquals("both", ReaderSettings.default().apply { epubProgressMode="unknown" }.effectiveProgressMode())
     }
+    @Test fun `explicit reference survives reopening and overrides the width default`() {
+        val settings = ReaderSettings.default()
+        for (mode in listOf("width", "height")) for (reference in listOf("page", "content", "cropped-content")) {
+            settings.setPageFitMode(mode)
+            settings.fitReferenceOverride = reference
+            val restored = Gson().fromJson(Gson().toJson(settings), ReaderSettings::class.java)
+            assertEquals(reference, restored.fitReference())
+        }
+        settings.setPageFitMode("none")
+        assertEquals("page", settings.fitReference())
+    }
+
 }

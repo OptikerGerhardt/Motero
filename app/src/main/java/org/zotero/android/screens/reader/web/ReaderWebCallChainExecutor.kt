@@ -3,6 +3,7 @@ package org.zotero.android.screens.reader.web
 import android.webkit.WebMessage
 import android.webkit.WebView
 import com.google.gson.Gson
+import com.google.gson.JsonObject
 import com.google.gson.JsonArray
 import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.scopes.ViewModelScoped
@@ -408,9 +409,15 @@ class ReaderWebCallChainExecutor @Inject constructor(
         }
     }
 
-    suspend fun setTool(toolName: String, colorHex: String? = null, size: Float? = null) {
+    suspend fun setTool(toolName: String, colorHex: String? = null, size: Float? = null, eraserMode: String? = null) {
         return suspendCancellableCoroutine { cont ->
-            val javascript = "setTool({ type: '$toolName', color: '$colorHex',  size: '$size' });"
+            val options = JsonObject().apply {
+                addProperty("type", toolName)
+                colorHex?.let { addProperty("color", it) }
+                size?.let { addProperty("size", it) }
+                eraserMode?.let { addProperty("eraserMode", it) }
+            }
+            val javascript = "setTool($options);"
             readerWebViewHandler.evaluateJavascript(javascript) {
                 cont.resume(Unit)
             }

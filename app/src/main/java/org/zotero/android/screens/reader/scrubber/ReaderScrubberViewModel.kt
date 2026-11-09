@@ -77,14 +77,13 @@ internal class ReaderScrubberViewModel @Inject constructor(
     }
 
     fun onPageChangedByReader(page: Int) {
-        val currentTimeMillis = System.currentTimeMillis()
-        if (viewState.selectedPage == page || currentTimeMillis < ignoreChangeByReaderUntil) {
-            return
-        }
-        updateState {
-            copy(selectedPage = page)
-        }
+        // Normal reader turns need the same preview as dragging the scrubber.
+        // Ignore late navigation callbacks while the user's scrub owns the page.
+        if (viewState.selectedPage != page && System.currentTimeMillis() < ignoreChangeByReaderUntil) return
+        thumbnailPreviewManager.requestThumbnail(page)
+        if (viewState.selectedPage != page) updateState { copy(selectedPage = page) }
     }
+
 
 
 }

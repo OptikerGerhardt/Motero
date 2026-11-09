@@ -153,6 +153,14 @@ open class Defaults @Inject constructor(
         return sharedPreferences.getFloat(activeLineWidth, 2f )
     }
 
+    fun getActiveEraserMode(): String = sharedPreferences.getString("activeEraserMode", "area")
+        ?.takeIf { it == "stroke" } ?: "area"
+
+    fun setActiveEraserMode(mode: String) {
+        require(mode == "area" || mode == "stroke")
+        sharedPreferences.edit { putString("activeEraserMode", mode) }
+    }
+
     fun setActiveEraserSize(width: Float) {
         sharedPreferences.edit { putFloat(activeEraserSize, width) }
     }

@@ -1,3 +1,7 @@
+# Build 313 — Prüfung läuft
+
+308 Reader-Tests, 122 native Tests und zwölf Browser-Suites erfolgreich. „Fit relative to“ wieder sichtbar und mit gespeicherter Bezugsfläche wirksam. Release- und Update-Nachweise folgen vor Abschluss.
+
 # Build 312 — veröffentlicht und unabhängig geprüft, 8. November 2026
 
 [APK und vollständige Quellen](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.0-312) sind veröffentlicht. Bestanden: 305 Reader-Tests, 119 native Tests, zwölf Browser-Suites und beide echten Android-Update-Gates auf API 31/35. Die Korrektur stellt auch entfernte Miniaturseiten nach einem Renderer-Neustart wieder her.

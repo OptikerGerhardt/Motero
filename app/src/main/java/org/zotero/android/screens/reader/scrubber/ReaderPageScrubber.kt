@@ -21,14 +21,11 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -62,7 +59,6 @@ import kotlin.math.roundToInt
 private val ScrubberThumbnailHeight = 44.dp
 private val ScrubberPreviewWidth = 40.dp
 private val ScrubberSelectedBorderWidth = 2.5.dp
-private const val ScrubberWidthFraction = 0.8f
 
 private const val AssumedPageAspectRatio = 0.72f
 
@@ -133,6 +129,8 @@ internal fun ReaderPageHistoryArrowButton(
 @Composable
 internal fun ReaderPageScrubber(
     viewModel: ReaderScrubberViewModel = viewModel(),
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     val viewState by viewModel.viewStates.observeAsState(ReaderScrubberViewState())
     val pageCount = viewState.thumbnailCache.size
@@ -141,8 +139,8 @@ internal fun ReaderPageScrubber(
     var contentWidthPx by remember { mutableIntStateOf(0) }
     var dragXPx by remember { mutableFloatStateOf(0f) }
 
-    BoxWithConstraints {
-        val maxAllowedWidth = maxWidth * ScrubberWidthFraction
+    BoxWithConstraints(modifier) {
+        val maxAllowedWidth = maxWidth
         val horizontalPillPadding = 8.dp
 
         val landmarkPageIndices = remember(maxAllowedWidth, pageCount) {
@@ -161,11 +159,7 @@ internal fun ReaderPageScrubber(
 
         Box(
             modifier = Modifier
-                .widthIn(max = maxAllowedWidth)
-                .padding(bottom = 12.dp)
-                .windowInsetsPadding(NavigationBarDefaults.windowInsets)
-                .clip(RoundedCornerShape(16.dp))
-                .background(MaterialTheme.colorScheme.surfaceContainer),
+                .width(maxAllowedWidth),
         ) {
             val fastLongPressViewConfiguration = rememberFastLongPressViewConfiguration()
             CompositionLocalProvider(LocalViewConfiguration provides fastLongPressViewConfiguration) {
@@ -173,8 +167,8 @@ internal fun ReaderPageScrubber(
                     modifier = Modifier
                         .padding(horizontal = horizontalPillPadding, vertical = 8.dp)
                         .onSizeChanged { contentWidthPx = it.width }
-                        .pointerInput(pageCount) {
-                            if (pageCount > 0) {
+                        .pointerInput(pageCount, enabled) {
+                            if (enabled && pageCount > 0) {
                                 detectDragGesturesAfterLongPress(
                                     onDragStart = { offset ->
                                         dragXPx = offset.x.coerceIn(0f, size.width.toFloat())
@@ -204,8 +198,8 @@ internal fun ReaderPageScrubber(
                                 )
                             }
                         }
-                        .pointerInput(pageCount) {
-                            if (pageCount > 0) {
+                        .pointerInput(pageCount, enabled) {
+                            if (enabled && pageCount > 0) {
                                 detectTapGestures(
                                     onTap = { offset ->
                                         viewModel.onTapAt(
@@ -302,7 +296,7 @@ private fun ScrubberThumbnail(
         .background(MaterialTheme.colorScheme.surface)
 
     Box(
-        modifier = modifier,
+        modifier = modifier.width(32.dp).height(height),
         contentAlignment = Alignment.Center,
     ) {
         if (bitmap == null) {

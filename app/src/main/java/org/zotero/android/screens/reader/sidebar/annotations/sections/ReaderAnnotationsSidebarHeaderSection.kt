@@ -71,7 +71,7 @@ internal fun ReaderAnnotationsSidebarHeaderSection(
         Spacer(modifier = Modifier.weight(1f))
         if (viewState.bookmarksOnly && annotation.isReaderBookmark() && !viewState.isAnnotationSelected(annotation.key)) {
             IconButton(onClick = { viewModel.focusBookmark(annotation.key) }) {
-                Icon(painterResource(Drawables.redo_24px), stringResource(R.string.reader_go_to_bookmark),
+                Icon(painterResource(R.drawable.reader_go_to_bookmark), stringResource(R.string.reader_go_to_bookmark),
                     modifier = Modifier.size(22.dp), tint = MaterialTheme.colorScheme.primary)
             }
             IconButton(onClick = { viewModel.deleteBookmark(annotation.key) }, enabled = viewModel.canDeleteBookmark(annotation)) {

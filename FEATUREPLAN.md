@@ -1,5 +1,20 @@
 # Motero auf BOOX: Featureplan
 
+Stand: 9. November 2026. Build 313 behebt die rückständige Crop-Auswahl und erweitert das gemeinsame Reader-Dock.
+
+## Reader-Nachbesserungen: Build 313
+
+- „Fit relative to“ bei Breiten-/Höhenanpassung wieder sichtbar und wirksam; explizite Bezugsfläche wird gespeichert. Bestehende Fit-Einstellungen bleiben bis zu einer neuen Auswahl erhalten.
+- Die Einstellungen lesen beim erneuten Öffnen den aktuellen dokumentbezogenen Crop-Modus. Manual Apply bleibt aktiv; Automatic lässt die manuellen Rahmen gespeichert.
+- Normale Seitenwechsel fordern das aktuelle Vorschaubild an; dieses wird vor den Nachbarseiten gerendert. Feste Miniaturslots verhindern Größenänderungen beim Nachladen.
+- Eine gemeinsame schwebende Fläche mit fester Unterkante: erst verbreitern, dann Vorschauen nach oben und Werkzeuge von unten bewegen; beim Schließen umgekehrt. Seitenzahl nur im Vorschaumodus.
+- Farbfeld öffnet eine zusätzliche Zeile im Dock. Zotero-Farbpalette, Stift-/Textgröße und Radierergröße; beim Radierer rechts zwischen Fläche und Strich wechseln. Einstellung lokal gespeichert, bestehendes Undo und Syncformat erhalten.
+- Bookmark-Sprung mit offenem, schräg gebogenem Pfeil nach der Nutzerzeichnung.
+- Auslieferung mit Reader-/Android-/Browserregressionen sowie unveränderter Signieridentität und Update-Prüfung von Build 303 und 312 auf API 31/35. Physische GrapheneOS-/BOOX-Prüfung separat.
+
+## Vorheriger Stand
+
+
 Stand: 8. November 2026. Build 310 enthält die Reader-Überarbeitung aus Build 309 und die zusätzliche Korrektur für verzögerte Toolbar-Tipps nach einem priorisierten Shortcut.
 
 ## Reader-Überarbeitung: Build 309

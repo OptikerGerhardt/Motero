@@ -122,7 +122,9 @@ class ReaderThumbnailPreviewManager @Inject constructor(
 
     private fun requestNearby(center: Int) {
         if (!initialized.value) return
-        requestIndices(((center - 3).coerceAtLeast(0)..(center + 3).coerceAtMost(numOfPagesInDocument - 1)).toList())
+        // Reader's bounded LIFO renderer services the last item first.
+        val neighbors = ((center - 3).coerceAtLeast(0)..(center + 3).coerceAtMost(numOfPagesInDocument - 1)).toList()
+        requestIndices(neighbors.filter { it != center } + center)
     }
 
     fun requestThumbnail(centerVisibleItemIndex: Int) { requestedCenter.value = centerVisibleItemIndex }

@@ -59,8 +59,16 @@ internal fun ReaderSettingsTable(
             )
             val axisFit = viewState.selectedFitToContentOption == ReaderSettingsOptions.FitToWidth
                 || viewState.selectedFitToContentOption == ReaderSettingsOptions.FitToHeight
+            if (axisFit) {
+                readerSettingsSettingRow(
+                    titleResId = Strings.pdf_settings_fit_reference_title,
+                    options = viewState.widthReferenceOptions,
+                    selectedOption = viewState.selectedFitReferenceOption,
+                    optionSelected = viewModel::onOptionSelected,
+                )
+            }
             if (viewState.selectedFitToContentOption == ReaderSettingsOptions.FitToContentOn
-                || axisFit) {
+                || (axisFit && viewState.selectedFitReferenceOption != ReaderSettingsOptions.FitReferencePage)) {
                 readerSettingsSettingRow(
                     titleResId = Strings.pdf_settings_content_margin_title,
                     options = viewState.contentMarginOptions,

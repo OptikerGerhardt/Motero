@@ -25,7 +25,7 @@ internal fun ReaderSettingsScreen(
     BackHandler(onBack = {
         applyParamsAndBack()
     })
-    LaunchedEffect(Unit) {
+    LaunchedEffect(args) {
         viewModel.init(args = args)
     }
 

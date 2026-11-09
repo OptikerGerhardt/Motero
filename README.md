@@ -8,7 +8,7 @@ This fork is maintained independently and is not affiliated with or endorsed by 
 
 ## Features
 
-- Direct text highlighting, Zotero tags, and a bottom PDF tool dock with annotation Undo and color/size controls.
+- Direct text highlighting, Zotero tags, and an animated bottom PDF dock with annotation Undo, inline color/size controls, and area/stroke erasing.
 - Black bookmark flags, a bookmark filter, and direct jump/delete shortcuts.
 - Reader appearance applied at startup, matching system-bar contrast and page previews.
 - Continuous cropped PDF pages, temporary two-finger access to full pages, and an overview that stays open when two complete pages are visible.

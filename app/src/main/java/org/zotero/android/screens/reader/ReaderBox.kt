@@ -7,7 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -38,8 +37,6 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import org.zotero.android.screens.reader.data.ReaderFileType
 import org.zotero.android.screens.reader.scrubber.ReaderPageHistoryArrowButton
-import org.zotero.android.screens.reader.scrubber.ReaderPageIndicatorLabel
-import org.zotero.android.screens.reader.scrubber.ReaderPageScrubber
 import org.zotero.android.screens.reader.scrubber.ReaderScrubberViewModel
 import org.zotero.android.screens.reader.toolbar.ReaderAnnotationCreationToolbar
 
@@ -134,24 +131,10 @@ internal fun ReaderBox(
             }
             if (viewState.manualCropOpen) Box(Modifier.fillMaxSize().windowInsetsPadding(readingInsets)) { ReaderCropControls(viewModel, viewState) }
             if (viewState.fileType == ReaderFileType.PDF && !viewState.manualCropOpen) {
-                val toolsVisible = viewState.showCreationToolbar && viewState.isScrubberVisible() && !(isOverlayMode && viewState.showSideBar)
                 val isScrubberVisible = viewState.isScrubberVisible() && !viewState.showCreationToolbar
-                if (toolsVisible) {
-                    Box(Modifier.align(Alignment.BottomCenter)
-                        .windowInsetsPadding(NavigationBarDefaults.windowInsets).padding(horizontal = 8.dp, vertical = 8.dp)) {
-                        org.zotero.android.screens.reader.toolbar.ReaderPdfAnnotationToolbar(viewModel, viewState)
-                    }
-                }
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = if (isScrubberVisible) 0.dp else 12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    ReaderPageIndicatorLabel(viewModel = scrubberViewModel, visible = isScrubberVisible)
-                    AnimatedVisibility(visible = isScrubberVisible) {
-                        ReaderPageScrubber(viewModel = scrubberViewModel)
+                if (viewState.isScrubberVisible() && !(isOverlayMode && viewState.showSideBar)) {
+                    Box(Modifier.align(Alignment.BottomCenter)) {
+                        org.zotero.android.screens.reader.toolbar.ReaderPdfBottomDock(viewModel, viewState, scrubberViewModel)
                     }
                 }
                 if (isScrubberVisible) {

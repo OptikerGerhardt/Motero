@@ -69,39 +69,45 @@ internal class ReaderSettingsViewModel @Inject constructor(
                 copy(isDark = pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
             }
             startObservingTheme()
-            readerSettings = loadedArgs.readerSettings
-            updateState {
-                copy(
-                    selectedAppearanceOption = convert(readerSettings.appearanceMode),
-                    selectedScrollModeOption = convert(readerSettings.scrollMode),
-                    selectedSpreadsOption = convert(readerSettings.spreadsMode),
-                    selectedPageLayoutFlowMode = convert(readerSettings.pageLayoutFlowMode),
-                    lineHeight = readerSettings.lineHeight,
-                    textScale = readerSettings.effectiveTextScale(),
-                    wordSpacing = readerSettings.wordSpacing,
-                    letterSpacing = readerSettings.letterSpacing,
-                    pageWidth = readerSettings.pageWidth.toFloat(),
-                    selectedFitToContentOption = when (readerSettings.pageFitMode()) {
-                        "width" -> ReaderSettingsOptions.FitToWidth
-                        "height" -> ReaderSettingsOptions.FitToHeight
-                        else -> convertFitToContent(readerSettings.fitToContent)
-                    },
-                    selectedFitReferenceOption = when (readerSettings.fitReference()) {
-                        "cropped-content" -> ReaderSettingsOptions.FitReferenceCroppedText
-                        "content" -> ReaderSettingsOptions.FitReferenceText
-                        else -> ReaderSettingsOptions.FitReferencePage
-                    },
-                    selectedMarginaliaOption = if (readerSettings.includeMarginalia) ReaderSettingsOptions.MarginaliaInclude
-                        else ReaderSettingsOptions.MarginaliaExclude,
-                    selectedSelectionOption = if (readerSettings.nativeTextSelection) ReaderSettingsOptions.SelectionAndroid
-                        else ReaderSettingsOptions.SelectionDirect,
-                    selectedContentMarginOption = convert(readerSettings.contentMargin),
-                    fileType = loadedArgs.fileType,
-                    readingModeEnabled = loadedArgs.readingModeEnabled,
-                    cropMode = loadedArgs.cropMode,
-                    progressMode = readerSettings.effectiveProgressMode(),
-                )
-            }
+        }
+        // This ViewModel survives the phone's settings overlay. Reload the
+        // document snapshot on every opening, including a manual-crop Apply.
+        debounceApplyJob?.cancel()
+        debounceApplyJob = null
+        reapplyFitting = false
+        cropModeChanged = null
+        readerSettings = loadedArgs.readerSettings.copy()
+        updateState {
+            copy(
+                selectedAppearanceOption = convert(readerSettings.appearanceMode),
+                selectedScrollModeOption = convert(readerSettings.scrollMode),
+                selectedSpreadsOption = convert(readerSettings.spreadsMode),
+                selectedPageLayoutFlowMode = convert(readerSettings.pageLayoutFlowMode),
+                lineHeight = readerSettings.lineHeight,
+                textScale = readerSettings.effectiveTextScale(),
+                wordSpacing = readerSettings.wordSpacing,
+                letterSpacing = readerSettings.letterSpacing,
+                pageWidth = readerSettings.pageWidth.toFloat(),
+                selectedFitToContentOption = when (readerSettings.pageFitMode()) {
+                    "width" -> ReaderSettingsOptions.FitToWidth
+                    "height" -> ReaderSettingsOptions.FitToHeight
+                    else -> convertFitToContent(readerSettings.fitToContent)
+                },
+                selectedFitReferenceOption = when (readerSettings.fitReference()) {
+                    "cropped-content" -> ReaderSettingsOptions.FitReferenceCroppedText
+                    "content" -> ReaderSettingsOptions.FitReferenceText
+                    else -> ReaderSettingsOptions.FitReferencePage
+                },
+                selectedMarginaliaOption = if (readerSettings.includeMarginalia) ReaderSettingsOptions.MarginaliaInclude
+                    else ReaderSettingsOptions.MarginaliaExclude,
+                selectedSelectionOption = if (readerSettings.nativeTextSelection) ReaderSettingsOptions.SelectionAndroid
+                    else ReaderSettingsOptions.SelectionDirect,
+                selectedContentMarginOption = convert(readerSettings.contentMargin),
+                fileType = loadedArgs.fileType,
+                readingModeEnabled = loadedArgs.readingModeEnabled,
+                cropMode = loadedArgs.cropMode,
+                progressMode = readerSettings.effectiveProgressMode(),
+            )
         }
     }
 
@@ -368,12 +374,17 @@ internal class ReaderSettingsViewModel @Inject constructor(
             ReaderSettingsOptions.FitToContentOn -> readerSettings.setPageFitMode("content")
             ReaderSettingsOptions.FitToWidth -> readerSettings.setPageFitMode("width")
             ReaderSettingsOptions.FitToHeight -> readerSettings.setPageFitMode("height")
-            ReaderSettingsOptions.FitReferencePage -> readerSettings.fitTextReference = false
+            ReaderSettingsOptions.FitReferencePage -> {
+                readerSettings.fitTextReference = false
+                readerSettings.fitReferenceOverride = "page"
+            }
             ReaderSettingsOptions.FitReferenceText -> {
+                readerSettings.fitReferenceOverride = "content"
                 readerSettings.fitTextReference = true
                 readerSettings.fitWidthCrop = false
             }
             ReaderSettingsOptions.FitReferenceCroppedText -> {
+                readerSettings.fitReferenceOverride = "cropped-content"
                 readerSettings.fitTextReference = true
                 readerSettings.fitWidthCrop = true
             }
@@ -409,6 +420,7 @@ internal class ReaderSettingsViewModel @Inject constructor(
     private fun sendSettingsParams(startManualCrop: Boolean = false) {
         EventBus.getDefault().post(ReaderSettingsChangeResult(readerSettings.copy(), reapplyFitting, startManualCrop, cropModeChanged))
         reapplyFitting = false
+        cropModeChanged = null
     }
 
 }

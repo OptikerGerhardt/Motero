@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.0.0-313 — 9. November 2026
+
+- „Fit relative to“ bei Breiten-/Höhenanpassung wieder sichtbar und wirksam; explizite Bezugsfläche wird gespeichert. Bestehende Fit-Einstellungen bleiben bis zu einer neuen Auswahl erhalten.
+- Manual-Cropping-Auswahl zeigt beim erneuten Öffnen den gespeicherten Dokumentmodus; veraltete Einstellungswerte werden nicht erneut angewendet.
+- Die aktuelle Seite erhält auch nach normalen Seitenwechseln ein Vorschaubild und wird bevorzugt gerendert. Feste Vorschauplätze verhindern nachträgliche Breitenänderungen.
+- Gemeinsames unteres Dock mit fester Höhe und Unterkante, abgestimmtem Breitenwechsel und vertikalem Austausch von Seitenvorschau und Annotationswerkzeugen.
+- Farbfeld öffnet eine zweite Werkzeugzeile mit Zotero-Palette und Größenreglern. Flächen- und Strichradierer sind direkt umschaltbar; Strichradierer erfasst auch schnell gezeichnete Segmente und erhält andere Striche.
+- Neuer schräg gebogener Sprungpfeil für Bookmarks. Paketkennung und Produktionssignatur unverändert; aktuelle Update-Basis ist Build 312.
+
 ## 1.0.0-312 — 8. November 2026
 
 - Veröffentlicht und unabhängig geprüft: 305 Reader-Tests, 119 native Tests, zwölf Browser-Suites und beide echten API-31/35-Updates bestanden; Signatur, Quellen und Prüfsummen stimmen überein.

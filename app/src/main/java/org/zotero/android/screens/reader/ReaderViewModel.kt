@@ -404,7 +404,8 @@ class ReaderViewModel @Inject constructor(
         this.activeFontSize = defaults.getActiveFontSize()
 
         updateState {
-            copy(toolColors = mapOf(
+            copy(inkWidth = activeLineWidth, eraserSize = activeEraserSize, textFontSize = activeFontSize,
+                eraserMode = defaults.getActiveEraserMode(), toolColors = mapOf(
                 ReaderAnnotationTool.highlight to defaults.getHighlightColorHex(),
                 ReaderAnnotationTool.note to defaults.getNoteColorHex(),
                 ReaderAnnotationTool.underline to defaults.getUnderlineColorHex(),
@@ -2066,7 +2067,7 @@ class ReaderViewModel @Inject constructor(
 
     fun toggleToolbarButton() {
         updateState {
-            copy(showCreationToolbar = !viewState.showCreationToolbar)
+            copy(showCreationToolbar = !viewState.showCreationToolbar, pdfToolOptionsVisible = false)
         }
         val tool = viewState.activeTool ?: return
         toggle(tool)
@@ -2460,6 +2461,38 @@ class ReaderViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
+    fun togglePdfTool(tool: ReaderAnnotationTool) {
+        updateState { copy(pdfToolOptionsVisible = if (activeTool == tool) false
+            else if (tool == ReaderAnnotationTool.eraser) true else pdfToolOptionsVisible) }
+        toggle(tool)
+    }
+
+    fun togglePdfToolOptions() {
+        updateState { copy(pdfToolOptionsVisible = !pdfToolOptionsVisible) }
+    }
+
+    fun setPdfToolColor(hex: String) {
+        val tool = viewState.activeTool ?: return
+        viewModelScope.launch { setToolOptions(hex, null, tool) }
+    }
+
+    fun setPdfToolSize(size: Float) {
+        val tool = viewState.activeTool ?: return
+        if (!size.isFinite()) return
+        val bounded = size.coerceIn(if (tool == ReaderAnnotationTool.text) 6f else .5f,
+            if (tool == ReaderAnnotationTool.text) 72f else 25f)
+        viewModelScope.launch { setToolOptions(viewState.toolColors[tool], bounded, tool) }
+    }
+
+    fun setPdfEraserMode(mode: String) {
+        if (mode !in setOf("area", "stroke")) return
+        defaults.setActiveEraserMode(mode)
+        updateState { copy(eraserMode = mode) }
+        if (viewState.activeTool == ReaderAnnotationTool.eraser) viewModelScope.launch {
+            updateAnnotationToolDrawColorAndSize(ReaderAnnotationTool.eraser)
+        }
+    }
+
     fun showToolOptions() {
         val tool = viewState.activeTool ?: return
         val colorHex = viewState.toolColors[tool]
@@ -2542,7 +2575,8 @@ class ReaderViewModel @Inject constructor(
                 }
             }
         }
-        updateAnnotationToolDrawColorAndSize(annotationTool = tool, colorHex = hex)
+        updateState { copy(inkWidth = activeLineWidth, eraserSize = activeEraserSize, textFontSize = activeFontSize) }
+        updateAnnotationToolDrawColorAndSize(annotationTool = tool, colorHex = hex ?: viewState.toolColors[tool])
     }
 
     private suspend fun updateAnnotationToolDrawColorAndSize(
@@ -2599,7 +2633,8 @@ class ReaderViewModel @Inject constructor(
             ReaderAnnotationTool.eraser -> {
                 readerWebCallChainExecutor.setTool(
                     toolName = "eraser",
-                    size = this.activeEraserSize
+                    size = this.activeEraserSize,
+                    eraserMode = viewState.eraserMode
                 )
             }
         }
@@ -2820,6 +2855,7 @@ class ReaderViewModel @Inject constructor(
         val previousSettings = defaults.getReaderSettings()
         updatePdfPageAppearanceMode(readerSettings)
         val applyFit = reapplyFitting || previousSettings.pageFitMode() != readerSettings.pageFitMode()
+            || previousSettings.fitReference() != readerSettings.fitReference()
             || previousSettings.fitTextReference != readerSettings.fitTextReference
             || previousSettings.fitWidthCrop != readerSettings.fitWidthCrop
             || previousSettings.includeMarginalia != readerSettings.includeMarginalia
@@ -3044,6 +3080,11 @@ data class ReaderViewState(
     val readerColorPickerArgs: ReaderColorPickerArgs? = null,
     val readerFilterArgs: ReaderFilterArgs? = null,
     val toolColors: Map<ReaderAnnotationTool, String> = emptyMap(),
+    val pdfToolOptionsVisible: Boolean = false,
+    val inkWidth: Float = 2f,
+    val eraserSize: Float = 10f,
+    val textFontSize: Float = 14f,
+    val eraserMode: String = "area",
     val focusDocumentLocationAnnotationKey: String? = null,
     val pageProgress: String? = null,
     val progressPosition: String? = null,
