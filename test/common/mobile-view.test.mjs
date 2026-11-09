@@ -198,3 +198,13 @@ test('mobile View recreates a password-protected PDF when no active request can 
 	]);
 	globalThis.__mobilePasswordAccepted = true;
 });
+
+test('complete erasure enters local annotation history before waiting for Android persistence', () => {
+    const nativeDeletes = [];
+    createMobileView({ onDeleteAnnotations: ids => nativeDeletes.push(ids) });
+    const deleted = [];
+    globalThis.__mobileAnnotationManager.deleteAnnotations = ids => deleted.push(ids);
+    globalThis.__mobilePDFView.options.onDeleteAnnotations(['ERASED01']);
+    assert.deepEqual(deleted, [['ERASED01']]);
+    assert.deepEqual(nativeDeletes, []);
+});

@@ -44,6 +44,14 @@ const root = path.resolve(__dirname, '../build/android');
   await page.waitForFunction(old=>window._view._view._pdfThumbnails.renderKey!==old,preview.key);
   await page.evaluate(()=>window.renderThumbnails([0]));
   await page.waitForFunction(()=>window._view._view._pdfThumbnails._thumbnails[0].colorScheme==='dark');
+  const darkContrast=await page.evaluate(async()=>{
+   const image=new Image();image.src=window._view._view._pdfThumbnails._thumbnails[0].image;await image.decode();
+   const c=document.createElement('canvas');c.width=image.width;c.height=image.height;const ctx=c.getContext('2d');ctx.drawImage(image,0,0);
+   const pixels=ctx.getImageData(0,0,c.width,c.height).data;let min=255,max=0;
+   for(let i=0;i<pixels.length;i+=4){const value=(pixels[i]+pixels[i+1]+pixels[i+2])/3;min=Math.min(min,value);max=Math.max(max,value);}
+   return {min,max};
+  });
+  assert.ok(darkContrast.min<100 && darkContrast.max-darkContrast.min>50,'dark preview must contain readable ink, '+JSON.stringify(darkContrast));
   const darkKey=await page.evaluate(()=>window._view._view._pdfThumbnails.renderKey);
   await page.evaluate(async()=>{const t=window._view._view._pdfThumbnails;const pending=t._render(1);window._view.setColorScheme('light');await pending;});
   await page.waitForFunction(key=>window._view._view._pdfThumbnails.renderKey!==key,darkKey);
@@ -53,13 +61,13 @@ const root = path.resolve(__dirname, '../build/android');
   console.log('PASS explicit Reader Light overrides OS Dark; thumbnails follow theme; stale renders and redundant resets are avoided');
 
   const bookmark=await page.evaluate(()=>window._view._annotationManager.addAnnotation({type:'note',color:'#000000',comment:'Bookmark · test',pageLabel:'1',sortIndex:'00000|000200|00000',position:{pageIndex:0,rects:[[200,300,222,322]]}}).id);
-  await page.waitForFunction(()=>window._view._view._pages[0]._originalPage.div.querySelector('path[d="M6 3h12v18l-6-4-6 4z"]'));
-  assert.equal(await page.evaluate(()=>window._view._view._pages[0]._originalPage.div.querySelector('path[d="M6 3h12v18l-6-4-6 4z"]').parentNode.getAttribute('opacity')),'0.7');
+  await page.waitForFunction(()=>window._view._view._pages[0]._originalPage.div.querySelector('path[d="M5 2h14v20l-7-4.5-7 4.5z"]'));
+  assert.equal(await page.evaluate(()=>window._view._view._pages[0]._originalPage.div.querySelector('path[d="M5 2h14v20l-7-4.5-7 4.5z"]').parentNode.getAttribute('opacity')),'0.7');
   await page.waitForFunction(()=>window.messages.some(x=>x.message?.event==='onHistoryChanged' && x.message.params.canUndo));
   await page.evaluate(()=>window.undoReaderAnnotation());
   assert.ok(await page.evaluate(id=>!window._view._view._annotations.some(a=>a.id===id),bookmark));
   await page.evaluate(()=>window._view._annotationManager.addAnnotation({type:'note',color:'#000000',comment:'ordinary note',pageLabel:'1',sortIndex:'00000|000200|00000',position:{pageIndex:0,rects:[[200,300,222,322]]}}));
-  assert.equal(await page.evaluate(()=>window._view._view._pages[0]._originalPage.div.querySelectorAll('path[d="M6 3h12v18l-6-4-6 4z"]').length),0);
+  assert.equal(await page.evaluate(()=>window._view._view._pages[0]._originalPage.div.querySelectorAll('path[d="M5 2h14v20l-7-4.5-7 4.5z"]').length),0);
   console.log('PASS semantic black bookmark flag at 70%; ordinary notes retain shape; Undo travels through annotation history');
 
   await page.evaluate(()=>{
@@ -115,6 +123,25 @@ const root = path.resolve(__dirname, '../build/android');
   await page.evaluate(()=>window.undoReaderAnnotation());
   await page.waitForFunction(before=>window._view._view._annotations.filter(a=>a.type==='ink').flatMap(a=>a.position.paths).length===before,beforeErase);
   console.log('PASS stroke eraser is selected through the Android bridge, preserves other strokes and is undoable');
+  await page.evaluate(()=>{const m=window._view._annotationManager;m.deleteAnnotations(m._annotations.filter(a=>a.type==='ink').map(a=>a.id));window.setTool({type:'ink',size:2,color:'#000000'});});
+  await pen('mousePressed',inkPoint.x,inkPoint.y);await pen('mouseReleased',inkPoint.x+2,inkPoint.y+2);
+  const erased=await page.evaluate(()=>{const a=window._view._view._annotations.find(a=>a.type==='ink');return {id:a.id,position:a.position};});
+  const erasedID=erased.id;
+  await page.evaluate(()=>window.setTool({type:'eraser',size:12,eraserMode:'stroke'}));
+  await pen('mousePressed',inkPoint.x,inkPoint.y);await pen('mouseReleased',inkPoint.x,inkPoint.y);
+  assert.ok(await page.evaluate(id=>!window._view._annotationManager._annotations.some(a=>a.id===id)&&!window._view._view._annotations.some(a=>a.id===id),erasedID));
+  await page.evaluate(()=>window.undoReaderAnnotation());
+  const restoredInk=await page.evaluate(()=>window._view._view._annotations.find(a=>a.type==='ink'));
+  assert.deepEqual(restoredInk.position,erased.position);
+  const erasedIDs=[erasedID,restoredInk.id];
+  await pen('mousePressed',inkPoint.x,inkPoint.y);await pen('mouseReleased',inkPoint.x,inkPoint.y);
+  await page.evaluate(()=>window.setTool({type:'ink',size:2,color:'#000000'}));
+  await pen('mousePressed',inkPoint.x,inkPoint.y+40);await pen('mouseReleased',inkPoint.x+3,inkPoint.y+43);
+  assert.ok(await page.evaluate(ids=>new Promise(resolve=>{
+   let frames=0,visible=false;function inspect(){const v=window._view._view;v._render();visible ||= v._annotations.some(a=>ids.includes(a.id));
+    if(++frames===8)resolve(!visible);else requestAnimationFrame(inspect);}inspect();
+  }),erasedIDs));
+  console.log('PASS fully erased ink stays removed while a new stroke is drawn, without waiting for a host echo; full deletion supports Undo');
   await page.evaluate(()=>window.beginManualCrop({nativeControls:true}));
   await page.waitForFunction(()=>window._view._view._pageFitting.editor && !window._view._view._pageFitting.editor.busy);
   assert.ok(await page.evaluate(()=>getComputedStyle(window._view._view._pageFitting.editor.root.querySelector('.crop-shade')).clipPath.includes('evenodd')));

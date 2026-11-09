@@ -138,14 +138,17 @@ export class AndroidPageFitting {
     }
 
 	configure(options, apply = true) {
+        const cropMode = options?.cropMode === 'automatic' ? 'automatic' : options?.cropMode === 'manual' ? 'manual'
+            : (options?.manualCrop || Object.keys(this.options.manualCrop || {}).length ? 'manual' : 'automatic');
 		this.options = {
 			mode: ['none', 'content', 'width', 'height'].includes(options?.mode) ? options.mode : 'none',
-			reference: ['content', 'cropped-content'].includes(options?.reference) ? options.reference : 'page',
+			reference: cropMode === 'manual' ? 'cropped-content'
+                : ['content', 'cropped-content'].includes(options?.reference) ? options.reference : 'page',
 			includeMarginalia: options?.includeMarginalia === true,
 			margin: Math.max(0, Math.min(0.2, Number(options?.margin) || 0)),
 			revision: options?.revision || 0,
 			manualCrop: normalizeCrops(options?.manualCrop === undefined ? this.options.manualCrop : options.manualCrop),
-            cropMode: options?.cropMode === 'automatic' ? 'automatic' : options?.cropMode === 'manual' ? 'manual' : (options?.manualCrop || Object.keys(this.options.manualCrop || {}).length ? 'manual' : 'automatic'),
+            cropMode,
 		};
 		this.configured = true;
 		if (!apply) return Promise.resolve(false);

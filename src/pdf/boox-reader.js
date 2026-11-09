@@ -246,7 +246,10 @@ export class PDFBooxReader {
 			button.style.cssText = 'display:flex;align-items:center;justify-content:center;flex:0 0 38px;width:38px;height:40px;border:0;border-radius:4px;background:transparent;padding:0;';
 			let circle = this.doc.createElement('span');
 			circle.style.cssText = `display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:${color};color:#111;font:18px sans-serif;`;
-			circle.textContent = annotations[0].color === color ? '✓' : ''; button.append(circle);
+			// Match Zotero Desktop's selected color tile instead of placing
+            // a font-dependent check glyph inside the swatch.
+            if (annotations[0].color === color) button.style.background = 'var(--fill-secondary,#747883)';
+            button.append(circle);
 			button.addEventListener('click', event => {
 				event.preventDefault(); event.stopPropagation();
 				let ids = new Set(annotations.map(a => a.id));
@@ -326,6 +329,9 @@ export class PDFBooxReader {
 		p.div.append(line);
 		this.edge = edge;
 		this.edgeElement = line;
+        this.edgeExpiry = this.win.setTimeout(() => {
+            if (this.edgeElement === line) this.clearEdge();
+        }, 5000);
 	}
 
 	onScroll() {
@@ -341,7 +347,11 @@ export class PDFBooxReader {
 		}, 160);
 	}
 
-	clearEdge() { this.edgeElement?.remove(); this.edgeElement = null; this.edge = null; }
+	clearEdge() {
+        this.win.clearTimeout(this.edgeExpiry);
+        this.edgeExpiry = null;
+        this.edgeElement?.remove(); this.edgeElement = null; this.edge = null;
+    }
 
 	clearNavigation(cancelEntry = false) {
 		if (cancelEntry) this.entering = null;

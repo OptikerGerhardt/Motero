@@ -180,7 +180,9 @@ class PDFThumbnails {
 		const renderContext = {
 			canvasContext: ctx,
 			transform,
-			background: this._window.theme?.background || "#FFFFFF",
+			// The PDF.js blender maps original white paper into the selected
+            // theme. Passing an already dark color maps it to foreground ink.
+            background: "#FFFFFF",
 			viewport: drawViewport
 		};
 		const renderTask = pdfPage.render(renderContext);

@@ -169,3 +169,13 @@ test('a scheduled reading refit defers to a queued page turn',async()=>{
     fitting.view._pendingPageTurn=null;await flush();
     assert.equal(applies,1);
 });
+
+
+test('manual fitting uses its saved frame even after an automatic paper reference', async () => {
+    const { fitting } = fixture();
+    await fitting.configure({ mode: 'width', reference: 'page', cropMode: 'manual', manualCrop: { all: [.1,.1,.9,.9] } }, false);
+    assert.equal(fitting.options.reference, 'cropped-content');
+    await fitting.configure({ ...fitting.options, reference: 'page', cropMode: 'automatic' }, false);
+    assert.equal(fitting.options.reference, 'page');
+    assert.deepEqual(fitting.options.manualCrop.all, [.1,.1,.9,.9]);
+});

@@ -136,3 +136,12 @@ test('pending thumbnail work is bounded and reports cancellations to its host', 
     thumbnails.clear(); resume(); await pending;
     assert.equal(thumbnails._pending.size,0);
 });
+
+test('dark thumbnails start with original white paper before the PDF.js theme blender', async () => {
+    globalThis.window = { devicePixelRatio: 1 };
+    const { thumbnails, renderContexts } = createThumbnails();
+    thumbnails._window.theme = { background: '#2E3440', foreground: '#D8DEE9' };
+    thumbnails._pdfView._colorScheme = 'dark';
+    await thumbnails._render(0);
+    assert.equal(renderContexts[0].background.toLowerCase(), '#ffffff');
+});
