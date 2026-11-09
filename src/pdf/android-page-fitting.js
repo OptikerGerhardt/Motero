@@ -45,7 +45,13 @@ export class AndroidPageFitting {
 		};
 		this.onUp = event => {
             this.penPointers.delete(event.pointerId);
-			this.pointers.delete(event.pointerId);
+			const tracked = this.pointers.delete(event.pointerId);
+            if (event.pointerType === 'touch') {
+                if (!tracked) return; // The priority tap path observes the same up.
+                // A page jump can hide the old TouchEvent target before its
+                // touchend is delivered. The last PointerEvent is authoritative.
+                if (!this.pointers.size) { this.touches = 0; this.touchZoom = false; }
+            }
 			if (this.view._booxReader?.palette) {
 				this.pendingPage = false;
 				this.win.clearTimeout(this.timer);
@@ -560,6 +566,7 @@ export class AndroidPageFitting {
 		}
 		finally { this.applying = false; }
 		this.view._render();
+		this.view._pageNavigation?.sync();
 		this.view._updateViewStats();
 		this.prefetchVisible();
 		return true;

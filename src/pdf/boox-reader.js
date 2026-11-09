@@ -243,12 +243,11 @@ export class PDFBooxReader {
 			button.type = 'button'; button.dataset.color = color;
 			button.setAttribute('aria-label', labels[index]);
 			button.setAttribute('aria-pressed', String(annotations[0].color === color));
-			button.style.cssText = 'display:flex;align-items:center;justify-content:center;flex:0 0 38px;width:38px;height:40px;border:0;border-radius:4px;background:transparent;padding:0;';
+			button.style.cssText = 'display:flex;align-items:center;justify-content:center;flex:0 0 38px;width:38px;height:40px;border:0;border-radius:50%;background:transparent;padding:0;';
 			let circle = this.doc.createElement('span');
 			circle.style.cssText = `display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:${color};color:#111;font:18px sans-serif;`;
-			// Match Zotero Desktop's selected color tile instead of placing
-            // a font-dependent check glyph inside the swatch.
-            if (annotations[0].color === color) button.style.background = 'var(--fill-secondary,#747883)';
+			// Match the native annotation popup: a white ring inside the color.
+            if (annotations[0].color === color) circle.style.boxShadow = `inset 0 0 0 2px ${color}, inset 0 0 0 4px white`;
             button.append(circle);
 			button.addEventListener('click', event => {
 				event.preventDefault(); event.stopPropagation();

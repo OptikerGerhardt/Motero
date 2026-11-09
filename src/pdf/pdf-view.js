@@ -57,6 +57,7 @@ import { debounce } from '../common/lib/debounce';
 import { AutoScroll } from './lib/auto-scroll';
 import { AndroidPageFitting } from './android-page-fitting';
 import { PDFBooxReader } from './boox-reader';
+import { PDFPageNavigation } from './page-navigation';
 import { PDFChromeTapGuard } from './chrome-tap-guard.mjs';
 import { PDFThumbnails } from './pdf-thumbnails';
 import {
@@ -358,6 +359,7 @@ class PDFView {
 						this._chromeTapGuard = new PDFChromeTapGuard(this);
 						this._booxReader = new PDFBooxReader(this);
                         this._pageFitting = new AndroidPageFitting(this);
+                        this._pageNavigation = new PDFPageNavigation(this);
 					}
 				}
 				if (options.data.buf) {
@@ -1284,6 +1286,7 @@ class PDFView {
 	destroy() {
 		this._chromeTapGuard?.reset();
 		this._booxReader?.destroy();
+        this._pageNavigation?.destroy();
         this._pageFitting?.destroy();
 		if (this._destroyed) {
 			return;

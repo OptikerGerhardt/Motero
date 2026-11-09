@@ -55,6 +55,18 @@ test('finger zoom keeps the selected mode and refits only after the final touch 
 	assert.match(pages[1].div.style.clipPath,/^inset\(/);
 });
 
+test('the last touch pointer releases fitting even if a page change swallows touchend',()=>{
+    const {fitting}=fixture();
+    fitting.onDown({pointerId:1,pointerType:'touch',clientX:100,clientY:100});
+    fitting.onDown({pointerId:2,pointerType:'touch',clientX:150,clientY:150});
+    fitting.touches=2;
+    fitting.onUp({pointerId:1,pointerType:'touch'});
+    assert.equal(fitting.touches,2,'a remaining pointer must keep the gesture active');
+    fitting.onUp({pointerId:2,pointerType:'touch'});
+    assert.equal(fitting.touches,0);
+    assert.equal(fitting.pointers.size,0);
+});
+
 test('one-finger scrolling keeps every crop and never recenters the scroll',async()=>{
     const {fitting,pages,container,flush}=fixture();
     await fitting.configure({mode:'content',reference:'content',margin:0});

@@ -187,6 +187,7 @@ class View {
 			pageWidthFit: this._options.pageWidthFit || false,
 			directHighlight: this._options.directHighlight || false,
 			readerChromeVisible: this._options.readerChromeVisible === true,
+			pageNavigation: this._options.pageNavigation || 'continuous',
 			onChangeViewState: debounce(this._options.onChangeViewState, DEBOUNCE_STATE_CHANGE),
 			onChangeViewStats: (stats) => {
 				this._baseViewStats = stats;
@@ -527,6 +528,11 @@ class View {
 		this._options.pageFitting = options;
 		if (this._view?._options) this._view._options.pageFitting = options;
 		return this._view._pageFitting?.configure(options, apply);
+	}
+
+	setPageNavigation(mode) {
+		this._options.pageNavigation = mode === 'jumped' ? 'jumped' : 'continuous';
+		this._view?._pageNavigation?.configure(this._options.pageNavigation);
 	}
 
 	fitToWidth() {

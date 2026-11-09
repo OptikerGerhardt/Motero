@@ -67,7 +67,7 @@ window.createView = (encodedOptions) => {
 		onInitialized: () => {
 			postMessage('onViewContentInitialized');
 		},
-        onChangeHistory: ({ undoSteps }) => postMessage('onHistoryChanged', { canUndo: undoSteps.length > 0 }),
+        onChangeHistory: ({ undoSteps, redoSteps }) => postMessage('onHistoryChanged', { canUndo: undoSteps.length > 0, canRedo: redoSteps.length > 0 }),
 		onSaveAnnotations: (annotations) => {
 			postMessage('onSaveAnnotations', { annotations });
 
@@ -183,9 +183,19 @@ window.undoReaderAnnotation = () => {
     if (!window._view || window._view._options.readOnly) return false;
     window._view.finishTextAnnotationEditing();
     window._view.undo();
-    postMessage('onHistoryChanged', { canUndo: window._view.canUndo });
+    postMessage('onHistoryChanged', { canUndo: window._view.canUndo, canRedo: window._view.canRedo });
     return true;
 };
+
+window.redoReaderAnnotation = () => {
+    if (!window._view || window._view._options.readOnly) return false;
+    window._view.finishTextAnnotationEditing();
+    window._view.redo();
+    postMessage('onHistoryChanged', { canUndo: window._view.canUndo, canRedo: window._view.canRedo });
+    return true;
+};
+
+window.setPageNavigation = mode => window._view.setPageNavigation(mode);
 
 window.setTool = (options) => {
 	log("Set tool: " + options.type + "; color: " + options.color);

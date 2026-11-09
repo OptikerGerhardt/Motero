@@ -42,7 +42,8 @@ const root=path.resolve(__dirname,'../build/android'),fixture=path.resolve(__dir
   assert.equal(await page.evaluate(()=>window.messages.filter(m=>m.message?.event==='onSetAnnotationPopup'&&m.message.params?.annotation).length),0);
   assert.equal(await palette.locator('[data-color][aria-pressed="true"]').count(),1);
   assert.equal(await palette.locator('[data-color][aria-pressed="true"]').evaluate(e=>e.textContent.includes('✓')),false);
-  assert.ok(await palette.locator('[data-color][aria-pressed="true"]').evaluate(e=>e.style.background.includes('--fill-secondary')));
+  assert.ok(await palette.locator('[data-color][aria-pressed="true"] span').evaluate(e=>e.style.boxShadow.includes('white')));
+  assert.equal(await palette.locator('[data-color][aria-pressed="true"]').evaluate(e=>e.style.background),'transparent');
   await palette.locator('[data-color="#2ea8e5"]').click();await page.waitForTimeout(120);assert.equal((await state()).annotations[0].color,'#2ea8e5');assert.equal((await state()).annotations[0].id,original.id);
   console.log('PASS long press reopens the same annotation quick palette and color updates preserve identity');
   await page.evaluate(()=>{window.setDirectHighlight(false);window.setReaderChromeVisible(true);});
