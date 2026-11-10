@@ -11,6 +11,6 @@ test_missing_secret_stops_before_creating_an_apk (test_signing_guards.SigningGua
 test_public_verifier_rejects_an_apk_signed_with_the_old_key (test_signing_guards.SigningGuards.test_public_verifier_rejects_an_apk_signed_with_the_old_key) ... ok
 
 ----------------------------------------------------------------------
-Ran 11 tests in 11.349s
+Ran 11 tests in 5.112s
 
 OK

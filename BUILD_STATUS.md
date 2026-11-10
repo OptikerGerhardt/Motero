@@ -1,6 +1,6 @@
 # Build 319 / Motero 1.0.4 — lokale Prüfung und Release-Vorbereitung
 
-- 365 Reader-Tests und 15 Browser-Suiten bestanden, einschließlich realer Chromium-Stift-/Handballen-/Tasten-/Fokusverlustfolgen. 132 native Tests in 32 Suiten und abschließender APK-Build bestanden. Die eingebetteten aktuellen Reader-Quellen sowie PDF.js-/Runtime-Dateien sind unabhängig verglichen.
+- 365 Reader-Tests und 15 Browser-Suiten bestanden, einschließlich realer Chromium-Stift-/Handballen-/Tasten-/Fokusverlustfolgen. 136 native Tests in 33 Suiten und abschließender APK-Build bestanden. Die eingebetteten aktuellen Reader-Quellen sowie PDF.js-/Runtime-Dateien sind unabhängig verglichen.
 - Reader-Commits `ad2ee766` und `b160afd0`; bestehende Cropping-, Scroll-, Bookmark-, Toolbar-, Theme- und EPUB-Regressionen erhalten. PDF.js/Runtime unverändert.
 - Neues lokales E-Reader-Profil und tragbare Stifteingabe. BOOX-SDK/Hardware-Preview ist bis zur Lizenz- und Geräteprüfung deaktiviert; kein Nachweis physischer Latenz oder Live-Kontosynchronisation.
 - Veröffentlichung folgt erst nach geschützter Signierung und API-31/35-Updates von 303 und 318 mit Datenerhalt sowie Alt-Schlüssel-Abweisung. [Umfang und Grenzen](docs/E_READER_AND_STYLUS.md).

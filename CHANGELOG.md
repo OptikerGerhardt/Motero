@@ -3,7 +3,7 @@
 ## 1.0.4-319 — 10. November 2026 — Motero 1.0.4
 
 - Lokales E-Reader-Profil für die App und den Reader mit stärkeren Kontrasten und sofortigen Übergängen; vorhandene Theme-Auswahl bleibt bestehen.
-- Tragbare Stifteingabe mit Pointer-Eigentum, Handballenschutz, Finger-Navigation oder explizitem Finger-Zeichnen; Hold/Toggle-Radierertasten und Eingabediagnose.
+- Tragbare Stifteingabe mit Pointer-Eigentum, Handballenschutz, Finger-Navigation oder explizitem Finger-Zeichnen; Hold/Toggle-Radierertasten und Eingabediagnose. Abgebrochene gemischte Stift-/Fingergesten können den Berührungsschutz nicht festhalten; normale Finger-Abbrüche bekommen keine Zusatzverzögerung.
 - Gezielte offizielle Zotero-Korrekturen für Undo/Redo, Auswahlgriffe, Stifterkennung, fertige Ink-Pfade und Schriftinitialisierung. Hintergrundanalyse pausiert beim Schreiben.
 - Bestehende Cropping-, Jump-/SmartScroll-, Bookmark-, Toolbar-, Theme- und EPUB-Funktionen bleiben regressionsgeprüft; PDF.js/Runtime unverändert.
 - BOOX-Vorschau-Schnittstelle vorbereitet, echte SDK-Anbindung bis zur Lizenz-/Hardwareprüfung deaktiviert. Details: [E-Reader und Stift](docs/E_READER_AND_STYLUS.md).

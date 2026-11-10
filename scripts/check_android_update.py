@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import sys
 import time
 import uuid
 
@@ -35,6 +36,24 @@ def adb(*values, check=True, input=None, timeout=50):
     if check and result.returncode:
         raise RuntimeError('adb command failed: ' + result.stdout + result.stderr)
     return result
+
+
+def report_failure(exc_type, error, traceback):
+    # The check owns a fresh, synthetic-data emulator. Keep the gate strict and
+    # expose an actionable crash/startup reason through the Checks API too.
+    details = str(error)
+    for command in [('logcat', '-d', '-b', 'crash'), ('shell', 'dumpsys', 'activity', 'activities')]:
+        try:
+            result = adb(*command, check=False, timeout=15)
+            details += '\n' + result.stdout[-8000:] + result.stderr[-1000:]
+        except Exception as diagnostic_error:
+            details += '\nDiagnostic unavailable: ' + type(diagnostic_error).__name__
+    if os.environ.get('GITHUB_ACTIONS') == 'true':
+        print('::error title=Android update gate diagnostics::' + details[-16000:].replace('%','%25').replace('\r','%0D').replace('\n','%0A'), flush=True)
+    sys.__excepthook__(exc_type, error, traceback)
+
+
+sys.excepthook = report_failure
 
 
 deadline = time.monotonic() + args.boot_timeout

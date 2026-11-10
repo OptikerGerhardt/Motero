@@ -1,7 +1,7 @@
 {
-  "suite_count": 32,
+  "suite_count": 33,
   "totals": {
-    "tests": 132,
+    "tests": 136,
     "failures": 0,
     "errors": 0,
     "skipped": 0
@@ -80,6 +80,13 @@
     {
       "suite": "org.zotero.android.ereader.PenButtonStateTest",
       "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "org.zotero.android.ereader.PenContactStateTest",
+      "tests": 4,
       "failures": 0,
       "errors": 0,
       "skipped": 0

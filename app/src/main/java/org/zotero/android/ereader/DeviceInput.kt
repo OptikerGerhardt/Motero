@@ -13,12 +13,10 @@ object DeviceInput {
     val diagnostics = mutableDiagnostics.asStateFlow()
     var learnKey = false
     var onEraser: ((Boolean) -> Unit)? = null
-    private var penDown = false
-    private var blockedNativeGesture = false
-    private var guardUntil = 0L
+    private val contacts = PenContactState()
     private var deviceId: Int? = null
     private var lastDiagnosticAt = 0L
-    val palmBlocked get() = penDown || SystemClock.uptimeMillis() < guardUntil
+    val palmBlocked get() = contacts.blocked(SystemClock.uptimeMillis())
     fun motion(event: MotionEvent): Boolean {
         val index = event.actionIndex.coerceIn(0, event.pointerCount - 1)
         val tool = event.getToolType(index)
@@ -26,12 +24,6 @@ object DeviceInput {
         if (pen) {
             if (deviceId != null && deviceId != event.deviceId) reset()
             deviceId = event.deviceId
-            when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> penDown = true
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_POINTER_UP -> {
-                    penDown = false; guardUntil = SystemClock.uptimeMillis() + 300
-                }
-            }
             val hover = event.actionMasked == MotionEvent.ACTION_HOVER_MOVE || event.actionMasked == MotionEvent.ACTION_HOVER_ENTER
             if (event.eventTime - lastDiagnosticAt >= 100 || event.actionMasked != MotionEvent.ACTION_MOVE) {
             lastDiagnosticAt = event.eventTime
@@ -40,13 +32,17 @@ object DeviceInput {
         }
         // Mixed streams must reach WebView, whose pointer router retains the pen
         // and suppresses just the palm. Native toolbar finger taps are blocked here.
-        if (event.actionMasked == MotionEvent.ACTION_DOWN) {
-            blockedNativeGesture = !pen && palmBlocked
+        val action = when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> PenContactState.Action.Down
+            MotionEvent.ACTION_POINTER_DOWN -> PenContactState.Action.PointerDown
+            MotionEvent.ACTION_UP -> PenContactState.Action.Up
+            MotionEvent.ACTION_POINTER_UP -> PenContactState.Action.PointerUp
+            MotionEvent.ACTION_CANCEL -> PenContactState.Action.Cancel
+            else -> PenContactState.Action.Other
         }
-        val blocked = blockedNativeGesture
-        if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) blockedNativeGesture = false
-        return blocked
+        return contacts.motion(action, pen, SystemClock.uptimeMillis())
     }
+
     fun key(event: KeyEvent, editing: Boolean): Boolean {
         if (editing || onEraser == null && !learnKey) return false
         if (event.keyCode in setOf(KeyEvent.KEYCODE_VOLUME_UP, KeyEvent.KEYCODE_VOLUME_DOWN,
@@ -66,5 +62,5 @@ object DeviceInput {
         onEraser?.invoke(active)
         return true
     }
-    fun reset() { blockedNativeGesture = false; penDown = false; guardUntil = 0; deviceId = null; penButton.reset(); onEraser?.invoke(false) }
+    fun reset() { contacts.reset(); deviceId = null; penButton.reset(); onEraser?.invoke(false) }
 }
