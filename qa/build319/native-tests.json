@@ -1,7 +1,7 @@
 {
-  "suite_count": 33,
+  "suite_count": 34,
   "totals": {
-    "tests": 136,
+    "tests": 141,
     "failures": 0,
     "errors": 0,
     "skipped": 0
@@ -78,6 +78,13 @@
       "skipped": 0
     },
     {
+      "suite": "org.zotero.android.ereader.PalmContactFilterTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
       "suite": "org.zotero.android.ereader.PenButtonStateTest",
       "tests": 3,
       "failures": 0,
@@ -86,7 +93,7 @@
     },
     {
       "suite": "org.zotero.android.ereader.PenContactStateTest",
-      "tests": 4,
+      "tests": 5,
       "failures": 0,
       "errors": 0,
       "skipped": 0

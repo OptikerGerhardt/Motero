@@ -1,5 +1,6 @@
 package org.zotero.android.screens.reader
 
+import org.zotero.android.ereader.rejectPenPalms
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -23,7 +24,7 @@ internal fun ReaderCropControls(viewModel: ReaderViewModel, state: ReaderViewSta
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val compact = maxHeight < 400.dp
         Surface(color = MaterialTheme.colorScheme.surface) {
-            Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp)
+            Column(Modifier.rejectPenPalms().fillMaxWidth().padding(horizontal = 12.dp)
                 .onSizeChanged { viewModel.cropInsets(topInset + it.height.toDouble() / density.density, bottomInset, leftInset, rightInset) }) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     TextButton(onClick = { viewModel.cropAction("cancel") }) {

@@ -17,7 +17,7 @@ object DeviceInput {
     private var deviceId: Int? = null
     private var lastDiagnosticAt = 0L
     val palmBlocked get() = contacts.blocked(SystemClock.uptimeMillis())
-    fun motion(event: MotionEvent): Boolean {
+    fun motion(event: MotionEvent) {
         val index = event.actionIndex.coerceIn(0, event.pointerCount - 1)
         val tool = event.getToolType(index)
         val pen = tool == MotionEvent.TOOL_TYPE_STYLUS || tool == MotionEvent.TOOL_TYPE_ERASER
@@ -30,8 +30,8 @@ object DeviceInput {
             mutableDiagnostics.value = "Tool: ${if (tool == MotionEvent.TOOL_TYPE_ERASER) "eraser" else "stylus"}; buttons: ${event.buttonState}; pressure: ${event.getPressure(index)}; hover: $hover. Backend: standard Android/WebView. BOOX SDK/refresh: unavailable (not validated)."
             }
         }
-        // Mixed streams must reach WebView, whose pointer router retains the pen
-        // and suppresses just the palm. Native toolbar finger taps are blocked here.
+        // Observe only. Native controls filter their own palm contacts; WebView
+        // receives Android's original stream, including coalesced pen samples.
         val action = when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> PenContactState.Action.Down
             MotionEvent.ACTION_POINTER_DOWN -> PenContactState.Action.PointerDown
@@ -40,7 +40,7 @@ object DeviceInput {
             MotionEvent.ACTION_CANCEL -> PenContactState.Action.Cancel
             else -> PenContactState.Action.Other
         }
-        return contacts.motion(action, pen, SystemClock.uptimeMillis())
+        contacts.motion(action, pen, SystemClock.uptimeMillis())
     }
 
     fun key(event: KeyEvent, editing: Boolean): Boolean {

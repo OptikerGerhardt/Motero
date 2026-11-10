@@ -1,5 +1,6 @@
 package org.zotero.android.screens.reader.toolbar
 
+import org.zotero.android.ereader.rejectPenPalms
 import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateDpAsState
@@ -50,7 +51,7 @@ internal fun ReaderPdfBottomDock(viewModel: ReaderViewModel, state: ReaderViewSt
         val travelPx = with(density) { 60.dp.toPx() }
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
             ReaderPageIndicatorLabel(visible = !tools, viewModel = scrubber)
-            Surface(Modifier.width(width), shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceContainer) {
+            Surface(Modifier.width(width).rejectPenPalms(), shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceContainer) {
                 Column {
                     Box(Modifier.fillMaxWidth().height(optionsHeight).clipToBounds(), contentAlignment = Alignment.BottomCenter) {
                         if (tools && state.pdfToolOptionsVisible || optionsHeight > 0.dp) {

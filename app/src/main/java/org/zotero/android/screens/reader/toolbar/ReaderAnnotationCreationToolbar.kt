@@ -1,5 +1,6 @@
 package org.zotero.android.screens.reader.toolbar
 
+import org.zotero.android.ereader.rejectPenPalms
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import org.zotero.android.ereader.deviceTween as tween
@@ -227,6 +228,7 @@ internal fun BoxScope.ReaderAnnotationCreationToolbar(
                 shape = roundCornerShape
             )
             .clip(roundCornerShape)
+            .rejectPenPalms()
     ) {
         item {
             Spacer(modifier = Modifier.height(4.dp))

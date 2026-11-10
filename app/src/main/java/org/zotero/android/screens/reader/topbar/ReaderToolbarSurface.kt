@@ -1,5 +1,6 @@
 package org.zotero.android.screens.reader.topbar
 
+import org.zotero.android.ereader.rejectPenPalms
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.animateDp
 import org.zotero.android.ereader.deviceTween as tween
@@ -43,11 +44,11 @@ internal fun ReaderToolbarSurface(
         .windowInsetsPadding(WindowInsets.statusBarsIgnoringVisibility.union(WindowInsets.displayCutout)
             .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
         .padding(horizontal = inset, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-        Surface(shape = RoundedCornerShape(radius), color = container) {
+        Surface(modifier = Modifier.rejectPenPalms(), shape = RoundedCornerShape(radius), color = container) {
             Row(Modifier.padding(4.dp), verticalAlignment = Alignment.CenterVertically, content = leading)
         }
         Spacer(Modifier.weight(1f))
-        Surface(shape = RoundedCornerShape(radius), color = container) {
+        Surface(modifier = Modifier.rejectPenPalms(), shape = RoundedCornerShape(radius), color = container) {
             Row(Modifier.padding(4.dp), verticalAlignment = Alignment.CenterVertically, content = trailing)
         }
     }

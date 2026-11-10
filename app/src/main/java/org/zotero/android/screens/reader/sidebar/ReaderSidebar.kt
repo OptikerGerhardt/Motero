@@ -1,5 +1,6 @@
 package org.zotero.android.screens.reader.sidebar
 
+import org.zotero.android.ereader.rejectPenPalms
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -41,7 +42,7 @@ internal fun ReaderSidebar(
     annotationMaxSideSize: Int,
 ) {
     val sidebarModifier = if (viewState.isPdfOrHtml()) Modifier.statusBarsPadding().padding(top = 64.dp) else Modifier
-    Column(sidebarModifier.background(MaterialTheme.colorScheme.surface)) {
+    Column(sidebarModifier.rejectPenPalms().background(MaterialTheme.colorScheme.surface)) {
         val selectorOptions = if (viewState.fileType == ReaderFileType.PDF) {
             pdfSliderOptions
         } else {

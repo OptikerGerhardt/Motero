@@ -191,7 +191,7 @@ internal class DashboardActivity : BaseActivity() {
     private val handledPageKeys = mutableSetOf<Int>()
 
     override fun dispatchTouchEvent(event: android.view.MotionEvent): Boolean {
-        if (org.zotero.android.ereader.DeviceInput.motion(event)) return true
+        org.zotero.android.ereader.DeviceInput.motion(event)
         return super.dispatchTouchEvent(event)
     }
     override fun onWindowFocusChanged(hasFocus: Boolean) {
