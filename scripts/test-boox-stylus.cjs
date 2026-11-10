@@ -49,6 +49,14 @@ const root=path.resolve(__dirname,'../build/android'),fixture=path.resolve(__dir
   assert.equal(await page.evaluate(()=>window._view._annotationManager._annotations[0].color),'#000000');
   await page.evaluate(()=>window.redoReaderAnnotation());
   assert.equal(await page.evaluate(()=>window._view._annotationManager._annotations[0].color),'#ff0000');
+  const before=await page.evaluate(()=>window._view._annotationManager._annotations.reduce((n,a)=>n+(a.position.paths?.length||0),0));
+  await pen('mousePressed',330,340);await pen('mouseMoved',350,360);
+  await page.evaluate(()=>{const w=window._view._view._iframeWindow;w.dispatchEvent(new w.Event('blur'));});
+  const after=await page.evaluate(()=>window._view._annotationManager._annotations.reduce((n,a)=>n+(a.position.paths?.length||0),0));
+  assert.equal(after,before+1,'focus loss retains the collected stroke exactly once');
+  await pen('mouseReleased',350,360,0);
+  assert.equal(await page.evaluate(()=>window._view._annotationManager._annotations.reduce((n,a)=>n+(a.position.paths?.length||0),0)),after);
+  console.log('PASS losing focus during a stroke commits collected samples exactly once');
   assert.deepEqual(errors,[]);
   console.log('PASS hardware eraser restores the base tool; native edits use undo/redo; disabling the profile removes its presentation');
  } finally {if(browser)await browser.close();await new Promise(r=>server.close(r));}

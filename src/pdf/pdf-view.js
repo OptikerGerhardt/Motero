@@ -456,7 +456,9 @@ class PDFView {
         if (this._options.platform === 'android') this._penInput = new MobilePenInput(this._iframeWindow, {
             profile: this._options.deviceProfile,
             onTakeover: () => {
-                this._handlePointerCancel(); this._directHighlight?.reset(); this._chromeTapGuard?.reset();
+                // A lost release/focus still commits the samples already collected.
+                const pointerId = this.action?.type === 'ink' ? this.action.pointerID : undefined;
+                this._handlePointerCancel(pointerId === undefined ? undefined : {pointerId}); this._directHighlight?.reset(); this._chromeTapGuard?.reset();
                 this._readerPriorityDown = null;
                 if (this._pageNavigation) this._pageNavigation.gesture = null;
                 this._pageFitting?.resetInput();
