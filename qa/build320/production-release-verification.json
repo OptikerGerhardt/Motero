@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "release": "https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.5-320",
+  "tag": "v1.0.5-320",
+  "apk_sha256": "d64af94d57619a934813480da04e32c97a3506fa9cb3e49ebda6544a83815101",
+  "reader_tests": 365,
+  "native_tests": 141,
+  "browser_suites": 16,
+  "pdfjs_version": "5.7.330",
+  "pdfjs_core_tests": 43,
+  "pdfjs_viewer_tests": 19,
+  "source_files": 9223,
+  "api31_update": true,
+  "api35_update": true,
+  "baseline_build": 319,
+  "latest_release_matches": true,
+  "physical_hardware_tested": false,
+  "anonymous_access_independently_tested": false
+}

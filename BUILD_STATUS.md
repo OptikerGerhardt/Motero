@@ -1,8 +1,11 @@
-# Build 320 / Motero 1.0.5 — PDF.js-Update, Freigabeprüfung läuft
+# Build 320 / Motero 1.0.5 — veröffentlicht und unabhängig geprüft
 
-- Zotero-PDF.js `5f95f712` / 5.7.330; Client, Worker und Viewer gemeinsam aktualisiert. Lizenzen, WebView-Kompatibilität und alle übrigen Runtime-Dateien erhalten.
-- Lokal bestanden: 365 Reader-, 43 Engine-Pixel-, 141 native Tests und 16 Browser-Suiten einschließlich 19 offizieller Viewer-Fälle. APK und gepinnte Quellen/Assets geprüft. Geschützte Release-/Update-Prüfung steht noch aus; Nachweise unter `qa/build320/`. Noch keine Veröffentlichung für 320 behauptet.
-- Bestehende Cropping-, Navigation-, Bookmark-, Toolbar-, EPUB- und E-Reader-/Stiftfunktionen bleiben im Regressionsumfang. [Details](docs/PDFJS_UPDATE.md).
+- Release: https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.5-320 ; vollständiger erfolgreicher Prüflauf: https://github.com/OptikerGerhardt/Motero/actions/runs/42820804089 .
+- App-Quelle: `3cd29ee1dea387d14226dbe9a608b67c328da9b9`; Reader: `ad0d6bae922d3a3d6d35beb31f54b1c54adbb638`; PDF.js `5f95f712` / 5.7.330.
+- 365 Reader-Tests, 43 zusätzliche Engine-Pixeltests, 141 native Tests in 34 Suiten und alle 16 Browser-Suiten bestanden, einschließlich 19 offizieller Viewer-Fälle. Bisherige Cropping-, Scroll-, Bookmark-, Toolbar-, Theme-, EPUB- und Stiftregressionen erhalten.
+- Öffentliche APK unabhängig heruntergeladen: SHA-256 `d64af94d57619a934813480da04e32c97a3506fa9cb3e49ebda6544a83815101`. Privater Motero-Signierer, Rotation, Receiver-Berechtigung, Android 9+, nicht debuggbar; 101 Reader-Quellen, 207 PDF.js- und 45 Runtime-Dateien stimmen. Tag, vollständiges Quellarchiv (9223 Dateien) und Prüfsummen geprüft.
+- API 31/35: Updates von 303 und 319 erhalten Datenmarker und UID und starten die App; alte Schlüssel für Updates/interne Berechtigungen abgewiesen. Latest-Release liefert 320 mit einer APK; kein unabhängig anonymer API-Zugriff behauptet.
+- Physische BOOX-/Pixel-/GrapheneOS-Prüfung und Kontosync separat. [PDF.js-Update und Grenzen](docs/PDFJS_UPDATE.md), [Nachweise](qa/build320/).
 
 # Build 319 / Motero 1.0.4 — veröffentlicht und unabhängig geprüft
 

@@ -7,6 +7,8 @@
 - Client, Worker und Viewer gemeinsam gepinnt; Build verhindert gemischte Versionen, abweichende Quellstände und fehlende Android-WebView-Kompatibilität. Schrift-/WASM-/CMap-Pakete und andere Laufzeitdateien unverändert.
 - Zusätzliche Engine-Pixeltests und Browserprüfungen für eingebettete Schriften, Light/Dark Mode, Textauswahl und Renderabbrüche. Bestehende Cropping-, Jump-/SmartScroll-, Bookmark-, Toolbar-, EPUB- und Stiftregressionen bleiben Teil der Freigabeprüfung.
 
+- Veröffentlicht und unabhängig geprüft: 365 Reader-, 43 Engine-Pixel-, 141 native Tests und 16 Browser-Suiten einschließlich 19 offizieller Viewer-Fälle bestanden. API-31/35-Updates von 303/319 erhalten Daten und UID, alte Schlüssel abgewiesen; Signatur, Quellen, Tag und Prüfsummen stimmen. [Nachweise](qa/build320/).
+
 ## 1.0.4-319 — 10. November 2026 — Motero 1.0.4
 
 - Lokales E-Reader-Profil für die App und den Reader mit stärkeren Kontrasten und sofortigen Übergängen; vorhandene Theme-Auswahl bleibt bestehen.
