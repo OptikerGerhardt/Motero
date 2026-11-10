@@ -10,6 +10,8 @@
 - Include/Exclude recognizes isolated marginal stars and dots. Text fitting retains the full non-fitting page axis; Text + crop clips both axes. The PDF.js pin and production signing identity are unchanged.
 
 
+- Published and independently verified: 378 reader tests, 43 engine pixel cases, 144 Android tests and 18 browser suites passed. Signed API 31/35 updates from 303/320 retain data and UID; old-key updates are rejected. APK signature, embedded sources, source archive, immutable tag and checksums match. [Evidence](qa/build321/).
+
 ## 1.0.5-320 — 10. November 2026 — Motero 1.0.5
 
 - PDF.js auf den von Zotero Reader verwendeten Stand `5f95f712` (5.7.330) aktualisiert. Eingebettete Schriften erhalten keine zusätzliche künstliche Fett-/Kursivzeichnung; semantische Schriftmerkmale bleiben für die Textanalyse verfügbar.

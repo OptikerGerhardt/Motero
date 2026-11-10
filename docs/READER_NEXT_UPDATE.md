@@ -16,7 +16,7 @@ Scope authorized in the conversation. Preserve PDF.js 5.7.330, annotation/sync f
 - [x] Replace misleading Page width presets by a real Margins slider, usable on narrow phones and wide readers, preserving logical reading position.
 - [x] Downloaded Files filter footer respects navigation/gesture insets and rounded-corner clearance.
 - [x] Modest EPUB comfort/stability additions: book/system font choices, robust anchor retention, bounded work and stale-operation protection where reproduced; no engine replacement or TTS in this package.
-- [ ] Full reader/native/browser regressions, signed API 31/35 updates, immutable APK release, independently verified download and sources.
+- [x] Full reader/native/browser regressions, signed API 31/35 updates, immutable APK release, independently verified download and sources.
 
 
 The shared EPUB palette supports the existing highlight, underline and CFI-anchored note formats. It does not introduce PDF ink/eraser annotations into reflowing EPUBs. Long-press editing preserves IDs and uses the normal annotation manager and Undo history.
@@ -26,3 +26,6 @@ EPUB reserves a constant footer and navigation inset so toggling reader chrome o
 Cropping reuses the existing bounded analysis queue, adjacent-page preparation and numeric geometry cache. The cache version changes for the revised marginal-symbol classification; annotation/PDF data and manual crop coordinates are unchanged.
 
 Physical BOOX/Pixel interaction, vendor-specific stylus behavior, native animation appearance and live Zotero account synchronization require separate testing. Browser fixtures are synthetic and do not prove the supplied personal PDFs render perfectly.
+
+
+Verification: 378 reader tests, 43 engine pixel cases, 144 native tests and 18 browser suites passed; signed API 31/35 updates from 303/320, independent APK/source/checksum verification and immutable release completed. [Reports](../qa/build321/README.md).

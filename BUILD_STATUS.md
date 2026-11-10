@@ -1,9 +1,12 @@
-# Build 321 / Motero 1.0.6 — lokal geprüft, Release-Prüfungen folgen
+# Build 321 / Motero 1.0.6 — veröffentlicht und unabhängig geprüft
 
-- 378 Reader-Tests, 43 Engine-Pixeltests, 144 native Tests in 35 Suiten und 18 Browser-Suiten bestanden. APK-Build und TypeScript erfolgreich; unveränderter PDF.js-Pin 5.7.330.
-- 104 eingebettete Reader-Quellen, 207 PDF.js- und 45 Runtime-Dateien geprüft. Signierschutz und Receiver-Prüfungen bestanden.
-- EPUB-Bedienung, Annotationsbearbeitung, Margins, globale Reader-Steuerung, Randzeichen und getrennte Text-/Text+crop-Geometrie umgesetzt. [Umfang](docs/READER_NEXT_UPDATE.md), [lokale Nachweise](qa/build321/).
-- Signierte API-31/35-Updates und unabhängige Prüfung des öffentlichen Downloads stehen vor Freigabe noch aus. Physische Geräte und Kontosync bleiben separat.
+- Release: https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.6-321 ; erfolgreicher Build-/Release-Prüflauf: https://github.com/OptikerGerhardt/Motero/actions/runs/42911476446 .
+- App-Quelle: `6b11d120ddb18a04023e568afaf56aee805a7fcb`; Reader: `319575841df017bd8f567b18b7181c6818f8e9f3`; PDF.js `5f95f712` / 5.7.330 unverändert.
+- 378 Reader-Tests, 43 Engine-Pixeltests, 144 native Tests in 35 Suiten und 18 Browser-Suiten bestanden, einschließlich 19 offizieller Viewer-Fälle. Bisherige Cropping-, Scroll-, Bookmark-, Toolbar-, Theme- und Stiftregressionen erhalten.
+- EPUB mit direktem Markieren, gemeinsamer Palette, schwebenden Leisten, schwarzen Bookmark-Fähnchen, Margins und Schriftwahl. Bestehende Annotationen per langem Druck bearbeiten; IDs und Undo erhalten. Text-Fit behält die volle nicht angepasste Achse; Text + crop schneidet beide Achsen zu.
+- Öffentliche APK unabhängig heruntergeladen: SHA-256 `c3b2bb0427ca601cc0ccc7fce44bd05e4b47d860d1f7c4478afdc0cf1af3d988`. Privater Motero-Signierer, Rotation, Receiver-Berechtigung, Android 9+, nicht debuggbar; 104 Reader-Quellen, 207 PDF.js- und 45 Runtime-Dateien stimmen. Tag, vollständiges Quellarchiv (9267 Dateien) und Prüfsummen geprüft.
+- API 31/35: Updates von 303 und 320 erhalten Datenmarker und UID und starten die App; alte Schlüssel für Updates/interne Berechtigungen abgewiesen. Latest-Release liefert 321 mit genau einer APK.
+- Physische BOOX-/Pixel-/GrapheneOS-Prüfung, native Animationsansicht und Kontosync separat. [Umfang](docs/READER_NEXT_UPDATE.md), [Nachweise](qa/build321/).
 
 # Build 320 / Motero 1.0.5 — veröffentlicht und unabhängig geprüft
 
