@@ -1,9 +1,11 @@
-# Build 319 / Motero 1.0.4 — lokale Prüfung und Release-Vorbereitung
+# Build 319 / Motero 1.0.4 — veröffentlicht und unabhängig geprüft
 
-- 365 Reader-Tests und 15 Browser-Suiten bestanden, einschließlich realer Chromium-Stift-/Handballen-/Tasten-/Fokusverlustfolgen. 141 native Tests in 34 Suiten und abschließender APK-Build bestanden. Die eingebetteten aktuellen Reader-Quellen sowie PDF.js-/Runtime-Dateien sind unabhängig verglichen.
-- Reader-Commits `ad2ee766` und `b160afd0`; bestehende Cropping-, Scroll-, Bookmark-, Toolbar-, Theme- und EPUB-Regressionen erhalten. PDF.js/Runtime unverändert.
-- Neues lokales E-Reader-Profil und tragbare Stifteingabe. BOOX-SDK/Hardware-Preview ist bis zur Lizenz- und Geräteprüfung deaktiviert; kein Nachweis physischer Latenz oder Live-Kontosynchronisation.
-- Veröffentlichung folgt erst nach geschützter Signierung und API-31/35-Updates von 303 und 318 mit Datenerhalt sowie Alt-Schlüssel-Abweisung. [Umfang und Grenzen](docs/E_READER_AND_STYLUS.md).
+- Release: https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.4-319 ; erfolgreicher vollständiger Prüflauf: https://github.com/OptikerGerhardt/Motero/actions/runs/42791143244 .
+- App-Quelle: `1237cedaa44daeb57861a88cdd2e2d9fcafafac0`; Reader: `b160afd08e47d431b306bd2ceb31aa23ed46fa7f`.
+- 365 Reader-Tests, 141 native Tests in 34 Suiten und alle 15 Browser-Suiten bestanden. Bisherige Cropping-, Scroll-, Bookmark-, Toolbar-, Theme- und EPUB-Regressionen erhalten; zusätzliche Stift-/Handballen-/Abbruch-/Historienfälle geprüft.
+- Öffentliche APK unabhängig heruntergeladen: SHA-256 `504a9ccfa5ad84a644bc32d83ded8a5af03a9ad3f886a41e5befcce68baf0a0b`. Privater Motero-Signierer, Rotation, Receiver-Berechtigung, Android 9+, nicht debuggbar; 101 Reader-Quellen, 207 PDF.js- und 45 Runtime-Dateien stimmen. Tag, vollständiges Quellarchiv und Prüfsummen ebenfalls geprüft.
+- API 31/35: Updates von 303 und 318 erhalten private Datenmarker und UID und starten die App. Alte Schlüssel werden für Updates/interne Berechtigungen abgewiesen. Latest-Release liefert 319 mit einer APK; kein unabhängig anonymer API-Zugriff behauptet.
+- Lokales App-/Reader-E-Reader-Profil und tragbare Stiftsteuerung geliefert. Physische BOOX-/Pixel-/InkSense-/EMR-Prüfung und Kontosync separat; BOOX-SDK/Preview bis Lizenz-/Hardware-/Latenzprüfung deaktiviert. [Umfang und Grenzen](docs/E_READER_AND_STYLUS.md), [Prüfberichte](qa/build319/).
 
 # Build 318 / Motero 1.0.3 — veröffentlicht und unabhängig geprüft
 

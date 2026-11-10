@@ -8,6 +8,8 @@
 - Bestehende Cropping-, Jump-/SmartScroll-, Bookmark-, Toolbar-, Theme- und EPUB-Funktionen bleiben regressionsgeprüft; PDF.js/Runtime unverändert.
 - BOOX-Vorschau-Schnittstelle vorbereitet, echte SDK-Anbindung bis zur Lizenz-/Hardwareprüfung deaktiviert. Details: [E-Reader und Stift](docs/E_READER_AND_STYLUS.md).
 
+- Veröffentlicht und unabhängig geprüft: 365 Reader-, 141 native Tests und 15 Browser-Suiten bestanden; API-31/35-Updates von 303/318 erhalten Daten und UID, alte Schlüssel abgewiesen. Signatur, Quellen, Tag und Prüfsummen geprüft. [Nachweise](qa/build319/).
+
 ## 1.0.3-318 — 9. November 2026 — Motero 1.0.3
 
 - Neue Randmaskierungen gepufferter Seiten werden auch bei unverändertem Seitenrahmen sofort gezeichnet. Die Layout-Optimierung behält ihre gezielten Stiländerungen; der inkrementelle Renderer erhält weiterhin die erforderliche Aktualisierung.

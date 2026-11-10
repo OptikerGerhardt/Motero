@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "release": "https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.4-319",
+  "tag": "v1.0.4-319",
+  "apk_sha256": "504a9ccfa5ad84a644bc32d83ded8a5af03a9ad3f886a41e5befcce68baf0a0b",
+  "reader_tests": 365,
+  "native_tests": 141,
+  "browser_suites": 15,
+  "source_files": 9186,
+  "api31_update": true,
+  "api35_update": true,
+  "baseline_build": 318,
+  "latest_release_matches": true,
+  "physical_hardware_tested": false,
+  "anonymous_access_independently_tested": false
+}
