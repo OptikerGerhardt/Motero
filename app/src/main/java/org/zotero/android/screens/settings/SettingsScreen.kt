@@ -1,12 +1,15 @@
 package org.zotero.android.screens.settings
 
 import android.net.Uri
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
@@ -31,6 +34,12 @@ internal fun SettingsScreen(
     toQuickCopyScreen: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
+    var showDeviceSettings by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    if (showDeviceSettings) {
+        androidx.activity.compose.BackHandler { showDeviceSettings = false }
+        org.zotero.android.ereader.EReaderSettingsScreen { showDeviceSettings = false }
+        return
+    }
     AppThemeM3 {
         val viewEffect by viewModel.viewEffects.observeAsState()
         LaunchedEffect(key1 = viewModel) {
@@ -58,7 +67,7 @@ internal fun SettingsScreen(
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxSize().verticalScroll(rememberScrollState())
             ) {
                 Spacer(modifier = Modifier.height(4.dp))
                 NewSettingsItem(
@@ -98,6 +107,8 @@ internal fun SettingsScreen(
 
                 NewSettingsDivider()
 
+                NewSettingsItem(title = "E-Reader and stylus", onItemTapped = { showDeviceSettings = true })
+                NewSettingsDivider()
                 BuildInfo()
             }
         }

@@ -106,7 +106,7 @@ fun BaseAnimatedLceBox(
     loading: @Composable BoxScope.() -> Unit,
     content: @Composable BoxScope.() -> Unit,
 ) {
-    Crossfade(targetState = lce) { _lce ->
+    Crossfade(targetState = lce, animationSpec = org.zotero.android.ereader.deviceTween()) { _lce ->
         Box(modifier) {
             when (_lce) {
                 LCE2.Content -> content()

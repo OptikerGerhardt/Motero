@@ -2,7 +2,7 @@ package org.zotero.android.screens.reader.toolbar
 
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.tween
+import org.zotero.android.ereader.deviceTween as tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.Orientation

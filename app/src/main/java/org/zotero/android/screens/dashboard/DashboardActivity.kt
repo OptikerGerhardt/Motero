@@ -190,7 +190,18 @@ internal class DashboardActivity : BaseActivity() {
     var readerPageTurnHandler: ((Boolean) -> Unit)? = null
     private val handledPageKeys = mutableSetOf<Int>()
 
+    override fun dispatchTouchEvent(event: android.view.MotionEvent): Boolean {
+        if (org.zotero.android.ereader.DeviceInput.motion(event)) return true
+        return super.dispatchTouchEvent(event)
+    }
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (!hasFocus) org.zotero.android.ereader.DeviceInput.reset()
+    }
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val ime = androidx.core.view.ViewCompat.getRootWindowInsets(window.decorView)
+            ?.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime()) == true
+        if (org.zotero.android.ereader.DeviceInput.key(event, ime || currentFocus?.onCheckIsTextEditor() == true)) return true
         if (event.action == KeyEvent.ACTION_UP && handledPageKeys.remove(event.keyCode)) return true
         val next = when (event.keyCode) {
             KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_PAGE_DOWN -> true

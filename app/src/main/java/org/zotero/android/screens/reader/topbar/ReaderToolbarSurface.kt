@@ -2,7 +2,7 @@ package org.zotero.android.screens.reader.topbar
 
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.animateDp
-import androidx.compose.animation.core.tween
+import org.zotero.android.ereader.deviceTween as tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures

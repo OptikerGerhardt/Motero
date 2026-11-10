@@ -73,8 +73,8 @@ internal fun ReaderPageIndicatorLabel(
 
     AnimatedVisibility(
         visible = visible && selectedPage != null && pageCount > 0,
-        enter = fadeIn(),
-        exit = fadeOut(),
+        enter = if (org.zotero.android.ereader.DeviceProfileStore.state.value.eReader) androidx.compose.animation.EnterTransition.None else fadeIn(),
+        exit = if (org.zotero.android.ereader.DeviceProfileStore.state.value.eReader) androidx.compose.animation.ExitTransition.None else fadeOut(),
     ) {
         if (selectedPage != null && pageCount > 0) {
             Box(

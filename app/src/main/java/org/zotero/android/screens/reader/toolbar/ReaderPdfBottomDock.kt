@@ -3,7 +3,7 @@ package org.zotero.android.screens.reader.toolbar
 import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.tween
+import org.zotero.android.ereader.deviceTween as tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape

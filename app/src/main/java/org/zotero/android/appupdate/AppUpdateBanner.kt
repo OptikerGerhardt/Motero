@@ -1,6 +1,6 @@
 package org.zotero.android.appupdate
 
-import androidx.compose.animation.AnimatedContent
+import org.zotero.android.ereader.DeviceAnimatedContent as AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Column

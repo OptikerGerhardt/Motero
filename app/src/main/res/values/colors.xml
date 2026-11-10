@@ -64,4 +64,5 @@
     <color name="pdf_annotations_topbar_background">#FAFAFD</color>
     <color name="pdf_scrubber_background">#FFE8E8ED</color>
     <color name="pdf_view_background_color">#FFF2F2F7</color>
+    <color name="reader_selection_handle">#FF4C7FF0</color>
 </resources>

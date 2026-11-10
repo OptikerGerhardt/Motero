@@ -22,6 +22,7 @@ import kotlin.math.roundToInt
 internal fun ReaderSettingsTable(
     viewState: ReaderSettingsViewState,
     viewModel: ReaderSettingsViewModel,
+    onDeviceSettings: () -> Unit = {},
     onManualCrop: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -29,6 +30,9 @@ internal fun ReaderSettingsTable(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 24.dp),
     ) {
+        item {
+            androidx.compose.material3.TextButton(onClick = onDeviceSettings) { androidx.compose.material3.Text("E-Reader and stylus") }
+        }
         readerSettingsSettingRow(
             titleResId = Strings.pdf_settings_appearance_title,
             options = viewState.appearanceOptions,

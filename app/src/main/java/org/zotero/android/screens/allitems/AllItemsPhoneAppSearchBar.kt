@@ -38,7 +38,8 @@ internal fun AllItemsPhoneAppSearchBar(
 
     if (!viewState.isEditing) {
         Crossfade(
-            modifier = Modifier.animateContentSize(),
+            animationSpec = org.zotero.android.ereader.deviceTween(),
+            modifier = if (org.zotero.android.ereader.DeviceProfileStore.state.value.eReader) Modifier else Modifier.animateContentSize(),
             targetState = isInSearchMode,
         ) { searchModeActive ->
             if (!searchModeActive) {

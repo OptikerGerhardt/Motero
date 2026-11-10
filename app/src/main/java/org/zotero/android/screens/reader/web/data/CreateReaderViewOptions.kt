@@ -16,6 +16,7 @@ data class CreateReaderViewOptions(
     var readerChromeVisible: Boolean = false,
     var pageNavigation: String = "continuous",
 
+    var deviceProfile: org.zotero.android.ereader.DeviceProfile = org.zotero.android.ereader.DeviceProfileStore.state.value,
     var colorScheme: String = "light",
 )
 

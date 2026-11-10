@@ -5,7 +5,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.core.tween
+import org.zotero.android.ereader.deviceTween as tween
 import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -221,8 +221,12 @@ private fun ReaderPageHistoryBackArrow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    if (org.zotero.android.ereader.DeviceProfileStore.state.value.eReader) {
+        if (visible) Box(modifier) { ReaderPageHistoryArrowButton(isForward = false, onClick = onClick) }
+    } else {
     AnimatedVisibility(visible = visible, modifier = modifier) {
         ReaderPageHistoryArrowButton(isForward = false, onClick = onClick)
+    }
     }
 }
 
@@ -232,8 +236,12 @@ private fun ReaderPageHistoryForwardArrow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    if (org.zotero.android.ereader.DeviceProfileStore.state.value.eReader) {
+        if (visible) Box(modifier) { ReaderPageHistoryArrowButton(isForward = true, onClick = onClick) }
+    } else {
     AnimatedVisibility(visible = visible, modifier = modifier) {
         ReaderPageHistoryArrowButton(isForward = true, onClick = onClick)
+    }
     }
 }
 

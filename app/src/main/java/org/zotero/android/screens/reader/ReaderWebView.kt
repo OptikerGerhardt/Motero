@@ -2,6 +2,7 @@ package org.zotero.android.screens.reader
 
 import android.view.ViewGroup
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.runtime.livedata.observeAsState
@@ -24,6 +25,17 @@ fun ReaderWebView(viewModel: ReaderViewModel, modifier: Modifier = Modifier) {
     val isTablet = layoutType.isTablet()
     val textFont = MaterialTheme.typography.bodyMedium
     val state by viewModel.viewStates.observeAsState(ReaderViewState())
+    org.zotero.android.ereader.DeviceProfileStore.initialize(androidx.compose.ui.platform.LocalContext.current)
+    val deviceProfile by org.zotero.android.ereader.DeviceProfileStore.state.collectAsState()
+    androidx.compose.runtime.DisposableEffect(viewModel) {
+        val handler: (Boolean) -> Unit = { active -> viewModel.setHardwareEraser(active) }
+        org.zotero.android.ereader.DeviceInput.onEraser = handler
+        onDispose {
+            org.zotero.android.ereader.DeviceInput.reset()
+            if (org.zotero.android.ereader.DeviceInput.onEraser === handler) org.zotero.android.ereader.DeviceInput.onEraser = null
+        }
+    }
+    androidx.compose.runtime.LaunchedEffect(deviceProfile) { viewModel.applyDeviceProfile(deviceProfile) }
     val background = MaterialTheme.colorScheme.surface.toArgb()
     if (state.rendererFailed) {
         Column(modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
@@ -36,7 +48,7 @@ fun ReaderWebView(viewModel: ReaderViewModel, modifier: Modifier = Modifier) {
     AndroidView(
         modifier = modifier,
         factory = { context ->
-            val webView = ReaderCustomWebView(context)
+            val webView = ReaderCustomWebView(android.view.ContextThemeWrapper(context, R.style.ReaderWebViewThemeOverlay))
             webView.setBackgroundColor(background)
             webView.layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,

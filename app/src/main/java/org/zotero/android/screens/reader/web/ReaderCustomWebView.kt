@@ -21,6 +21,10 @@ class ReaderCustomWebView(context: Context, attrs: AttributeSet? = null) : WebVi
     private var gestureAlreadyReportedThisTouch = false
     private val touchSlop by lazy { ViewConfiguration.get(context).scaledTouchSlop }
 
+    override fun dispatchHoverEvent(event: MotionEvent): Boolean {
+        org.zotero.android.ereader.DeviceInput.motion(event)
+        return super.dispatchHoverEvent(event)
+    }
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         when (ev.actionMasked) {
             MotionEvent.ACTION_DOWN -> {

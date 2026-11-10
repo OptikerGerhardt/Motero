@@ -1,6 +1,6 @@
 package org.zotero.android.screens.allitems.table.rows
 
-import androidx.compose.animation.AnimatedContent
+import org.zotero.android.ereader.DeviceAnimatedContent as AnimatedContent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope

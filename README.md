@@ -8,6 +8,8 @@ This fork is maintained independently and is not affiliated with or endorsed by 
 
 ## Features
 
+- Optional app-wide E-Reader mode, stylus-only annotation with finger navigation, palm protection, configurable eraser buttons and local input diagnostics. [Controls and hardware limits](docs/E_READER_AND_STYLUS.md).
+
 - Direct text highlighting, Zotero tags, and an animated bottom PDF dock with annotation Undo, long-press Redo, inline color/size controls, and area/stroke erasing.
 - Black bookmark flags, a bookmark filter, and direct jump/delete shortcuts. Every annotation card offers a direct jump and its options in the header.
 - Reader appearance applied at startup, matching system-bar contrast and page previews.

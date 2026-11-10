@@ -135,7 +135,6 @@ class ReaderWebCallChainExecutor @Inject constructor(
                         }
                         "onSaveAnnotations" -> {
                             val params = data["params"].asJsonObject
-                            Timber.i("ReaderWebCallChainExecutor: $params")
                             observable.emitAsync(
                                 Result.Success(
                                     ReaderWebData.saveAnnotations(params)
@@ -459,6 +458,36 @@ class ReaderWebCallChainExecutor @Inject constructor(
         }
     }
 
+    suspend fun addAnnotation(annotation: JsonObject) {
+        val encodedAnnotation = encodeAsJSONForJavascript(gson = this.gson, data = annotation)
+
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("addAnnotation({ annotation: '${encodedAnnotation}' });") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun editAnnotation(annotation: JsonObject) {
+        val encodedAnnotation = encodeAsJSONForJavascript(gson = this.gson, data = annotation)
+
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("editAnnotation({ annotation: '${encodedAnnotation}' });") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun deleteAnnotations(keys: List<String>) {
+        val encodedIds = encodeAsJSONForJavascript(gson = this.gson, data = keys)
+
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("deleteAnnotations({ ids: '${encodedIds}' });") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
     suspend fun clearSearch() {
         return suspendCancellableCoroutine { cont ->
             readerWebViewHandler.evaluateJavascript("javascript:window._view.find();") {
@@ -503,6 +532,8 @@ class ReaderWebCallChainExecutor @Inject constructor(
             directHighlight = !defaults.getReaderSettings().nativeTextSelection,
             readerChromeVisible = chromeVisible,
             pageNavigation = defaults.getReaderSettings().effectivePageNavigation(),
+            deviceProfile = org.zotero.android.ereader.DeviceProfileStore.state.value.copy(
+                eraserSize = defaults.getActiveEraserSize(), eraserMode = defaults.getActiveEraserMode()),
         )
 
         val flowModeString = when (defaults.getReaderSettings().pageLayoutFlowMode) {

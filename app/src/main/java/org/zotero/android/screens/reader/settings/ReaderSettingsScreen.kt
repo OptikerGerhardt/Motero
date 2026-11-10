@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -19,6 +20,15 @@ internal fun ReaderSettingsScreen(
     onBack: () -> Unit,
     viewModel: ReaderSettingsViewModel = hiltViewModel(),
 ) {
+    LaunchedEffect(args) { viewModel.init(args = args) }
+    viewModel.setOsTheme(isDark = isSystemInDarkTheme())
+    val viewState by viewModel.viewStates.observeAsState(ReaderSettingsViewState())
+    var deviceSettings by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    if (deviceSettings) {
+        BackHandler { deviceSettings = false }
+        org.zotero.android.ereader.EReaderSettingsScreen(darkTheme = viewState.isDark, onBack = { deviceSettings = false })
+        return
+    }
     val applyParamsAndBack: () -> Unit = {
         viewModel.applyChangesImmediately()
         onBack()
@@ -27,12 +37,6 @@ internal fun ReaderSettingsScreen(
     BackHandler(onBack = {
         applyParamsAndBack()
     })
-    LaunchedEffect(args) {
-        viewModel.init(args = args)
-    }
-
-    viewModel.setOsTheme(isDark = isSystemInDarkTheme())
-    val viewState by viewModel.viewStates.observeAsState(ReaderSettingsViewState())
     AppThemeM3(
         darkTheme = viewState.isDark,
     ) {
@@ -44,7 +48,7 @@ internal fun ReaderSettingsScreen(
                 )
             },
         ) { insets ->
-            ReaderSettingsTable(viewState, viewModel, modifier = Modifier.padding(bottom = insets.calculateBottomPadding()), onManualCrop = {
+            ReaderSettingsTable(viewState, viewModel, modifier = Modifier.padding(bottom = insets.calculateBottomPadding()), onDeviceSettings = { deviceSettings = true }, onManualCrop = {
                 onBack()
                 viewModel.applyChangesImmediately(startManualCrop = true)
             })

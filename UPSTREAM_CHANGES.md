@@ -15,3 +15,15 @@ Reviewed on November 8, 2026 against Git history and GitHub pull-request metadat
 Inclusion in Motero does not mean a change has been merged into official Zotero. Not every PR linked in the feature plan was incorporated: some are research references or approaches that were later implemented independently. For example, Android #205 is a reference for attachment sharing; Motero uses its own adaptations of the current downloader and FileProvider.
 
 Thank you to the authors, reviewers, maintainers, and the wider Zotero community. Copyright and license notices in the original sources remain authoritative.
+
+## Build 319: selected stability and pen fixes
+
+Reviewed against official source history for October 26–November 9, 2026. These are targeted adaptations into Motero, not a wholesale upstream merge. Original authors include **Martynas Bagdonas** (Reader) and **Dima** (Android); their existing copyright/license notices remain intact.
+
+- [Reader pen detection](https://github.com/zotero/reader/commit/266cd23928767aba8aaaaad579e7bcfc4772bdaf) and [pointer ownership/release](https://github.com/zotero/reader/commit/b10db2071013d3c8b8db86e28c657621d75d8620), plus [Android tool transition](https://github.com/zotero/zotero-android/commit/63a4be89e5d06ec565d79e1b236f866d6fd7739c): adapted to PDF, DOM/EPUB and Motero priority gestures.
+- [Completed ink path cache](https://github.com/zotero/reader/commit/b38680100114346012230efa56350cfaae57be91), including upstream transform/live-stroke regression cases.
+- [History-aware Reader commands](https://github.com/zotero/reader/commit/a4e2ee0d7ff693d217a2e6266642a222a62bb98c), [deletion/save history](https://github.com/zotero/reader/commit/7276c54deab72378b0e5656891c4f46c9fb0b019) and [Android Undo/Redo integration](https://github.com/zotero/zotero-android/commit/f62ff0d2afaf27d1fcd1a5827e745d814bde6e7e): retain Motero's dock and long-press Redo; extend queued-history metadata and comment preservation.
+- [Android selection-handle contrast](https://github.com/zotero/zotero-android/commit/ee6f4392362f0d1f44b02f2c3e604c96d34eae48).
+- [Reading Mode font initialization](https://github.com/zotero/reader/commit/04795bfbafd55600e042d62e05f9a4147458ae53); Android-relevant appearance/scale retention informed by [9d180730](https://github.com/zotero/reader/commit/9d18073090a3bb54079fb9146aeb9677a8149c36).
+
+The already included Android download/session fixes are retained. The official BOOX demo is a research reference; no SDK binary or unverified low-latency renderer is included. [Integration and remaining device gates](docs/E_READER_AND_STYLUS.md).

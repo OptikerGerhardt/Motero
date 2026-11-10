@@ -183,4 +183,8 @@
         <item name="android:indeterminate">true</item>
     </style>
 
+    <style name="ReaderWebViewThemeOverlay">
+        <item name="colorControlActivated">@color/reader_selection_handle</item>
+        <item name="android:colorControlActivated">@color/reader_selection_handle</item>
+    </style>
 </resources>

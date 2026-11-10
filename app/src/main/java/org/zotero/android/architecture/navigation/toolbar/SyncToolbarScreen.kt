@@ -1,6 +1,6 @@
 package org.zotero.android.architecture.navigation.toolbar
 
-import androidx.compose.animation.AnimatedContent
+import org.zotero.android.ereader.DeviceAnimatedContent as AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.BoxScope

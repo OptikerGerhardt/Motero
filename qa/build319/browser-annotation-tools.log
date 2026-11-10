@@ -1,0 +1,7 @@
+PASS attached final punctuation is persisted in text and geometry; live magnifier disappears on release
+PASS equal palette thirds and normal synced deletion clear selection and pointer state
+PASS long press reopens the same annotation quick palette and color updates preserve identity
+PASS long press works with Android selection mode and visible chrome
+PASS note quick colors preserve content and early movement retains native dragging
+PASS multitouch cancellation removes the magnifier without creating an annotation
+PASS: all annotation tool regressions

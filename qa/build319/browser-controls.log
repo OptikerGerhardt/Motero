@@ -1,0 +1,6 @@
+PASS three width references, content-height scrolling and cropped hardware page limits in all layouts
+PASS cropped width never fits the page height
+PASS first annotation tap only dismisses chrome; second tap opens annotation without moving the PDF
+PASS first empty-page tap dismisses chrome once
+PASS visible chrome preserves direct hold-and-drag highlighting
+PASS: all new Android reader controls

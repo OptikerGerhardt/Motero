@@ -6,6 +6,8 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -261,7 +263,9 @@ fun AppThemeM3(
     dynamicColor: Boolean = false,
     content: @Composable() () -> Unit
 ) {
-  val colorScheme = when {
+  org.zotero.android.ereader.DeviceProfileStore.initialize(LocalContext.current)
+  val profile by org.zotero.android.ereader.DeviceProfileStore.state.collectAsState()
+  val baseScheme = when {
       dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
           val context = LocalContext.current
           if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
@@ -271,11 +275,19 @@ fun AppThemeM3(
       else -> lightScheme
   }
 
+  val colorScheme = if (profile.eReader) baseScheme.copy(
+      outline = if (darkTheme) androidx.compose.ui.graphics.Color.White else androidx.compose.ui.graphics.Color.Black,
+      outlineVariant = if (darkTheme) androidx.compose.ui.graphics.Color.LightGray else androidx.compose.ui.graphics.Color.DarkGray,
+      onSurfaceVariant = baseScheme.onSurface,
+      surfaceContainer = if (darkTheme) androidx.compose.ui.graphics.Color(0xFF202020) else androidx.compose.ui.graphics.Color(0xFFF0F0F0),
+  ) else baseScheme
   MaterialTheme(
     colorScheme = colorScheme,
     typography = AppTypographyM3,
     content =  {
         CompositionLocalProvider(
+            androidx.compose.material3.LocalRippleConfiguration provides
+                if (profile.eReader) null else androidx.compose.material3.LocalRippleConfiguration.current,
             LocalUriHandler provides CustomUriHandler(LocalContext.current),
         ) {
             content()
