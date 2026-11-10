@@ -8,7 +8,14 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class SettingsViewModel @Inject constructor(
+    private val defaults: org.zotero.android.architecture.Defaults,
 ) : BaseViewModel2<SettingsViewState, SettingsViewEffect>(SettingsViewState()) {
+
+    fun nativeSelection() = defaults.getReaderSettings().nativeTextSelection
+    fun setNativeSelection(value: Boolean) {
+        val settings = defaults.getReaderSettings().copy(nativeTextSelection = value)
+        defaults.setReaderSettings(settings)
+    }
 
     fun init() = initOnce {
     }

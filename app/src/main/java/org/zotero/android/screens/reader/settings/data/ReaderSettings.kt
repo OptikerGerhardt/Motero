@@ -56,7 +56,12 @@ data class ReaderSettings(
     var fitReferenceOverride: String? = null,
     // Null migrates older installations to their existing continuous scrolling.
     var pageNavigation: String? = null,
+    var epubMargins: Float? = null,
+    var epubFontFamily: String? = null,
 ) {
+    fun effectiveMargins(): Float = epubMargins?.takeIf { it.isFinite() }?.coerceIn(0f, 20f)
+        ?: when (pageWidth) { -1 -> 12f; 1 -> 2f; else -> 8f }
+    fun effectiveFontFamily(): String = epubFontFamily?.takeIf { it in setOf("original", "serif", "sans-serif") } ?: "serif"
     fun effectivePageNavigation(): String = if (pageNavigation == "jumped") "jumped" else "continuous"
     fun effectiveTextScale(): Float = textScale.takeIf { it.isFinite() && it in 0.6f..1.8f } ?: 1f
     fun effectiveProgressMode(): String = epubProgressMode?.takeIf { it in listOf("both", "hidden", "position", "percent") } ?: "both"

@@ -11,6 +11,7 @@ import androidx.compose.animation.core.TweenSpec
 /** Device preferences never enter Zotero/attachment state or synced annotations. */
 data class DeviceProfile(
     val eReader: Boolean = false,
+    val protectReaderEdges: Boolean = false,
     val penOnly: Boolean = true,
     val eraserButtonMode: String = "hold",
     val buttonMask: Int = 2,
@@ -28,6 +29,7 @@ object DeviceProfileStore {
         preferences = prefs
         mutable.value = DeviceProfile(
             eReader = prefs.getBoolean("eReader", false),
+            protectReaderEdges = prefs.getBoolean("protectReaderEdges", false),
             penOnly = prefs.getBoolean("penOnly", true),
             eraserButtonMode = if (prefs.getString("eraserButtonMode", "hold") == "toggle") "toggle" else "hold",
             buttonMask = if (prefs.getInt("buttonMask", 2) == 4) 4 else 2,
@@ -35,7 +37,7 @@ object DeviceProfileStore {
     }
     fun update(value: DeviceProfile) {
         mutable.value = value
-        preferences?.edit()?.putBoolean("eReader", value.eReader)?.putBoolean("penOnly", value.penOnly)
+        preferences?.edit()?.putBoolean("protectReaderEdges", value.protectReaderEdges)?.putBoolean("eReader", value.eReader)?.putBoolean("penOnly", value.penOnly)
             ?.putString("eraserButtonMode", value.eraserButtonMode)?.putInt("buttonMask", value.buttonMask)?.apply()
     }
     fun assignedKey(descriptor: String): Int? = preferences?.getInt("penKey:$descriptor", -1)?.takeIf { it >= 0 }

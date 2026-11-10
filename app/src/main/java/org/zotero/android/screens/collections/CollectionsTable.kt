@@ -18,8 +18,10 @@ internal fun CollectionsTable(
     viewModel: CollectionsViewModel,
     layoutType: CustomLayoutSize.LayoutType
 ) {
+    val state = rememberLazyListState()
+    org.zotero.android.uicomponents.CollectionHardwareButtons(state)
     LazyColumn(
-        state = rememberLazyListState(),
+        state = state,
     ) {
         fixedCollectionRow(
             customType = CollectionIdentifier.CustomType.all,

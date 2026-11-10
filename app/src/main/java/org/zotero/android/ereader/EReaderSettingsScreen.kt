@@ -13,22 +13,36 @@ import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.themem3.AppThemeM3
 
 @Composable
-fun EReaderSettingsScreen(darkTheme: Boolean = androidx.compose.foundation.isSystemInDarkTheme(), onBack: () -> Unit) {
+fun EReaderSettingsScreen(stylusOnly: Boolean = false, nativeSelection: Boolean = false, onNativeSelection: (Boolean) -> Unit = {}, darkTheme: Boolean = androidx.compose.foundation.isSystemInDarkTheme(), onBack: () -> Unit) {
     val profile by DeviceProfileStore.state.collectAsState()
     val diagnostics by DeviceInput.diagnostics.collectAsState()
     DisposableEffect(Unit) { onDispose { DeviceInput.learnKey = false; DeviceInput.reset() } }
     AppThemeM3(darkTheme = darkTheme) {
         CustomScaffoldM3(topBar = {
-            TopAppBar(title = { Text("E-Reader and stylus") }, navigationIcon = {
+            TopAppBar(title = { Text(if (stylusOnly) "Stylus" else "Reader controls") }, navigationIcon = {
                 IconButton(onClick = onBack) { Icon(painterResource(Drawables.arrow_back_24dp), "Back") }
             })
         }) {
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                if (!stylusOnly) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text("E-Reader mode", Modifier.weight(1f)); Switch(profile.eReader, { DeviceProfileStore.update(profile.copy(eReader = it)) })
                 }
                 Text("Higher contrast and instant transitions throughout the app. Your app and reader appearance choices stay unchanged.")
                 HorizontalDivider()
+                Text("Text selection", style = MaterialTheme.typography.titleMedium)
+                var androidSelection by remember(nativeSelection) { mutableStateOf(nativeSelection) }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(!androidSelection, { androidSelection = false; onNativeSelection(false) }, { Text("Hold and drag") })
+                    FilterChip(androidSelection, { androidSelection = true; onNativeSelection(true) }, { Text("Android selection") })
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Protect reader page swipes", Modifier.weight(1f))
+                    Switch(profile.protectReaderEdges, { DeviceProfileStore.update(profile.copy(protectReaderEdges = it)) })
+                }
+                Text("Reduce accidental system Back gestures at the reader edges. Android may limit the protected area; system navigation remains available outside the reader.")
+                HorizontalDivider()
+                }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text("Stylus draws, fingers navigate", Modifier.weight(1f)); Switch(profile.penOnly, { DeviceInput.reset(); DeviceProfileStore.update(profile.copy(penOnly = it)) })
                 }

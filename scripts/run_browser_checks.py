@@ -13,7 +13,7 @@ checks = {'gestures': 'test-boox-browser.cjs', 'features': 'test-boox-features.c
     'controls': 'test-boox-reader-controls.cjs', 'annotation-tools': 'test-boox-annotation-tools.cjs',
     'fit-recovery': 'test-boox-fit-recovery.cjs', 'reader-update': 'test-boox-reader-update.cjs',
     'manual-crop': 'test-boox-manual-crop.cjs', 'edge-taps': 'test-boox-edge-taps.cjs', 'refinements': 'test-boox-refinements.cjs', 'ui-consistency': 'test-boox-ui-consistency.cjs',
-    'page-navigation': 'test-boox-page-navigation.cjs', 'crop-performance': 'test-boox-crop-performance.cjs', 'stylus': 'test-boox-stylus.cjs', 'pdfjs-engine': 'test-boox-pdfjs-engine.cjs'}
+    'page-navigation': 'test-boox-page-navigation.cjs', 'crop-performance': 'test-boox-crop-performance.cjs', 'stylus': 'test-boox-stylus.cjs', 'pdfjs-engine': 'test-boox-pdfjs-engine.cjs', 'epub-interaction': 'test-boox-epub-interaction.cjs', 'touch-editing': 'test-boox-touch-editing.cjs'}
 parser = argparse.ArgumentParser()
 parser.add_argument('checks', nargs='*', help='Optional check names: ' + ', '.join(checks))
 parser.add_argument('--browser', default=os.environ.get('BOOX_TEST_BROWSER') or shutil.which('chromium') or shutil.which('google-chrome'))

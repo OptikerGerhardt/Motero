@@ -2,7 +2,7 @@
 
 [![Build and tests](https://github.com/OptikerGerhardt/Motero/actions/workflows/motero.yml/badge.svg)](https://github.com/OptikerGerhardt/Motero/actions/workflows/motero.yml)
 
-Motero is an unofficial fork of **[Zotero for Android](https://github.com/zotero/zotero-android)**, focused on reading and annotating PDFs on BOOX e-readers and Android phones. It adds reading controls, page fitting and cropping, and annotation tools tailored to that workflow.
+Motero is an unofficial fork of **[Zotero for Android](https://github.com/zotero/zotero-android)**, focused on reading and annotating PDFs and EPUBs on BOOX e-readers and Android phones. It adds reading controls, page fitting and cropping, and annotation tools tailored to that workflow.
 
 This fork is maintained independently and is not affiliated with or endorsed by Zotero or the Corporation for Digital Scholarship.
 
@@ -10,18 +10,19 @@ This fork is maintained independently and is not affiliated with or endorsed by 
 
 - Optional app-wide E-Reader mode, stylus-only annotation with finger navigation, palm protection, configurable eraser buttons and local input diagnostics. [Controls and hardware limits](docs/E_READER_AND_STYLUS.md).
 
-- Direct text highlighting, Zotero tags, and an animated bottom PDF dock with annotation Undo, long-press Redo, inline color/size controls, and area/stroke erasing.
+- Direct drag highlighting in PDFs and EPUBs, touch editing of existing annotations, Zotero tags, and an animated bottom PDF dock with annotation Undo, long-press Redo, inline color/size controls, and area/stroke erasing.
 - Black bookmark flags, a bookmark filter, and direct jump/delete shortcuts. Every annotation card offers a direct jump and its options in the header.
 - Reader appearance applied at startup, matching system-bar contrast and page previews.
 - Continuous cropped PDF pages, temporary two-finger access to full pages, and an overview that stays open when two complete pages are visible.
-- Font-size controls with a percentage display for EPUBs and Reading Mode.
+- Font size, font choice, spacing and percentage-based side margins for EPUBs and Reading Mode. EPUB controls float above the text without moving the reading position.
 - Automatic content fitting with controls for margins and marginal notes, local chapter/layout learning, Roman and Arabic folio detection, a text-only analysis shortcut, and a bounded geometry cache.
 - Automatic or manual content cropping, shared by the page-fitting modes. Manual frames for all, odd, or even pages are saved per attachment.
 - SmartScroll, hardware-button navigation, and edge taps in vertical, horizontal, and wrapped PDF layouts.
 - Continuous scrolling or single-page swipe navigation: short pages are centered and tall pages enter at the reading edge, with two-finger access to the page overview.
 - A top-right bookmark shortcut for the centered reading page: tap to add a black bookmark, then tap again to remove it. Existing bookmark colors are preserved.
 - Tag suggestions ranked by use in the current document and library, with explicit creation of new tags.
-- EPUB navigation, local reading-position restoration, and a persistent choice of progress display, including hidden.
+- EPUB navigation, local reading-position restoration, and progress displays cycled by tapping the footer, including hidden.
+- Global reader controls for direct/Android text selection and optional protection against Android Back edge gestures, plus ordinary volume-key list scrolling. [Reader changes](docs/READER_NEXT_UPDATE.md).
 
 View cropping does not modify the PDF file or annotation coordinates. Manual crop settings are stored locally and are not synchronized with Zotero.
 

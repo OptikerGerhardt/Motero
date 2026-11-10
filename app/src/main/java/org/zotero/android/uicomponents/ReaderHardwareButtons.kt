@@ -17,6 +17,7 @@ internal fun ReaderHardwareButtons(enabled: Boolean, onTurnPage: (Boolean) -> Un
     DisposableEffect(dashboard, lifecycle, enabled) {
         val handler: (Boolean) -> Unit = { callback.value(it) }
         fun update() {
+            dashboard.readerInputActive = lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
             if (enabled && lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
                 dashboard.readerPageTurnHandler = handler
             } else if (dashboard.readerPageTurnHandler === handler) {
@@ -27,6 +28,7 @@ internal fun ReaderHardwareButtons(enabled: Boolean, onTurnPage: (Boolean) -> Un
         lifecycle.addObserver(observer)
         update()
         onDispose {
+            dashboard.readerInputActive = false
             lifecycle.removeObserver(observer)
             if (dashboard.readerPageTurnHandler === handler) dashboard.readerPageTurnHandler = null
         }

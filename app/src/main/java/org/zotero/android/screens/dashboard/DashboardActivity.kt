@@ -188,6 +188,8 @@ internal class DashboardActivity : BaseActivity() {
 
     }
     var readerPageTurnHandler: ((Boolean) -> Unit)? = null
+    var readerInputActive: Boolean = false
+    var collectionScrollHandler: ((Boolean) -> Unit)? = null
     private val handledPageKeys = mutableSetOf<Int>()
 
     override fun dispatchTouchEvent(event: android.view.MotionEvent): Boolean {
@@ -210,7 +212,7 @@ internal class DashboardActivity : BaseActivity() {
         }
         if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount > 0 &&
             event.keyCode in handledPageKeys) return true
-        val handler = readerPageTurnHandler
+        val handler = if (readerInputActive) readerPageTurnHandler else collectionScrollHandler
         val keyboardVisible = androidx.core.view.ViewCompat.getRootWindowInsets(window.decorView)
             ?.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime()) == true
         if (event.action != KeyEvent.ACTION_DOWN || event.repeatCount != 0 ||

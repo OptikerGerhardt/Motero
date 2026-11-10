@@ -1,6 +1,18 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 10. November 2026. Build 320 / Motero 1.0.5 aktualisiert gezielt PDF.js; die in Build 319 veröffentlichten E-Reader-/Stiftfunktionen und alle bisherigen Reader-Korrekturen bleiben erhalten.
+Stand: 10. November 2026. Build 321 / Motero 1.0.6 erweitert EPUB-Bedienung und Annotationsbearbeitung. PDF.js 5.7.330 und die bisherigen PDF-/Stift-/Syncformate bleiben erhalten.
+
+## Reader und EPUB: Build 321 / 1.0.6
+
+- Bestehende PDF-Highlights/Unterstreichungen nach langem Druck an den Enden ändern, Bereichsrahmen vergrößern/verkleinern, Notizen verschieben; EPUB mit CFI-Endpunkten und verschiebbaren Notizankern. Identität und Undo bleiben erhalten.
+- EPUB mit PDF-Drag-Highlighting und gemeinsamer Schnellpalette; schwarze Bookmark-Fähnchen oben rechts, 70 % auf der Seite.
+- Schwebender EPUB-Kopf und untere Annotationsleiste ohne Miniaturen; kein Umbruch beim Ein-/Ausblenden, Vollbildstatusleiste mit gemeinsam ausgeblendeter Abdeckung.
+- EPUB-Rückkehr ohne veraltete Unschärfe/Skalierung; Schutz gegen veraltete asynchrone Arbeit, begrenzte Wortanalyse und Aktualisierung pro Bild.
+- „Margins“ als echter Regler, Schriftwahl Buch/Serif/Sans serif, vorhandene Größen-/Abstandsregler. Fortschrittsanzeige ausschließlich unten antippen.
+- E-Reader-Modus und Textauswahl global unter Reader controls; Stylus-Schnellzugriff unten in Appearance. Optionaler Reader-Randschutz innerhalb der Android-Grenzen.
+- Lautstärketasten scrollen Collections und Titellisten normal; vorhandene Hardware-Navigation muss aktiviert sein. Downloaded-Files-Filter mit sicherem unteren Abstand.
+- Randsterne/-punkte folgen Include/Exclude. „Text“ behält bei Fit to Width die volle Seitenhöhe, bei Fit to Height die volle Seitenbreite; „Text + crop“ entfernt die äußeren Ränder beider Achsen.
+- [Umfang und Prüfnachweise](docs/READER_NEXT_UPDATE.md). Physische Geräte und Kontosync bleiben separat zu prüfen.
 
 ## PDF.js: Build 320 / 1.0.5
 

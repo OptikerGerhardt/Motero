@@ -52,6 +52,7 @@ internal fun AllItemsScreen(
         val viewState by viewModel.viewStates.observeAsState(AllItemsViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
         val lazyListState = rememberLazyListState()
+        org.zotero.android.uicomponents.CollectionHardwareButtons(lazyListState, enabled = !viewState.shouldShowAddBottomSheet && !viewState.showDownloadedFilesPopup)
 
         val isTablet = layoutType.isTablet()
 

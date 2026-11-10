@@ -1,3 +1,10 @@
+# Build 321 / Motero 1.0.6 — lokal geprüft, Release-Prüfungen folgen
+
+- 378 Reader-Tests, 43 Engine-Pixeltests, 144 native Tests in 35 Suiten und 18 Browser-Suiten bestanden. APK-Build und TypeScript erfolgreich; unveränderter PDF.js-Pin 5.7.330.
+- 104 eingebettete Reader-Quellen, 207 PDF.js- und 45 Runtime-Dateien geprüft. Signierschutz und Receiver-Prüfungen bestanden.
+- EPUB-Bedienung, Annotationsbearbeitung, Margins, globale Reader-Steuerung, Randzeichen und getrennte Text-/Text+crop-Geometrie umgesetzt. [Umfang](docs/READER_NEXT_UPDATE.md), [lokale Nachweise](qa/build321/).
+- Signierte API-31/35-Updates und unabhängige Prüfung des öffentlichen Downloads stehen vor Freigabe noch aus. Physische Geräte und Kontosync bleiben separat.
+
 # Build 320 / Motero 1.0.5 — veröffentlicht und unabhängig geprüft
 
 - Release: https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.5-320 ; vollständiger erfolgreicher Prüflauf: https://github.com/OptikerGerhardt/Motero/actions/runs/42820804089 .

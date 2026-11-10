@@ -243,16 +243,6 @@ internal fun ReaderTopBar(
 
             }
     }
-    if (viewState.isPdfOrHtml()) {
-        ReaderToolbarSurface(floating = floating,
-            leading = { navigation(); leading() }, trailing = { trailing() })
-    } else {
-        TopAppBar(
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.surface,
-                scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer),
-            title = {}, navigationIcon = navigation,
-            actions = { Spacer(Modifier.width(48.dp)); leading(); Spacer(Modifier.weight(1f)); trailing() },
-        )
-    }
+    ReaderToolbarSurface(floating = floating,
+        leading = { navigation(); leading() }, trailing = { trailing() })
 }

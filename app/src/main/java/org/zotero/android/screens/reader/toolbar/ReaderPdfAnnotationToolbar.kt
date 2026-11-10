@@ -41,7 +41,11 @@ import org.zotero.android.uicomponents.Strings
 /** An overlay dock: opening tools never resizes the PDF viewport. */
 @Composable
 internal fun ReaderPdfAnnotationToolbar(viewModel: ReaderViewModel, state: ReaderViewState, modifier: Modifier = Modifier, enabled: Boolean = true) {
-    val tools = listOf(
+    val tools = if (state.fileType == org.zotero.android.screens.reader.data.ReaderFileType.EPUB) listOf(
+        Triple(ReaderAnnotationTool.highlight, Drawables.annotate_highlight, Strings.pdf_annotation_toolbar_highlight),
+        Triple(ReaderAnnotationTool.underline, Drawables.annotate_underline, Strings.pdf_annotation_toolbar_underline),
+        Triple(ReaderAnnotationTool.note, Drawables.annotate_note, Strings.pdf_annotation_toolbar_note),
+    ) else listOf(
         Triple(ReaderAnnotationTool.note, Drawables.annotate_note, Strings.pdf_annotation_toolbar_note),
         Triple(ReaderAnnotationTool.text, Drawables.annotate_text, Strings.pdf_annotation_toolbar_text),
         Triple(ReaderAnnotationTool.image, Drawables.annotate_area, Strings.pdf_annotation_toolbar_image),

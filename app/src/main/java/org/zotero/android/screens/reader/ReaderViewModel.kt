@@ -2872,6 +2872,8 @@ class ReaderViewModel @Inject constructor(
                     wordSpacing = readerSettings.wordSpacing.toDouble(),
                     letterSpacing = readerSettings.letterSpacing.toDouble(),
                     pageWidth = readerSettings.pageWidth,
+                    margins = readerSettings.effectiveMargins().toDouble(),
+                    fontFamily = readerSettings.effectiveFontFamily(),
                 )
                 readerWebCallChainExecutor.setReadingModeEnabled(true)
             } catch (e: Exception) {
@@ -2970,6 +2972,8 @@ class ReaderViewModel @Inject constructor(
                         wordSpacing = readerSettings.wordSpacing.toDouble(),
                         letterSpacing = readerSettings.letterSpacing.toDouble(),
                         pageWidth = readerSettings.pageWidth,
+                        margins = readerSettings.effectiveMargins().toDouble(),
+                        fontFamily = readerSettings.effectiveFontFamily(),
                     )
                 }
             }

@@ -30,9 +30,6 @@ internal fun ReaderSettingsTable(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 24.dp),
     ) {
-        item {
-            androidx.compose.material3.TextButton(onClick = onDeviceSettings) { androidx.compose.material3.Text("E-Reader and stylus") }
-        }
         readerSettingsSettingRow(
             titleResId = Strings.pdf_settings_appearance_title,
             options = viewState.appearanceOptions,
@@ -92,12 +89,7 @@ internal fun ReaderSettingsTable(
                     optionSelected = viewModel::onOptionSelected
                 )
             }
-            readerSettingsSettingRow(
-                titleResId = Strings.pdf_settings_selection_title,
-                options = viewState.selectionOptions,
-                selectedOption = viewState.selectedSelectionOption,
-                optionSelected = viewModel::onOptionSelected
-            )
+
         }
         if ((viewState.fileType == ReaderFileType.PDF && !viewState.readingModeEnabled) || viewState.fileType == ReaderFileType.EPUB) {
             readerSettingsSettingRow(
@@ -116,19 +108,17 @@ internal fun ReaderSettingsTable(
             )
         }
 
-        if (viewState.fileType == ReaderFileType.EPUB) {
+        if (viewState.fileType == ReaderFileType.EPUB || viewState.readingModeEnabled) {
             item {
                 Column(Modifier.fillMaxWidth().padding(16.dp)) {
-                    Text(stringResource(R.string.reader_progress_display), style = MaterialTheme.typography.titleSmall)
-                    for ((mode, label) in listOf("both" to R.string.reader_progress_both, "hidden" to R.string.reader_progress_hidden,
-                        "position" to R.string.reader_progress_position, "percent" to R.string.reader_progress_percent)) {
-                        FilterChip(selected = viewState.progressMode == mode, onClick = { viewModel.setProgressMode(mode) },
-                            label = { Text(stringResource(label)) })
+                    Text(stringResource(R.string.reader_font), style = MaterialTheme.typography.titleSmall)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        for ((value, label) in listOf("original" to R.string.reader_font_original, "serif" to R.string.reader_font_serif, "sans-serif" to R.string.reader_font_sans)) {
+                            FilterChip(selected = viewState.fontFamily == value, onClick = { viewModel.onFontFamilyChanged(value) }, label = { Text(stringResource(label)) })
+                        }
                     }
                 }
             }
-        }
-        if (viewState.fileType == ReaderFileType.EPUB || viewState.readingModeEnabled) {
             readerSettingsSliderRow(
                 titleResId = org.zotero.android.R.string.reader_text_size,
                 value = viewState.textScale,
@@ -162,14 +152,16 @@ internal fun ReaderSettingsTable(
                 onValueChange = viewModel::onLetterSpacingChanged,
             )
             readerSettingsSliderRow(
-                titleResId = Strings.pdf_settings_page_width_title,
+                titleResId = R.string.reader_margins,
                 value = viewState.pageWidth,
-                valueRange = -1f..1f,
-                steps = 1,
-                valueLabel = "${((viewState.pageWidth + 3) / 4 * 100).roundToInt()}%",
+                valueRange = 0f..20f,
+                steps = 19,
+                valueLabel = "${viewState.pageWidth.roundToInt()}%",
                 onValueChange = viewModel::onPageWidthChanged,
             )
         }
-
+        item {
+            TextButton(onClick = onDeviceSettings) { Text("Stylus") }
+        }
     }
 }

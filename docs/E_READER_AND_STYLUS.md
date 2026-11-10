@@ -1,6 +1,6 @@
 # E-reader and stylus support
 
-Build 319 adds **Settings → E-Reader and stylus**, also reachable from the reader's Appearance screen. These preferences are local to this installation. They do not change Zotero's annotation format, PDF files, cropping frames or reading-position data.
+Build 321 groups app-wide E-Reader mode and text selection under **Settings → Reader controls**. **Appearance → Stylus** retains quick access to pen controls. These preferences are local to this installation. They do not change Zotero's annotation format, PDF files, cropping frames or reading-position data.
 
 ## Controls
 
@@ -10,6 +10,9 @@ Build 319 adds **Settings → E-Reader and stylus**, also reachable from the rea
 - While the pen is down, palm contacts cannot invoke annotation selection, bookmarks, edge turns, Jumped navigation, direct highlighting or crop peeking. Contacts involved in a stroke remain suppressed until release. New finger contacts are guarded for 300 ms after the pen lifts; ordinary scrolling has no added delay outside this interval.
 - Physical eraser tips are recognized when the Android pointer stream identifies them. Pointer side buttons can use Primary or Secondary. Hardware key assignment is stored per input-device descriptor; volume/page keys and text editing stay reserved. **Hold** is the default; **Toggle** ignores key repeats. The transient eraser restores the base tool, color, width and stored eraser mode.
 - Input diagnostics show tool type, button mask, pressure, hover and backend capability. They do not record stroke coordinates or document content. The annotation bridge no longer logs complete annotation payloads.
+
+- **Protect reader page swipes** asks Android to exclude system Back gestures from a central 200 dp region at each reader edge. Android imposes these limits; the setting is off by default and does not disable system navigation globally. Exclusions are restored on leaving the reader or opening reader dialogs.
+- Existing hardware page-button preferences also enable ordinary 120 dp list scrolling in Collections and item lists; IME input, dialogs and reader ownership remain protected.
 
 ## Preserved reader behavior
 

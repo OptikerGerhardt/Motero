@@ -26,7 +26,7 @@ internal fun ReaderSettingsScreen(
     var deviceSettings by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     if (deviceSettings) {
         BackHandler { deviceSettings = false }
-        org.zotero.android.ereader.EReaderSettingsScreen(darkTheme = viewState.isDark, onBack = { deviceSettings = false })
+        org.zotero.android.ereader.EReaderSettingsScreen(stylusOnly = true, darkTheme = viewState.isDark, onBack = { deviceSettings = false })
         return
     }
     val applyParamsAndBack: () -> Unit = {

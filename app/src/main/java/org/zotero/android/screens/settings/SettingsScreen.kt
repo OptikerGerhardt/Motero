@@ -37,7 +37,7 @@ internal fun SettingsScreen(
     var showDeviceSettings by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     if (showDeviceSettings) {
         androidx.activity.compose.BackHandler { showDeviceSettings = false }
-        org.zotero.android.ereader.EReaderSettingsScreen { showDeviceSettings = false }
+        org.zotero.android.ereader.EReaderSettingsScreen(nativeSelection = viewModel.nativeSelection(), onNativeSelection = viewModel::setNativeSelection) { showDeviceSettings = false }
         return
     }
     AppThemeM3 {
@@ -107,7 +107,7 @@ internal fun SettingsScreen(
 
                 NewSettingsDivider()
 
-                NewSettingsItem(title = "E-Reader and stylus", onItemTapped = { showDeviceSettings = true })
+                NewSettingsItem(title = "Reader controls", onItemTapped = { showDeviceSettings = true })
                 NewSettingsDivider()
                 BuildInfo()
             }

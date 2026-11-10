@@ -1,5 +1,15 @@
 # Änderungen
 
+## 1.0.6-321 — 2026-11-10
+
+- Touch editing of existing PDF highlights, underlines, area boxes and notes; EPUB range editing and anchored note movement, preserving annotation IDs and Undo.
+- EPUB drag highlighting with the shared PDF quick palette, upper-right black bookmark flags and floating controls that do not reflow text.
+- EPUB margins slider and font choices; remove the redundant progress settings section while retaining footer-tap cycling. Clear stale resize blur/scale on resume, preserve anchors during font reflow and cancel disposed work.
+- Move E-Reader and text-selection controls into global Reader controls; keep Stylus at the end of Appearance. Add optional reader-only Back edge protection and ordinary hardware-key scrolling in library lists.
+- Respect gesture-navigation clearance below Downloaded Files.
+- Include/Exclude recognizes isolated marginal stars and dots. Text fitting retains the full non-fitting page axis; Text + crop clips both axes. The PDF.js pin and production signing identity are unchanged.
+
+
 ## 1.0.5-320 — 10. November 2026 — Motero 1.0.5
 
 - PDF.js auf den von Zotero Reader verwendeten Stand `5f95f712` (5.7.330) aktualisiert. Eingebettete Schriften erhalten keine zusätzliche künstliche Fett-/Kursivzeichnung; semantische Schriftmerkmale bleiben für die Textanalyse verfügbar.

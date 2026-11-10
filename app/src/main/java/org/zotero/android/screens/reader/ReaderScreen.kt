@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -92,8 +93,12 @@ internal fun ReaderScreen(
 
     val activity = LocalActivity.current ?: return
     val currentView = LocalView.current
+    val deviceProfile by org.zotero.android.ereader.DeviceProfileStore.state.collectAsState()
+    val noReaderDialog = viewState.readerSettingsArgs == null && viewState.readerColorPickerArgs == null && viewState.readerFilterArgs == null && viewState.readerAnnotationArgs == null && viewState.readerAnnotationMoreArgs == null
+    ReaderGestureProtection(deviceProfile.protectReaderEdges && noReaderDialog && !viewState.showSideBar && !viewState.showPdfSearch && !viewState.manualCropOpen && viewState.selectedAnnotationKey == null)
+
     org.zotero.android.uicomponents.ReaderHardwareButtons(
-        enabled = !viewState.isReaderLoading && !viewState.showPdfSearch &&
+        enabled = noReaderDialog && !viewState.isReaderLoading && !viewState.showPdfSearch &&
             viewState.selectedAnnotationKey == null && !viewState.manualCropOpen,
         onTurnPage = viewModel::turnPage,
     )
@@ -203,7 +208,7 @@ internal fun ReaderScreen(
                             )
                         } else {
                             ReaderTopBar(
-                                floating = viewState.isPdfOrHtml() && !viewState.showSideBar,
+                                floating = !viewState.showSideBar,
                                 onBack = onBack,
                                 onShowHideSideBar = viewModel::toggleSideBar,
                                 toPdfSettings = viewModel::navigateToReaderSettings,

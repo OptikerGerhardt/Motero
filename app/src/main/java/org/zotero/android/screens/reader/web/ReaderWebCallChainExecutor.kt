@@ -187,11 +187,12 @@ class ReaderWebCallChainExecutor @Inject constructor(
                             if (key != null) {
                                 val inlineTextEditing = paramsObject["inlineTextEditing"]
                                     ?.takeIf { !it.isJsonNull }?.asBoolean ?: false
+                                val touchEditing = paramsObject["touchEditing"]?.takeIf { !it.isJsonNull }?.asBoolean ?: false
                                 observable.emitAsync(
                                     Result.Success(
                                         ReaderWebData.selectAnnotationFromDocument(
                                             key,
-                                            inlineTextEditing
+                                            inlineTextEditing || touchEditing
                                         )
                                     )
                                 )
@@ -572,6 +573,7 @@ class ReaderWebCallChainExecutor @Inject constructor(
                     settings.lineHeight.toDouble(), settings.wordSpacing.toDouble(),
                     settings.letterSpacing.toDouble(), settings.pageWidth,
                     textScale = data.savedEpubViewState?.scale ?: settings.effectiveTextScale().toDouble(),
+                    margins = settings.effectiveMargins().toDouble(), fontFamily = settings.effectiveFontFamily(),
                 )
             }
             data.savedEpubViewState?.restoreInto(createReaderViewOptions.viewState)
@@ -787,11 +789,13 @@ class ReaderWebCallChainExecutor @Inject constructor(
         lineHeight: Double,
         wordSpacing: Double,
         letterSpacing: Double,
-        pageWidth: Int
+        pageWidth: Int,
+        margins: Double = defaults.getReaderSettings().effectiveMargins().toDouble(),
+        fontFamily: String = defaults.getReaderSettings().effectiveFontFamily(),
     ) {
         return suspendCancellableCoroutine { cont ->
             val javascript =
-                "javascript:setAppearance({ lineHeight: $lineHeight, wordSpacing: $wordSpacing, letterSpacing: $letterSpacing, pageWidth: $pageWidth, textScale: ${defaults.getReaderSettings().effectiveTextScale()} });"
+                "javascript:setAppearance({ lineHeight: $lineHeight, wordSpacing: $wordSpacing, letterSpacing: $letterSpacing, pageWidth: $pageWidth, margins: $margins, fontFamily: ${org.json.JSONObject.quote(fontFamily)}, useOriginalFont: ${fontFamily == "original"}, textScale: ${defaults.getReaderSettings().effectiveTextScale()} });"
             readerWebViewHandler.evaluateJavascript(javascript) {
                 cont.resume(Unit)
             }

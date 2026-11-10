@@ -123,8 +123,37 @@ internal fun ReaderBox(
                 safeInsets
             }
             val readingModifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)
-                .then(if (viewState.fileType == ReaderFileType.PDF) Modifier else Modifier.windowInsetsPadding(readingInsets))
+                .then(if (viewState.fileType == ReaderFileType.EPUB) Modifier.windowInsetsPadding(WindowInsets.navigationBarsIgnoringVisibility).padding(bottom = 40.dp)
+                    else if (viewState.fileType == ReaderFileType.HTML) Modifier.windowInsetsPadding(readingInsets) else Modifier)
+
             ReaderWebView(viewModel = viewModel, modifier = readingModifier)
+        if (viewState.fileType == ReaderFileType.EPUB) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter).fillMaxWidth()
+                    .windowInsetsPadding(WindowInsets.navigationBarsIgnoringVisibility)
+                    .height(40.dp).clickable(onClick = viewModel::cycleEpubProgress)
+                    .background(MaterialTheme.colorScheme.surface)
+            ) {
+                // EPUB: When bars are hidden, show page progress in the empty space
+                val pageProgress = viewState.pageProgress
+                if (!viewState.isTopBarVisible
+                    && pageProgress != null
+                ) {
+                    Text(
+                        modifier = Modifier.align(Alignment.Center),
+                        text = when(viewState.progressMode) {
+                            "hidden" -> ""
+                            "position" -> viewState.progressPosition.orEmpty()
+                            "percent" -> viewState.progressPercent.orEmpty()
+                            else -> pageProgress
+                        },
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
+        }
             // This is an overlay, never a reserved strip in the PDF viewport.
             // Stable insets avoid a second layout jump as Android shows its bars.
             androidx.compose.animation.AnimatedVisibility(
@@ -137,7 +166,7 @@ internal fun ReaderBox(
                     WindowInsets.statusBarsIgnoringVisibility.union(WindowInsets.displayCutout).getTop(this).toDp()
                 }).background(MaterialTheme.colorScheme.surface))
             }
-            if ((viewState.fileType != ReaderFileType.PDF || viewState.readingModeEnabled) && viewState.showCreationToolbar && viewState.isTopBarVisible && !viewState.manualCropOpen) {
+            if ((viewState.fileType == ReaderFileType.HTML || viewState.readingModeEnabled) && viewState.showCreationToolbar && viewState.isTopBarVisible && !viewState.manualCropOpen) {
                 ReaderAnnotationCreationToolbar(
                     viewState = viewState,
                     viewModel = viewModel,
@@ -146,6 +175,16 @@ internal fun ReaderBox(
                     onShowSnapTargetAreas = { shouldShowSnapTargetAreas = true },
                     shouldShowSnapTargetAreas = shouldShowSnapTargetAreas
                 )
+            }
+            if (viewState.fileType == ReaderFileType.EPUB) {
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = viewState.isTopBarVisible && viewState.showCreationToolbar && !viewState.showSideBar,
+                    enter = slideInVertically(tween(220)) { it } + fadeIn(tween(160)),
+                    exit = slideOutVertically(tween(180)) { it } + fadeOut(tween(140)),
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                ) {
+                    org.zotero.android.screens.reader.toolbar.ReaderEpubAnnotationDock(viewModel, viewState)
+                }
             }
             if (viewState.manualCropOpen) Box(Modifier.fillMaxSize().windowInsetsPadding(readingInsets)) { ReaderCropControls(viewModel, viewState,
                 topInset = readingInsets.getTop(density).toDouble() / density.density,
@@ -183,33 +222,7 @@ internal fun ReaderBox(
             }
         }
 
-        if (viewState.fileType == ReaderFileType.EPUB) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .windowInsetsPadding(NavigationBarDefaults.windowInsets)
-                    .height(40.dp).clickable(onClick = viewModel::cycleEpubProgress)
-                    .background(MaterialTheme.colorScheme.surface)
-            ) {
-                // EPUB: When bars are hidden, show page progress in the empty space
-                val pageProgress = viewState.pageProgress
-                if (!viewState.isTopBarVisible
-                    && pageProgress != null
-                ) {
-                    Text(
-                        modifier = Modifier.align(Alignment.Center),
-                        text = when(viewState.progressMode) {
-                            "hidden" -> ""
-                            "position" -> viewState.progressPosition.orEmpty()
-                            "percent" -> viewState.progressPercent.orEmpty()
-                            else -> pageProgress
-                        },
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-            }
-        }
+
     }
 }
 
