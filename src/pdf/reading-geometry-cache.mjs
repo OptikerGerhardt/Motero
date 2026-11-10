@@ -1,6 +1,6 @@
 // View geometry only. No PDF text, images, annotation data or credentials.
-const KEY = 'motero.reading-geometry.v3';
-const VERSION = 3;
+const KEY = 'motero.reading-geometry.v4';
+const VERSION = 4;
 const validBounds = b => Array.isArray(b) && b.length === 4 && b.every(n => Number.isFinite(n) && n >= 0 && n <= 1)
     && b[0] < b[2] && b[1] < b[3];
 export function validGeometry(page) {

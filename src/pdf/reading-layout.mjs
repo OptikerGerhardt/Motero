@@ -27,11 +27,12 @@ const editionPattern = new RegExp('^(?:(?:(?:AA|Ak\\.?)\\s*)?(?:[IVXLC]+|\\d{1,3
 const editionReference = text => editionPattern.test(text.trim());
 const romanReference = text => /^[IVXLCDM]{1,9}$/.test(text.trim())
     && new RegExp('^' + romanFolio + '$').test(text.trim());
+const marginalSymbol = text => /^[*∗⋆✱✳✻✽•·∙⋅.†‡]+$/u.test(text.trim());
 const marginalReference = text => editionReference(text) || romanReference(text);
 
 function splitOuterReference(item, viewport) {
 	if (!item.chars?.length) return null;
-	let text = item.str.trim(), pattern = '(?:' + abReference + '|\\d{1,3}|\\[\\d{1,4}\\])';
+	let text = item.str.trim(), pattern = '(?:' + abReference + '|\\d{1,3}|\\[\\d{1,4}\\]|[*∗⋆✱✳✻✽•·∙⋅.†‡]+)';
 	let tail = text.match(new RegExp('^(.*\\S)\\s+(' + pattern + ')$', 'i'));
 	let head = !tail && text.match(new RegExp('^(' + pattern + ')\\s+(\\S.*)$', 'i'));
 	if (!tail && !head) return null;
@@ -55,7 +56,7 @@ function splitOuterReference(item, viewport) {
 	// from superscript footnote markers, even in a single merged OCR item.
 	if (!(r[2] < 0.14 || r[0] > 0.86) || r[2] - r[0] > 0.1
 		|| !Number.isFinite(baseline) || !ref.every(c => Math.abs(c.baseline - baseline) < height * 0.2)
-		|| !editionReference(refText) && !romanReference(refText) && !ref.every(c => c.fontSize < height * 0.9)
+		|| !editionReference(refText) && !romanReference(refText) && !marginalSymbol(refText) && !ref.every(c => c.fontSize < height * 0.9)
 		|| Math.max(r[0] - b[2], b[0] - r[2]) < 0.005) return null;
 	return [{ text: bodyText, rect: b, vertical: false, sideCandidate: false },
 		{ text: refText, rect: r, vertical: false, sideCandidate: true }];
@@ -65,7 +66,7 @@ function splitOuterReference(item, viewport) {
 export function getReadingTextLines(content, viewport) {
 	let v = viewport.transform, spans = [];
 	for (let item of content?.items || []) {
-		if (!item.str?.trim() || !item.transform || !item.width) continue;
+		if (!item.str?.trim() || !item.transform || !item.width && !marginalSymbol(item.str)) continue;
 		let split = splitOuterReference(item, viewport);
 		if (split) { spans.push(...split); continue; }
 		let t = item.transform;
@@ -74,7 +75,7 @@ export function getReadingTextLines(content, viewport) {
 		let x = v[0] * t[4] + v[2] * t[5] + v[4], y = v[1] * t[4] + v[3] * t[5] + v[5];
 		let length = Math.hypot(a, b);
 		if (!length) continue;
-		let w = item.width * viewport.scale, dx = a / length * w, dy = b / length * w;
+		let w = (item.width || Math.hypot(t[0],t[1]) * .5 * item.str.trim().length) * viewport.scale, dx = a / length * w, dy = b / length * w;
 		let style = content.styles?.[item.fontName] || {};
 		let ascent = Number.isFinite(style.ascent) ? style.ascent : 0.85;
 		let descent = Number.isFinite(style.descent) ? style.descent : -0.15;
@@ -87,7 +88,7 @@ export function getReadingTextLines(content, viewport) {
 		// OCR often places a line number directly against the final word's text
 		// box. Keep outer reference spans separate before merging body words.
 		let sideCandidate = (rect[2] < 0.20 || rect[0] > 0.80)
-			&& rect[2] - rect[0] < 0.1 && (/^\d{1,3}$/.test(text) || marginalReference(text));
+			&& rect[2] - rect[0] < 0.1 && (/^\d{1,3}$/.test(text) || marginalReference(text) || marginalSymbol(text));
 		spans.push({ text, rect, font: item.fontName || style.fontFamily || null, vertical: Math.abs(dy) > Math.abs(dx), sideCandidate });
 	}
     // PDF text extraction can split “B XI” into independent items. Combine only
@@ -325,7 +326,7 @@ export function getReadingExclusions(lines, model = { repeated: new Set() }, pag
 	// Edition references occupy a separate narrow outer column, never an
 	// arbitrary number inside an equation or a footnote citation.
 	for (let line of lines) {
-		if (!marginalReference(line.text)) continue;
+		if (!marginalReference(line.text) && !marginalSymbol(line.text)) continue;
 		let [x0, y0, x1, y1] = line.rect;
 		if (x1 - x0 > 0.10) continue;
         // Use the robust body column of the page, even beside a short chapter
@@ -335,6 +336,12 @@ export function getReadingExclusions(lines, model = { repeated: new Set() }, pag
         if (body.length >= 3) {
             const quantile = values => values.sort((a,b)=>a-b)[Math.floor(values.length*.25)];
             const left = quantile(body.map(l=>l.rect[0]));
+            const bodyHeight = model?.bodyHeight || quantile(body.map(l=>l.rect[3]-l.rect[1]));
+            if (marginalSymbol(line.text) && y1-y0 > bodyHeight*1.3) continue;
+            if (marginalSymbol(line.text) && y0 > .75 && lines.some(other => other !== line && other.text.length > 20
+                && other.rect[3]-other.rect[1] < bodyHeight*.85
+                && Math.abs((other.rect[1]+other.rect[3]-y0-y1)/2) < bodyHeight
+                && other.rect[0] > x1 && other.rect[0]-x1 < .065)) continue;
             const right = -quantile(body.map(l=>-l.rect[2]));
             if (x1 < left-.004 && x1 < .22 || x0 > right+.004 && x0 > .78) excluded.add(line);
         }
@@ -461,6 +468,14 @@ export function resolveReadingBounds(actual, index, profiles) {
 		Math.max(actual[2], clamp(center + width / 2)), actual[3]];
 }
 
+// Text fitting preserves the full paper extent on the scrolling axis.
+export function getReadingFrame(bounds, {mode,reference}) {
+    if (reference !== 'content') return bounds;
+    if (mode === 'width') return [bounds[0],0,bounds[2],1];
+    if (mode === 'height') return [0,bounds[1],1,bounds[3]];
+    return bounds;
+}
+
 export function getReadingFit({ mode, reference, margin, bounds, width, height, pageWidth, pageHeight }) {
 	let content = mode === 'content' || reference === 'content' || reference === 'cropped-content';
 	let b = content ? bounds : [0, 0, 1, 1];
@@ -468,7 +483,7 @@ export function getReadingFit({ mode, reference, margin, bounds, width, height, 
 	let sx = Math.max(1, width - 2 * pad) / ((b[2] - b[0]) * pageWidth);
 	let sy = Math.max(1, height - 2 * pad) / ((b[3] - b[1]) * pageHeight);
 	let scale = mode === 'width' ? sx : mode === 'height' ? sy : Math.min(sx, sy);
-	return { scale: Math.max(0.1, Math.min(10, scale)), bounds: b, pad };
+	return { scale: Math.max(0.1, Math.min(10, scale)), bounds: getReadingFrame(b, {mode,reference}), pad };
 }
 
 export function rotateReadingBounds(b, degrees) {

@@ -58,3 +58,5 @@
 		object-fit: contain;
 	}
 }
+
+:root[data-margins="custom"] &:not(.fixed-layout) > .sections { margin-inline: var(--reader-side-margin); > .section-container { max-inline-size: 100%; } }

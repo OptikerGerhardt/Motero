@@ -1,3 +1,4 @@
+import { DOMDirectHighlight } from './direct-highlight';
 import { MobilePenInput } from '../../common/mobile-pen-input.mjs';
 import injectCSS from './stylesheets/inject.scss';
 import annotationsCSS from './stylesheets/annotations.scss';
@@ -153,6 +154,8 @@ abstract class DOMView<State extends DOMViewState, Data> {
 	protected _lastPointerPosition: { x: number, y: number } | null = null;
 
 	protected _gotPointerUp = false;
+    protected _directHighlight: any;
+    protected _domDestroyed = false;
 
 	protected _hadSelectionOnPointerDown = false;
 
@@ -256,7 +259,7 @@ abstract class DOMView<State extends DOMViewState, Data> {
 		// support the csp attribute (currently all browsers besides Chrome derivatives)
 		this._iframe.setAttribute('csp', this._getCSP());
 		this.initializedPromise = this._initialize();
-		this.initializedPromise.then(() => this.initialized = true);
+		this.initializedPromise.then(() => { if (!this._domDestroyed) this.initialized = true; });
 		this._resizeIframeImmediate();
 		this._resizeObserver = new ResizeObserver(() => {
 			let dpr = window.devicePixelRatio || 1;
@@ -334,14 +337,17 @@ abstract class DOMView<State extends DOMViewState, Data> {
 	}
 
 	protected async _handleIFrameLoaded(): Promise<void> {
+        if (this._domDestroyed) return;
         if (this._options.platform === 'android') this._penInput = new MobilePenInput(this._iframeWindow, {
             profile: (this._options as any).deviceProfile,
             onTakeover: () => {
+                this._directHighlight?.reset();
                 this._touchAnnotationStartPosition = null; this._touchAnnotationPointerType = null;
                 this._iframeDocument.body.classList.remove('creating-touch-annotation');
             },
-            onSignal: event => this._handlePenSignal(event),
+            onSignal: (event: PointerEvent) => this._handlePenSignal(event),
         });
+        if (this._options.platform === 'android' && this._options.mobileAnnotations) this._directHighlight = new DOMDirectHighlight(this);
 		this._iframeWindow.addEventListener('contextmenu', this._handleContextMenu.bind(this));
 		this._iframeWindow.addEventListener('keydown', this._handleKeyDown.bind(this), true);
 		this._iframeWindow.addEventListener('keyup', this._handleKeyUp.bind(this));
@@ -721,7 +727,8 @@ abstract class DOMView<State extends DOMViewState, Data> {
 		};
 	}
 
-	protected _handleViewUpdate(synchronous = true) {
+    protected _handleViewUpdate(synchronous = true) {
+        if (this._domDestroyed) return;
 		if (!this.initialized) {
 			return;
 		}
@@ -757,7 +764,7 @@ abstract class DOMView<State extends DOMViewState, Data> {
 	}
 
 	protected _renderAnnotations(synchronous = false) {
-		if (!this._annotationRenderRootEl) {
+		if (this._domDestroyed || !this._annotationRenderRootEl) {
 			return;
 		}
 		if (!this._showAnnotations) {
@@ -1576,8 +1583,8 @@ abstract class DOMView<State extends DOMViewState, Data> {
 	}
 
 	private _handleAnnotationPointerDown = (id: string, event: React.PointerEvent) => {
+        if (this._directHighlight?.gesture.state && !this._directHighlight.bypass) return;
 		event.stopPropagation();
-
 		// Clean up in case this pointer was left behind in _handledPointerIDs,
 		// since we know this is a new interaction
 		this._handledPointerIDs.delete(event.pointerId);
@@ -1627,8 +1634,9 @@ abstract class DOMView<State extends DOMViewState, Data> {
 		this._handledPointerIDs.add(event.pointerId);
 	};
 
-	private _handleAnnotationPointerUp = (id: string, event: React.PointerEvent) => {
-		event.stopPropagation();
+    private _handleAnnotationPointerUp = (id: string, event: React.PointerEvent) => {
+        event.stopPropagation();
+        if (event.defaultPrevented) return;
 
 		if (this._touchAnnotationPointerType === 'pen'
 				&& (event.pointerType === 'pen' || event.pointerType === 'touch')) {
@@ -1651,8 +1659,10 @@ abstract class DOMView<State extends DOMViewState, Data> {
 		}
 
 		// Cycle selection on left click if clicked annotation is already selected
-		let idsHere = this._getAnnotationsAtPoint(event.clientX, event.clientY);
-		let selectedID = this._selectedAnnotationIDs.find(id => idsHere.includes(id));
+        let idsHere = this._getAnnotationsAtPoint(event.clientX, event.clientY);
+        if (!idsHere.length && this._annotationsByID.has(id)) idsHere = [id];
+        if (!idsHere.length) return;
+        let selectedID = this._selectedAnnotationIDs.find(id => idsHere.includes(id));
 		let nextIDIndex = selectedID
 			? (idsHere.indexOf(selectedID) + 1) % idsHere.length
 			: 0;
@@ -2146,15 +2156,17 @@ abstract class DOMView<State extends DOMViewState, Data> {
 		this._handleViewUpdate();
 	}
 
-	protected _handleScroll(event: Event) {
-		this._lastScrollTime = event.timeStamp;
+    protected _handleScroll(event: Event) {
+        if (this._domDestroyed) return;
+        this._lastScrollTime = event.timeStamp;
 		if (this._readAloud.state?.active && !this._readAloud.scrolling) {
 			this._onManualNavigation();
 		}
-		requestAnimationFrame(() => {
-			this._renderAnnotations();
-			this._repositionPopups();
-		});
+        requestAnimationFrame(() => {
+            if (this._domDestroyed) return;
+            this._renderAnnotations();
+            this._repositionPopups();
+        });
 	}
 
 	protected _onManualNavigation(): void {
@@ -2241,16 +2253,20 @@ abstract class DOMView<State extends DOMViewState, Data> {
 		}
 	}
 
-	protected _preventNextClickEvent() {
-		let clickListener = (event: Event) => {
-			event.stopImmediatePropagation();
-			event.preventDefault();
-		};
-		this._iframeDocument.addEventListener('click', clickListener, { once: true, capture: true });
-		setTimeout(() => {
-			this._iframeDocument.removeEventListener('click', clickListener, { capture: true });
-		}, 500);
-	}
+    protected _preventNextClickEvent() {
+        const cleanup = () => {
+            this._iframeDocument.removeEventListener('click', clickListener, true);
+            this._iframeDocument.removeEventListener('pointerdown', cleanup, true);
+        };
+        const clickListener = (event: Event) => {
+            cleanup();
+            if (event.composedPath().some(target => (target as Element).matches?.('.boox-highlight-palette'))) return;
+            event.stopImmediatePropagation(); event.preventDefault();
+        };
+        this._iframeDocument.addEventListener('click', clickListener, {capture:true});
+        this._iframeDocument.addEventListener('pointerdown', cleanup, {once:true,capture:true});
+        setTimeout(cleanup, 500);
+    }
 
 	private _selectionContainsPoint(x: number, y: number): boolean {
 		let selection = this._iframeDocument.getSelection();
@@ -2276,19 +2292,24 @@ abstract class DOMView<State extends DOMViewState, Data> {
 		return result;
 	}
 
-	destroy() {
+    destroy() {
+        this._domDestroyed = true;
+        this._directHighlight?.destroy();
         this._penInput?.destroy();
 		this._clearPenActive();
 		this._overlayPopupDelayer.destroy();
-		this._annotationRenderRoot.unmount();
-		this._resizeObserver.disconnect();
+		this._annotationRenderRoot?.unmount();
+        this._resizeObserver.disconnect();
 	}
 
 	// ***
 	// Setters that get called once there are changes in reader._state
 	// ***
 
+    setDirectHighlight(enabled: boolean) { this._directHighlight?.setEnabled(enabled); }
+
 	setTool(tool: Tool) {
+        this._directHighlight?.reset();
 		this._tool = tool;
 
 		this._iframeDocument.body.dataset.tool = tool.type;
@@ -2381,7 +2402,16 @@ abstract class DOMView<State extends DOMViewState, Data> {
 			...DEFAULT_REFLOWABLE_APPEARANCE,
 			...partialAppearance
 		};
-		this.appearance = appearance;
+        this.appearance = appearance;
+        const root = this._iframeDocument.documentElement;
+        if (Number.isFinite(appearance.margins)) {
+            root.dataset.margins = 'custom';
+            root.style.setProperty('--reader-side-margin', Math.max(0, Math.min(20, appearance.margins!)) + 'vw');
+        }
+        if (['serif', 'sans-serif', 'original'].includes(appearance.fontFamily || '')) {
+            appearance.useOriginalFont = appearance.fontFamily === 'original';
+            this.setFontFamily(appearance.fontFamily === 'sans-serif' ? 'sans-serif' : 'serif');
+        }
 		if (Number.isFinite(appearance.textScale) && appearance.textScale! >= this.MIN_SCALE && appearance.textScale! <= this.MAX_SCALE
 				&& Math.abs((this.scale || 1) - appearance.textScale!) > 0.001) {
 			this._setScale(appearance.textScale!);
@@ -2581,8 +2611,11 @@ export type DOMViewOptions<State extends DOMViewState, Data> = {
 	onAddAnnotation: (annotation: NewAnnotation<WADMAnnotation>, select?: boolean) => WADMAnnotation;
 	onUpdateAnnotations: (annotations: Partial<Annotation>[]) => void;
 	onDeleteAnnotationsFromPalette?: (ids: string[]) => void;
+    onConvertAnnotations?: (ids: string[], type: string) => WADMAnnotation[];
+    directHighlight?: boolean;
+    mobileAnnotations?: boolean;
 	onOpenLink: (url: string) => void;
-	onSelectAnnotations: (ids: string[], triggeringEvent?: KeyboardEvent | MouseEvent) => void;
+	onSelectAnnotations: (ids: string[], triggeringEvent?: KeyboardEvent | MouseEvent, options?: { touchEditing?: boolean }) => void;
 	onSetSelectionPopup: (params?: SelectionPopupParams<WADMAnnotation> | null) => void;
 	onSetAnnotationPopup: (params?: AnnotationPopupParams<WADMAnnotation> | null) => void;
 	onSetOverlayPopup: (params?: OverlayPopupParams) => void;

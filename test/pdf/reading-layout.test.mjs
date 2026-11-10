@@ -128,7 +128,9 @@ test('a smaller line number inside one OCR item is split by glyph geometry; supe
 test('cropped text width uses the same width scale while taller pages remain scrollable', () => {
 	let options = {mode:'width',reference:'content',margin:.01,bounds:[.2,.1,.8,.95],width:600,height:800,pageWidth:600,pageHeight:1200};
 	let ordinary = getReadingFit(options), cropped = getReadingFit({...options,reference:'cropped-content'});
-	assert.deepEqual(cropped,ordinary);
+	assert.equal(cropped.scale,ordinary.scale);
+    assert.equal(ordinary.bounds[1],0);assert.equal(ordinary.bounds[3],1);
+    assert.deepEqual(cropped.bounds,options.bounds);
 	assert.equal(cropped.scale,getReadingFit({...options,height:1000,reference:'cropped-content'}).scale);
 	assert.ok((cropped.bounds[3]-cropped.bounds[1])*options.pageHeight*cropped.scale>options.height);
 });
@@ -149,7 +151,18 @@ test('visible margin masks contain only excluded reference boxes, never footnote
 	let star=line('*',[.94,.2,.96,.22]);
 	let footnote=line('1 A complete footnote.',[.2,.91,.8,.93]);
 	let lines=[...body,...references,star,footnote],model=buildReadingModel([]);
-	assert.deepEqual(getReadingMarginalia(lines,model,0),references.map(l=>l.rect));
+	assert.deepEqual(getReadingMarginalia(lines,model,0),[...references,star].map(l=>l.rect));
+});
+
+test('isolated stars and dots on either margin follow Include/Exclude while body markers stay', () => {
+    const marks = [line('*',[.04,.3,.055,.32]),line('·',[.94,.4,.96,.42]),line('•',[.94,.6,.96,.62])];
+    const inline = [line('*',[.5,.4,.51,.42]),line('1 A footnote with an ordinary marker.',[.2,.91,.8,.93])];
+    const lines = [...body,...marks,...inline], model = buildReadingModel([]);
+    const excluded = getReadingExclusions(lines,model,0);
+    for (const mark of marks) assert.ok(excluded.includes(mark.rect));
+    for (const mark of inline) assert.ok(!excluded.includes(mark.rect));
+    const included = getReadingExclusions(lines,model,0,{includeMarginalia:true});
+    for (const mark of marks) assert.ok(!included.includes(mark.rect));
 });
 function image(rectangles) {
 	let width = 500, height = 700, data = new Uint8ClampedArray(width * height * 4).fill(255);
@@ -486,4 +499,41 @@ test('normalized repeated body lines within the expanded header band remain cont
 test('continuously changing running titles do not destroy usable local geometric evidence',()=>{
  const pages=Array.from({length:9},(_,index)=>({index,lines:[...body,line('Author: unique title '+index,[.2,.04,.7,.056])]}));
  assert.equal(localReadingPages(pages,4).length,9);
+});
+
+
+test('Text fitting preserves the full non-fit axis in both directions', () => {
+ const options={reference:'content',margin:0,bounds:[.2,.1,.8,.85],width:600,height:800,pageWidth:600,pageHeight:1000};
+ const width=getReadingFit({...options,mode:'width'}),height=getReadingFit({...options,mode:'height'});
+ assert.deepEqual(width.bounds,[.2,0,.8,1]);
+ assert.deepEqual(height.bounds,[0,.1,1,.85]);
+ assert.deepEqual(getReadingFit({...options,mode:'height',reference:'cropped-content'}).bounds,options.bounds);
+});
+test('a small footnote star beside footnote text remains readable', () => {
+ const star=line('*',[.15,.91,.16,.922]),footnote=line('A complete, smaller footnote remains intact.',[.2,.91,.8,.922]);
+ assert.ok(!getReadingExclusions([...body,star,footnote],buildReadingModel([]),0).includes(star.rect));
+});
+
+
+test('a zero-advance gutter star is still extracted as a separate marginal span', () => {
+ const lines=getReadingTextLines({items:[{str:'*',width:0,transform:[10,0,0,10,570,500]}]},
+  {width:600,height:800,scale:1,transform:[1,0,0,-1,0,800]});
+ assert.equal(lines.length,1);assert.equal(lines[0].sideCandidate,true);assert.ok(lines[0].rect[2]>lines[0].rect[0]);
+});
+
+
+test('merged OCR margin stars split without shrinking equal-font body text', () => {
+ const chars=[...('alpha')].map((u,i)=>({u,rect:[120+i*7,300,126+i*7,310],fontSize:10,baseline:300}));
+ chars.push({u:'*',rect:[570,300,576,310],fontSize:10,baseline:300});
+ const viewport={width:600,height:800,scale:1,transform:[1,0,0,-1,0,800]};
+ const item={str:'alpha *',width:456,transform:[10,0,0,10,120,300],chars};
+ const lines=getReadingTextLines({items:[item]},viewport);
+ assert.equal(lines.length,2);assert.equal(lines.find(l=>l.text==='*').sideCandidate,true);
+ chars.at(-1).baseline=305;
+ assert.equal(getReadingTextLines({items:[item]},viewport).length,1,'superscript marker stays with its text');
+});
+test('a large title period is not misidentified as a tiny gutter dot', () => {
+ const dot=line('.',[.94,.25,.96,.31]);
+ const title=line('A large, complete and important chapter title',[.2,.25,.92,.31]);
+ assert.ok(!getReadingExclusions([...body,title,dot],buildReadingModel([]),0).includes(dot.rect));
 });

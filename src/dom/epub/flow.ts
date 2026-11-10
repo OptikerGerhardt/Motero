@@ -926,8 +926,9 @@ export class PaginatedFlow extends AbstractFlow {
 		}
 	};
 
-	private _handlePointerDown = (event: PointerEvent) => {
-		if (!event.isPrimary
+    private _handlePointerDown = (event: PointerEvent) => {
+        if (event.defaultPrevented || event.composedPath().some(target => (target as Element).matches?.('.resizer, .boox-highlight-palette'))) return;
+        if (!event.isPrimary
 				|| (event.pointerType !== 'touch' && event.pointerType !== 'pen')
 				|| (event.composedPath()[0] as Element).closest('.annotation-container') && !this._view.readerNavigationAllowed()) {
 			return;
@@ -958,6 +959,7 @@ export class PaginatedFlow extends AbstractFlow {
 	};
 
 	private _handlePointerMove = (event: PointerEvent) => {
+        if (this._view.isMobileAnnotationGestureActive()) return;
 		if (event.pointerId !== this._touchPointerID
 				|| !event.isPrimary
 				|| event.buttons % 1 !== 0
@@ -981,6 +983,7 @@ export class PaginatedFlow extends AbstractFlow {
 	};
 
 	private _handlePointerUp = (event: PointerEvent) => {
+        if (event.defaultPrevented) { this._resetSwipe(); return; }
 		if (event.pointerId !== this._touchPointerID
 				|| !event.isPrimary
 				// No event.buttons check - "buttons" have now been released

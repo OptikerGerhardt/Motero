@@ -8,7 +8,7 @@ export function createAnnotationSelectionHandler({ select, notify, defer, getSel
 		// Any newer selection supersedes a deferred notification that hasn't fired yet
 		let current = ++pendingNotification;
 
-		if (!options.inlineTextEditing) {
+		if (!options.inlineTextEditing && !options.touchEditing) {
 			notify(ids, options);
 			select(ids);
 			return;

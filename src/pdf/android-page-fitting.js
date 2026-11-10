@@ -1,7 +1,7 @@
 import { canUseTextBounds, ReadingMetrics } from './reading-analysis.mjs';
 import { ReadingGeometryCache } from './reading-geometry-cache.mjs';
 import { getReadingSamples, getReadingTextLines, buildReadingModel, getReadingBounds,
-	buildReadingProfiles, resolveReadingBounds, getReadingFit, rotateReadingBounds, getReadingMarginalia, getReadingTextBounds, localReadingPages } from './reading-layout.mjs';
+	buildReadingProfiles, resolveReadingBounds, getReadingFit, getReadingFrame, rotateReadingBounds, getReadingMarginalia, getReadingTextBounds, localReadingPages } from './reading-layout.mjs';
 import { cropForPage, normalizeCrops } from './manual-crop.mjs';
 import { ManualCropEditor } from './manual-crop-editor.js';
 import { CroppedPageLayout } from './cropped-page-layout.mjs';
@@ -186,7 +186,8 @@ export class AndroidPageFitting {
 		const manual = cropForPage(this.options.cropMode === 'manual' ? this.options.manualCrop : {}, index);
 		if (manual) return rotateReadingBounds(manual, this.viewer.pagesRotation);
 		const profile = this.profiles?.profiles[index % 2];
-		return profile ? rotateReadingBounds(profile, this.viewer.pagesRotation) : [0, 0, 1, 1];
+		if (this.options.reference === 'page' && this.options.mode !== 'content') return [0,0,1,1];
+        return getReadingFrame(profile ? rotateReadingBounds(profile, this.viewer.pagesRotation) : [0,0,1,1], this.options);
 	}
 
 	beginPeek() {
@@ -242,7 +243,7 @@ export class AndroidPageFitting {
 
 	prefetchVisible() {
         if (this.inkActive()) { this.prefetchWanted = true; return; }
-        if (!this.active || !this.usesCropLayout() || this.zooming || this.editor || this.view._destroyed) return;
+        if (!this.active || this.options.mode === 'none' || this.zooming || this.editor || this.view._destroyed) return;
         this.prefetchWanted = true;
         // Throttle rather than restarting a trailing timer on every scroll event.
         if (this.prefetchTimer || this.prefetching) return;
@@ -513,7 +514,7 @@ export class AndroidPageFitting {
         let page = await pending;
         model ||= this.readingModel || {aspect:page?.aspect};
         if (!page) return [0,0,1,1];
-		let actual = includeMarginalia ? page.withMarginalia : page.bounds;
+        const actual = includeMarginalia ? page.withMarginalia : page.bounds;
 		if (!actual) return [0, 0, 1, 1];
 		let profiles = includeMarginalia ? model.withMarginalia : model;
         let bounds = !profiles?.profiles || Math.abs(page.aspect / model.aspect - 1) > 0.05 ? actual
@@ -553,9 +554,11 @@ export class AndroidPageFitting {
 		let width = c.clientWidth, height = c.clientHeight;
 		let bounds = options.mode === 'content' || options.reference !== 'page'
 			? await this.boundsFor(index, { ...options, priority }) : [0, 0, 1, 1];
+
 		let pdfPage = await v.pdfDocument.getPage(index + 1);
 		let base = pdfPage.getViewport({ scale: 96 / 72, rotation: pdfPage.rotate + rotation });
 		let fit = getReadingFit({ ...options, bounds, width, height, pageWidth: base.width, pageHeight: base.height });
+        bounds = fit.bounds;
 		let page = await this.cache.get(index);
 		let marginalia = cropForPage(options.manualCrop, index) ? []
 			: (page?.marginalia || []).map(r => rotateReadingBounds(r, rotation));

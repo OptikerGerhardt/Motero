@@ -211,7 +211,7 @@ test('refinement retains prepared crops for valid pages and only invalidates pro
  assert.ok(fitting.preparedPages.has(2));assert.ok(!fitting.preparedPages.has(5));
 });
 test('unchanged compact geometry requires no DOM layout reads or additional page writes',async()=>{
- const {fitting,pages}=fixture();await fitting.configure({mode:'width',reference:'content',margin:0});
+ const {fitting,pages}=fixture();await fitting.configure({mode:'width',reference:'cropped-content',margin:0});
  let reads=0,writes=0;
  for(const page of pages) {
   page.div.getBoundingClientRect=()=>{reads++;throw Error('forced layout');};
@@ -223,7 +223,7 @@ test('unchanged compact geometry requires no DOM layout reads or additional page
 
 
 test('a cached neighbor can never overwrite a newly prepared current-page crop',async()=>{
- const {fitting}=fixture();await fitting.configure({mode:'width',reference:'content',margin:0});
+ const {fitting}=fixture();await fitting.configure({mode:'width',reference:'cropped-content',margin:0});
  const old=fitting.preparedPages.get(1);
  fitting.boundsFor=async()=>[.2,.15,.8,.9];
  const fresh=await fitting.prepare(1);
@@ -235,7 +235,7 @@ test('a cached neighbor can never overwrite a newly prepared current-page crop',
 
 
 test('a cancelled PDF.js analysis recovers a current fit without rejecting the UI command',async()=>{
- const {fitting,flush}=fixture();await fitting.configure({mode:'width',reference:'content',margin:0});
+ const {fitting,flush}=fixture();await fitting.configure({mode:'width',reference:'cropped-content',margin:0});
  const prepare=fitting.prepare.bind(fitting);let calls=0;
  fitting.prepare=async(...args)=>{if(!calls++){const e=new Error('cancelled');e.name='RenderingCancelledException';throw e;}return prepare(...args);};
  assert.equal(await fitting.apply(),false);await flush();
@@ -248,4 +248,17 @@ test('buffered reference masks repaint even when their page-frame geometry is un
  const reference=[.05,.3,.08,.32];fitting.marginaliaByPage.set(0,[reference]);
  fitting.queueGeometryRefresh();await flush();
  assert.deepEqual(painted,[reference],'a newly detected reference must disappear from an already visible neighbor');
+});
+
+
+test('Text preserves full paper height; Text + crop also removes vertical margins', async () => {
+ const {fitting,pages}=fixture();
+ await fitting.configure({mode:'width',reference:'content',margin:0});
+ assert.equal(fitting.usesCropLayout(),true);
+ assert.equal(fitting.applied.bounds[1],0);assert.equal(fitting.applied.bounds[3],1);
+ await fitting.configure({mode:'width',reference:'cropped-content',margin:0});
+ assert.equal(fitting.usesCropLayout(),true);
+ assert.ok(pages.some(p=>p.div.style.clipPath.startsWith('inset(')));
+ await fitting.configure({mode:'width',reference:'content',margin:0});
+ assert.equal(fitting.applied.bounds[1],0);assert.equal(fitting.applied.bounds[3],1);
 });

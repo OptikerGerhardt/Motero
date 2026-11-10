@@ -1,7 +1,7 @@
 // Portable Android input ownership. No stroke/document data is logged or stored.
 // Runs in capture before fitting, edge taps, selection and PDF.js touch handling.
 export class MobilePenInput {
-    constructor(win, { profile = {}, onTakeover = () => {}, onSignal = () => {}, onEraser = () => {} } = {}) {
+    constructor(win, { profile = {}, onTakeover = () => {}, onSignal = event => {}, onEraser = () => {} } = {}) {
         this.win = win; this.profile = profile; this.onTakeover = onTakeover;
         this.onSignal = onSignal; this.onEraser = onEraser;
         this.contacts = new Set(); this.blocked = new Set(); this.owner = null;
@@ -9,7 +9,7 @@ export class MobilePenInput {
         this.listeners = [];
         for (const name of ['pointerdown','pointermove','pointerup','pointercancel','pointerover']) this.listen(name, e => this.pointer(e));
         for (const name of ['touchstart','touchmove','touchend','touchcancel']) this.listen(name, e => this.touch(e));
-        this.listen('blur', () => { if (this.owner !== null) this.onTakeover(); this.reset(); });
+        this.listen('blur', event => { if (event.target && event.target !== this.win) return; if (this.owner !== null) this.onTakeover(); this.reset(); });
         this.listen('lostpointercapture', e => {
             if (this.owner !== e.pointerId) return;
             this.onTakeover(); this.owner = null; this.until = Date.now()+300; this.setEraser(false);

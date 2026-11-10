@@ -80,6 +80,9 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 	private readonly _hrefTargetCache = new Map<string, HTMLElement>();
 
 	private _lastNavigationTime = 0;
+    private _appearanceRevision = 0;
+    private _disposed = false;
+    private _onFocusReturn = () => this._handleVisibilityChange();
 
     private _bookmarkPointer: { x: number, y: number, time: number } | null = null;
 
@@ -96,6 +99,8 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
                 || !this._iframeWindow.getSelection()?.isCollapsed) return false;
         return this.addAndroidBookmark();
     }
+
+    isMobileAnnotationGestureActive(): boolean { return !!this._directHighlight?.gesture.active || !!this._resizingAnnotationID; }
 
     readerNavigationAllowed(): boolean { return this._options.platform !== 'android' || this._tool.type === 'pointer'; }
     clearReaderNavigationSelection(): void {
@@ -199,7 +204,10 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 	}
 
 	protected override _handleIFrameLoaded() {
-		this._iframeDocument.addEventListener('visibilitychange', this._handleVisibilityChange.bind(this));
+        if (this._disposed) return Promise.resolve();
+		this._iframeDocument.addEventListener('visibilitychange', this._onFocusReturn);
+        this._iframeWindow.addEventListener('focus', this._onFocusReturn);
+        window.addEventListener('focus', this._onFocusReturn);
 
 		return super._handleIFrameLoaded();
 	}
@@ -207,6 +215,7 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 	protected override async _handleViewCreated(viewState: Partial<Readonly<EPUBViewState>>) {
 		await super._handleViewCreated(viewState);
 		await this.book.opened;
+        if (this._disposed) return;
 
 		this._iframeDocument.documentElement.lang = this.lang;
 
@@ -245,6 +254,7 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 		this._iframeDocument.body.prepend(this._sectionsContainer);
 
 		await this._displaySections();
+        if (this._disposed) return;
 
 		if (this._sectionRenderers.some(view => view.error) && await this._isEncrypted()) {
 			this._options.onEPUBEncrypted();
@@ -298,9 +308,10 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 
 		// Perform the navigation on the next frame, because apparently the layout might not have
 		// settled yet
-		await new Promise(resolve => requestAnimationFrame(resolve));
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        if (this._disposed) return;
 
-		if (this._options.location) {
+        if (this._options.location) {
 			this.navigate(this._options.location, { behavior: 'instant' });
 		}
 		else if (!viewState.cfi || viewState.cfi === '_start') {
@@ -845,11 +856,18 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 	// ***
 
 	protected _handleVisibilityChange() {
+        if (this._disposed || !this.flow) return;
 		if (this._iframeDocument.visibilityState !== 'visible') {
 			return;
 		}
-		this._keepPosition();
-		this._handleViewUpdate();
+        if (this._options.platform === 'android') {
+            this._resizeIframeTrailing.cancel();
+            this._iframe.style.transform = '';
+            this._iframe.classList.remove('mask-resizing');
+            if (this._iframe.offsetWidth !== this._container.clientWidth || this._iframe.offsetHeight !== this._container.clientHeight) this._resizeIframeImmediate();
+        }
+        else this._keepPosition();
+        this._handleViewUpdate();
 	}
 
 	protected override _resizeIframeImmediate() {
@@ -862,7 +880,12 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 		});
 	}
 
-	protected override _resizeIframeLeading() {
+    protected override _resizeIframeLeading() {
+        if (this._options.platform === 'android') {
+            this._iframe.style.transform = '';
+            this._iframe.classList.remove('mask-resizing');
+            return;
+        }
 		let dpr = window.devicePixelRatio || 1;
 		let targetWidth = Math.floor(this._container.clientWidth * dpr) / dpr;
 		let currentWidth = this._iframe.offsetWidth;
@@ -881,7 +904,7 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 		this._iframe.style.transform = '';
 		this._resizeIframeImmediate();
 		this._iframe.classList.remove('mask-resizing');
-	}, 250);
+	}, this._options.platform === 'android' ? 0 : 250);
 
 	protected override _tryResizeWidthInPlace(width: number): boolean {
 		if (!this.flow || this._isFixedLayout || !this.flow.canResizeWidthInPlace(width)) {
@@ -1417,11 +1440,34 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 		this._handleViewUpdate();
 	}
 
-	override setAppearance(partialAppearance: Partial<ReflowableAppearance>) {
-		this._keepPosition(() => {
-			super.setAppearance(partialAppearance);
-		});
-	}
+    override setAppearance(partialAppearance: Partial<ReflowableAppearance>) {
+        const fontChanged = partialAppearance.fontFamily !== this.appearance?.fontFamily;
+        const cfi = this.flow?.startCFI?.toString(), offset = this.flow?.startCFIOffset;
+        const revision = ++this._appearanceRevision;
+        this._keepPosition(() => super.setAppearance(partialAppearance));
+        if (fontChanged && cfi && this._options.platform === 'android') {
+            this._iframeWindow.requestAnimationFrame(() => {
+                this._iframeDocument.fonts.ready.then(() => {
+                    if (!this._disposed && revision === this._appearanceRevision) this.navigate(
+                        {pageNumber:cfi}, {skipHistory:true,behavior:'auto',offsetBlock:offset ?? undefined,keepAnchor:true});
+                });
+            });
+        }
+    }
+
+    protected override _onManualNavigation() {
+        this._appearanceRevision++;
+        super._onManualNavigation();
+    }
+
+    override destroy() {
+        this._disposed = true; this._appearanceRevision++;
+        this._resizeIframeTrailing.cancel();
+        this._iframeDocument?.removeEventListener('visibilitychange', this._onFocusReturn);
+        this._iframeWindow?.removeEventListener('focus', this._onFocusReturn);
+        window.removeEventListener('focus', this._onFocusReturn);
+        super.destroy();
+    }
 
 	// ***
 	// Public methods to control the view from the outside

@@ -5,6 +5,8 @@ export interface ReflowableAppearance {
 	pageWidth: PageWidth;
 	useOriginalFont: boolean;
 	textScale?: number;
+    margins?: number;
+    fontFamily?: string;
 }
 
 export const enum PageWidth {

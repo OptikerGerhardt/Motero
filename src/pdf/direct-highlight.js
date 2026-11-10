@@ -51,8 +51,11 @@ export class PDFDirectHighlight {
 	canStart(event) {
 		if ((!this.enabled && !this.quickAnnotation(event)) || !event.target.closest?.('.page')
 				|| event.target.closest?.('textarea, input, [contenteditable="true"], .textAnnotation')) return false;
-		let position = this.view.pointerEventToPosition(event);
-		return !!position && !this.view._getSelectableOverlay(position)
+        let position = this.view.pointerEventToPosition(event);
+        const selected = this.view.getSelectedAnnotations();
+        const edit = position && selected.length === 1 && this.view.getSelectedAnnotationAction(selected[0], position);
+        if (edit && ['updateAnnotationRange','resize','rotate','moveAndDrag'].includes(edit.type)) return false;
+        return !!position && !this.view._getSelectableOverlay(position)
 			&& (!this.view.getSelectableAnnotations(position)?.length || !!this.quickAnnotation(event));
 	}
 
@@ -89,8 +92,11 @@ export class PDFDirectHighlight {
 		view._onSelectAnnotations([]);
 		view._onSetAnnotationPopup(null);
 		view._onSetSelectionPopup(null);
-		if (annotations) {
-			this.quickHold = true;
+        if (annotations) {
+            view._onSelectAnnotations(annotations.map(a => a.id), event, { touchEditing: true });
+            view._onSetAnnotationPopup(null);
+            view._render();
+            this.quickHold = true;
 			view._booxReader?.showPalette(annotations);
 			return;
 		}

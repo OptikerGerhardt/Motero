@@ -57,6 +57,15 @@ test('selects before deferring an inline-editing notification', () => {
 	]);
 });
 
+test('touch editing selects handles before notifying the host to suppress its popup', () => {
+    const {calls,deferred,handle} = setup();
+    const options = {touchEditing:true};
+    handle(['A'],options);
+    assert.deepEqual(calls,[['select',['A']]]);
+    deferred[0]();
+    assert.deepEqual(calls,[['select',['A']],['notify',['A'],options]]);
+});
+
 test('drops a deferred inline-editing notification after selection changes', () => {
 	let { calls, deferred, handle, setSelectedIDs } = setup();
 	handle(['A'], { inlineTextEditing: true });

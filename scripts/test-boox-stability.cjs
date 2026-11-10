@@ -24,7 +24,7 @@ const types = { '.html':'text/html', '.js':'text/javascript', '.mjs':'text/javas
    await page.waitForFunction(()=>window.messages.some(x=>x.message?.event==='onInitialized'));
    await page.evaluate(({origin,pdf,index})=>window.createView(btoa(JSON.stringify({type:'pdf',url:origin+pdf,annotations:[],directHighlight:true,
     viewState:{pageIndex:index,scale:'page-width',scrollMode:2,spreadMode:0},
-    pageFitting:{mode:'width',reference:'content',margin:.01,revision:1}}))),{origin,pdf,index});
+    pageFitting:{mode:'width',reference:'cropped-content',margin:.01,revision:1}}))),{origin,pdf,index});
    await page.waitForFunction(()=>window._view?._view?._pageFitting?.applied);await page.evaluate(async()=>{let f=window._view._view._pageFitting;await f.ensureModel();});await page.waitForTimeout(350);await page.evaluate(()=>{let f=window._view._view._pageFitting;return window.setPageFitting(f.options);});
    await page.waitForTimeout(250);
   }

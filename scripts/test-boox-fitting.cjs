@@ -26,7 +26,7 @@ const types = { '.html':'text/html', '.js':'text/javascript', '.mjs':'text/javas
    await page.waitForFunction(()=>window.messages.some(x=>x.message?.event==='onInitialized'));
    await page.evaluate(({origin,pdf,index})=>window.createView(btoa(JSON.stringify({type:'pdf',url:origin+pdf,annotations:[],directHighlight:true,
     viewState:{pageIndex:index,scale:'page-width',scrollMode:2,spreadMode:0},
-    pageFitting:{mode:'width',reference:'content',margin:.01,revision:1}}))),{origin,pdf,index});
+    pageFitting:{mode:'width',reference:'cropped-content',margin:.01,revision:1}}))),{origin,pdf,index});
    await page.waitForFunction(()=>window._view?._view?._pageFitting?.applied);await page.evaluate(async()=>{let f=window._view._view._pageFitting;await f.ensureModel();});await page.waitForTimeout(350);await page.evaluate(()=>{let f=window._view._view._pageFitting;return window.setPageFitting(f.options);});
    await page.waitForTimeout(250);
   }
@@ -95,6 +95,17 @@ const types = { '.html':'text/html', '.js':'text/javascript', '.mjs':'text/javas
   await page.evaluate(()=>{let v=window._view._view._pageFitting.viewer,p=v.getPageView(v.currentPageNumber-1);v.container.scrollTop=p.div.offsetTop+p.div.clientTop;});await page.waitForTimeout(200);
   assert.ok((await state()).y<=0,'width mode permits scrolling to paper top');
   console.log('PASS adjustable content margins, full vertical paper access in width mode');
+  const textWidth=await fit('width','content',0),cropWidth=await fit('width','cropped-content',0);
+  assert.equal(textWidth.bounds[1],0);assert.equal(textWidth.bounds[3],1);
+  assert.ok(cropWidth.bounds[1]>.10&&cropWidth.bounds[3]<.96,JSON.stringify(cropWidth));
+  assert.ok(Math.abs(textWidth.scale-cropWidth.scale)<.005,JSON.stringify({textWidth,cropWidth}));
+  const textHeight=await fit('height','content',0),cropHeight=await fit('height','cropped-content',0);
+  assert.equal(textHeight.bounds[0],0);assert.equal(textHeight.bounds[2],1);
+  assert.ok(cropHeight.bounds[0]>.10&&cropHeight.bounds[2]<.95,JSON.stringify(cropHeight));
+  assert.ok(Math.abs(textHeight.scale-cropHeight.scale)<.005,JSON.stringify({textHeight,cropHeight}));
+  console.log('PASS Text keeps the full non-fitting axis; Text + crop removes both axes at the same fitted scale');
+  await fit('width','content',.08);
+
   await page.evaluate(()=>{window._view._view._pageFitting.viewer.currentScale=1.8;});await page.waitForTimeout(150);
   assert.equal((await state()).active,false);assert.equal((await state()).reported.pageFitMode,'width');
   let reapplied=await fit('width','content',.08);assert.ok(Math.abs(reapplied.scale-roomy.scale)<.002,JSON.stringify({roomy,reapplied}));

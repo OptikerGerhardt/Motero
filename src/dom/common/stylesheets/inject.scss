@@ -55,3 +55,9 @@ body[data-tool="note"] {
 		mix-blend-mode: screen;
 	}
 }
+
+body.mobile-direct-highlight {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}

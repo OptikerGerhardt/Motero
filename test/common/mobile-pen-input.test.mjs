@@ -31,6 +31,16 @@ test('a pen takes over an earlier finger; palms cannot move or release its strok
     f.input.destroy();
 });
 
+test('focus moving between controls does not cancel the pen, while window blur does', () => {
+    const f=fixture();
+    f.send('pointerdown','pen',9);
+    f.send('blur',undefined,9,{target:{}});
+    assert.equal(f.input.owner,9);
+    f.send('blur',undefined,9,{target:f.input.win});
+    assert.equal(f.input.owner,null);
+    f.input.destroy();
+});
+
 test('all palm contacts remain suppressed until lifted, beyond the 300 ms guard', t => {
     t.mock.timers.enable({apis:['Date'],now:1000});
     const f=fixture();f.send('pointerdown','pen',8);f.send('pointerdown','touch',4);

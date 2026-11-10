@@ -147,6 +147,8 @@ class View {
             deviceProfile: this._options.deviceProfile,
             onPenEraser: active => this.setPenEraser(active),
 			fontFamily: this._options.fontFamily,
+            directHighlight: this._options.directHighlight,
+            mobileAnnotations: this._type === 'epub',
 			onAddAnnotation,
 			onUpdateAnnotations,
 			onDeleteAnnotationsFromPalette: ids => this._annotationManager.deleteAnnotations(ids),
@@ -465,6 +467,7 @@ class View {
         for (const v of [this._view,this._sdtView]) {
             if (!v) continue;
             v._options.deviceProfile = profile;
+            v._directHighlight?.reset();
             v._penInput?.applyProfile(profile);
             if (profile.penOnly === false) v.setPenActive?.(false);
             v.setPenExclusive?.(!!profile.penOnly);
@@ -663,6 +666,7 @@ class View {
 			wordSpacing: appearance.wordSpacing,
 			letterSpacing: appearance.letterSpacing,
 			pageWidth: appearance.pageWidth,
+            margins: appearance.margins, fontFamily: appearance.fontFamily,
             useOriginalFont: appearance.useOriginalFont ?? this._appearance?.useOriginalFont,
 			textScale: appearance.textScale,
 		};

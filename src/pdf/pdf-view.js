@@ -3157,7 +3157,7 @@ class PDFView {
 			return null;
 		}
 
-		let dd = 5 * devicePixelRatio;
+		let dd = this._options.platform === 'android' ? 22 : 5 * devicePixelRatio;
 
 		let p = this.getViewPoint(position.rects[0], position.pageIndex);
 
@@ -3171,7 +3171,7 @@ class PDFView {
 				let { chars } = this._pdfPages[annotation.position.pageIndex];
 				let startHandle;
 				let endHandle;
-				let padding = 3;
+				let padding = this._options.platform === 'android' ? 16 : 3;
 				if (annotation.position.nextPageRects) {
 					if (annotation.position.pageIndex + 1 === position.pageIndex) {
 						let { chars } = this._pdfPages[annotation.position.pageIndex + 1];

@@ -261,3 +261,5 @@ blockquote {
 		border-color: #555;
 	}
 }
+
+:root[data-margins="custom"] body { max-inline-size: none; padding-inline: var(--reader-side-margin); }

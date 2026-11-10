@@ -1,3 +1,4 @@
+import { isBlackReaderBookmark, BOOKMARK_FLAG_PATH } from '../../../../common/reader-bookmark.mjs';
 import React, {
 	memo,
 	useCallback,
@@ -502,7 +503,9 @@ const Note: React.FC<NoteProps> = (props) => {
 	rect.y += doc.defaultView.scrollY;
 	let rtl = isRTL(annotation.range.commonAncestorContainer);
 	let staggerOffset = (staggerIndex || 0) * 15;
-	let x = rect.left + (rtl ? -25 : rect.width + 25) + (rtl ? -1 : 1) * staggerOffset;
+    let bookmark = isBlackReaderBookmark(annotation);
+    let x = rect.left + (rtl ? -25 : rect.width + 25) + (rtl ? -1 : 1) * staggerOffset;
+    if (bookmark && rect.right >= doc.defaultView.scrollX && rect.left < doc.defaultView.scrollX + doc.defaultView.innerWidth) x = doc.defaultView.scrollX + doc.defaultView.innerWidth - 24 - staggerOffset;
 	let y = rect.top + staggerOffset;
 	return (
 		<CommentIcon
@@ -511,7 +514,7 @@ const Note: React.FC<NoteProps> = (props) => {
 			x={x}
 			y={y}
 			color={annotation.color!}
-			opacity={annotation.id ? '100%' : '50%'}
+			opacity={annotation.id ? (bookmark ? '70%' : '100%') : '50%'}
 			selected={selected}
 			large={true}
 			tabIndex={-1}
@@ -848,7 +851,7 @@ let CommentIcon = React.forwardRef<SVGSVGElement, CommentIconProps>((props, ref)
 			data-annotation-id={props.annotation?.id}
 			ref={ref}
 		>
-			<IconNoteLarge/>
+            {isBlackReaderBookmark(props.annotation) ? <path d={BOOKMARK_FLAG_PATH} fill="currentColor"/> : <IconNoteLarge/>}
 		</svg>
 		{props.selected && (
 			<SelectionBorder rect={new DOMRect(x, y, size, size)}/>

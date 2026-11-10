@@ -1,4 +1,4 @@
-const ACTION_TYPES = new Set(['moveAndDrag', 'resize', 'rotate']);
+const ACTION_TYPES = new Set(['moveAndDrag', 'resize', 'rotate', 'updateAnnotationRange']);
 const DRAG_SLOP = 5;
 
 export function shouldStartInlineTextAnnotationEditing(event, platform) {
