@@ -1,6 +1,13 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 9. November 2026. Build 318 / Motero 1.0.3 ergänzt die in Build 317 veröffentlichten Cropping-, Performance- und Bedienungskorrekturen um die sofortige Aktualisierung von Randmasken.
+Stand: 10. November 2026. Build 320 / Motero 1.0.5 aktualisiert gezielt PDF.js; die in Build 319 veröffentlichten E-Reader-/Stiftfunktionen und alle bisherigen Reader-Korrekturen bleiben erhalten.
+
+## PDF.js: Build 320 / 1.0.5
+
+- Zotero-Pin `5f95f712bc629ac11159cb4859ed8091fdffa87b`, PDF.js 5.7.330: korrekte eingebettete Fett-/Kursivschriften und bereichsweise Textfärbung. Keine zusätzlichen UI-Funktionen oder Änderungen der gespeicherten Annotationen.
+- Gemeinsamer Client-/Worker-/Viewer-Build mit Prüfung gegen den Quell-Pin; bisherige Android-Polyfills, Zotero-Viewer-CSS, Lizenzen und Laufzeitpakete erhalten.
+- Freigabe umfasst die bisherigen Reader-/Android-/Browserregressionen, zusätzliche Engine-Pixel-/DOM-/Schrifttests und API-31/35-Updates von 303 und 319. Physische BOOX-/GrapheneOS- und Kontosync-Prüfungen bleiben separat.
+- [Änderungen, Herkunft und Prüfumfang](docs/PDFJS_UPDATE.md).
 
 ## Korrektur: Build 318 / 1.0.3
 

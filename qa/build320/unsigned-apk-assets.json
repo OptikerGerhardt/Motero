@@ -1,0 +1,13 @@
+{
+  "verified": true,
+  "signing": "unsigned local build; production signing is CI-only",
+  "version_code": 320,
+  "pdfjs_version": "5.7.330",
+  "pdfjs_commit": "5f95f712bc629ac11159cb4859ed8091fdffa87b",
+  "reader_sources": 101,
+  "runtime_files": 45,
+  "pdfjs_files": 207,
+  "test_dependencies_bundled": false,
+  "apk_sha256": "6ab70956f249b907bb910dc45527fb0397ef95e98de1b937ab7931ad6eafa266",
+  "reader_zip_sha256": "8a2b461894a7cea855fa6d5414e09315c61c8d4bd1b9c6f1fb7487dcf4b6eeda"
+}

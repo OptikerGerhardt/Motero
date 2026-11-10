@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-"""Validate the pinned runtime and restore the unchanged mobile PDF.js distribution."""
+"""Validate the pinned runtime and restore the matching mobile PDF.js distribution."""
 import hashlib
 import json
 from pathlib import Path
+import subprocess
 import zipfile
+
+from pdfjs_assets import validate_engine
 
 root = Path(__file__).resolve().parents[1]
 sha = lambda data: hashlib.sha256(data).hexdigest()
@@ -18,10 +21,12 @@ assert sha(archive.read_bytes()) == manifest['archive_sha256'], 'PDF.js archive 
 with zipfile.ZipFile(archive) as source:
     assert source.testzip() is None
     assert {name for name in source.namelist() if not name.endswith('/')} == set(manifest['files'])
-    for name, digest in manifest['files'].items():
+    files = {name: source.read(name) for name in manifest['files']}
+    commit = subprocess.check_output(['git', '-C', str(root / 'reader/pdfjs/pdf.js'),
+        'rev-parse', 'HEAD'], text=True).strip()
+    validate_engine(manifest, files, commit, (root / 'reader/pdfjs/compatibility.js').read_bytes())
+    for name, data in files.items():
         assert name.startswith('pdf/') and '..' not in Path(name).parts
-        data = source.read(name)
-        assert sha(data) == digest, name
         for target in ['reader/build/mobile', 'reader/build/android']:
             path = root / target / name
             path.parent.mkdir(parents=True, exist_ok=True)

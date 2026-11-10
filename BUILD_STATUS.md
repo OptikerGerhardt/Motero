@@ -1,3 +1,9 @@
+# Build 320 / Motero 1.0.5 — PDF.js-Update, Freigabeprüfung läuft
+
+- Zotero-PDF.js `5f95f712` / 5.7.330; Client, Worker und Viewer gemeinsam aktualisiert. Lizenzen, WebView-Kompatibilität und alle übrigen Runtime-Dateien erhalten.
+- Lokal bestanden: 365 Reader-, 43 Engine-Pixel-, 141 native Tests und 16 Browser-Suiten einschließlich 19 offizieller Viewer-Fälle. APK und gepinnte Quellen/Assets geprüft. Geschützte Release-/Update-Prüfung steht noch aus; Nachweise unter `qa/build320/`. Noch keine Veröffentlichung für 320 behauptet.
+- Bestehende Cropping-, Navigation-, Bookmark-, Toolbar-, EPUB- und E-Reader-/Stiftfunktionen bleiben im Regressionsumfang. [Details](docs/PDFJS_UPDATE.md).
+
 # Build 319 / Motero 1.0.4 — veröffentlicht und unabhängig geprüft
 
 - Release: https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.4-319 ; erfolgreicher vollständiger Prüflauf: https://github.com/OptikerGerhardt/Motero/actions/runs/42791143244 .

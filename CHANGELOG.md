@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.0.5-320 — 10. November 2026 — Motero 1.0.5
+
+- PDF.js auf den von Zotero Reader verwendeten Stand `5f95f712` (5.7.330) aktualisiert. Eingebettete Schriften erhalten keine zusätzliche künstliche Fett-/Kursivzeichnung; semantische Schriftmerkmale bleiben für die Textanalyse verfügbar.
+- Offizielle Unterstützung für bereichsweise Textfärbung einschließlich Theme-Kontrast, Überlagerungen und abgebrochener Renderaufträge übernommen. Keine neue Farbautomatik für vorhandene Annotationen aktiviert.
+- Client, Worker und Viewer gemeinsam gepinnt; Build verhindert gemischte Versionen, abweichende Quellstände und fehlende Android-WebView-Kompatibilität. Schrift-/WASM-/CMap-Pakete und andere Laufzeitdateien unverändert.
+- Zusätzliche Engine-Pixeltests und Browserprüfungen für eingebettete Schriften, Light/Dark Mode, Textauswahl und Renderabbrüche. Bestehende Cropping-, Jump-/SmartScroll-, Bookmark-, Toolbar-, EPUB- und Stiftregressionen bleiben Teil der Freigabeprüfung.
+
 ## 1.0.4-319 — 10. November 2026 — Motero 1.0.4
 
 - Lokales E-Reader-Profil für die App und den Reader mit stärkeren Kontrasten und sofortigen Übergängen; vorhandene Theme-Auswahl bleibt bestehen.

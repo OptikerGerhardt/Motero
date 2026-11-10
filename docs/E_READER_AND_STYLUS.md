@@ -13,7 +13,7 @@ Build 319 adds **Settings → E-Reader and stylus**, also reachable from the rea
 
 ## Preserved reader behavior
 
-The changes build on 1.0.3: continuous prepared crops, automatic/manual selection, fit references, responsive manual crop, centered short Jumped pages and directional entry into tall pages, SmartScroll/volume keys, narrow priority edge zones, two-finger overview/snap-back, centered-page bookmark toggling, black flags, annotation jump/delete/options, color rings without check marks, unified dock transitions, hidden-chrome full screen, theme-matched thumbnails/system bars, EPUB progress and text-size settings remain covered by regression tests. The pinned PDF.js/runtime versions stay unchanged.
+The changes build on 1.0.3: continuous prepared crops, automatic/manual selection, fit references, responsive manual crop, centered short Jumped pages and directional entry into tall pages, SmartScroll/volume keys, narrow priority edge zones, two-finger overview/snap-back, centered-page bookmark toggling, black flags, annotation jump/delete/options, color rings without check marks, unified dock transitions, hidden-chrome full screen, theme-matched thumbnails/system bars, EPUB progress and text-size settings remain covered by regression tests. Build 319 retained its PDF.js/runtime pins; the separately tested engine update follows in Build 320.
 
 ## Upstream review
 
@@ -28,7 +28,7 @@ Review window: October 26–November 9, 2026, official GitHub source history. So
 | Reader `04795bfb` and Android-relevant parts of `9d180730` | Initialize DOM font family before restoring layout; retain Reading Mode appearance/scale without overwriting PDF position/zoom. Android already persists effective text scale locally. |
 | Android `d87fafb5` and `a3113861` | Safe attachment replacement and duplicate-reader-session fixes already present in 318; retained, not reapplied. |
 
-PDF.js upgrades, TTS, desktop-only localization and draft pressure/grouped-annotation changes are separate work. See [upstream credits](../UPSTREAM_CHANGES.md).
+The PDF.js upgrade is delivered separately in [Build 320](PDFJS_UPDATE.md). TTS, desktop-only localization and draft pressure/grouped-annotation changes remain separate work. See [upstream credits](../UPSTREAM_CHANGES.md).
 
 ## Experimental BOOX boundary
 

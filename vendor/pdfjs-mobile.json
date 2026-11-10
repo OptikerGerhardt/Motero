@@ -1,12 +1,13 @@
 {
   "schema": 1,
   "source": "https://github.com/zotero/pdf.js",
-  "commit": "3ec7e00205d95c512a8d74fefee5228611416d46",
-  "archive_sha256": "19a7f5c0d09d5800272705774074c730e1dabb60b93036b1d4c818f37a84444f",
+  "commit": "5f95f712bc629ac11159cb4859ed8091fdffa87b",
+  "version": "5.7.330",
+  "build": "5f95f712b",
   "files": {
     "pdf/LICENSE": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594",
-    "pdf/build/pdf.mjs": "c8efda1901634be7c8b5695792ddd73e093a9ead08bc98a8e7f7b94eb684c59e",
-    "pdf/build/pdf.worker.mjs": "e44f81b3937e853d9f828fc76015df343fada385a27c7a7722592a8f2840ead2",
+    "pdf/build/pdf.mjs": "bc6015c94b4ba6056da93af700f70f6f4b71033eb84c4aa407372832eddd0336",
+    "pdf/build/pdf.worker.mjs": "bf28fe231866879027274a93bc5adbe550732a726034789092634dcb9c6e6e48",
     "pdf/web/cmaps/78-EUC-H.bcmap": "d92a261336dc18b8c03a46eb4d462382d33f4338fa195d303256b2031434c874",
     "pdf/web/cmaps/78-EUC-V.bcmap": "61670bebc4e4827b67230c054fd0d820d6e30c3584d02e386804e62bbedc032a",
     "pdf/web/cmaps/78-H.bcmap": "ece6415b853d61e1b2560165151407d35cf16e6556932b85a13ea75276b77402",
@@ -197,7 +198,7 @@
     "pdf/web/standard_fonts/LiberationSans-Regular.ttf": "f8ace1f892b2bd9dc1792ba7f097fa7588f84fed48321480e04de5390828221f",
     "pdf/web/viewer.css": "54a6864d140c64fd40fbd912b3a2ed55653412651692f7e5331ec85e4dd89c53",
     "pdf/web/viewer.html": "d5c95c02794856cfa3b5b16e9c0e23473d50421b188f8736063f20a524f9e76e",
-    "pdf/web/viewer.mjs": "8587778ee3983654015b5eb3e60e08e1fcbc7f2a9cced3855bf9858c244e2320",
+    "pdf/web/viewer.mjs": "a2d1a615a8ac1f332875ce28a176bc11d0abdc6ebad2be1a823af61cc79b452c",
     "pdf/web/wasm/LICENSE_JBIG2": "9e66b7f1b934a28b37f3bc4dac97915de1674271e79a0a88182a18ed9731b4d1",
     "pdf/web/wasm/LICENSE_OPENJPEG": "a6af136f3e15038a666b61f376612a07d9a4e48cb7c01adbf3e33b3f14ab49b6",
     "pdf/web/wasm/LICENSE_PDFJS_JBIG2": "aad3cce09842e00e9e11ad5e8fef8cc02fbc3a3768fe2f007443b9cee37aaee5",
@@ -211,5 +212,6 @@
     "pdf/web/wasm/qcms_bg.wasm": "bfdaeb649178748e54bcdaa819bcd5c5c5a4278c8eaaf5feb5a26071e1c25bfc",
     "pdf/web/wasm/quickjs-eval.js": "767927762bd1ed2a833d16d1fcccbec4a4c7155ebd7de776df14b979c311423b",
     "pdf/web/wasm/quickjs-eval.wasm": "7a40e1732934f0f78de3166e1d7a0d2b85f172862f7ace69a02d250426cb14bb"
-  }
+  },
+  "archive_sha256": "1c24ab1b2d56dfba05d32e108a64755592dde2470d133824646c5c806d1b66dd"
 }

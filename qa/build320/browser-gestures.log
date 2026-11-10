@@ -1,0 +1,71 @@
+HTTP /view.html
+HTTP /view.js
+HTTP /view.css
+View HTML loaded
+HTTP /favicon.ico
+HTTP /pdf/web/viewer.html
+HTTP /pdf/web/viewer.css
+HTTP /pdf/build/pdf.mjs
+HTTP /pdf/web/viewer.mjs
+HTTP /pdf/build/pdf.worker.mjs
+HTTP /gesture-test.pdf
+HTTP /pdf/web/images/loading-icon.gif
+Initial reader {
+  scale: 'page-width',
+  width: 560,
+  viewport: 600,
+  native: false,
+  chars: 1426
+}
+Gesture coordinates {
+  a: { x: 78.77458823529412, y: 90.27011764705867 },
+  b: { x: 219.81552941176477, y: 90.27011764705867 },
+  scroll: 18
+}
+After hold { active: true, ranges: 1 }
+Highlight result {
+  saved: [
+    {
+      type: 'highlight',
+      color: '#ffd400',
+      sortIndex: '00000|000000|00088',
+      pageLabel: '1',
+      position: [Object],
+      text: 'Alpha beta gamma delta.',
+      comment: '',
+      tags: [],
+      id: '2TJJFYM4',
+      dateCreated: '2026-11-10T12:54:09.191Z',
+      dateModified: '2026-11-10T12:54:09.191Z'
+    }
+  ],
+  selection: '',
+  scroll: 18
+}
+Quick swipe scroll 261
+Pinch abort { active: false, saves: 1, scale: 0.98 }
+Pinch mode false { calls: [], scale: 0.98 }
+Pinch mode true {
+  calls: [
+    [ null, 1.0816326530612246, [Array] ],
+    [ null, 1, [Array] ],
+    [ null, 1.0754716981132075, [Array] ],
+    [ null, 1, [Array] ],
+    [ null, 1.0701754385964914, [Array] ],
+    [ null, 1, [Array] ],
+    [ null, 1.0655737704918034, [Array] ],
+    [ null, 1, [Array] ],
+    [ null, 1.0615384615384615, [Array] ],
+    [ null, 1, [Array] ],
+    [ null, 1.0579710144927537, [Array] ],
+    [ null, 1, [Array] ],
+    [ null, 1.0547945205479452, [Array] ],
+    [ null, 1, [Array] ],
+    [ null, 1.051948051948052, [Array] ],
+    [ null, 1, [Array] ]
+  ],
+  scale: 1.62
+}
+Pen highlight Alpha beta gamma delta.
+Width after resize { width: 760, viewport: 800, scale: 'page-width' }
+PASS: width and resize, selection fallback, finger and pen highlighting, scrolling, pinch interruption and PDF.js handoff

@@ -16,6 +16,10 @@ Inclusion in Motero does not mean a change has been merged into official Zotero.
 
 Thank you to the authors, reviewers, maintainers, and the wider Zotero community. Copyright and license notices in the original sources remain authoritative.
 
+## Build 320: Zotero PDF.js update
+
+Reviewed November 10, 2026. The PDF.js submodule and its packaged client/worker/viewer advance together to Zotero's official Reader pin, `5f95f712bc629ac11159cb4859ed8091fdffa87b`. Both upstream commits are included unchanged: [region-based text coloring](https://github.com/zotero/pdf.js/commit/61b3f391354f3be9feff4c4d435b9eebe844af20) and [embedded-font styling](https://github.com/zotero/pdf.js/commit/5f95f712bc629ac11159cb4859ed8091fdffa87b). Thank you to Zotero and the PDF.js contributors for this work and its regression tests. The original Apache 2.0 engine notices and bundled font/component licenses are retained; Motero remains AGPLv3. [Packaging and verification](docs/PDFJS_UPDATE.md).
+
 ## Build 319: selected stability and pen fixes
 
 Reviewed against official source history for October 26–November 9, 2026. These are targeted adaptations into Motero, not a wholesale upstream merge. Original authors include **Martynas Bagdonas** (Reader) and **Dima** (Android); their existing copyright/license notices remain intact.
