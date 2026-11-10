@@ -1,3 +1,4 @@
+import { MobilePenInput } from '../common/mobile-pen-input.mjs';
 import { appendInkSamples } from './ink-samples.mjs';
 import Page from './page';
 import { p2v, v2p } from './lib/coordinates';
@@ -119,6 +120,8 @@ const WRAPPED_SCROLL_MODE = 2;
 const CONTENT_FIT_SAMPLE_PAGES = 8;
 const CONTENT_FIT_SAMPLE_WIDTH = 400;
 
+const PEN_ACTIVE_TIMEOUT = 5 * 60 * 1000;
+
 class PDFView {
 	constructor(options) {
 		this._options = options;
@@ -197,6 +200,9 @@ class PDFView {
 		this._scrolling = false;
 		this._dragging = false;
 		this._touchTransform = null;
+		this._penActive = options.penActive ?? false;
+		this._penActiveTimeout = null;
+		this._penExclusive = options.penExclusive ?? false;
 		this._readAloudPositionLocked = true;
 		this._readAloudScrolling = false;
 
@@ -315,6 +321,7 @@ class PDFView {
 			this._updateColorScheme();
 			let root = this._iframeWindow.document.documentElement;
 			root.toggleAttribute('data-mobile-reader', !!this._mobile);
+			this._updatePenActiveState();
 			// This is necessary to make sure this is called after webviewerloaded
 			setTimeout(() => {
 				if (this._destroyed) {
@@ -446,6 +453,17 @@ class PDFView {
 	}
 
 	async _init() {
+        if (this._options.platform === 'android') this._penInput = new MobilePenInput(this._iframeWindow, {
+            profile: this._options.deviceProfile,
+            onTakeover: () => {
+                this._handlePointerCancel(); this._directHighlight?.reset(); this._chromeTapGuard?.reset();
+                this._readerPriorityDown = null;
+                if (this._pageNavigation) this._pageNavigation.gesture = null;
+                this._pageFitting?.resetInput();
+            },
+            onSignal: event => this._handlePenSignal(event),
+            onEraser: active => this._options.onPenEraser?.(active),
+        });
 		// this._iframeWindow.document.body.draggable = true;
 
 		this._iframeWindow.addEventListener('contextmenu', this._handleContextMenu.bind(this));
@@ -454,7 +472,11 @@ class PDFView {
 		this._iframeWindow.addEventListener('pointerdown', this._handlePointerDown.bind(this), true);
 		// mousedown event is necessary to get event.detail, but for touch pointerdown is necessary
 		this._iframeWindow.addEventListener('mousedown', this._handlePointerDown.bind(this), true);
-		// Touch events are passive by default
+		this._iframeWindow.addEventListener('touchstart', this._handleTouchStart.bind(this), { capture: true, passive: true });
+        this._iframeWindow.addEventListener('pointermove', this._handlePenSignal.bind(this), { capture: true, passive: true });
+        this._iframeWindow.addEventListener('pointerup', this._handlePenPointerRelease.bind(this), true);
+        this._iframeWindow.addEventListener('pointercancel', this._handlePenPointerRelease.bind(this), true);
+        // Touch events are passive by default
 		this._iframeWindow.addEventListener('touchmove', this._handleTouchMove.bind(this), { passive: false });
 		this._iframeWindow.addEventListener('touchstart', event => this._directHighlight?.touchStart(event), { passive: true });
 		this._iframeWindow.addEventListener('touchcancel', () => this._directHighlight?.reset());
@@ -472,7 +494,7 @@ class PDFView {
 		// its container listeners so no finger remains registered in our gesture.
 		this._iframeWindow.addEventListener('pointerup', event => {
             if (this._consumePaletteDismissal?.(event)) return;
-            if (this.action?.type === 'ink' && this.action.pointerID !== undefined && event.pointerId !== this.action.pointerID) { event.stopImmediatePropagation(); return; }
+            if (this._isForeignPointer(event)) { event.stopImmediatePropagation(); return; }
             this._pageFitting?.onUp(event);
 			if (this._tryPriorityReaderTap(event)) { this._readerPriorityHandled=event.pointerId; return; }
             if (!this._chromeTapGuard?.up(event)) this._directHighlight?.up(event);
@@ -1308,6 +1330,7 @@ class PDFView {
 		this._nativeTextSelection?.destroy();
 		this._directHighlight?.reset();
 		this._clearPendingBackdropTap();
+        this._penInput?.destroy(); this._clearPenActive();
 	}
 
 	// Log once and disable a memory feature if the pdf.js fork stops exposing
@@ -1553,6 +1576,65 @@ class PDFView {
 		this._readOnly = readOnly;
 	}
 
+	setPenActive(penActive) {
+		if (penActive) {
+			this._markPenActive();
+		}
+		else {
+			this._clearPenActive();
+		}
+	}
+
+	setPenExclusive(penExclusive) {
+		this._penExclusive = penExclusive;
+		this._updatePenActiveState();
+	}
+
+	_isPenInUse() {
+		return this._options?.platform !== 'web' && this._options?.deviceProfile?.penOnly !== false
+            && (this._penActive || this._penExclusive);
+	}
+
+	// A pen only matters while annotating, so it isn't tracked with the pointer and hand tools
+	_isAnnotationToolActive() {
+		return !['pointer', 'hand'].includes(this._tool.type);
+	}
+
+	_markPenActive() {
+		this._penActive = true;
+		this._updatePenActiveState();
+		clearTimeout(this._penActiveTimeout);
+		this._penActiveTimeout = setTimeout(() => this._clearPenActive(), PEN_ACTIVE_TIMEOUT);
+	}
+
+	_clearPenActive() {
+		this._penActive = false;
+		clearTimeout(this._penActiveTimeout);
+		this._penActiveTimeout = null;
+		this._updatePenActiveState();
+	}
+
+	// Exposed to CSS, which can't tell a pen from a finger when choosing touch-action
+	_updatePenActiveState() {
+		this._iframeWindow?.document?.documentElement?.toggleAttribute('data-pen-active', this._isPenInUse());
+	}
+
+	_handlePenSignal(event) {
+		if (event.pointerType === 'pen' && this._isAnnotationToolActive()) {
+			this._markPenActive();
+		}
+	}
+
+	// A pointer other than the one that started the current pointer action, e.g. a palm
+	// resting on the screen while a pen is drawing
+	_isForeignPointer(event) {
+		let pointerDownTap = this._pointerDownTap;
+		return pointerDownTap?.pointerType === 'pen'
+			&& event?.pointerId !== undefined
+			&& event.pointerId !== pointerDownTap.pointerId;
+	}
+
+
 	setTool(tool) {
 		this._directHighlight?.reset();
 		if (['highlight', 'underline'].includes(tool.type) && /^#[\da-f]{6}$/i.test(tool.color)) {
@@ -1579,11 +1661,13 @@ class PDFView {
 				&& !(this._directHighlightEnabled && ['highlight', 'underline'].includes(tool.type))
 		);
 		this._tool = tool;
+		if (!this._isAnnotationToolActive()) this._clearPenActive();
 		this._nativeTextSelection?.updateEnabledState();
 		this.updateCursor();
 	}
 
 	resetAndroidInput() {
+        this._penInput?.reset();
 		if (this._options.platform !== 'android') return;
 		this._dragging = false;
 		this._handlePointerCancel();
@@ -3429,10 +3513,13 @@ class PDFView {
 		if (event.altKey) {
 			return { action: { type: 'selectText' }, selectAnnotations: [] };
 		}
-		if (this._tool.type === 'ink') {
+		// While a pen is in use, fingers (and palms) only scroll and select existing annotations,
+		// they don't use the active annotation tool
+		let touchWithPen = event.pointerType === 'touch' && this._isPenInUse();
+		if (this._tool.type === 'ink' && !touchWithPen) {
 			return { action: { type: 'ink' }, selectAnnotations: [] };
 		}
-		else if (this._tool.type === 'eraser') {
+		else if (this._tool.type === 'eraser' && !touchWithPen) {
 			return { action: { type: 'erase', annotations: new Map() }, selectAnnotations: [] };
 		}
 		if (this._selectionRanges.length && ![2, 3].includes(event.detail)) {
@@ -3490,6 +3577,9 @@ class PDFView {
 		}
 		else {
 			selectAnnotations = [];
+			if (touchWithPen) {
+				return { action: { type: 'none' }, selectAnnotations };
+			}
 			if (this._tool.type === 'note') {
 				action = { type: 'note' };
 			}
@@ -3622,7 +3712,7 @@ class PDFView {
     }
 
 	_handlePointerDown(event) {
-        if (this.action?.type === 'ink' && this.action.pointerID !== undefined && event.pointerId !== this.action.pointerID) { event.stopImmediatePropagation?.(); return; }
+        if (this._isForeignPointer(event) && !(event.type === 'pointerdown' && ['pen','mouse'].includes(event.pointerType))) { event.stopImmediatePropagation?.(); return; }
         if (this._pageFitting?.editor) return;
         if (this._consumePaletteDismissal?.(event)) return;
         if (event.type==='pointerdown' && ['touch','pen'].includes(event.pointerType)) {
@@ -3646,6 +3736,11 @@ class PDFView {
 			event.preventDefault();
 			return;
 		}
+        if (this._pointerDownTap?.pointerType === 'pen' && event.type === 'pointerdown'
+                && ['mouse','pen'].includes(event.pointerType)) {
+            this._clearPointerAction(); this._setSelectionRanges(); this._render();
+        }
+        if (event.pointerType === 'pen') { this._clearPendingBackdropTap(); this._handlePenSignal(event); }
 		if (this._chromeTapGuard?.down(event) || this._directHighlight?.down(event)) {
 			return;
 		}
@@ -3666,6 +3761,15 @@ class PDFView {
 		if (event.pointerType === 'mouse') {
 			return;
 		}
+		// A pen landing after a finger means that the finger was a palm, so drop
+		// whatever it started instead of letting it block the pen
+		if (this._pointerDownTriggered
+				&& event.pointerType === 'pen'
+				&& this._pointerDownTap?.pointerType === 'touch') {
+			this._clearPointerAction();
+			this._setSelectionRanges();
+			this._render();
+		}
 		if (this._pointerDownTriggered) {
 			return;
 		}
@@ -3680,6 +3784,8 @@ class PDFView {
 			x: event.clientX,
 			y: event.clientY,
 			button: event.button,
+			pointerId: event.pointerId,
+			pointerType: event.pointerType,
 			inViewerContainer: !!event.target.closest('#viewerContainer'),
 			hadSelection: !this._isSelectionCollapsed() || !!this._selectedAnnotationIDs.length,
 			doubleTap,
@@ -3705,7 +3811,7 @@ class PDFView {
 		let shift = event.shiftKey;
 		let position = this.pointerEventToPosition(event);
 
-		if (event.button === 2) {
+		if (event.button === 2 && event.pointerType !== 'pen') {
 			// Right click will be handled in the contextmenu event
 			return;
 		}
@@ -3893,6 +3999,16 @@ class PDFView {
 		this._render();
 	}
 
+    _handleTouchStart(event) {
+        if (this._pointerDownTap?.pointerType === 'pen') event.stopPropagation();
+    }
+    _handlePenPointerRelease(event) {
+        const down = this._pointerDownTap;
+        if (down?.pointerType !== 'pen' || down.pointerId !== event.pointerId) return;
+        setTimeout(() => {
+            if (!this._destroyed && this._pointerDownTap === down) this._handlePointerCancel(event);
+        }, 0);
+    }
 	_handleTouchMove(event) {
 		if (this._pageFitting?.editor) return;
 		if (this._directHighlight?.touchMove(event)) {
@@ -3904,6 +4020,7 @@ class PDFView {
 		if (
 			// Prevent default touch action (which is scroll) if any tool is enabled
 			this._tool.type !== 'pointer' && !this._directHighlight?.enabled && event.target.id !== 'viewer'
+                && (!this._isPenInUse() || this._pointerDownTap?.pointerType === 'pen')
 			// Or a text selection action is triggered using a pen in the page (not the gray area)
 			|| this.action?.type === 'selectText'
 			// Or a selected annotation is being transformed by touch
@@ -3927,10 +4044,16 @@ class PDFView {
 		if (event.cancelable) {
 			event.preventDefault();
 		}
-		this._pointerDownTriggered = false;
+		// A palm lifting while a pen is still touching must not end the pen's action
+		if (!event.touches?.length && this._pointerDownTap?.pointerType !== 'pen') {
+			this._pointerDownTriggered = false;
+		}
 	}
 
-	_handlePointerMove = throttle((event) => {
+    _handlePointerMove(event) {
+        if (!this._isForeignPointer(event)) this._handlePointerMoveThrottled(event);
+    }
+	_handlePointerMoveThrottled = throttle((event) => {
         if (this.action?.type === 'ink' && this.action.pointerID !== undefined && event.pointerId !== this.action.pointerID) { event.stopImmediatePropagation?.(); return; }
 		if (this._pageFitting?.editor) return;
 		if (this._chromeTapGuard?.move(event)) return;
@@ -3945,7 +4068,8 @@ class PDFView {
 		// when the highlight/underline tool is enabled
 		this._creationTimeout = null;
 
-		if (this._scrolling) {
+		// Ownership can change while this move is queued.
+		if (this._scrolling || this._isForeignPointer(event)) {
 			return;
 		}
 
@@ -4416,6 +4540,9 @@ class PDFView {
 			this._clearPointerAction();
 			return;
 		}
+		if (this._isForeignPointer(event)) {
+			return;
+		}
 		if (this._touchTransform && event.pointerId !== this._touchTransform.pointerID) {
 			return;
 		}
@@ -4652,6 +4779,7 @@ class PDFView {
     }
 
 	_handlePointerCancel(event) {
+        if (event && this._isForeignPointer(event)) return;
         if (event && this.action?.type === 'ink') {
             if (this.action.pointerID !== undefined && this.action.pointerID !== event.pointerId) return;
             // Cancellation coordinates can be zero or stale; keep only collected input.
@@ -4766,6 +4894,9 @@ class PDFView {
 	}
 
 	_handleContextMenu(event) {
+        if (event.pointerType === 'pen' && (this._isPenInUse() || this._penInput?.eraser)) {
+            event.preventDefault(); return;
+        }
 		if (this._directHighlight?.contextMenu(event)) {
 			return;
 		}

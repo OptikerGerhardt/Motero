@@ -82,7 +82,8 @@ export class PDFPageNavigation {
     get enabled() {
         return this.mode === 'jumped' && !this.multitouch && !this.view._destroyed
             && !this.view._pageFitting?.zooming && !this.view._pageFitting?.editor
-            && !this.view._booxReader?.isOverview() && this.view._tool.type === 'pointer';
+            && !this.view._booxReader?.isOverview() && !this.view._penInput?.busy
+            && (this.view._tool.type === 'pointer' || this.view._isPenInUse?.());
     }
     isPageTarget(target) {
         return this.viewer.container.contains(target) && !target.closest?.('a,button,input,textarea,select,.boox-highlight-palette,.boox-manual-crop');

@@ -70,6 +70,16 @@ function createClassList(...names) {
 	return { contains: name => values.has(name) };
 }
 
+// Use real view methods without running the browser-dependent constructor.
+function withPenState(view) {
+	return Object.assign(Object.create(PDFView.prototype), {
+		_options: { platform: 'android' },
+		_penActive: false,
+		_penExclusive: false,
+		_penActiveTimeout: null,
+	}, view);
+}
+
 function createNativeSelectionFixture() {
 	let root = createRoot();
 	let page = { dataset: { pageNumber: '1' } };
@@ -532,7 +542,7 @@ test('mobile PDF initialization installs native-selection and touch-transform ev
 		_options: {},
 	});
 
-	await PDFView.prototype._init.call(view);
+	await PDFView.prototype._init.call(Object.setPrototypeOf(view, PDFView.prototype));
 	assert.equal(view._nativeTextSelection instanceof PDFNativeTextSelection, true);
 	assert.equal(listeners.some(([type]) => type === 'touchmove'), true);
 	assert.equal(listeners.some(([type]) => type === 'touchend'), true);
@@ -561,7 +571,7 @@ test('destroying a mobile PDF view releases native selection', () => {
 		_pendingPageTurn: { cancel: () => calls.push(['pageTurn']) },
 	};
 	try {
-		PDFView.prototype.destroy.call(view);
+		PDFView.prototype.destroy.call(Object.setPrototypeOf(view, PDFView.prototype));
 	}
 	finally {
 		window.removeEventListener = previousRemoveEventListener;
@@ -602,7 +612,7 @@ test('primary mobile PDF document initialization requests outline data', async (
 		_resolveInitializedPromise: () => initialized++,
 	};
 
-	await PDFView.prototype._handleDocumentInit.call(view);
+	await PDFView.prototype._handleDocumentInit.call(Object.setPrototypeOf(view, PDFView.prototype));
 	assert.equal(view._iframeWindow.PDFViewerApplication.pdfViewer.currentScaleValue, 'page-width');
 	assert.equal(initialized, 1);
 	assert.equal(outlineRequests, 1);
@@ -624,11 +634,11 @@ test('PDF text-layer and annotation selection changes stay synchronized with nat
 		_render: () => renders++,
 		_onSetAnnotationPopup: () => popups++,
 	};
-	PDFView.prototype._handleTextLayerRendered.call(view, {
+	PDFView.prototype._handleTextLayerRendered.call(Object.setPrototypeOf(view, PDFView.prototype), {
 		source: { div: { querySelector: () => textLayer } },
 	});
-	PDFView.prototype.clearSelection.call(view);
-	PDFView.prototype.setSelectedAnnotationIDs.call(view, ['annotation']);
+	PDFView.prototype.clearSelection.call(Object.setPrototypeOf(view, PDFView.prototype));
+	PDFView.prototype.setSelectedAnnotationIDs.call(Object.setPrototypeOf(view, PDFView.prototype), ['annotation']);
 	assert.deepEqual(renderedLayers, [textLayer]);
 	assert.equal(clears, 2);
 	assert.equal(domClears, 1);
@@ -640,7 +650,7 @@ test('PDF text-layer and annotation selection changes stay synchronized with nat
 function createPointerView(platform = 'android', annotation = { id: 'annotation', type: 'highlight' }) {
 	let selected = [];
 	let currentPosition = { pageIndex: 0, rects: [[10, 10, 11, 11]] };
-	let view = {
+	let view = withPenState({
 		_options: { platform },
 		_tool: { type: 'pointer' },
 		_nativeTextSelection: null,
@@ -678,7 +688,7 @@ function createPointerView(platform = 'android', annotation = { id: 'annotation'
 		_render() {},
 		_updateViewStats() {},
 		updateCursor() {},
-	};
+	});
 	return {
 		selected,
 		setPosition: position => currentPosition = position,
@@ -1184,9 +1194,9 @@ test('Desktop platforms and unsupported scroll modes use plain PDF.js positionin
 test('Android PDF edge taps turn all three scroll modes and preserve zoom', () => {
  for (let scrollMode of [0,1,2]) {
 	let { calls, pdfViewer, view } = createEdgePageTurnView({scrollMode});
-	PDFView.prototype._resolveBackdropTap.call(view, {}, 'previous');
-	PDFView.prototype._resolveBackdropTap.call(view, {}, 'next');
-	PDFView.prototype._resolveBackdropTap.call(view, {}, null);
+	PDFView.prototype._resolveBackdropTap.call(Object.setPrototypeOf(view, PDFView.prototype), {}, 'previous');
+	PDFView.prototype._resolveBackdropTap.call(Object.setPrototypeOf(view, PDFView.prototype), {}, 'next');
+	PDFView.prototype._resolveBackdropTap.call(Object.setPrototypeOf(view, PDFView.prototype), {}, null);
 
 	assert.deepEqual(calls, { backdrop: 1, manual: 2, next: 1, previous: 1 });
 	assert.equal(pdfViewer.currentScaleValue, 2.5);
@@ -1216,22 +1226,22 @@ test('PDF edge taps fall through outside supported Android touch input', () => {
 		let { calls, view } = createEdgePageTurnView(options);
 		let event = { pointerType: 'touch' };
 		let direction = view._getEdgePageTurnDirection(event, 10);
-		PDFView.prototype._resolveBackdropTap.call(view, event, direction);
+		PDFView.prototype._resolveBackdropTap.call(Object.setPrototypeOf(view, PDFView.prototype), event, direction);
 		assert.deepEqual(calls, { backdrop: 1, manual: 0, next: 0, previous: 0 });
 	}
 
 	let { calls, view } = createEdgePageTurnView();
 	let event = { pointerType: 'mouse' };
 	let direction = view._getEdgePageTurnDirection(event, 10);
-	PDFView.prototype._resolveBackdropTap.call(view, event, direction);
+	PDFView.prototype._resolveBackdropTap.call(Object.setPrototypeOf(view, PDFView.prototype), event, direction);
 	assert.deepEqual(calls, { backdrop: 1, manual: 0, next: 0, previous: 0 });
 });
 
 test('Android PDF edge taps delegate every spread mode to PDF.js', () => {
 	for (let spreadMode of [0, 1, 2]) {
 		let { calls, pdfViewer, view } = createEdgePageTurnView({ spreadMode, scale: 3 });
-		PDFView.prototype._resolveBackdropTap.call(view, {}, 'previous');
-		PDFView.prototype._resolveBackdropTap.call(view, {}, 'next');
+		PDFView.prototype._resolveBackdropTap.call(Object.setPrototypeOf(view, PDFView.prototype), {}, 'previous');
+		PDFView.prototype._resolveBackdropTap.call(Object.setPrototypeOf(view, PDFView.prototype), {}, 'next');
 
 		assert.deepEqual(calls, { backdrop: 0, manual: 2, next: 1, previous: 1 });
 		assert.equal(pdfViewer.currentScaleValue, 3);
@@ -1242,7 +1252,7 @@ test('Android PDF edge taps support pen input', () => {
 	let { calls, view } = createEdgePageTurnView();
 	let event = { pointerType: 'pen' };
 	let direction = view._getEdgePageTurnDirection(event, 990);
-	PDFView.prototype._resolveBackdropTap.call(view, event, direction);
+	PDFView.prototype._resolveBackdropTap.call(Object.setPrototypeOf(view, PDFView.prototype), event, direction);
 	assert.deepEqual(calls, { backdrop: 0, manual: 1, next: 1, previous: 0 });
 });
 
@@ -1250,7 +1260,7 @@ test('Android PDF edge taps remain consumed at document boundaries', () => {
 	for (let direction of ['previous', 'next']) {
 		// PDF.js returns false when it cannot advance past the first or last page.
 		let { calls, view } = createEdgePageTurnView({ navigationResult: false });
-		PDFView.prototype._resolveBackdropTap.call(view, {}, direction);
+		PDFView.prototype._resolveBackdropTap.call(Object.setPrototypeOf(view, PDFView.prototype), {}, direction);
 
 		assert.equal(calls.backdrop, 0);
 		assert.equal(calls.manual, 1);
@@ -1338,13 +1348,28 @@ test('Android backdrop taps wait for a possible second tap', (t) => {
 	view._clearPendingBackdropTap = PDFView.prototype._clearPendingBackdropTap;
 	let event = { clientX: 500, clientY: 20, pointerType: 'touch' };
 
-	PDFView.prototype._scheduleBackdropTap.call(view, event, null);
+	PDFView.prototype._scheduleBackdropTap.call(Object.setPrototypeOf(view, PDFView.prototype), event, null);
 	t.mock.timers.tick(299);
 	assert.equal(calls.backdrop, 0);
 	t.mock.timers.tick(1);
 	assert.equal(calls.previous, 0);
 	assert.equal(calls.backdrop, 1);
 	assert.equal(view._pendingBackdropTap, null);
+});
+
+test('pen contact cancels a pending Android backdrop or edge tap', (t) => {
+	t.mock.timers.enable({ apis: ['setTimeout'] });
+	let { view } = createPointerView();
+	view._iframeWindow.setTimeout = setTimeout;
+	view._iframeWindow.clearTimeout = clearTimeout;
+	let resolved = 0;
+	view._resolveBackdropTap = () => resolved++;
+	PDFView.prototype._scheduleBackdropTap.call(view, createPointerEvent('touch'), 'next');
+	assert.notEqual(view._pendingBackdropTap, null);
+	PDFView.prototype._handlePointerDown.call(view, createPointerEvent('pen'));
+	assert.equal(view._pendingBackdropTap, null);
+	t.mock.timers.tick(300);
+	assert.equal(resolved, 0);
 });
 
 test('Android edge taps tolerate boundary drift and use the delayed pointer path', (t) => {
@@ -1390,10 +1415,10 @@ test('Android edge taps tolerate boundary drift and use the delayed pointer path
 	let event = createPointerEvent();
 	event.clientX = 59;
 
-	PDFView.prototype._handlePointerDown.call(fixture.view, event);
+	PDFView.prototype._handlePointerDown.call(Object.setPrototypeOf(fixture.view, PDFView.prototype), event);
 	event.clientX = 67;
 	event.clientY = 19;
-	PDFView.prototype._handlePointerUp.call(fixture.view, event);
+	PDFView.prototype._handlePointerUp.call(Object.setPrototypeOf(fixture.view, PDFView.prototype), event);
 	assert.deepEqual(calls, { backdrop: 0, manual: 0, previous: 0 });
 	t.mock.timers.tick(300);
 	assert.deepEqual(calls, { backdrop: 0, manual: 1, previous: 1 });
@@ -1410,7 +1435,7 @@ test('Android palette input never starts a page action that consumes the next ta
 		let event = { type, pointerType,
 			target: { closest: selector => selector === '.boox-highlight-palette' ? {} : null },
 		};
-		PDFView.prototype._handlePointerDown.call(view, event);
+		PDFView.prototype._handlePointerDown.call(Object.setPrototypeOf(view, PDFView.prototype), event);
 		assert.equal(view._pointerDownTriggered, false);
 		assert.equal(view._contentFitRequest, pendingFit);
 	}
@@ -1437,11 +1462,11 @@ test('Android double taps suppress only their touch-generated compatibility mous
 		preventDefault: () => prevented++,
 	};
 
-	PDFView.prototype._handlePointerDown.call(view, compatibilityMouseEvent);
+	PDFView.prototype._handlePointerDown.call(Object.setPrototypeOf(view, PDFView.prototype), compatibilityMouseEvent);
 	assert.equal(prevented, 1);
 	assert.equal(nativePointerDowns, 0);
 
-	PDFView.prototype._handlePointerDown.call(view, {
+	PDFView.prototype._handlePointerDown.call(Object.setPrototypeOf(view, PDFView.prototype), {
 		...compatibilityMouseEvent,
 		sourceCapabilities: { firesTouchEvents: false },
 	});
@@ -1471,12 +1496,12 @@ test('Android touch double-tap candidates wait for tap release before claiming t
 	event.type = 'pointerdown';
 	event.preventDefault = () => prevented++;
 
-	PDFView.prototype._handlePointerDown.call(fixture.view, event);
+	PDFView.prototype._handlePointerDown.call(Object.setPrototypeOf(fixture.view, PDFView.prototype), event);
 	assert.equal(clearedTimeout, 42);
 	assert.equal(prevented, 0);
 	assert.equal(fixture.view._suppressCompatibilityMouseUntil, 0);
 
-	PDFView.prototype._handlePointerUp.call(fixture.view, event);
+	PDFView.prototype._handlePointerUp.call(Object.setPrototypeOf(fixture.view, PDFView.prototype), event);
 	assert.equal(prevented, 1);
 	assert.equal(fixture.view._suppressCompatibilityMouseUntil, 1300);
 	assert.equal(fixture.view._pendingBackdropTap, null);
@@ -1486,25 +1511,25 @@ test('Android touch double-tap candidates wait for tap release before claiming t
 test('Android annotation touches select on tap release, not on scroll start', () => {
 	let tap = createPointerView();
 	let event = createPointerEvent();
-	PDFView.prototype._handlePointerDown.call(tap.view, event);
+	PDFView.prototype._handlePointerDown.call(Object.setPrototypeOf(tap.view, PDFView.prototype), event);
 	assert.deepEqual(tap.selected, []);
-	PDFView.prototype._handlePointerUp.call(tap.view, event);
+	PDFView.prototype._handlePointerUp.call(Object.setPrototypeOf(tap.view, PDFView.prototype), event);
 	assert.deepEqual(tap.selected, [['annotation']]);
 
 	let scroll = createPointerView();
-	PDFView.prototype._handlePointerDown.call(scroll.view, event);
+	PDFView.prototype._handlePointerDown.call(Object.setPrototypeOf(scroll.view, PDFView.prototype), event);
 	scroll.setPosition(null);
-	PDFView.prototype._handlePointerUp.call(scroll.view, event);
+	PDFView.prototype._handlePointerUp.call(Object.setPrototypeOf(scroll.view, PDFView.prototype), event);
 	assert.deepEqual(scroll.selected, []);
 
 	let desktop = createPointerView('zotero');
-	PDFView.prototype._handlePointerDown.call(desktop.view, event);
+	PDFView.prototype._handlePointerDown.call(Object.setPrototypeOf(desktop.view, PDFView.prototype), event);
 	assert.deepEqual(desktop.selected, [['annotation']]);
 
 	let androidMouse = createPointerView();
 	let mouseEvent = createPointerEvent('');
 	mouseEvent.type = 'mousedown';
-	PDFView.prototype._handlePointerDown.call(androidMouse.view, mouseEvent);
+	PDFView.prototype._handlePointerDown.call(Object.setPrototypeOf(androidMouse.view, PDFView.prototype), mouseEvent);
 	assert.deepEqual(androidMouse.selected, [['annotation']]);
 });
 
@@ -1530,7 +1555,7 @@ test('Android text-tool touches create and focus an inline text annotation immed
 	let event = createPointerEvent();
 	event.preventDefault = () => prevented++;
 
-	PDFView.prototype._handlePointerDown.call(fixture.view, event);
+	PDFView.prototype._handlePointerDown.call(Object.setPrototypeOf(fixture.view, PDFView.prototype), event);
 	assert.equal(added.select, false);
 	assert.equal(added.annotation.type, 'text');
 	assert.equal(added.annotation.position.fontSize, 12);
@@ -1563,11 +1588,11 @@ test('Android touch transforms capture the pointer before moving a selected anno
 	event.target.releasePointerCapture = pointerID => released.push(pointerID);
 	event.preventDefault = () => prevented++;
 
-	PDFView.prototype._handlePointerDown.call(fixture.view, event);
+	PDFView.prototype._handlePointerDown.call(Object.setPrototypeOf(fixture.view, PDFView.prototype), event);
 	assert.deepEqual(captured, [1]);
 	assert.equal(fixture.view._touchTransform.pointerID, 1);
 	assert.equal(prevented, 1);
-	PDFView.prototype._releaseTouchTransform.call(fixture.view);
+	PDFView.prototype._releaseTouchTransform.call(Object.setPrototypeOf(fixture.view, PDFView.prototype));
 	assert.deepEqual(released, [1]);
 	assert.equal(fixture.view._touchTransform, null);
 });
@@ -1586,8 +1611,8 @@ test('tapping a selected text annotation enters editing without stealing an exis
 	let event = createPointerEvent();
 	event.preventDefault = () => prevented++;
 	event.stopPropagation = () => stopped++;
-	PDFView.prototype._handlePointerDown.call(fixture.view, event);
-	PDFView.prototype._handlePointerUp.call(fixture.view, event);
+	PDFView.prototype._handlePointerDown.call(Object.setPrototypeOf(fixture.view, PDFView.prototype), event);
+	PDFView.prototype._handlePointerUp.call(Object.setPrototypeOf(fixture.view, PDFView.prototype), event);
 	assert.equal(blurred, 1);
 	assert.deepEqual(focused, ['text']);
 	assert.equal(prevented, 1);
@@ -1601,8 +1626,8 @@ test('tapping a selected text annotation enters editing without stealing an exis
 	let caretEvent = createPointerEvent();
 	let caretPrevents = 0;
 	caretEvent.preventDefault = () => caretPrevents++;
-	PDFView.prototype._handlePointerDown.call(alreadyFocused.view, caretEvent);
-	PDFView.prototype._handlePointerUp.call(alreadyFocused.view, caretEvent);
+	PDFView.prototype._handlePointerDown.call(Object.setPrototypeOf(alreadyFocused.view, PDFView.prototype), caretEvent);
+	PDFView.prototype._handlePointerUp.call(Object.setPrototypeOf(alreadyFocused.view, PDFView.prototype), caretEvent);
 	assert.equal(caretPrevents, 0);
 });
 
@@ -1610,7 +1635,7 @@ test('Android annotation tools claim touch input without changing pointer or han
 	let root = createRoot();
 	let switchedTools = [];
 	let nativeUpdates = 0;
-	let view = {
+	let view = withPenState({
 		_options: { platform: 'android' },
 		_tool: { type: 'pointer' },
 		_iframeWindow: {
@@ -1622,26 +1647,26 @@ test('Android annotation tools claim touch input without changing pointer or han
 		_nativeTextSelection: { updateEnabledState: () => nativeUpdates++ },
 		_textAnnotationFocused: () => false,
 		updateCursor() {},
-	};
+	});
 
-	PDFView.prototype.setTool.call(view, { type: 'highlight' });
+	PDFView.prototype.setTool.call(Object.setPrototypeOf(view, PDFView.prototype), { type: 'highlight' });
 	assert.equal(root.hasAttribute('data-android-annotation-tool'), true);
-	PDFView.prototype.setTool.call(view, { type: 'pointer' });
+	PDFView.prototype.setTool.call(Object.setPrototypeOf(view, PDFView.prototype), { type: 'pointer' });
 	assert.equal(root.hasAttribute('data-android-annotation-tool'), false);
-	PDFView.prototype.setTool.call(view, { type: 'hand' });
+	PDFView.prototype.setTool.call(Object.setPrototypeOf(view, PDFView.prototype), { type: 'hand' });
 	assert.equal(root.hasAttribute('data-android-annotation-tool'), false);
 	assert.deepEqual(switchedTools, [0, 0, 1]);
 	assert.equal(nativeUpdates, 3);
 
 	view._options.platform = 'zotero';
-	PDFView.prototype.setTool.call(view, { type: 'highlight' });
+	PDFView.prototype.setTool.call(Object.setPrototypeOf(view, PDFView.prototype), { type: 'highlight' });
 	assert.equal(root.hasAttribute('data-android-annotation-tool'), false);
 });
 
 test('changing Android tools finishes an active text editor exactly once', () => {
 	let root = createRoot();
 	let finishes = 0;
-	let view = {
+	let view = withPenState({
 		_options: { platform: 'android' },
 		_tool: { type: 'pointer' },
 		_iframeWindow: {
@@ -1652,10 +1677,10 @@ test('changing Android tools finishes an active text editor exactly once', () =>
 		_textAnnotationFocused: () => true,
 		finishTextAnnotationEditing: () => finishes++,
 		updateCursor() {},
-	};
+	});
 
-	PDFView.prototype.setTool.call(view, { type: 'highlight' });
-	PDFView.prototype.setTool.call(view, { type: 'highlight' });
+	PDFView.prototype.setTool.call(Object.setPrototypeOf(view, PDFView.prototype), { type: 'highlight' });
+	PDFView.prototype.setTool.call(Object.setPrototypeOf(view, PDFView.prototype), { type: 'highlight' });
 	assert.equal(finishes, 1);
 });
 
@@ -1674,12 +1699,12 @@ test('native touch-end handoff preserves scrolling and active transforms keep ap
 	};
 	let event = { cancelable: true, preventDefault: () => prevented++ };
 
-	PDFView.prototype._handleTouchEnd.call(view, event);
+	PDFView.prototype._handleTouchEnd.call(Object.setPrototypeOf(view, PDFView.prototype), event);
 	assert.equal(cleared, 1);
 	assert.equal(prevented, 0);
 
 	view._touchTransform = {};
-	PDFView.prototype._handleTouchEnd.call(view, event);
+	PDFView.prototype._handleTouchEnd.call(Object.setPrototypeOf(view, PDFView.prototype), event);
 	assert.equal(prevented, 1);
 	assert.equal(view._pointerDownTriggered, false);
 	assert.equal(pointerUps, 2);
@@ -1687,7 +1712,7 @@ test('native touch-end handoff preserves scrolling and active transforms keep ap
 	view._touchTransform = null;
 	view._nativeTextSelection.shouldAllowNativeTouch = () => false;
 	view._pointerDownTriggered = true;
-	PDFView.prototype._handleTouchEnd.call(view, {
+	PDFView.prototype._handleTouchEnd.call(Object.setPrototypeOf(view, PDFView.prototype), {
 		cancelable: false,
 		preventDefault: () => assert.fail('non-cancelable scrolling must not be interrupted'),
 	});
@@ -1698,7 +1723,7 @@ test('native-selection gesture deferral leaves touch move and pointer-up to the 
 	let prevented = 0;
 	let cleared = 0;
 	let pendingTapClears = 0;
-	let view = {
+	let view = withPenState({
 		_nativeTextSelection: {
 			enabled: true,
 			shouldDeferEvent: () => true,
@@ -1709,20 +1734,20 @@ test('native-selection gesture deferral leaves touch move and pointer-up to the 
 		_pointerDownTap: { doubleTap: true },
 		_clearPendingBackdropTap: () => pendingTapClears++,
 		_clearPointerAction: () => cleared++,
-	};
+	});
 	let event = {
 		target: { id: 'page' },
 		preventDefault: () => prevented++,
 	};
-	PDFView.prototype._handleTouchMove.call(view, event);
+	PDFView.prototype._handleTouchMove.call(Object.setPrototypeOf(view, PDFView.prototype), event);
 	assert.equal(prevented, 0);
-	PDFView.prototype._handlePointerUp.call(view, event);
+	PDFView.prototype._handlePointerUp.call(Object.setPrototypeOf(view, PDFView.prototype), event);
 	assert.equal(cleared, 1);
 	assert.equal(pendingTapClears, 1);
 
 	view._nativeTextSelection.shouldDeferEvent = () => false;
 	view._touchTransform = {};
-	PDFView.prototype._handleTouchMove.call(view, event);
+	PDFView.prototype._handleTouchMove.call(Object.setPrototypeOf(view, PDFView.prototype), event);
 	assert.equal(prevented, 1);
 });
 
@@ -1734,7 +1759,7 @@ test('interrupted Android annotation transforms release pointer capture and rese
 		hasPointerCapture: () => true,
 		releasePointerCapture: pointerID => released.push(pointerID),
 	};
-	let view = {
+	let view = withPenState({
 		_touchTransform: { pointerID: 7, target },
 		_nativeTextSelection: null,
 		_dragging: false,
@@ -1746,11 +1771,11 @@ test('interrupted Android annotation transforms release pointer capture and rese
 		_render: () => renders++,
 		_releaseTouchTransform: PDFView.prototype._releaseTouchTransform,
 		_handlePointerCancel: PDFView.prototype._handlePointerCancel,
-	};
+	});
 
-	PDFView.prototype._handleTouchTransformInterrupted.call(view, { pointerId: 8 });
+	PDFView.prototype._handleTouchTransformInterrupted.call(Object.setPrototypeOf(view, PDFView.prototype), { pointerId: 8 });
 	assert.equal(view._touchTransform.pointerID, 7);
-	PDFView.prototype._handleTouchTransformInterrupted.call(view, { pointerId: 7 });
+	PDFView.prototype._handleTouchTransformInterrupted.call(Object.setPrototypeOf(view, PDFView.prototype), { pointerId: 7 });
 	assert.deepEqual(released, [7]);
 	assert.equal(view._touchTransform, null);
 	assert.equal(view.action, null);
@@ -1758,6 +1783,245 @@ test('interrupted Android annotation transforms release pointer capture and rese
 	assert.equal(view._pointerDownTriggered, false);
 	assert.equal(pendingTapClears, 1);
 	assert.equal(renders, 1);
+});
+
+test('a hovering or touching pen is tracked only while an annotation tool is active', (t) => {
+	t.mock.timers.enable({ apis: ['setTimeout'] });
+	let root = createRoot();
+	let view = withPenState({
+		_options: { platform: 'android' },
+		_tool: { type: 'pointer' },
+		_iframeWindow: {
+			PDFViewerApplication: { pdfCursorTools: { switchTool() {} } },
+			document: { documentElement: root },
+		},
+		_nativeTextSelection: null,
+		_textAnnotationFocused: () => false,
+		updateCursor() {},
+	});
+
+	PDFView.prototype._handlePenSignal.call(view, { pointerType: 'pen' });
+	assert.equal(view._isPenInUse(), false);
+
+	PDFView.prototype.setTool.call(view, { type: 'highlight' });
+	PDFView.prototype._handlePenSignal.call(view, { pointerType: 'touch' });
+	assert.equal(view._isPenInUse(), false);
+	PDFView.prototype._handlePenSignal.call(view, { pointerType: 'pen' });
+	assert.equal(view._isPenInUse(), true);
+	assert.equal(root.hasAttribute('data-pen-active'), true);
+
+	t.mock.timers.tick(5 * 60 * 1000);
+	assert.equal(view._isPenInUse(), false);
+	assert.equal(root.hasAttribute('data-pen-active'), false);
+
+	PDFView.prototype._handlePenSignal.call(view, { pointerType: 'pen' });
+	PDFView.prototype.setTool.call(view, { type: 'pointer' });
+	assert.equal(view._isPenInUse(), false);
+	assert.equal(root.hasAttribute('data-pen-active'), false);
+});
+
+test('while a pen is in use fingers get no tool actions but still select annotations like the pen', () => {
+	let annotation = { id: 'annotation', type: 'highlight', position: { pageIndex: 0, rects: [[0, 0, 10, 10]] } };
+	let position = { pageIndex: 0, rects: [[5, 5, 5, 5]] };
+	let selectable = [];
+	let view = withPenState({
+		_readOnly: false,
+		_tool: { type: 'highlight' },
+		_selectionRanges: [],
+		getSelectedAnnotations: () => [],
+		getSelectableAnnotations: () => selectable,
+	});
+	let getAction = pointerType => PDFView.prototype.getActionAtPosition.call(
+		view, position, { pointerType, detail: 1 }
+	);
+
+	assert.equal(getAction('touch').action.type, 'selectText');
+	view._penActive = true;
+	assert.equal(getAction('touch').action.type, 'none');
+	assert.equal(getAction('pen').action.type, 'selectText');
+	for (let type of ['ink', 'eraser', 'note', 'text', 'image']) {
+		view._tool = { type };
+		assert.equal(getAction('touch').action.type, 'none', type);
+		assert.notEqual(getAction('pen').action.type, 'none', type);
+	}
+
+	view._tool = { type: 'highlight' };
+	selectable = [annotation];
+	for (let pointerType of ['touch', 'pen']) {
+		let { action, selectAnnotations } = getAction(pointerType);
+		assert.equal(action.type, 'drag', pointerType);
+		assert.deepEqual(selectAnnotations, [annotation], pointerType);
+	}
+});
+
+test('web pen settings preserve finger annotation input', (t) => {
+	t.mock.timers.enable({ apis: ['setTimeout'] });
+	let view = withPenState({
+		_options: { platform: 'web' },
+		_tool: { type: 'ink' },
+	});
+	PDFView.prototype.setPenActive.call(view, true);
+	PDFView.prototype.setPenExclusive.call(view, true);
+	assert.equal(view._isPenInUse(), false);
+	assert.equal(PDFView.prototype.getActionAtPosition.call(view, {}, { pointerType: 'touch' }).action.type, 'ink');
+});
+
+test('a swallowed pen release is cancelled without touching a completed or newer action', (t) => {
+	t.mock.timers.enable({ apis: ['setTimeout'] });
+	let { view } = createPointerView();
+	let pen = { ...createPointerEvent('pen'), pointerId: 2 };
+	let start = () => {
+		view._pointerDownTap = { pointerType: 'pen', pointerId: 2 };
+		view._pointerDownTriggered = true;
+		view.pointerDownPosition = view.pointerEventToPosition(pen);
+		view.action = { type: 'none' };
+	};
+	start();
+	PDFView.prototype._handlePenPointerRelease.call(view, pen);
+	assert.notEqual(view.action, null);
+	t.mock.timers.tick(0);
+	assert.equal(view.action, null);
+	assert.equal(view._pointerDownTriggered, false);
+
+	start();
+	PDFView.prototype._handlePenPointerRelease.call(view, pen);
+	PDFView.prototype._handlePointerUp.call(view, pen);
+	t.mock.timers.tick(0);
+	assert.equal(view._pointerDownTap, null);
+	assert.equal(view.action, null);
+
+	start();
+	PDFView.prototype._handlePenPointerRelease.call(view, pen);
+	start();
+	let nextTap = view._pointerDownTap;
+	t.mock.timers.tick(0);
+	assert.equal(view._pointerDownTap, nextTap);
+	assert.equal(view._pointerDownTriggered, true);
+});
+
+test('a new mouse or pen contact recovers a missing pen release without accepting palm or compatibility events', () => {
+	for (let [pointerType, pointerId] of [['mouse', 1], ['pen', 2], ['pen', 3]]) {
+		let { view } = createPointerView('zotero');
+		let pen = { ...createPointerEvent('pen'), type: 'pointerdown', pointerId: 2 };
+		view._handlePointerDown(pen);
+		let previousTap = view._pointerDownTap;
+		view._handlePointerDown({ ...createPointerEvent('touch'), type: 'pointerdown' });
+		view._handlePointerDown({ ...createPointerEvent(), type: 'mousedown', pointerType: undefined, pointerId: undefined });
+		assert.equal(view._pointerDownTap, previousTap);
+
+		let contact = { ...createPointerEvent(pointerType), type: 'pointerdown', pointerId };
+		view._handlePointerDown(contact);
+		assert.notEqual(view._pointerDownTap, previousTap, `${pointerType} ${pointerId}`);
+		if (pointerType === 'mouse') {
+			assert.equal(view.action, null);
+			view._handlePointerDown({ ...contact, type: 'mousedown', pointerType: undefined, pointerId: undefined });
+		}
+		assert.equal(view._pointerDownTriggered, true);
+		view._handlePointerUp(contact);
+		assert.equal(view._pointerDownTap, null);
+		assert.equal(view.action, null);
+	}
+});
+
+test('only a pen-owned action keeps touchstart away from PDF.js pinch handling', () => {
+	let stopped = 0;
+	let view = { _penActive: true };
+	let start = () => PDFView.prototype._handleTouchStart.call(view, { stopPropagation: () => stopped++ });
+	start();
+	view._pointerDownTap = { pointerType: 'touch' };
+	start();
+	assert.equal(stopped, 0);
+	view._pointerDownTap = { pointerType: 'pen' };
+	start();
+	assert.equal(stopped, 1);
+});
+
+test('palm moves cannot replace queued pen moves, and finger-only input keeps its release handling', () => {
+	let queued = [];
+	let { view } = createPointerView();
+	let pen = { ...createPointerEvent('pen'), pointerId: 2 };
+	let palm = createPointerEvent('touch');
+	view._pointerDownTap = { pointerId: pen.pointerId, pointerType: 'pen' };
+	view._handlePointerMoveThrottled = event => queued.push(event);
+	PDFView.prototype._handlePointerMove.call(view, pen);
+	PDFView.prototype._handlePointerMove.call(view, palm);
+	assert.deepEqual(queued, [pen]);
+
+	view._pointerDownTap = { pointerId: 2, pointerType: 'touch' };
+	view._pointerDownTriggered = true;
+	PDFView.prototype._handlePointerMove.call(view, palm);
+	assert.deepEqual(queued, [pen, palm]);
+	PDFView.prototype._handlePointerUp.call(view, palm);
+	assert.equal(view._pointerDownTap, null);
+	assert.equal(view._pointerDownTriggered, false);
+});
+
+test('a palm cannot end or cancel the action of a pen, and a pen takes over from a palm', (t) => {
+	t.mock.timers.enable({ apis: ['setTimeout'] });
+	let createFixture = () => {
+		let { view } = createPointerView();
+		view._tool = { type: 'highlight' };
+		view._iframeWindow.document = { documentElement: createRoot() };
+		return view;
+	};
+	let pen = { ...createPointerEvent('pen'), pointerId: 2 };
+	let palm = { ...createPointerEvent('touch'), pointerId: 1 };
+
+	let view = createFixture();
+	PDFView.prototype._handlePointerDown.call(view, pen);
+	assert.equal(view._pointerDownTap.pointerId, 2);
+	assert.equal(view._isPenInUse(), true);
+	PDFView.prototype._handlePointerDown.call(view, palm);
+	PDFView.prototype._handlePointerUp.call(view, palm);
+	PDFView.prototype._handlePointerCancel.call(view, palm);
+	PDFView.prototype._handleTouchEnd.call(view, { touches: [], cancelable: false });
+	PDFView.prototype._handlePointerDown.call(view, palm);
+	assert.equal(view._pointerDownTap.pointerId, 2);
+	assert.notEqual(view.action, null);
+	assert.equal(view._pointerDownTriggered, true);
+	PDFView.prototype._handlePointerUp.call(view, pen);
+	assert.equal(view._pointerDownTap, null);
+	assert.equal(view.action, null);
+
+	view = createFixture();
+	PDFView.prototype._handlePointerDown.call(view, palm);
+	assert.equal(view._pointerDownTap.pointerType, 'touch');
+	PDFView.prototype._handlePointerDown.call(view, pen);
+	assert.equal(view._pointerDownTap.pointerId, 2);
+	PDFView.prototype._handlePointerUp.call(view, palm);
+	assert.equal(view._pointerDownTap.pointerId, 2);
+	assert.notEqual(view.action, null);
+});
+
+test('fingers are left to scroll while a pen is in use, but a pen stroke keeps owning touch movement', () => {
+	let prevented = 0;
+	let view = withPenState({
+		_nativeTextSelection: null,
+		_tool: { type: 'highlight' },
+		_touchTransform: null,
+		_pointerDownTap: { pointerType: 'touch' },
+	});
+	let event = { target: { id: 'page' }, preventDefault: () => prevented++ };
+
+	PDFView.prototype._handleTouchMove.call(view, event);
+	assert.equal(prevented, 1);
+
+	view._penActive = true;
+	PDFView.prototype._handleTouchMove.call(view, event);
+	assert.equal(prevented, 1);
+
+	view._pointerDownTap = { pointerType: 'pen' };
+	PDFView.prototype._handleTouchMove.call(view, event);
+	assert.equal(prevented, 2);
+});
+
+test('a palm lifting while another touch remains does not end the pointer action', () => {
+	let view = { _touchTransform: null, _pointerDownTriggered: true, _nativeTextSelection: null };
+
+	PDFView.prototype._handleTouchEnd.call(view, { cancelable: true, touches: [{}], preventDefault() {} });
+	assert.equal(view._pointerDownTriggered, true);
+	PDFView.prototype._handleTouchEnd.call(view, { cancelable: true, touches: [], preventDefault() {} });
+	assert.equal(view._pointerDownTriggered, false);
 });
 
 test('native selection keeps keyboard range movement in the browser and invalid copies untouched', () => {
@@ -1789,7 +2053,7 @@ test('native selection keeps keyboard range movement in the browser and invalid 
 		preventDefault: () => prevented++,
 		stopPropagation: () => stopped++,
 	};
-	PDFView.prototype._handleKeyDown.call(view, keyEvent);
+	PDFView.prototype._handleKeyDown.call(Object.setPrototypeOf(view, PDFView.prototype), keyEvent);
 	assert.equal(prevented, 0);
 	assert.equal(stopped, 0);
 
@@ -1798,7 +2062,7 @@ test('native selection keeps keyboard range movement in the browser and invalid 
 		preventDefault: () => prevented++,
 		stopPropagation: () => stopped++,
 	};
-	PDFView.prototype._handleCopy.call(view, copyEvent);
+	PDFView.prototype._handleCopy.call(Object.setPrototypeOf(view, PDFView.prototype), copyEvent);
 	assert.equal(prevented, 0);
 	assert.equal(stopped, 0);
 });
@@ -1832,7 +2096,7 @@ test('Escape clears a native PDF selection through the shared selection lifecycl
 		preventDefault: () => prevented++,
 		stopPropagation() {},
 	};
-	PDFView.prototype._handleKeyDown.call(view, event);
+	PDFView.prototype._handleKeyDown.call(Object.setPrototypeOf(view, PDFView.prototype), event);
 	assert.equal(prevented, 1);
 	assert.equal(clears, 1);
 });
@@ -1849,7 +2113,7 @@ test('PDF context menus defer to native Android selection before Reader hit test
 		},
 		pointerEventToPosition: () => assert.fail('Reader hit testing must not run'),
 	};
-	PDFView.prototype._handleContextMenu.call(view, {});
+	PDFView.prototype._handleContextMenu.call(Object.setPrototypeOf(view, PDFView.prototype), {});
 	assert.equal(nativeCalls, 1);
 });
 
@@ -1859,11 +2123,11 @@ test('PDF password entry resumes an active request and reports when view recreat
 		_password: null,
 		_passwordUpdateCallback: password => passwords.push(password),
 	};
-	assert.equal(PDFView.prototype.enterPassword.call(view, 'secret'), true);
+	assert.equal(PDFView.prototype.enterPassword.call(Object.setPrototypeOf(view, PDFView.prototype), 'secret'), true);
 	assert.equal(view._password, 'secret');
 	assert.equal(view._passwordUpdateCallback, null);
 	assert.deepEqual(passwords, ['secret']);
-	assert.equal(PDFView.prototype.enterPassword.call(view, 'replacement'), false);
+	assert.equal(PDFView.prototype.enterPassword.call(Object.setPrototypeOf(view, PDFView.prototype), 'replacement'), false);
 	assert.equal(view._password, 'replacement');
 });
 
@@ -1885,9 +2149,9 @@ test('PDF view buffers mobile annotation image requests until its renderer is in
 		_handleViewAreaUpdate() {},
 		_updateViewStats() {},
 	};
-	PDFView.prototype.renderAnnotationImages.call(view, ['missing']);
+	PDFView.prototype.renderAnnotationImages.call(Object.setPrototypeOf(view, PDFView.prototype), ['missing']);
 	assert.deepEqual(view._pendingAnnotationImageIDs, ['missing']);
-	await PDFView.prototype._init2.call(view);
+	await PDFView.prototype._init2.call(Object.setPrototypeOf(view, PDFView.prototype));
 	assert.deepEqual(delivered, [{ id: 'missing', image: '' }]);
 	assert.equal(view._pendingAnnotationImageIDs, null);
 	assert.equal(eventHandlers[0][0], 'updateviewarea');
@@ -1939,7 +2203,7 @@ function createPositionNavigationView({
 test('Android centered position navigation is synchronous and preserves the zoom preset', () => {
 	for (let options of [{}, { block: 'center' }]) {
 		let { element, pdfViewer, view } = createPositionNavigationView();
-		assert.equal(PDFView.prototype.navigateToPosition.call(view, { pageIndex: 3 }, options), undefined);
+		assert.equal(PDFView.prototype.navigateToPosition.call(Object.setPrototypeOf(view, PDFView.prototype), { pageIndex: 3 }, options), undefined);
 		assert.deepEqual(element.lastScrollTo, { left: 1000, top: 2000, behavior: 'instant' });
 		assert.equal(pdfViewer.currentScaleValue, 'page-width');
 		assert.equal(pdfViewer.currentScale, 2);
@@ -1950,7 +2214,7 @@ test('Android navigation uses page bounds at nonzero scroll offsets', () => {
 	let { element, page, view } = createPositionNavigationView({ rect: [1500, 2800, 1600, 2840] });
 	Object.assign(element, { scrollLeft: 900, scrollTop: 1800 });
 	Object.assign(page.div, { clientWidth: 1200, clientHeight: 1800 });
-	PDFView.prototype.navigateToPosition.call(view, { pageIndex: 3 });
+	PDFView.prototype.navigateToPosition.call(Object.setPrototypeOf(view, PDFView.prototype), { pageIndex: 3 });
 	assert.deepEqual(element.lastScrollTo, { left: 1350, top: 2520, behavior: 'instant' });
 });
 
@@ -1959,7 +2223,7 @@ test('Android fitted pages keep horizontal placement in vertical and wrapped mod
 		let { element, pdfViewer, view } = createPositionNavigationView();
 		Object.assign(element, { scrollLeft: 1000, scrollTop: 1800 });
 		pdfViewer.scrollMode = scrollMode;
-		PDFView.prototype.navigateToPosition.call(view, { pageIndex: 3 });
+		PDFView.prototype.navigateToPosition.call(Object.setPrototypeOf(view, PDFView.prototype), { pageIndex: 3 });
 		assert.deepEqual(element.lastScrollTo, { top: 2000, behavior: 'instant' });
 	}
 });
@@ -1970,7 +2234,7 @@ test('Android cross-page annotations keep legacy vertical positioning and page-a
 		Object.assign(element, { scrollLeft: 900, scrollTop: 1800 });
 		Object.assign(page.div, { clientWidth: 1200, clientHeight: 1800 });
 		pdfViewer.scrollMode = scrollMode;
-		PDFView.prototype.navigateToPosition.call(view, {
+		PDFView.prototype.navigateToPosition.call(Object.setPrototypeOf(view, PDFView.prototype), {
 			pageIndex: 3, nextPageRects: [[100, 760, 200, 780]],
 		});
 		assert.deepEqual(element.lastScrollTo, { left: 1000, top, behavior: 'instant' });
@@ -1990,7 +2254,7 @@ test('Position navigation preserves legacy targets outside the Android centered 
 		['android', true, { block: 'center', inline: 'nearest', ifNeeded: true, visibilityMargin: -150 }],
 	]) {
 		let { element, pdfViewer, rect, view } = createPositionNavigationView({ platform, loaded });
-		PDFView.prototype.navigateToPosition.call(view, { pageIndex: 3 }, options);
+		PDFView.prototype.navigateToPosition.call(Object.setPrototypeOf(view, PDFView.prototype), { pageIndex: 3 }, options);
 		assert.deepEqual(element.lastScrollTo, { ...getScrollTarget({ rect, ...element, ...options }), behavior: 'instant' });
 		assert.equal(pdfViewer.currentScaleValue, 'page-width');
 	}
@@ -2007,7 +2271,7 @@ test('long edge presses and moved pointers do not turn a page', () => {
  for (let mutate of [({view})=>view._pointerDownTap.time=Date.now()-500,
    ({event})=>event.clientX+=12,({event})=>event.clientY+=12]) {
   let f=createBackdropTapEligibilityFixture();f.view._pointerDownTap.time=Date.now();mutate(f);
-  assert.equal(PDFView.prototype._shouldHandleBackdropTap.call(f.view,f.event,f.position,10),false);
+  assert.equal(PDFView.prototype._shouldHandleBackdropTap.call(Object.setPrototypeOf(f.view, PDFView.prototype),f.event,f.position,10),false);
  }
 });
 
@@ -2025,7 +2289,7 @@ test('a priority edge tap cancels deferred chrome input rather than replaying a 
  view._chromeTapGuard=new PDFChromeTapGuard(view);
  const event={type:'pointerdown',pointerType:'touch',isPrimary:true,button:0,pointerId:1,clientX:599,clientY:799,target,preventDefault(){}};
  assert.equal(view._chromeTapGuard.down(event),true);
- assert.equal(PDFView.prototype._tryPriorityReaderTap.call(view,event),true);
+ assert.equal(PDFView.prototype._tryPriorityReaderTap.call(Object.setPrototypeOf(view, PDFView.prototype),event),true);
  t.mock.timers.tick(500);
  assert.equal(turns,1);assert.equal(replayed,0);
 });
@@ -2036,7 +2300,7 @@ test('a PDF tap dismissing the highlight palette is consumed before chrome, book
   _iframeWindow:{PDFViewerApplication:{pdfViewer:{container:{contains:()=>true}}}},
   _clearPendingBackdropTap(){cleared++;},_clearPointerAction(){},_chromeTapGuard:{reset(){}},_directHighlight:{reset(){}}};
  const event=type=>({type,pointerId:4,target:{closest:()=>null},preventDefault(){consumed++;},stopImmediatePropagation(){}});
- const dismiss=e=>PDFView.prototype._consumePaletteDismissal.call(view,e);
+ const dismiss=e=>PDFView.prototype._consumePaletteDismissal.call(Object.setPrototypeOf(view, PDFView.prototype),e);
  assert.equal(dismiss(event('pointerdown')),true);assert.equal(closed,1);assert.equal(cleared,1);
  assert.equal(dismiss(event('pointerup')),true);assert.equal(consumed,2);
  assert.equal(dismiss({...event('mousedown'),pointerId:undefined,sourceCapabilities:{firesTouchEvents:true}}),true);

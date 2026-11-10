@@ -1,3 +1,4 @@
+import { MobilePenInput } from '../../common/mobile-pen-input.mjs';
 import injectCSS from './stylesheets/inject.scss';
 import annotationsCSS from './stylesheets/annotations.scss';
 import {
@@ -179,6 +180,8 @@ abstract class DOMView<State extends DOMViewState, Data> {
 
 	protected _touchAnnotationStartPosition: CaretPosition | null = null;
 
+	protected _touchAnnotationPointerType: string | null = null;
+
 	protected _draggingNoteAnnotation: WADMAnnotation | null = null;
 
 	protected _resizingAnnotationID: string | null = null;
@@ -189,6 +192,7 @@ abstract class DOMView<State extends DOMViewState, Data> {
 
 	protected _lastKeyboardFocusedAnnotationID: string | null = null;
 
+	protected _penInput?: MobilePenInput;
 	protected _penActive: boolean;
 
 	protected _penActiveTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -330,6 +334,14 @@ abstract class DOMView<State extends DOMViewState, Data> {
 	}
 
 	protected async _handleIFrameLoaded(): Promise<void> {
+        if (this._options.platform === 'android') this._penInput = new MobilePenInput(this._iframeWindow, {
+            profile: (this._options as any).deviceProfile,
+            onTakeover: () => {
+                this._touchAnnotationStartPosition = null; this._touchAnnotationPointerType = null;
+                this._iframeDocument.body.classList.remove('creating-touch-annotation');
+            },
+            onSignal: event => this._handlePenSignal(event),
+        });
 		this._iframeWindow.addEventListener('contextmenu', this._handleContextMenu.bind(this));
 		this._iframeWindow.addEventListener('keydown', this._handleKeyDown.bind(this), true);
 		this._iframeWindow.addEventListener('keyup', this._handleKeyUp.bind(this));
@@ -403,6 +415,9 @@ abstract class DOMView<State extends DOMViewState, Data> {
 
 	protected async _handleViewCreated(viewState: Partial<Readonly<State>>): Promise<void> {
 		this.setHyphenate(this._options.hyphenate ?? true);
+		if (this._options.fontFamily) {
+			this.setFontFamily(this._options.fontFamily);
+		}
 
 		if (viewState.appearance) {
 			this.setAppearance(viewState.appearance);
@@ -1033,7 +1048,7 @@ abstract class DOMView<State extends DOMViewState, Data> {
 			}
 		}
 
-		if (this._tool.type == 'note') {
+		if (this._tool.type == 'note' && !this._isTouchIgnoredBecauseOfPen(event)) {
 			let range = this._getNoteTargetRange(event);
 			if (range) {
 				this._previewAnnotation = this.getAnnotationFromRange(range, 'note', this._tool.color);
@@ -1615,6 +1630,12 @@ abstract class DOMView<State extends DOMViewState, Data> {
 	private _handleAnnotationPointerUp = (id: string, event: React.PointerEvent) => {
 		event.stopPropagation();
 
+		if (this._touchAnnotationPointerType === 'pen'
+				&& (event.pointerType === 'pen' || event.pointerType === 'touch')) {
+			this._handlePointerUp(event.nativeEvent);
+			return;
+		}
+
 		// If pointerdown already performed an action due to this pointer, don't do anything
 		if (this._handledPointerIDs.has(event.pointerId)) {
 			this._handledPointerIDs.delete(event.pointerId);
@@ -1719,6 +1740,12 @@ abstract class DOMView<State extends DOMViewState, Data> {
 		// since we know this is a new interaction
 		this._handledPointerIDs.delete(event.pointerId);
 
+		this._handlePenSignal(event);
+		if (this._isTouchDuringPenAnnotation(event)) {
+			event.stopPropagation();
+			return;
+		}
+
 		if ((event.buttons & 1) === 1 && event.isPrimary) {
 			this._gotPointerUp = false;
 			this._pointerMovementWhileDown = 0;
@@ -1730,6 +1757,7 @@ abstract class DOMView<State extends DOMViewState, Data> {
 			let touchCaretPosition = this._getTouchAnnotationStartPosition(event);
 			if (touchCaretPosition) {
 				this._touchAnnotationStartPosition = touchCaretPosition;
+				this._touchAnnotationPointerType = event.pointerType;
 				this._iframeDocument.body.classList.add('creating-touch-annotation');
 				event.stopPropagation();
 			}
@@ -1746,7 +1774,8 @@ abstract class DOMView<State extends DOMViewState, Data> {
 		// Create note annotation on pointer down event, if note tool is active.
 		// The note tool will be automatically deactivated in reader.js,
 		// because this is what we do in PDF reader
-		if ((event.buttons & 1) === 1 && this._tool.type == 'note' && this._previewAnnotation) {
+		if ((event.buttons & 1) === 1 && this._tool.type == 'note' && this._previewAnnotation
+				&& !this._isTouchIgnoredBecauseOfPen(event)) {
 			this._options.onAddAnnotation(this._finalizeAnnotation(this._previewAnnotation!), true);
 			this._previewAnnotation = null;
 			this._renderAnnotations(true);
@@ -1772,6 +1801,10 @@ abstract class DOMView<State extends DOMViewState, Data> {
 
 	protected _handlePointerUp(event: PointerEvent) {
 		this._handledPointerIDs.delete(event.pointerId);
+
+		if (this._isTouchDuringPenAnnotation(event)) {
+			return;
+		}
 
 		if (!event.isPrimary || event.defaultPrevented) {
 			return;
@@ -1808,15 +1841,17 @@ abstract class DOMView<State extends DOMViewState, Data> {
 			}
 		}
 		this._touchAnnotationStartPosition = null;
+		this._touchAnnotationPointerType = null;
 		this._selectionChangedWhilePointerDown = false;
 		this._renderAnnotations();
 		this._iframeDocument.body.classList.remove('creating-touch-annotation');
 	}
 
 	protected _handlePointerMove(event: PointerEvent) {
+		this._handlePenSignal(event);
 		this._handlePointerMoveForReadAloud(event);
 
-		if ((event.buttons & 1) !== 1 || !event.isPrimary) {
+		if ((event.buttons & 1) !== 1 || !event.isPrimary || this._isTouchDuringPenAnnotation(event)) {
 			return;
 		}
 		if (this._lastPointerPosition) {
@@ -1851,9 +1886,6 @@ abstract class DOMView<State extends DOMViewState, Data> {
 					this._previewAnnotation = annotation;
 					this._renderAnnotations();
 				}
-			}
-			if (event.pointerType === 'pen') {
-				this._markPenActive();
 			}
 			event.stopPropagation();
 		}
@@ -1970,6 +2002,7 @@ abstract class DOMView<State extends DOMViewState, Data> {
 	 * use for PEN_ACTIVE_TIMEOUT after the last pen interaction.
 	 */
 	protected _markPenActive() {
+        if ((this._options as any).deviceProfile?.penOnly === false) return;
 		this._penActive = true;
 		if (this._penActiveTimeout !== null) {
 			clearTimeout(this._penActiveTimeout);
@@ -1986,6 +2019,26 @@ abstract class DOMView<State extends DOMViewState, Data> {
 			clearTimeout(this._penActiveTimeout);
 			this._penActiveTimeout = null;
 		}
+	}
+
+	/**
+	 * A pen is only tracked while annotating, so a hovering or touching pen
+	 * switches fingers to scrolling before a palm lands.
+	 */
+	protected _handlePenSignal(event: PointerEvent) {
+		if (event.pointerType === 'pen' && this._tool.type !== 'pointer') {
+			this._markPenActive();
+		}
+	}
+
+	protected _isTouchIgnoredBecauseOfPen(event: PointerEvent): boolean {
+		return event.pointerType === 'touch' && (this._penActive || this._penExclusive);
+	}
+
+	// A touch while a pen is annotating, e.g. a palm resting on the screen while highlighting
+	protected _isTouchDuringPenAnnotation(event: PointerEvent): boolean {
+		return this._touchAnnotationPointerType === 'pen'
+			&& event.pointerType === 'touch';
 	}
 
 	protected _getTouchAnnotationStartPosition(event: PointerEvent): CaretPosition | null {
@@ -2224,6 +2277,7 @@ abstract class DOMView<State extends DOMViewState, Data> {
 	}
 
 	destroy() {
+        this._penInput?.destroy();
 		this._clearPenActive();
 		this._overlayPopupDelayer.destroy();
 		this._annotationRenderRoot.unmount();
@@ -2355,12 +2409,12 @@ abstract class DOMView<State extends DOMViewState, Data> {
 
 	setFontFamily(fontFamily: string) {
 		this._iframeDocument.documentElement.style.setProperty('--content-font-family', fontFamily);
-		this._renderAnnotations(true);
+		this._handleViewUpdate();
 	}
 
 	setHyphenate(hyphenate: boolean) {
 		this._iframeDocument.documentElement.classList.toggle('hyphenate', hyphenate);
-		this._renderAnnotations(true);
+		this._handleViewUpdate();
 	}
 
 	setPenActive(penActive: boolean) {

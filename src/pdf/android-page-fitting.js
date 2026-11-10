@@ -34,6 +34,7 @@ export class AndroidPageFitting {
 		this.touches = 0;
 		this.onDown = event => {
             if (event.pointerType === 'pen') {
+                this.work.pauseBackground(true);
                 this.penPointers.add(event.pointerId); this.inputEpoch++; this.token++;
                 return;
             }
@@ -47,6 +48,8 @@ export class AndroidPageFitting {
 		};
 		this.onUp = event => {
             this.penPointers.delete(event.pointerId);
+            if (!this.penPointers.size) this.work.pauseBackground(false);
+            if (!this.penPointers.size && this.prefetchWanted) this.win.setTimeout(() => this.prefetchVisible(), 0);
 			const tracked = this.pointers.delete(event.pointerId);
             if (event.pointerType === 'touch') {
                 if (!tracked) return; // The priority tap path observes the same up.
@@ -238,12 +241,14 @@ export class AndroidPageFitting {
     }
 
 	prefetchVisible() {
+        if (this.inkActive()) { this.prefetchWanted = true; return; }
         if (!this.active || !this.usesCropLayout() || this.zooming || this.editor || this.view._destroyed) return;
         this.prefetchWanted = true;
         // Throttle rather than restarting a trailing timer on every scroll event.
         if (this.prefetchTimer || this.prefetching) return;
         this.prefetchTimer = this.win.setTimeout(async () => {
             this.prefetchTimer = null;
+            if (this.inkActive()) return;
             if (!this.active || this.zooming || this.applying || this.view._destroyed) return;
             this.prefetching = true; this.prefetchWanted = false;
             const key=this.key(), rotation=this.viewer.pagesRotation;
@@ -260,7 +265,7 @@ export class AndroidPageFitting {
             const rank=i=>indexes.has(i) ? Math.abs(i-center)-20 : Math.abs(i-center)*2+(Math.sign(i-center)===direction ? 0 : 1);
             try {
                 for (const i of [...wanted].sort((a,b)=>rank(a)-rank(b))) {
-                    if (!this.active || this.zooming || this.editor || key!==this.key() || rotation!==this.viewer.pagesRotation
+                    if (!this.active || this.inkActive() || this.zooming || this.editor || key!==this.key() || rotation!==this.viewer.pagesRotation
                             || center!==this.viewer.currentPageNumber-1 || this.view._destroyed) break;
                     const prepared=await this.prepare(i,this.options,false,5);
                     if (!prepared || this.zooming || key!==this.key() || rotation!==this.viewer.pagesRotation) break;
@@ -637,7 +642,7 @@ export class AndroidPageFitting {
 	}
 
 	resetInput() {
-        this.penPointers.clear();
+        this.penPointers.clear(); this.work.pauseBackground(false);
 		this.inputEpoch++; this.token++; this.pointers.clear(); this.pendingPage = false;
 		this.touches = 0; this.touchZoom = false;
 		this.win.clearTimeout(this.timer);

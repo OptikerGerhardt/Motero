@@ -29,6 +29,8 @@ class View {
 
 		this._type = options.type;
 		this._options = options;
+        this._deviceProfile = options.deviceProfile;
+        this._appearance = options.viewState?.appearance;
 		this._sdtDocumentSession = new SDTDocumentSession({
 			documentType: this._type,
 			retainReader: false,
@@ -141,7 +143,9 @@ class View {
 			darkTheme: this._darkTheme,
 			colorScheme: this._colorScheme,
 			penActive: this._options.penActive ?? false,
-			penExclusive: this._options.penExclusive ?? false,
+			penExclusive: this._options.deviceProfile?.penOnly ?? this._options.penExclusive ?? false,
+            deviceProfile: this._options.deviceProfile,
+            onPenEraser: active => this.setPenEraser(active),
 			fontFamily: this._options.fontFamily,
 			onAddAnnotation,
 			onUpdateAnnotations,
@@ -217,7 +221,7 @@ class View {
 				onRenderAnnotationImage: this._options.onRenderAnnotationImage,
 				onSetPageLabels: this._options.onSetPageLabels || nop,
 				// PDF can delete annotations inside the view, for example by completely erasing ink.
-				onDeleteAnnotations: ids => this._annotationManager.deleteAnnotations(ids)
+				onDeleteAnnotations: ids => this.deleteAnnotations(ids)
 			});
 		}
 		else if (this._type === 'epub') {
@@ -279,11 +283,15 @@ class View {
 			...this._getCommonViewOptions(),
 			tool: this._getSDTTool(this._tool),
 			annotations: this._getSDTAnnotations([...this._annotationManager._annotations]),
-			viewState: this._appearance ? { appearance: this._appearance } : {},
+			viewState: this._appearance ? { appearance: this._appearance, scale: this._appearance.textScale } : {},
 			location: baseView.getSDTLocation?.(sdt.structure) ?? null,
 			// The base view keeps providing the view state, since it's scroll-synced
 			// and can be restored without Reading Mode
-			onChangeViewState: nop,
+			onChangeViewState: state => {
+                // Typography belongs to Reading Mode; the base PDF still owns position/zoom.
+                this._appearance = {...this._appearance, ...state.appearance,
+                    ...(Number.isFinite(state.scale) ? {textScale:state.scale} : {})};
+            },
 			onChangeViewStats: (stats) => {
 				if (this._sdtView !== view) {
 					return;
@@ -440,6 +448,29 @@ class View {
 		if (!tool) {
 			tool = { type: 'pointer' };
 		}
+        this._baseTool = tool;
+        this._applyTool(this._penEraser ? this._eraserTool() : tool);
+    }
+    _eraserTool() { return { ...this._baseTool, type: 'eraser', size: this._deviceProfile?.eraserSize || 12, eraserMode: this._deviceProfile?.eraserMode || 'stroke' }; }
+    setPenEraser(active, source = 'pointer') {
+        (this._penEraserSources ??= new Set());
+        if (active) this._penEraserSources.add(source); else this._penEraserSources.delete(source);
+        active = this._penEraserSources.size > 0;
+        if (this._penEraser === active) return;
+        this._penEraser = active;
+        this._applyTool(active ? this._eraserTool() : this._baseTool || {type:'pointer'});
+    }
+    setDeviceProfile(profile) {
+        this._deviceProfile = profile; this._options.deviceProfile = profile;
+        for (const v of [this._view,this._sdtView]) {
+            if (!v) continue;
+            v._options.deviceProfile = profile;
+            v._penInput?.applyProfile(profile);
+            if (profile.penOnly === false) v.setPenActive?.(false);
+            v.setPenExclusive?.(!!profile.penOnly);
+        }
+    }
+    _applyTool(tool) {
 		this._tool = tool;
 		this._view.setTool(tool);
 		this._sdtView?.setTool(this._getSDTTool(tool));
@@ -454,14 +485,23 @@ class View {
 	}
 
 	undo() {
-		this._annotationManager.undo();
+		this._saveImmediately(() => this._annotationManager.undo());
 		this._deselectAnnotations();
 	}
 
 	redo() {
-		this._annotationManager.redo();
+		this._saveImmediately(() => this._annotationManager.redo());
 		this._deselectAnnotations();
 	}
+
+    addAnnotation(annotation) { return this._annotationManager.addAnnotation(annotation); }
+    updateAnnotations(annotations) { return this._saveImmediately(() => this._annotationManager.updateAnnotations(annotations)); }
+    deleteAnnotations(ids) { return this._saveImmediately(() => this._annotationManager.deleteAnnotations(ids)); }
+    _saveImmediately(callback) {
+        this._annotationManager._skipAnnotationSavingDebounce = true;
+        try { return callback(); }
+        finally { this._annotationManager._skipAnnotationSavingDebounce = false; }
+    }
 
 	// Deselect without the empty-text-annotation cleanup, so that undo/redo
 	// can restore an annotation to its empty state
@@ -623,6 +663,7 @@ class View {
 			wordSpacing: appearance.wordSpacing,
 			letterSpacing: appearance.letterSpacing,
 			pageWidth: appearance.pageWidth,
+            useOriginalFont: appearance.useOriginalFont ?? this._appearance?.useOriginalFont,
 			textScale: appearance.textScale,
 		};
 		this._view?.setAppearance?.(this._appearance);

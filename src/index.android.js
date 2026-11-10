@@ -68,8 +68,8 @@ window.createView = (encodedOptions) => {
 			postMessage('onViewContentInitialized');
 		},
         onChangeHistory: ({ undoSteps, redoSteps }) => postMessage('onHistoryChanged', { canUndo: undoSteps.length > 0, canRedo: redoSteps.length > 0 }),
-		onSaveAnnotations: (annotations) => {
-			postMessage('onSaveAnnotations', { annotations });
+		onSaveAnnotations: (annotations, {history = false} = {}) => {
+			postMessage('onSaveAnnotations', { annotations, history });
 
 			// Select a just-created note annotation. Match by dateCreated to avoid
 			// re-selecting an existing note whose pending edit landed in the same batch.
@@ -197,6 +197,15 @@ window.redoReaderAnnotation = () => {
     return true;
 };
 
+window.setDeviceProfile = profile => window._view?.setDeviceProfile(profile);
+window.setPenEraser = active => window._view?.setPenEraser(active, 'key');
+window.addAnnotation = options => window._view.addAnnotation(JSON.parse(decodeBase64(options.annotation)));
+window.editAnnotation = options => {
+    try { window._view.updateAnnotations([JSON.parse(decodeBase64(options.annotation))]); }
+    catch (error) { console.error('Annotation edit rejected', error.name); }
+};
+window.deleteAnnotations = options => window._view.deleteAnnotations(JSON.parse(decodeBase64(options.ids)));
+
 window.setPageNavigation = mode => window._view.setPageNavigation(mode);
 
 window.setTool = (options) => {
@@ -219,12 +228,12 @@ window.updateAnnotations = (options) => {
 	const modifications = JSON.parse(decodeBase64(options.modifications));
 
 	if (deletions.length > 0) {
-		log("Delete: " + JSON.stringify(deletions));
+		log("Delete annotations: " + deletions.length);
 		window._view.unsetAnnotations(deletions);
 	}
 	let updates = [...insertions, ...modifications];
 	if (updates.length > 0) {
-		log("Add/Update: " + JSON.stringify(updates));
+		log("Update annotations: " + updates.length);
 		window._view.setAnnotations(updates);
 	}
 };

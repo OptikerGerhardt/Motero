@@ -30,6 +30,7 @@ class AnnotationManager {
 		};
 
 		this._unsavedAnnotations = new Map();
+        this._historySaveIDs = new Set();
 		this._highVolatilityAnnotationIDs = new Set();
 		// When the client depends on onSave to learn about new annotations before
 		// other events (e.g. selection) reference their IDs, track which IDs the
@@ -41,6 +42,7 @@ class AnnotationManager {
 		this._lastChangeTime = 0;
 		this._lastSaveTime = 0;
 		this._saveTimeout = null;
+		this._saveImmediatelyAfterSaving = false;
 
 		this._undoStack = [];
 		this._redoStack = [];
@@ -59,13 +61,18 @@ class AnnotationManager {
 
 	// Called when changes come from the client side
 	async setAnnotations(annotations) {
+        const fields = ['type','color','text','comment','tags','position','sortIndex','pageLabel'];
+        const external = annotations.filter(a => {
+            const old = this._getAnnotationByID(a.id);
+            return !old || fields.some(k => !basicDeepEqual(old[k] ?? null, a[k] ?? null));
+        }).map(a => a.id);
 		for (let annotation of annotations) {
 			this._clientKnownAnnotationIDs?.add(annotation.id);
 			this._annotations = this._annotations.filter(x => x.id !== annotation.id);
 			this._annotations.push(annotation);
 		}
 		this._annotations.sort((a, b) => (a.sortIndex > b.sortIndex) - (a.sortIndex < b.sortIndex));
-		this._clearInterferingHistory(annotations.map(x => x.id));
+		this._clearInterferingHistory(external);
 		this.render();
 	}
 
@@ -191,6 +198,9 @@ class AnnotationManager {
 	}
 
 	deleteAnnotations(ids) {
+		// Ignore IDs already removed: their history snapshots would be undefined,
+		// so undoing the deletion would fail.
+		ids = ids.filter(id => this._getAnnotationByID(id));
 		if (!ids.length || this._readOnly) {
 			return 0;
 		}
@@ -347,7 +357,8 @@ class AnnotationManager {
 			if (changedAnnotation && !this._unsavedAnnotations.get(id)?.image) {
 				delete changedAnnotation.image;
 			}
-			this._unsavedAnnotations.set(id, changedAnnotation);
+			this._historySaveIDs.delete(id);
+            this._unsavedAnnotations.set(id, changedAnnotation);
 		}
 		this._historySave(changedAnnotations, action, count);
 		annotations = new Map([...annotations, ...changedAnnotations]);
@@ -387,12 +398,24 @@ class AnnotationManager {
 	}
 
 	async _triggerSaving() {
-		if (!this._unsavedAnnotations.size || this._savingInProgress) {
+		if (!this._unsavedAnnotations.size) {
+			return;
+		}
+		if (this._savingInProgress) {
+			// A mobile eraser gesture can save a partial stroke update, then request an
+			// immediate deletion of another stroke while that save is still in progress.
+			// _saveImmediately() clears its debounce bypass before the save completes,
+			// so retain the request for the next batch instead of debouncing it again.
+			// Otherwise a quick Undo can run before the deletion reaches the app.
+			if (this._skipAnnotationSavingDebounce) {
+				this._saveImmediatelyAfterSaving = true;
+			}
 			return;
 		}
 		if ((Date.now() - this._lastChangeTime < DEBOUNCE_TIME)
 			&& (Date.now() - this._lastSaveTime < DEBOUNCE_MAX_TIME)
 			&& !this._skipAnnotationSavingDebounce
+			&& !this._saveImmediatelyAfterSaving
 			&& !this._hasAnnotationsUnknownToClient()) {
 			clearTimeout(this._saveTimeout);
 			this._saveTimeout = setTimeout(() => {
@@ -401,6 +424,8 @@ class AnnotationManager {
 			}, DEBOUNCE_TIME);
 			return;
 		}
+		// Consume the request for this batch; later edits should debounce normally.
+		this._saveImmediatelyAfterSaving = false;
 		clearTimeout(this._saveTimeout);
 		this._saveTimeout = null;
 		this._lastSaveTime = Date.now();
@@ -429,7 +454,9 @@ class AnnotationManager {
 			}
 		}
 		this._highVolatilityAnnotationIDs.clear();
-		await this._onSave(clonedAnnotations);
+		const history = clonedAnnotations.some(a => this._historySaveIDs.has(a.id));
+        for (const a of clonedAnnotations) this._historySaveIDs.delete(a.id);
+        await this._onSave(clonedAnnotations, {history});
 		this._savingInProgress = false;
 		this._triggerSaving();
 	}
@@ -640,7 +667,9 @@ class AnnotationManager {
 				annotation.id = newID;
 			}
 			allAnnotations.set(id, annotation);
-			this._unsavedAnnotations.set(id, annotation);
+			// Keep any pending deletion of the old ID when restoring under a new ID.
+			this._historySaveIDs.add(annotation ? annotation.id : id);
+            this._unsavedAnnotations.set(annotation ? annotation.id : id, annotation);
 		}
 		this._redoStack.push(redoPoint);
 		this.remapHistory(mapping);
@@ -674,7 +703,9 @@ class AnnotationManager {
 				annotation.id = newID;
 			}
 			allAnnotations.set(id, annotation);
-			this._unsavedAnnotations.set(id, annotation);
+			// Keep any pending deletion of the old ID when restoring under a new ID.
+			this._historySaveIDs.add(annotation ? annotation.id : id);
+            this._unsavedAnnotations.set(annotation ? annotation.id : id, annotation);
 		}
 		this._undoStack.push(undoPoint);
 		this.remapHistory(mapping);

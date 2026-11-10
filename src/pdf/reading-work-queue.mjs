@@ -17,9 +17,10 @@ export class ReadingWorkQueue {
             if (!job.started) { this.jobs.delete(job.key); job.reject(this.abortError()); }
         }
     }
+    pauseBackground(paused) { this.backgroundPaused = paused; if (!paused) this.drain(); }
     drain() {
         if (this.closed) return;
-        const waiting = [...this.jobs.values()].filter(j => !j.started).sort((a,b) => a.priority-b.priority);
+        const waiting = [...this.jobs.values()].filter(j => !j.started && (!this.backgroundPaused || j.priority <= 0)).sort((a,b) => a.priority-b.priority);
         while (this.running < this.limit && waiting.length) {
             // Reserve one slot for the current reading page. Background model and
             // prefetch jobs cannot occupy both workers ahead of a user's turn.
