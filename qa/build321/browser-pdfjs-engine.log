@@ -1,0 +1,2 @@
+PASS 19 official viewer tests: canvas replacement, cancellation, selection/focus, detail views and thumbnails
+PASS bundled PDF.js 5.7.330/5f95f712b: real worker, embedded bold/italic font, native glyph coloring in light and dark themes

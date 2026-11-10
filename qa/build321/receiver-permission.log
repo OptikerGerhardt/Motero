@@ -1,0 +1,7 @@
+test_redeclaring_the_legacy_permission_is_rejected (test_receiver_permission.ReceiverPermissionMigration.test_redeclaring_the_legacy_permission_is_rejected) ... ok
+test_release_manifest_and_androidx_use_the_same_new_permission (test_receiver_permission.ReceiverPermissionMigration.test_release_manifest_and_androidx_use_the_same_new_permission) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 2.549s
+
+OK

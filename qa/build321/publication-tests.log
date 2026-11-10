@@ -1,0 +1,7 @@
+test_deleted_secret_in_history_and_nested_archive_are_blocked (test_publication_audit.PublicationAudit.test_deleted_secret_in_history_and_nested_archive_are_blocked) ... ok
+test_public_fixture_exception_is_content_bound (test_publication_audit.PublicationAudit.test_public_fixture_exception_is_content_bound) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.118s
+
+OK

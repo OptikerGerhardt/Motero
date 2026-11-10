@@ -1,0 +1,52 @@
+Warning: Please use the `legacy` build in Node.js environments.
+✔ glyph coloring preserves other text and graphics at rotation 0 (208.395345ms)
+✔ glyph coloring preserves other text and graphics at rotation 90 (141.946513ms)
+✔ glyph coloring preserves other text and graphics at rotation 180 (109.426264ms)
+✔ glyph coloring preserves other text and graphics at rotation 270 (180.812066ms)
+✔ region fallback: mixed visible text and hidden OCR (29.785355ms)
+✔ region fallback: filled and stroked text (30.019942ms)
+✔ region fallback: clipping text (53.78858ms)
+✔ region fallback: negative font direction (21.70775ms)
+✔ region fallback: zero opacity (32.325471ms)
+✔ region fallback: partial opacity (65.143991ms)
+✔ region fallback: nonstandard blend (67.390584ms)
+✔ region fallback: soft-masked text (103.092041ms)
+✔ region fallback: pattern-filled text (32.442375ms)
+✔ region fallback: visible text with invisible Type3 glyphs (17.067914ms)
+✔ ordinary transparency groups can still color text (21.179363ms)
+✔ bitmap glyphs keep fallback only where their paint overlaps citations (242.780312ms)
+✔ zero-size text does not disqualify visible text (18.621036ms)
+✔ unsupported text and paint in a disabled optional-content layer are ignored (21.476852ms)
+✔ colors extracted character boxes with Times-Roman (101.681535ms)
+✔ colors extracted character boxes with Times-Bold (54.966605ms)
+✔ colors extracted character boxes with Courier (21.340943ms)
+✔ colors extracted character boxes with Symbol (27.991042ms)
+✔ unusual display font metrics cannot move the hit point outside extracted boxes (44.928161ms)
+✔ publishes all painted overlapping regions, not empty rectangles (13.824223ms)
+✔ forced page colors retain fallback instead of relying on glyph hue (19.019044ms)
+✔ unsupported text elsewhere does not reject a supported citation (13.996718ms)
+✔ a mixed region keeps fallback regardless of glyph paint order (51.111442ms)
+✔ overlapping images keep fallback before or after text; other images do not (139.179454ms)
+✔ shading fallback: behind text (51.246292ms)
+✔ shading fallback: over text (29.992477ms)
+✔ shading fallback: clipped elsewhere (16.685207ms)
+✔ visible citation ink in white theme (86.819298ms)
+✔ visible citation ink in sepia theme (28.26088ms)
+✔ visible citation ink in snow theme (47.261307ms)
+✔ visible citation ink in dark theme (28.148845ms)
+✔ visible citation ink in black theme (17.167781ms)
+✔ visible citation ink in dim teal theme (77.592024ms)
+✔ visible citation ink in dim gray theme (17.257783ms)
+✔ low-contrast custom themes retain original text and fallback (52.469908ms)
+✔ low-contrast backgrounds and later solid paint keep fallback (40.875496ms)
+✔ native text drawing colors themed glyphs and retains image fallback (123.367516ms)
+✔ isolated graphics groups only disqualify overlapping citation regions (49.319717ms)
+✔ transparent or clipped-out paint does not disqualify citation text (24.135629ms)
+ℹ tests 43
+ℹ suites 0
+ℹ pass 43
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2598.347889

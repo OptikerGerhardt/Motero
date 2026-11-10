@@ -1,0 +1,8 @@
+test_known_public_test_key_cannot_be_used_as_production_key (test_signing_guards.SigningGuards.test_known_public_test_key_cannot_be_used_as_production_key) ... ok
+test_missing_secret_stops_before_creating_an_apk (test_signing_guards.SigningGuards.test_missing_secret_stops_before_creating_an_apk) ... ok
+test_public_verifier_rejects_an_apk_signed_with_the_old_key (test_signing_guards.SigningGuards.test_public_verifier_rejects_an_apk_signed_with_the_old_key) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 2.729s
+
+OK

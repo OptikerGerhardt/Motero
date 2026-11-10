@@ -1,0 +1,9 @@
+test_infrastructure_only_changes_preserve_the_tested_build (test_build_reuse.BuildReuse.test_infrastructure_only_changes_preserve_the_tested_build) ... ok
+test_native_application_changes_require_a_fresh_build (test_build_reuse.BuildReuse.test_native_application_changes_require_a_fresh_build) ... ok
+test_reader_pointer_changes_require_a_fresh_build (test_build_reuse.BuildReuse.test_reader_pointer_changes_require_a_fresh_build) ... ok
+test_source_binding_and_passed_build_are_required (test_build_reuse.BuildReuse.test_source_binding_and_passed_build_are_required) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.332s
+
+OK

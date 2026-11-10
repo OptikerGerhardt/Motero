@@ -1,0 +1,85 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.6.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Reusing configuration cache.
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDevReleaseBuild UP-TO-DATE
+> Task :app:generateDevReleaseResValues UP-TO-DATE
+> Task :app:injectCrashlyticsMappingFileIdDevRelease UP-TO-DATE
+> Task :app:extractDevReleaseVersionControlInfo UP-TO-DATE
+> Task :app:injectCrashlyticsVersionControlInfoDevRelease UP-TO-DATE
+> Task :app:processDevReleaseGoogleServices UP-TO-DATE
+> Task :app:buildKotlinToolingMetadata UP-TO-DATE
+> Task :app:generateDevReleaseBuildConfig UP-TO-DATE
+> Task :app:generateDevReleaseResources UP-TO-DATE
+> Task :app:javaPreCompileDevRelease UP-TO-DATE
+> Task :app:packageDevReleaseResources UP-TO-DATE
+> Task :app:mergeDevReleaseResources UP-TO-DATE
+> Task :app:processDevReleaseNavigationResources UP-TO-DATE
+> Task :app:checkDevReleaseAarMetadata UP-TO-DATE
+> Task :app:mapDevReleaseSourceSetPaths UP-TO-DATE
+> Task :app:dataBindingMergeDependencyArtifactsDevRelease UP-TO-DATE
+> Task :app:createDevReleaseCompatibleScreenManifests UP-TO-DATE
+> Task :app:preDevReleaseUnitTestBuild UP-TO-DATE
+> Task :app:extractDeepLinksDevRelease UP-TO-DATE
+> Task :app:parseDevReleaseLocalResources UP-TO-DATE
+> Task :app:javaPreCompileDevReleaseUnitTest UP-TO-DATE
+> Task :app:compileDevReleaseNavigationResources UP-TO-DATE
+> Task :app:generateDevReleaseRFile UP-TO-DATE
+> Task :app:mergeDevReleaseJniLibFolders UP-TO-DATE
+> Task :app:mergeDevReleaseArtProfile UP-TO-DATE
+> Task :app:desugarDevReleaseFileDependencies UP-TO-DATE
+> Task :app:mergeDevReleaseNativeLibs UP-TO-DATE
+> Task :app:stripDevReleaseDebugSymbols UP-TO-DATE
+> Task :app:extractDevReleaseNativeSymbolTables UP-TO-DATE
+> Task :app:mergeDevReleaseNativeDebugMetadata NO-SOURCE
+> Task :app:mergeDevReleaseStartupProfile UP-TO-DATE
+> Task :app:generateDevReleaseAssets UP-TO-DATE
+> Task :app:dataBindingGenBaseClassesDevRelease UP-TO-DATE
+> Task :app:processDevReleaseMainManifest UP-TO-DATE
+> Task :app:processDevReleaseManifest UP-TO-DATE
+> Task :app:processDevReleaseManifestForPackage UP-TO-DATE
+> Task :app:checkDevReleaseDuplicateClasses UP-TO-DATE
+> Task :app:mergeDevReleaseAssets
+> Task :app:compressDevReleaseAssets
+> Task :app:collectDevReleaseDependencies UP-TO-DATE
+> Task :app:sdkDevReleaseDependencyData UP-TO-DATE
+> Task :app:writeDevReleaseAppMetadata UP-TO-DATE
+> Task :app:writeDevReleaseSigningConfigVersions UP-TO-DATE
+> Task :app:processDevReleaseResources UP-TO-DATE
+> Task :app:optimizeDevReleaseResources UP-TO-DATE
+> Task :app:mergeExtDexDevRelease UP-TO-DATE
+
+> Task :app:kspDevReleaseKotlin
+w: [ksp] No dependencies reported for generated source org.zotero.android.ZoteroApplication_ComponentTreeDeps.java which willprevent incremental compilation.
+Please file a bug at https://issuetracker.google.com/issues/new?component=413107.
+
+> Task :app:kaptGenerateStubsDevReleaseKotlin
+> Task :app:kaptDevReleaseKotlin UP-TO-DATE
+> Task :app:compileDevReleaseKotlin
+> Task :app:compileDevReleaseJavaWithJavac UP-TO-DATE
+> Task :app:bundleDevReleaseClassesToCompileJar UP-TO-DATE
+> Task :app:kspDevReleaseUnitTestKotlin SKIPPED
+> Task :app:processDevReleaseJavaRes UP-TO-DATE
+> Task :app:devReleaseRealmAccessorsTransformer UP-TO-DATE
+> Task :app:transformDevReleaseClassesWithAsm UP-TO-DATE
+> Task :app:bundleDevReleaseClassesToRuntimeJar UP-TO-DATE
+> Task :app:dexBuilderDevRelease UP-TO-DATE
+> Task :app:kaptGenerateStubsDevReleaseUnitTestKotlin UP-TO-DATE
+> Task :app:mergeDevReleaseJavaResource UP-TO-DATE
+> Task :app:mergeDexDevRelease UP-TO-DATE
+> Task :app:kaptDevReleaseUnitTestKotlin UP-TO-DATE
+> Task :app:compileDevReleaseUnitTestKotlin UP-TO-DATE
+> Task :app:mergeDevReleaseGlobalSynthetics UP-TO-DATE
+> Task :app:compileDevReleaseArtProfile UP-TO-DATE
+> Task :app:compileDevReleaseUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDevReleaseUnitTestJavaRes UP-TO-DATE
+> Task :app:transformDevReleaseUnitTestClassesWithAsm UP-TO-DATE
+> Task :app:testDevReleaseUnitTest UP-TO-DATE
+> Task :app:packageDevRelease
+> Task :app:assembleDevRelease
+> Task :app:createDevReleaseApkListingFileRedirect UP-TO-DATE
+
+BUILD SUCCESSFUL in 1m 14s
+65 actionable tasks: 6 executed, 59 up-to-date
+Configuration cache entry reused.

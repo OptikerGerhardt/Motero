@@ -1,0 +1,10 @@
+PASS paginated: real touch hold/drag creates a CFI highlight with the shared PDF palette, without Android selection
+PASS paginated: long-press exposes EPUB endpoints; touch resize preserves ID and Undo restores its CFI
+PASS paginated: real note hold/drag changes its CFI anchor, preserves ID and Undo restores it
+PASS paginated: upper-right black 70% bookmark flag and repeated tap removal
+PASS paginated: actual margin control and center/focus-return keep the CFI, offset and sharp layout
+PASS scrolled: real touch hold/drag creates a CFI highlight with the shared PDF palette, without Android selection
+PASS scrolled: long-press exposes EPUB endpoints; touch resize preserves ID and Undo restores its CFI
+PASS scrolled: real note hold/drag changes its CFI anchor, preserves ID and Undo restores it
+PASS scrolled: upper-right black 70% bookmark flag and repeated tap removal
+PASS scrolled: actual margin control and center/focus-return keep the CFI, offset and sharp layout
