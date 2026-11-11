@@ -36,3 +36,5 @@ Reviewed public source, not an engine upgrade:
 The 96-case deterministic gray/color/noise/header/footer corpus has the identical geometry hash before and after compaction: `45da750134702115fd4bbc100c700c533145b38d94491224b73270fc8f266bd1`. Worker transfer tests verify detached source buffers, priority, cancellation and failure fallback. Detached buffer sizes in the main WebView are **not** total RAM: the worker owns them until analysis finishes. Physical BOOX/Pixels, device-specific WebViews, animations, pen-to-pixel latency and live-account synchronization remain separate checks.
 
 Reader/native/browser tests, release verification and API 31/35 update gates from original 303 and preceding 322 are required before publication. Final results are recorded in the build report.
+
+Local verification: 401 reader cases, 147 native cases in 36 suites and all 21 browser suites pass, including 43 engine pixel and 19 official viewer cases. [Reports](../qa/build323/README.md). Public signing/update gates remain pending until the protected release workflow finishes.

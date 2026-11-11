@@ -2,8 +2,8 @@
 
 ## Build 323 / Motero 1.0.8 — Release-Kandidat
 
-- Reader `7038bbfb`: stabile EPUB-Textanker, Bearbeitungspaletten, Odd-/Even-Spreads und gemeinsame Speicher-/Arbeitssteuerung.
-- Lokaler Release-Build und 147 native Tests in 36 Suiten bestanden. Bestehende Browser-Suiten bestanden; neue Spread-/Worker-Fälle werden mit dem endgültigen Stand erneut geprüft.
+- Reader `cf40afbf`: stabile EPUB-Textanker, Bearbeitungspaletten, Odd-/Even-Spreads und gemeinsame Speicher-/Arbeitssteuerung.
+- Lokaler Release-Build und 147 native Tests in 36 Suiten bestanden. 401 Reader-Fälle und alle 21 Browser-Suiten bestanden, einschließlich aller Spread-/Worker-Fälle.
 - Kompakte Crop-Daten stimmen in 96 Vergleichsfällen mit der vorherigen Geometrie überein. PDF.js 5.7.330 unverändert.
 - Signatur, API-31/35-Updates von 303/322 und öffentliche APK-Prüfung sind vor der Freigabe erforderlich. [Details und Grenzen](docs/READER_323.md).
 
