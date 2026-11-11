@@ -1,5 +1,13 @@
 # Build 322 / Motero 1.0.7 — veröffentlicht und unabhängig geprüft
 
+## Build 323 / Motero 1.0.8 — Release-Kandidat
+
+- Reader `7038bbfb`: stabile EPUB-Textanker, Bearbeitungspaletten, Odd-/Even-Spreads und gemeinsame Speicher-/Arbeitssteuerung.
+- Lokaler Release-Build und 147 native Tests in 36 Suiten bestanden. Bestehende Browser-Suiten bestanden; neue Spread-/Worker-Fälle werden mit dem endgültigen Stand erneut geprüft.
+- Kompakte Crop-Daten stimmen in 96 Vergleichsfällen mit der vorherigen Geometrie überein. PDF.js 5.7.330 unverändert.
+- Signatur, API-31/35-Updates von 303/322 und öffentliche APK-Prüfung sind vor der Freigabe erforderlich. [Details und Grenzen](docs/READER_323.md).
+
+
 - Release: https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.7-322 ; erfolgreicher Build-/Release-Prüflauf: https://github.com/OptikerGerhardt/Motero/actions/runs/42929208556 .
 - App-Quelle: `0257b1991b86fe843d25c81e37e76827f2106dbf`; Reader: `0aec12a3114e30c53ff4847ffe9351856d02387e`; PDF.js `5f95f712` / 5.7.330 unverändert.
 - EPUB-Wischen auf Text und Randtippen korrigiert; eigene obere/untere Ränder, stabiles symmetrisches Textfeld außerhalb des Status-/Aussparungsbereichs und erreichbarer Bookmark-Filter.

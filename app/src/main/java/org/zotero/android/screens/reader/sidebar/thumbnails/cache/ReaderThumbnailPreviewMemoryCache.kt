@@ -17,9 +17,16 @@ class ReaderThumbnailPreviewMemoryCache @Inject constructor(
         }
     }
 
+    fun put(page: Int, bitmap: Bitmap) {
+        val eReader = org.zotero.android.ereader.DeviceProfileStore.state.value.eReader
+        val limit = previewCacheLimitKb(maxMemory, eReader)
+        if (memoryCache.maxSize() != limit) memoryCache.resize(limit)
+        memoryCache.put(page, bitmap)
+    }
+
     fun addToCache(pagesToBitmapsList: List<Pair<Int, Bitmap>>): Map<Int, Bitmap> {
         pagesToBitmapsList.forEach {
-            memoryCache.put(it.first, it.second)
+            put(it.first, it.second)
         }
         return memoryCache.snapshot()
     }
@@ -30,9 +37,14 @@ class ReaderThumbnailPreviewMemoryCache @Inject constructor(
 
     fun snapshot(): Map<Int, Bitmap> = memoryCache.snapshot()
 
+    fun trimMemory() { memoryCache.trimToSize((memoryCache.maxSize() / 4).coerceAtLeast(256)) }
+
     fun clear() {
         memoryCache.evictAll()
     }
 
 
 }
+/** Each native preview cache leaves space for the other cache, WebView and PDF canvases. */
+internal fun previewCacheLimitKb(heapKb: Int, eReader: Boolean): Int =
+    (heapKb / if (eReader) 32 else 16).coerceIn(1024, if (eReader) 12 * 1024 else 24 * 1024)

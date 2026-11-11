@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.0.8 — Build 323
+
+- Stabile EPUB-Auswahl über Zeilenabstände, getrennte Halte-/Werkzeuggesten und automatisch ausgeblendete Bearbeitungspalette mit runderen Griffen.
+- Gemeinsame Leseeinheit für Odd-/Even-Spreads: Zuschnitt, Zentrierung, Jumped/Hardware-Wechsel und Übersicht in allen Scrollrichtungen.
+- Gebündelte Vorschau-Aktualisierung, gezielte WebView-Updates, Raster-Crop-Worker und kompakte, ergebnisgleiche Bildanalyse.
+- Kleinere E-Reader-/Low-RAM-Budgets, Speicherwarnungen, priorisierte Hintergrundarbeit und weniger unnötige EPUB-Layouts.
+- PDF.js, Daten-/Synchronisationsformate und Signatur unverändert. [Prüfumfang](docs/READER_323.md).
+
+
 ## 1.0.7-322 — 2026-11-11
 
 - Restore EPUB page swipes beginning on text: the pending drag-highlight gesture releases navigation rather than consuming pointer-up. Annotation handles, long holds and palette dismissal retain their priority.

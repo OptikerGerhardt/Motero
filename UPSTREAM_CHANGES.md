@@ -31,3 +31,8 @@ Reviewed against official source history for October 26–November 9, 2026. Thes
 - [Reading Mode font initialization](https://github.com/zotero/reader/commit/04795bfbafd55600e042d62e05f9a4147458ae53); Android-relevant appearance/scale retention informed by [9d180730](https://github.com/zotero/reader/commit/9d18073090a3bb54079fb9146aeb9677a8149c36).
 
 The already included Android download/session fixes are retained. The official BOOX demo is a research reference; no SDK binary or unverified low-latency renderer is included. [Integration and remaining device gates](docs/E_READER_AND_STYLUS.md).
+
+
+## Build 323: performance and spread references
+
+Reviewed November 11, 2026. Native preview batching and the narrower WebView update path are informed by Zotero Android `f62ff0d2`. Spread parity follows PDF.js; Foliate's paginator informed the review of EPUB layout/section lifetime. These are focused Motero adaptations, not wholesale upstream merges or an engine replacement. No Foliate code/dependency is bundled. [Exact revisions, differences and validation](docs/READER_323.md).

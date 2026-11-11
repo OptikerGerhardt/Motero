@@ -2600,12 +2600,21 @@ class ReaderViewModel @Inject constructor(
         updateAnnotationToolDrawColorAndSize(annotationTool = tool, colorHex = hex ?: viewState.toolColors[tool])
     }
 
+    fun trimReaderMemory() {
+        ReaderMemoryPressure.notifyPressure()
+        readerWebView?.evaluateJavascript("window.trimReaderMemory?.();", null)
+    }
+
     fun setHardwareEraser(active: Boolean) {
         readerWebView?.evaluateJavascript("window.setPenEraser?.($active);", null)
     }
     fun applyDeviceProfile(profile: org.zotero.android.ereader.DeviceProfile) {
         val effective = profile.copy(eraserSize = activeEraserSize, eraserMode = defaults.getActiveEraserMode())
-        readerWebView?.evaluateJavascript("window.setDeviceProfile?.(${com.google.gson.Gson().toJson(effective)});", null)
+        val payload = com.google.gson.Gson().toJsonTree(effective).asJsonObject
+        val memory = context.getSystemService(Context.ACTIVITY_SERVICE) as? android.app.ActivityManager
+        payload.addProperty("lowMemory", memory?.isLowRamDevice == true)
+        payload.addProperty("memoryClassMb", memory?.memoryClass ?: 0)
+        readerWebView?.evaluateJavascript("window.setDeviceProfile?.($payload);", null)
     }
     private suspend fun updateAnnotationToolDrawColorAndSize(
         annotationTool: ReaderAnnotationTool,

@@ -11,6 +11,13 @@ import kotlin.math.abs
 
 class ReaderCustomWebView(context: Context, attrs: AttributeSet? = null) : WebView(context, attrs) {
 
+    private var readerBackground: Int? = null
+    fun setReaderBackground(color: Int) {
+        if (readerBackground == color) return
+        readerBackground = color
+        setBackgroundColor(color)
+    }
+
     var selectionActionModeDelegate: ReaderSelectionActionModeDelegate? = null
 
     private var activeSelectionActionMode: ActionMode? = null

@@ -39,6 +39,8 @@ class ReaderThumbnailPreviewManager @Inject constructor(
     private val requestedCenter = MutableStateFlow(0)
     private val initialized = MutableStateFlow(false)
     private var requestedExact: List<Int> = emptyList()
+    private var publicationJob: Job? = null
+    private var hasPublishedImage = false
 
     fun init(viewModelScope: CoroutineScope) {
         this.viewModelScope = viewModelScope
@@ -49,6 +51,10 @@ class ReaderThumbnailPreviewManager @Inject constructor(
                 is ReaderWebData.onRenderThumbnail -> store(value.thumbnailJsonObject)
                 else -> Unit
             }
+        }.launchIn(viewModelScope)
+        org.zotero.android.screens.reader.ReaderMemoryPressure.events.onEach {
+            publicationJob?.cancel(); publicationJob = null
+            memoryCache.trimMemory(); publish()
         }.launchIn(viewModelScope)
         requestedCenter.debounce(150).combine(initialized) { center, ready ->
             if (ready) requestNearby(center)
@@ -71,6 +77,7 @@ class ReaderThumbnailPreviewManager @Inject constructor(
     }
 
     private fun resetWorker() {
+        publicationJob?.cancel(); publicationJob = null; hasPublishedImage = false
         coroutineScope?.cancel()
         queue.cancel()
         val input = Channel<Preview>(16)
@@ -90,8 +97,19 @@ class ReaderThumbnailPreviewManager @Inject constructor(
                     val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: continue
                     withContext(dispatchers.main) {
                         if (accept(preview) && isActive) {
-                            memoryCache.addToCache(listOf(preview.page to bitmap))
-                            publish()
+                            memoryCache.put(preview.page, bitmap)
+                            if (!hasPublishedImage || preview.page == requestedCenter.value) {
+                                publicationJob?.cancel(); publicationJob = null
+                                publish(); hasPublishedImage = true
+                            } else if (publicationJob == null) {
+                                // A fixed small window, not a trailing debounce: a stream
+                                // of neighbours cannot postpone publication indefinitely.
+                                publicationJob = scope.launch(dispatchers.main) {
+                                    delay(32)
+                                    if (accept(preview) && isActive) publish()
+                                    publicationJob = null
+                                }
+                            }
                         }
                     }
                 } catch (_: IllegalArgumentException) {

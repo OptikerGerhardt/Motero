@@ -1,6 +1,15 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 11. November 2026. Build 322 / Motero 1.0.7 korrigiert EPUB-Gesten und Seitenabstände und begrenzt zusätzlichen Bildspeicher. PDF.js 5.7.330 und die bisherigen PDF-/Stift-/Syncformate bleiben erhalten.
+Stand: 11. November 2026. Build 323 / Motero 1.0.8 verbessert Auswahl, Spreads und Ressourcensteuerung. PDF.js 5.7.330 und die bisherigen PDF-/Stift-/Syncformate bleiben erhalten.
+
+## Auswahl, Spreads und Effizienz: Build 323 / 1.0.8
+
+- EPUB: Textposition zwischen Zeilen stabil; explizite Markierungswerkzeuge konkurrieren nicht mit der Haltegeste.
+- Highlight-Schnellpalette während Bearbeitung ausblenden und anschließend mit aktueller Geometrie wiederherstellen; rundere blaue Griffe bei PDF/EPUB.
+- Odd-/Even-Seitenpaare bei Zuschnitt, Zentrierung, Jumped/Hardware-Navigation und Übersicht gemeinsam behandeln; Cover und letzte Einzelblätter erhalten.
+- Vorschauen gebündelt veröffentlichen, WebView gezielt aktualisieren, Raster-Cropping in Worker mit kompakten Bilddaten und Rückfallpfad; Geräte-/Speicherdruck-Budgets und bevorzugte aktuelle Seite.
+- EPUB: unnötige Erscheinungs-/Font-Wiederherstellung vermeiden, Scroll-Updates bündeln, Kapitelaufbau zwischen Aufgaben freigeben. Doppeltipp unverändert.
+- [Details, Quellen und Prüfgrenzen](docs/READER_323.md).
 
 ## EPUB und Ressourcenverbrauch: Build 322 / 1.0.7
 
