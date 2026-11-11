@@ -1,5 +1,9 @@
 package org.zotero.android.uicomponents.icon
 
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
 import androidx.annotation.DrawableRes
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -12,7 +16,9 @@ fun IconWithPaddingM3(
     @DrawableRes unselectedDrawableRes: Int,
     @DrawableRes selectedDrawableRes: Int,
     isSelected: Boolean,
-    onToggle: (() -> Unit)
+    onToggle: (() -> Unit),
+    onLongClick: (() -> Unit)? = null,
+    contentDescription: String? = null,
 ) {
     val tintColor = if (isSelected) {
         MaterialTheme.colorScheme.primary
@@ -24,12 +30,19 @@ fun IconWithPaddingM3(
     } else {
         unselectedDrawableRes
     }
-    IconButton(onClick = onToggle) {
+    val icon: @Composable () -> Unit = {
         Icon(
             painter = painterResource(id = drawableRes),
-            contentDescription = null,
+            contentDescription = contentDescription,
             tint = tintColor
         )
     }
-
+    if (onLongClick == null) IconButton(onClick = onToggle) { icon() }
+    else androidx.compose.foundation.layout.Box(
+        modifier = androidx.compose.ui.Modifier
+            .size(48.dp).clip(androidx.compose.foundation.shape.CircleShape)
+            .combinedClickable(onClick = onToggle, onLongClick = onLongClick,
+                role = androidx.compose.ui.semantics.Role.Button),
+        contentAlignment = androidx.compose.ui.Alignment.Center,
+    ) { icon() }
 }

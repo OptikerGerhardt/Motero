@@ -59,8 +59,10 @@ data class ReaderSettings(
     var epubMargins: Float? = null,
     var epubVerticalMargins: Float? = null,
     var epubFontFamily: String? = null,
+    var pageBackground: String? = null,
 ) {
-    fun effectiveVerticalMargins(): Float = epubVerticalMargins?.takeIf { it.isFinite() }?.coerceIn(0f, 15f) ?: 3f
+    fun effectivePageBackground(): String = pageBackground?.takeIf { it in setOf("snow", "sepia", "dark", "black") } ?: "default"
+    fun effectiveVerticalMargins(): Float = epubVerticalMargins?.takeIf { it.isFinite() }?.coerceIn(-20f, 15f) ?: 3f
     fun effectiveMargins(): Float = epubMargins?.takeIf { it.isFinite() }?.coerceIn(0f, 20f)
         ?: when (pageWidth) { -1 -> 12f; 1 -> 2f; else -> 8f }
     fun effectiveFontFamily(): String = epubFontFamily?.takeIf { it in setOf("original", "serif", "sans-serif") } ?: "serif"

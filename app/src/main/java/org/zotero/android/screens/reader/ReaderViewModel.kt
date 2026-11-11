@@ -2958,6 +2958,8 @@ class ReaderViewModel @Inject constructor(
         return updateAppearanceAccordingToSettings(isSettingsUpdate = true, applyFit = applyFit)
     }
 
+    fun setReaderViewportInset(value: Float) = readerWebCallChainExecutor.setReaderViewportInset(value)
+
     private fun updateAppearanceAccordingToSettings(isSettingsUpdate: Boolean, applyFit: Boolean = false): kotlinx.coroutines.Job {
         return viewModelScope.launch {
             val readerSettings = defaults.getReaderSettings()

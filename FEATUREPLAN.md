@@ -1,6 +1,17 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 11. November 2026. Build 323 / Motero 1.0.8 verbessert Auswahl, Spreads und Ressourcensteuerung. PDF.js 5.7.330 und die bisherigen PDF-/Stift-/Syncformate bleiben erhalten.
+Stand: 11. November 2026. Build 324 / Motero 1.0.9 ergänzt die nach Build 323 gesammelten Reader-Änderungen. PDF.js 5.7.330 und die bisherigen PDF-/Stift-/Syncformate bleiben erhalten.
+
+## Lesegesten, Spalten und Darstellung: Build 324 / 1.0.9
+
+- PDF-/EPUB-Drag-Highlighting nach 250 ms; Stylus-Einstellungen durch langen Druck auf den oberen Stift, kurzer Druck unverändert.
+- EPUB-WebView über die volle Lesefläche, sicherer Standardabstand innerhalb des Layouts; Top-/Bottom-Margins -20 bis 15 %, größere schwarze Fähnchen und Bookmark-Tippbereich unabhängig vom Textfeld.
+- Bestehende Desktop-Farben für PDF-/EPUB-Seiten, im globalen E-Reader-Modus ausgenommen.
+- Spreads und Page Fitting bleiben gemeinsam aktiv; Leseeinheiten bei Fit-/Übersichtssprüngen direkt zentrieren, ohne normales Scrollen einzuschränken.
+- Continuous-Volume-Schritte laufen über Seitengrenzen; Jumped-SmartScroll bleibt erhalten.
+- Zweispaltige Textseiten und klare Scans konservativ erkennen, Textbreite auf die Spalte beziehen und links/rechts in Leserichtung fortsetzen. Spreads, manuelle Rahmen und vollständiger Seitenbezug bleiben explizit.
+- EPUB-Überschriften im Kundera-Buch bleiben als möglicherweise quellenspezifische Beobachtung für einen Vergleich offen.
+- [Prüfumfang und Erkennungsgrenzen](docs/READER_324.md). Physische Eingabe und Kontosync separat.
 
 ## Auswahl, Spreads und Effizienz: Build 323 / 1.0.8
 

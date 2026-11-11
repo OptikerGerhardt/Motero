@@ -1,0 +1,247 @@
+{
+  "tests": 411,
+  "files": 48,
+  "passed": true,
+  "suites": [
+    {
+      "file": "test/android/index-android.test.mjs",
+      "cases": 8,
+      "passed": true
+    },
+    {
+      "file": "test/common/annotation-cleanup.test.mjs",
+      "cases": 3,
+      "passed": true
+    },
+    {
+      "file": "test/common/annotation-manager.test.mjs",
+      "cases": 8,
+      "passed": true
+    },
+    {
+      "file": "test/common/annotation-selection-handler.test.mjs",
+      "cases": 6,
+      "passed": true
+    },
+    {
+      "file": "test/common/mobile-pen-input.test.mjs",
+      "cases": 7,
+      "passed": true
+    },
+    {
+      "file": "test/common/mobile-view.test.mjs",
+      "cases": 4,
+      "passed": true
+    },
+    {
+      "file": "test/common/reader-bookmark.test.mjs",
+      "cases": 1,
+      "passed": true
+    },
+    {
+      "file": "test/common/sdt-document-session.test.mjs",
+      "cases": 4,
+      "passed": true
+    },
+    {
+      "file": "test/dom/mobile-word-range.test.mjs",
+      "cases": 4,
+      "passed": true
+    },
+    {
+      "file": "test/dom/pen-input.test.mjs",
+      "cases": 3,
+      "passed": true
+    },
+    {
+      "file": "test/dom/text-caret.test.mjs",
+      "cases": 3,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/android-page-fitting.test.mjs",
+      "cases": 26,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/android-ui.test.mjs",
+      "cases": 78,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/chrome-tap-guard.test.mjs",
+      "cases": 4,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/content-fit.test.mjs",
+      "cases": 15,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/cropped-page-layout.test.mjs",
+      "cases": 3,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/direct-selection.test.mjs",
+      "cases": 4,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/double-tap-zoom.test.mjs",
+      "cases": 5,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/hardware-navigation.test.mjs",
+      "cases": 20,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/hold-to-highlight.test.mjs",
+      "cases": 9,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/ink-eraser.test.mjs",
+      "cases": 3,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/ink-rendering.test.mjs",
+      "cases": 5,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/ink-samples.test.mjs",
+      "cases": 4,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/manual-crop.test.mjs",
+      "cases": 6,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/native-text-selection-map.test.mjs",
+      "cases": 12,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/navigation-history.test.mjs",
+      "cases": 16,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/page-navigation.test.mjs",
+      "cases": 3,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/pdf-document-data.test.mjs",
+      "cases": 2,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/pdf-sdt-position-mapper.test.mjs",
+      "cases": 4,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/pdf-thumbnails.test.mjs",
+      "cases": 9,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/pdfjs-compatibility.test.mjs",
+      "cases": 3,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/reading-analysis.test.mjs",
+      "cases": 2,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/reading-columns.test.mjs",
+      "cases": 5,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/reading-edge-timeout.test.mjs",
+      "cases": 1,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/reading-geometry-cache.test.mjs",
+      "cases": 4,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/reading-image.test.mjs",
+      "cases": 2,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/reading-interaction.test.mjs",
+      "cases": 5,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/reading-layout.test.mjs",
+      "cases": 62,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/reading-unit.test.mjs",
+      "cases": 4,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/reading-work-queue.test.mjs",
+      "cases": 1,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/reading-worker.test.mjs",
+      "cases": 6,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/scroll-target.test.mjs",
+      "cases": 4,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/sdt-integration.test.mjs",
+      "cases": 5,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/sdt-search.test.mjs",
+      "cases": 7,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/search-session.test.mjs",
+      "cases": 2,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/selection-flow.test.mjs",
+      "cases": 5,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/semantic-overlays.test.mjs",
+      "cases": 11,
+      "passed": true
+    },
+    {
+      "file": "test/pdf/touch-annotation-transform.test.mjs",
+      "cases": 3,
+      "passed": true
+    }
+  ]
+}

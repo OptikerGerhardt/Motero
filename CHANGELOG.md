@@ -1,5 +1,15 @@
 # Änderungen
 
+## 1.0.9 — Build 324
+
+- Kürzere gemeinsame PDF-/EPUB-Haltegeste; Stylus-Einstellungen per langem Druck auf den oberen Stift statt in Appearance.
+- EPUB-Ränder mit sicherem Standard und negativen Werten bis zum Bildschirmrand; größere, unverdeckte Bookmark-Fähnchen und vom Textfeld unabhängige obere rechte Ecke.
+- Desktop-Seitenfarben Default/Snow/Sepia/Dark/Black für PDF/EPUB, im E-Reader-Modus ausgenommen.
+- Spreads mit allen Page-Fitting-Optionen; direktes Rendern beim Umschalten und zuverlässige Zentrierung auch nach Rückkehr aus der Übersicht.
+- Continuous-Volume-Scrolling über Seitengrenzen; Jumped behält SmartScroll.
+- Konservative Spaltenerkennung für Text und klare Scans; Fit to Width und Leserichtung links → rechts → nächste Seite, ohne die PDF zu verändern.
+- Bestehende Engine, Signatur und Synchronisationsformate erhalten. [Umfang und Grenzen](docs/READER_324.md).
+
 ## 1.0.8 — Build 323
 
 - Stabile EPUB-Auswahl über Zeilenabstände, getrennte Halte-/Werkzeuggesten und automatisch ausgeblendete Bearbeitungspalette mit runderen Griffen.

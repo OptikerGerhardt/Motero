@@ -1,3 +1,8 @@
+# Build 324 / Motero 1.0.9 — lokaler Release-Kandidat
+
+- Gesammelte Gesten-, EPUB-, Bookmark-, Farb-, Spalten-, Spread- und Continuous-Änderungen umgesetzt. [Umfang und Grenzen](docs/READER_324.md).
+- Finaler Browser-/Android-Prüflauf und signierte API-31/35-Updates vor Veröffentlichung erforderlich. [Nachweise](qa/build324/README.md).
+
 # Build 323 / Motero 1.0.8 — veröffentlicht und unabhängig geprüft
 
 - [APK und vollständige Quellen](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.8-323) veröffentlicht; [Build und Release](https://github.com/OptikerGerhardt/Motero/actions/runs/43031667034) erfolgreich. Anwendung `f3ab0b89`, Reader `db317a71`, PDF.js 5.7.330 unverändert.

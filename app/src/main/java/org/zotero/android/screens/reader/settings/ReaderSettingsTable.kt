@@ -3,7 +3,7 @@ package org.zotero.android.screens.reader.settings
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
-import androidx.compose.material3.TextButton
+import androidx.compose.runtime.collectAsState
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.FilterChip
@@ -22,10 +22,10 @@ import kotlin.math.roundToInt
 internal fun ReaderSettingsTable(
     viewState: ReaderSettingsViewState,
     viewModel: ReaderSettingsViewModel,
-    onDeviceSettings: () -> Unit = {},
     onManualCrop: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
+    val eReader = org.zotero.android.ereader.DeviceProfileStore.state.collectAsState().value
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 24.dp),
@@ -48,6 +48,34 @@ internal fun ReaderSettingsTable(
                 selectedOption = if (viewState.pageNavigation == "jumped") ReaderSettingsOptions.NavigationJumped else ReaderSettingsOptions.NavigationContinuous,
                 optionSelected = viewModel::onOptionSelected,
             )
+        }
+        if (!eReader.eReader) {
+            item {
+                Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                    Text(stringResource(R.string.reader_page_background), style = MaterialTheme.typography.bodyMedium)
+                    Spacer(Modifier.height(8.dp))
+                    for (choices in listOf("default" to "Default", "snow" to "Snow", "sepia" to "Sepia", "dark" to "Dark", "black" to "Black").chunked(3)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                            choices.forEachIndexed { index, (value, label) ->
+                                androidx.compose.material3.ToggleButton(
+                                    checked = viewState.pageBackground == value,
+                                    onCheckedChange = { viewModel.onPageBackgroundChanged(value) },
+                                    modifier = Modifier.weight(1f),
+                                    colors = androidx.compose.material3.ToggleButtonDefaults.toggleButtonColors(
+                                        checkedContainerColor = MaterialTheme.colorScheme.secondary,
+                                        checkedContentColor = MaterialTheme.colorScheme.onSecondary,
+                                    ),
+                                    shapes = when(index) {
+                                        0 -> androidx.compose.material3.ButtonGroupDefaults.connectedLeadingButtonShapes()
+                                        choices.lastIndex -> androidx.compose.material3.ButtonGroupDefaults.connectedTrailingButtonShapes()
+                                        else -> androidx.compose.material3.ButtonGroupDefaults.connectedMiddleButtonShapes()
+                                    },
+                                ) { Text(label) }
+                            }
+                        }
+                    }
+                }
+            }
         }
         // Fitting applies to the PDF pages, not to Reading Mode's reflowed text
         if (viewState.fileType == ReaderFileType.PDF && !viewState.readingModeEnabled) {
@@ -154,8 +182,8 @@ internal fun ReaderSettingsTable(
             if (viewState.fileType == ReaderFileType.EPUB) readerSettingsSliderRow(
                 titleResId = R.string.reader_vertical_margins,
                 value = viewState.verticalMargins,
-                valueRange = 0f..15f,
-                steps = 14,
+                valueRange = -20f..15f,
+                steps = 34,
                 valueLabel = "${viewState.verticalMargins.roundToInt()}%",
                 onValueChange = viewModel::onVerticalMarginsChanged,
             )
@@ -167,9 +195,6 @@ internal fun ReaderSettingsTable(
                 valueLabel = "${viewState.pageWidth.roundToInt()}%",
                 onValueChange = viewModel::onPageWidthChanged,
             )
-        }
-        item {
-            TextButton(onClick = onDeviceSettings) { Text("Stylus") }
         }
     }
 }

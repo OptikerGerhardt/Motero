@@ -46,10 +46,10 @@ class ReaderCustomWebView(context: Context, attrs: AttributeSet? = null) : WebVi
             }
 
             MotionEvent.ACTION_MOVE -> {
-                // The Reader starts hold-and-drag highlighting after 450 ms.
+                // The Reader starts hold-and-drag highlighting after 250 ms.
                 // Keep the layout stable for that gesture and native long-press selection.
                 if (!gestureAlreadyReportedThisTouch && ev.pointerCount == 1 &&
-                    ev.eventTime - ev.downTime < 300L &&
+                    ev.eventTime - ev.downTime < 200L &&
                     (abs(ev.x - gestureDownX) > touchSlop || abs(ev.y - gestureDownY) > touchSlop)
                 ) {
                     gestureAlreadyReportedThisTouch = true

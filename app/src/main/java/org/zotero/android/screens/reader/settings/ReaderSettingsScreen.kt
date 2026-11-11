@@ -23,12 +23,6 @@ internal fun ReaderSettingsScreen(
     LaunchedEffect(args) { viewModel.init(args = args) }
     viewModel.setOsTheme(isDark = isSystemInDarkTheme())
     val viewState by viewModel.viewStates.observeAsState(ReaderSettingsViewState())
-    var deviceSettings by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
-    if (deviceSettings) {
-        BackHandler { deviceSettings = false }
-        org.zotero.android.ereader.EReaderSettingsScreen(stylusOnly = true, darkTheme = viewState.isDark, onBack = { deviceSettings = false })
-        return
-    }
     val applyParamsAndBack: () -> Unit = {
         viewModel.applyChangesImmediately()
         onBack()
@@ -48,7 +42,7 @@ internal fun ReaderSettingsScreen(
                 )
             },
         ) { insets ->
-            ReaderSettingsTable(viewState, viewModel, modifier = Modifier.padding(bottom = insets.calculateBottomPadding()), onDeviceSettings = { deviceSettings = true }, onManualCrop = {
+            ReaderSettingsTable(viewState, viewModel, modifier = Modifier.padding(bottom = insets.calculateBottomPadding()), onManualCrop = {
                 onBack()
                 viewModel.applyChangesImmediately(startManualCrop = true)
             })

@@ -48,4 +48,15 @@ class ReaderComfortSettingsTest {
         assertEquals("width",restored.pageFitMode())
         assertEquals("cropped-content",restored.fitReference())
     }
+
+    @Test fun `negative vertical margins and page backgrounds persist without altering existing fitting`() {
+        val settings=ReaderSettings.default().copy(epubVerticalMargins=-12f,pageBackground="sepia",fitToWidth=true)
+        val restored=Gson().fromJson(Gson().toJson(settings),ReaderSettings::class.java)
+        assertEquals(-12f,restored.effectiveVerticalMargins(),0f)
+        assertEquals("sepia",restored.effectivePageBackground())
+        assertEquals("width",restored.pageFitMode())
+        restored.pageBackground="untrusted";restored.epubVerticalMargins=-100f
+        assertEquals("default",restored.effectivePageBackground())
+        assertEquals(-20f,restored.effectiveVerticalMargins(),0f)
+    }
 }

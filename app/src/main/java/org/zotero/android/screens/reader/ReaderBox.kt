@@ -126,12 +126,14 @@ internal fun ReaderBox(
             // space above and below, including the progress strip and cutout.
             val epubEdge = with(density) {
                 maxOf(WindowInsets.statusBarsIgnoringVisibility.union(WindowInsets.displayCutout).getTop(this),
-                    WindowInsets.navigationBarsIgnoringVisibility.getBottom(this) + 40.dp.roundToPx()).toDp()
+                    WindowInsets.navigationBarsIgnoringVisibility.getBottom(this) + (if (viewState.progressMode == "hidden") 0.dp else 40.dp).roundToPx()).toDp()
+            }
+            androidx.compose.runtime.LaunchedEffect(epubEdge, viewState.fileType, viewState.progressMode) {
+                viewModel.setReaderViewportInset(if (viewState.fileType == ReaderFileType.EPUB) epubEdge.value else 0f)
             }
             val readingModifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)
                 .then(if (viewState.fileType == ReaderFileType.EPUB) Modifier
                     .windowInsetsPadding(WindowInsets.navigationBarsIgnoringVisibility.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal))
-                    .padding(vertical = epubEdge)
                     else if (viewState.fileType == ReaderFileType.HTML) Modifier.windowInsetsPadding(readingInsets) else Modifier)
 
             ReaderWebView(viewModel = viewModel, modifier = readingModifier)
@@ -141,7 +143,7 @@ internal fun ReaderBox(
                     .align(Alignment.BottomCenter).fillMaxWidth()
                     .windowInsetsPadding(WindowInsets.navigationBarsIgnoringVisibility)
                     .height(40.dp).clickable(onClick = viewModel::cycleEpubProgress)
-                    .background(MaterialTheme.colorScheme.surface)
+                    .background(if (viewState.progressMode == "hidden" || viewState.isTopBarVisible) androidx.compose.ui.graphics.Color.Transparent else MaterialTheme.colorScheme.surface)
             ) {
                 // EPUB: When bars are hidden, show page progress in the empty space
                 val pageProgress = viewState.pageProgress

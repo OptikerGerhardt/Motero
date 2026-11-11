@@ -141,4 +141,6 @@
     <string name="reader_font_serif">Serif</string>
     <string name="reader_font_sans">Sans serif</string>
     <string name="reader_vertical_margins">Top and bottom margins</string>
+    <string name="reader_stylus_settings">Annotation tools; long press for stylus settings</string>
+    <string name="reader_page_background">Page background</string>
 </resources>

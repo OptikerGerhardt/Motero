@@ -47,6 +47,7 @@ internal fun ReaderTopBar(
     toggleReadingMode: () -> Unit,
     onShowHidePdfSearch: () -> Unit,
     toggleToolbarButton: () -> Unit,
+    onStylusSettings: () -> Unit,
     isToolbarButtonSelected: Boolean,
     showSideBar: Boolean,
     showPdfSearch: Boolean,
@@ -146,12 +147,15 @@ internal fun ReaderTopBar(
                         )
                     }
                 },
-                state = rememberTooltipState()
+                state = rememberTooltipState(),
+                enableUserInput = false
             ) {
                 IconWithPaddingM3(
                     unselectedDrawableRes = Drawables.draw,
                     selectedDrawableRes = Drawables.draw_filled,
                     onToggle = toggleToolbarButton,
+                    onLongClick = onStylusSettings,
+                    contentDescription = androidx.compose.ui.res.stringResource(org.zotero.android.R.string.reader_stylus_settings),
                     isSelected = isToolbarButtonSelected
                 )
             }

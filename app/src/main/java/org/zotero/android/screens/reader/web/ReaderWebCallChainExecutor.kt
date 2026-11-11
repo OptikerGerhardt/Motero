@@ -41,6 +41,12 @@ class ReaderWebCallChainExecutor @Inject constructor(
     private val defaults: Defaults,
 ) {
 
+    private var viewportInset = 0f
+    fun setReaderViewportInset(value: Float) {
+        viewportInset = value
+        readerWebViewHandler.evaluateJavascript("window.setReaderViewportInset?.($value);") {}
+    }
+
     var documentCrops: org.zotero.android.screens.reader.data.ReaderManualCrops? = null
     private val limitedParallelismDispatcher =
         dispatchers.io.limitedParallelism(1)
@@ -532,6 +538,8 @@ class ReaderWebCallChainExecutor @Inject constructor(
             } else null,
             directHighlight = !defaults.getReaderSettings().nativeTextSelection,
             readerChromeVisible = chromeVisible,
+            viewportInset = viewportInset.toDouble(),
+            pageBackground = defaults.getReaderSettings().effectivePageBackground(),
             pageNavigation = defaults.getReaderSettings().effectivePageNavigation(),
             deviceProfile = org.zotero.android.ereader.DeviceProfileStore.state.value.copy(
                 eraserSize = defaults.getActiveEraserSize(), eraserMode = defaults.getActiveEraserMode()),
@@ -648,14 +656,10 @@ class ReaderWebCallChainExecutor @Inject constructor(
     }
 
     suspend fun updateInterface(isDark: Boolean) {
-        val appearanceString = if (isDark) {
-            "dark"
-        } else {
-            "light"
-        }
-
+        val appearanceString = if (isDark) "dark" else "light"
+        val background = gson.toJson(defaults.getReaderSettings().effectivePageBackground())
         return suspendCancellableCoroutine { cont ->
-            readerWebViewHandler.evaluateJavascript("window._view.setColorScheme('$appearanceString');") {
+            readerWebViewHandler.evaluateJavascript("window._view.setColorScheme('$appearanceString');window._view.setPageBackground($background);") {
                 cont.resume(Unit)
             }
         }

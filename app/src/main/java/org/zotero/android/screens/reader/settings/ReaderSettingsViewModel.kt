@@ -91,6 +91,7 @@ internal class ReaderSettingsViewModel @Inject constructor(
                 pageWidth = readerSettings.effectiveMargins(),
                 verticalMargins = readerSettings.effectiveVerticalMargins(),
                 fontFamily = readerSettings.effectiveFontFamily(),
+                pageBackground = readerSettings.effectivePageBackground(),
                 selectedFitToContentOption = when (readerSettings.pageFitMode()) {
                     "width" -> ReaderSettingsOptions.FitToWidth
                     "height" -> ReaderSettingsOptions.FitToHeight
@@ -259,13 +260,8 @@ internal class ReaderSettingsViewModel @Inject constructor(
             "content" -> ReaderSettingsOptions.FitReferenceText
             else -> ReaderSettingsOptions.FitReferencePage
         }) }
-        if (option in viewState.fitToContentOptions && option != ReaderSettingsOptions.FitToContentOff) {
-            readerSettings.spreadsMode = PageSpreadsMode.NONE
-            updateState { copy(selectedSpreadsOption = ReaderSettingsOptions.PageSpreadsNone) }
-        } else if (option in viewState.spreadsOptions && option != ReaderSettingsOptions.PageSpreadsNone) {
-            readerSettings.setPageFitMode("none")
+        if (option in viewState.spreadsOptions) {
             reapplyFitting = true
-            updateState { copy(selectedFitToContentOption = ReaderSettingsOptions.FitToContentOff) }
         }
         scheduleDebouncedApply()
     }
@@ -321,9 +317,16 @@ internal class ReaderSettingsViewModel @Inject constructor(
     }
 
     fun onVerticalMarginsChanged(value: Float) {
-        val rounded = value.coerceIn(0f, 15f).roundToInt().toFloat()
+        val rounded = value.coerceIn(-20f, 15f).roundToInt().toFloat()
         readerSettings.epubVerticalMargins = rounded
         updateState { copy(verticalMargins = rounded) }
+        scheduleDebouncedApply()
+    }
+
+    fun onPageBackgroundChanged(value: String) {
+        if (value !in setOf("default", "snow", "sepia", "dark", "black")) return
+        readerSettings.pageBackground = value
+        updateState { copy(pageBackground = value) }
         scheduleDebouncedApply()
     }
 
@@ -461,6 +464,7 @@ internal data class ReaderSettingsViewState(
     val letterSpacing: Float = 0f,
     val pageWidth: Float = 8f,
     val verticalMargins: Float = 3f,
+    val pageBackground: String = "default",
     val fontFamily: String = "serif",
     val selectedFitToContentOption: ReaderSettingsOptions = ReaderSettingsOptions.FitToContentOff,
     val selectedFitReferenceOption: ReaderSettingsOptions = ReaderSettingsOptions.FitReferencePage,

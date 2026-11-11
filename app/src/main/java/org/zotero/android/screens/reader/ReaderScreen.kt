@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -93,8 +94,9 @@ internal fun ReaderScreen(
 
     val activity = LocalActivity.current ?: return
     val currentView = LocalView.current
+    var stylusSettings by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     val deviceProfile by org.zotero.android.ereader.DeviceProfileStore.state.collectAsState()
-    val noReaderDialog = viewState.readerSettingsArgs == null && viewState.readerColorPickerArgs == null && viewState.readerFilterArgs == null && viewState.readerAnnotationArgs == null && viewState.readerAnnotationMoreArgs == null
+    val noReaderDialog = !stylusSettings && viewState.readerSettingsArgs == null && viewState.readerColorPickerArgs == null && viewState.readerFilterArgs == null && viewState.readerAnnotationArgs == null && viewState.readerAnnotationMoreArgs == null
     ReaderGestureProtection(deviceProfile.protectReaderEdges && noReaderDialog && !viewState.showSideBar && !viewState.showPdfSearch && !viewState.manualCropOpen && viewState.selectedAnnotationKey == null)
 
     org.zotero.android.uicomponents.ReaderHardwareButtons(
@@ -114,6 +116,13 @@ internal fun ReaderScreen(
         }
     }
     AppThemeM3(darkTheme = viewState.isDark) {
+        if (stylusSettings) androidx.compose.ui.window.Dialog(
+            onDismissRequest = { stylusSettings = false },
+            properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
+        ) {
+            org.zotero.android.ereader.EReaderSettingsScreen(stylusOnly = true,
+                darkTheme = viewState.isDark, onBack = { stylusSettings = false })
+        }
         ReaderSystemBars(activity.window, currentView, viewState.isTopBarVisible || viewState.manualCropOpen, viewState.isDark)
 
         val annotationMaxSideSize = annotationMaxSideSize()
@@ -215,6 +224,7 @@ internal fun ReaderScreen(
                                 toggleReadingMode = viewModel::toggleReadingMode,
                                 showPdfSearch = viewState.showPdfSearch,
                                 toggleToolbarButton = viewModel::toggleToolbarButton,
+                                onStylusSettings = { stylusSettings = true },
                                 isToolbarButtonSelected = viewState.showCreationToolbar,
                                 showSideBar = viewState.showSideBar,
                                 onShowHidePdfSearch = viewModel::togglePdfSearch,
