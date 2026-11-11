@@ -18,7 +18,7 @@ const root=path.resolve(__dirname,'../build/android');
   async function open(flow){
    await page.goto(origin+'/view.html');await page.evaluate(()=>{window.messages=[];const c=new MessageChannel();c.port1.onmessage=e=>window.messages.push(JSON.parse(e.data));window.postMessage('initPort','*',[c.port2]);});
    await page.waitForFunction(()=>window.messages.some(x=>x.message?.event==='onInitialized'));
-   await page.evaluate(o=>window.createView(btoa(JSON.stringify(o))),{type:'epub',url:origin+'/navigation.epub',annotations:[],directHighlight:true,viewState:{flowMode:flow,spreadMode:0,appearance:{lineHeight:1.2,wordSpacing:0,letterSpacing:0,pageWidth:0,margins:8,fontFamily:'serif'}}});
+   await page.evaluate(o=>window.createView(btoa(JSON.stringify(o))),{type:'epub',url:origin+'/navigation.epub',annotations:[],directHighlight:true,viewportInset:64,viewState:{flowMode:flow,spreadMode:0,appearance:{lineHeight:1.2,wordSpacing:0,letterSpacing:0,pageWidth:0,margins:8,fontFamily:'serif'}}});
    await page.waitForFunction(()=>window._view?._view?.initialized&&window._view._view.flow?.startRange);
   }
   const point=()=>page.evaluate(()=>{
@@ -58,16 +58,38 @@ const root=path.resolve(__dirname,'../build/android');
 
   for(const flow of ['paginated','scrolled']){
    await open(flow);
-   for(const margins of [0,5,12]){
+   for(const margins of [-20,-5,0,5,12]){
     await page.evaluate(m=>window._view.setAppearance({lineHeight:1.2,wordSpacing:0,letterSpacing:0,pageWidth:0,margins:8,verticalMargins:m,fontFamily:'serif'}),margins);
     await page.waitForTimeout(120);
     const spacing=await page.evaluate(()=>{const v=window._view._view,b=v._iframeDocument.body,sections=b.querySelector('.sections');return{margin:parseFloat(v._iframeDocument.documentElement.style.getPropertyValue('--reader-block-margin')),top:parseFloat(getComputedStyle(b).marginTop),bottom:parseFloat(getComputedStyle(b).marginBottom),padding:parseFloat(getComputedStyle(sections).paddingTop),height:v._iframeWindow.innerHeight};});
     assert.equal(spacing.margin,margins);
-    if(flow==='paginated'){assert.ok(Math.abs(spacing.top-spacing.height*margins/100)<2,JSON.stringify(spacing));assert.equal(spacing.top,spacing.bottom);}
-    else assert.ok(Math.abs(spacing.padding-spacing.height*margins/100)<2,JSON.stringify(spacing));
+    if(flow==='paginated'){assert.ok(Math.abs(spacing.top-Math.max(0,64+spacing.height*margins/100))<2,JSON.stringify(spacing));assert.equal(spacing.top,spacing.bottom);}
+    else assert.ok(Math.abs(spacing.padding-Math.max(0,64+spacing.height*margins/100))<2,JSON.stringify(spacing));
    }
    console.log('PASS '+flow+': independent top/bottom margin control is symmetric and applied to layout');
   }
+  await open('paginated');
+  await page.evaluate(()=>window._view.setAppearance({lineHeight:1.2,wordSpacing:0,letterSpacing:0,pageWidth:0,margins:8,verticalMargins:12,fontFamily:'serif'}));
+  await tap({x:385,y:22});
+  await page.waitForFunction(()=>window._view._annotationManager._annotations.some(a=>a.comment?.startsWith('Bookmark')));
+  const flag=await page.evaluate(()=>{const v=window._view._view,a=v._annotations.find(a=>a.comment?.startsWith('Bookmark'));
+   const el=v._annotationShadowRoot.querySelector(`svg[data-annotation-id="${a.id}"]`),r=el.getBoundingClientRect();return{top:r.top,left:r.left,right:r.right,width:r.width,height:v._iframeWindow.innerHeight};});
+  assert.ok(flag.width>=18&&flag.top>=0&&flag.top<32&&flag.right<=393,JSON.stringify(flag));
+  await tap({x:385,y:22});
+  assert.equal(await page.evaluate(()=>window._view._annotationManager._annotations.filter(a=>a.comment?.startsWith('Bookmark')).length),0);
+  console.log('PASS viewport corner toggles a larger unclipped EPUB bookmark independently of content margins');
+  for(const [theme,color] of [['snow','#ECEFF4'],['sepia','#F4ECD8'],['dark','#2E3440'],['black','#000000']]){
+   await page.evaluate(t=>window._view.setPageBackground(t),theme);
+   assert.equal(await page.evaluate(()=>window._view._view._iframeDocument.documentElement.style.getPropertyValue('--background-color')),color);
+  }
+  await page.evaluate(()=>window._view.setDeviceProfile({eReader:true,penOnly:false}));
+  assert.equal(await page.evaluate(()=>window._view._view._iframeDocument.documentElement.style.getPropertyValue('--background-color')),'#ffffff');
+  console.log('PASS all four desktop page backgrounds and E-Reader override');
+  await open('paginated');
+  const fast=await point();await touch('touchStart',[fast]);await page.waitForTimeout(320);
+  assert.equal(await page.evaluate(()=>window._view._view._directHighlight.gesture.active),true,'a stationary word hold starts within 320 ms in a prepared EPUB');
+  await touch('touchEnd',[]);
+  console.log('PASS shorter word hold starts direct highlighting before the old hold threshold');
   assert.deepEqual(errors,[]);
  }finally{await browser?.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);process.exitCode=1;});

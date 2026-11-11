@@ -54,6 +54,10 @@ class View {
 		this._darkTheme = options.darkTheme
 			? DEFAULT_THEMES.find(x => x.id === options.darkTheme) ?? null
 			: DEFAULT_THEMES.find(x => x.id === 'dark');
+        this._defaultLightTheme = this._lightTheme;
+        this._defaultDarkTheme = this._darkTheme;
+        const background = !options.deviceProfile?.eReader && DEFAULT_THEMES.find(t => t.id === options.pageBackground);
+        if (background) this._lightTheme = this._darkTheme = background;
 		this._colorScheme = options.colorScheme;
 		if (this._options.platform === 'android') {
 			if (['light', 'dark'].includes(this._colorScheme)) document.documentElement.dataset.colorScheme = this._colorScheme;
@@ -149,6 +153,7 @@ class View {
 			fontFamily: this._options.fontFamily,
             directHighlight: this._options.directHighlight,
             mobileAnnotations: this._type === 'epub',
+            viewportInset: this._options.viewportInset,
 			onAddAnnotation,
 			onUpdateAnnotations,
 			onDeleteAnnotationsFromPalette: ids => this._annotationManager.deleteAnnotations(ids),
@@ -462,8 +467,21 @@ class View {
         this._penEraser = active;
         this._applyTool(active ? this._eraserTool() : this._baseTool || {type:'pointer'});
     }
+    setPageBackground(id) {
+        this._options.pageBackground = id;
+        const theme = !this._deviceProfile?.eReader && DEFAULT_THEMES.find(t => t.id === id);
+        const light = theme || this._defaultLightTheme, dark = theme || this._defaultDarkTheme;
+        if (this._lightTheme === light && this._darkTheme === dark) return;
+        this._lightTheme = light; this._darkTheme = dark;
+        for (const v of [this._view, this._sdtView]) {
+            v?.setLightTheme(light); v?.setDarkTheme(dark);
+        }
+    }
+
     setDeviceProfile(profile) {
+        const changed = !!profile.eReader !== !!this._deviceProfile?.eReader;
         this._deviceProfile = profile; this._options.deviceProfile = profile;
+        if (changed) this.setPageBackground(this._options.pageBackground);
         for (const v of [this._view,this._sdtView]) {
             if (!v) continue;
             v._options.deviceProfile = profile;

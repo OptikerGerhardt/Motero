@@ -2415,9 +2415,10 @@ abstract class DOMView<State extends DOMViewState, Data> {
 		};
         this.appearance = appearance;
         const root = this._iframeDocument.documentElement;
+        root.style.setProperty('--reader-safe-inset', Math.max(0, this._options.viewportInset || 0) + 'px');
         if (Number.isFinite(appearance.verticalMargins)) {
             root.dataset.verticalMargins = 'custom';
-            root.style.setProperty('--reader-block-margin', Math.max(0, Math.min(15, appearance.verticalMargins!)) + 'vh');
+            root.style.setProperty('--reader-block-margin', Math.max(-20, Math.min(15, appearance.verticalMargins!)) + 'vh');
         }
         if (Number.isFinite(appearance.margins)) {
             root.dataset.margins = 'custom';
@@ -2595,6 +2596,7 @@ abstract class DOMView<State extends DOMViewState, Data> {
 export type DOMViewOptions<State extends DOMViewState, Data> = {
 	primary?: boolean;
 	mobile?: boolean;
+    viewportInset?: number;
 	preview?: boolean;
 	readOnly?: boolean;
 	container: Element;

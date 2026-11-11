@@ -623,6 +623,9 @@ class PDFView {
 			this.fitToContent({ margin: this._contentFit.margin, alignTop: true });
 		}
 
+        if (!this._pageFitting?.active && this._pageNavigation?.mode === 'jumped') {
+            this._pageNavigation.centerCurrentPage({preservePosition:true});
+        }
 		this._resolveInitializedPromise?.(true);
 		this._resolveInitializedPromise = null;
 	}
@@ -5895,6 +5898,16 @@ class PDFView {
 		if (!point || viewer[`${type}Mode`] === previousMode) {
 			return;
 		}
+        if (this._options.platform === 'android' && this._pageFitting?.active) {
+            this._pageFitting.schedule(0);
+            return;
+        }
+        this._pageNavigation?.sync();
+        viewer.update?.();
+        if (this._options.platform === 'android' && this._pageNavigation?.mode === 'jumped') {
+            this._pageNavigation.centerCurrentPage();
+            return;
+        }
 		// Re-fitting may change the scale and current page. Keep the original
 		// page's document position, leaving fitted axes to PDF.js.
 		let [left, top] = page.viewport.convertToViewportPoint(...point);

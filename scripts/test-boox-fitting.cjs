@@ -62,6 +62,7 @@ const types = { '.html':'text/html', '.js':'text/javascript', '.mjs':'text/javas
   let snapshot=JSON.stringify(full);
   await page.waitForTimeout(700);assert.equal(JSON.stringify(await state()),snapshot,'fitting must settle without a scroll/rezoom loop');
   console.log('PASS complete content rectangle visible; clipping and view settle');
+    await page.evaluate(()=>window.setPageNavigation('jumped'));
 	for (let mode of [0,1,2]) {
 	 await page.evaluate(mode=>window._view._view.setScrollMode(mode),mode);
 	 await fit('content');

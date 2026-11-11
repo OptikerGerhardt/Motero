@@ -156,3 +156,18 @@ test('spread SmartScroll uses the taller partner and advances to the next pair',
  container.scrollTop=1000;assert.equal(await move(view,true),'page');assert.equal(viewer.currentPageNumber,3);
  assert.equal(container.scrollTop,1612);
 });
+
+for (const mode of [0,1,2]) test(`continuous mode ${mode} crosses page boundaries by exactly the requested viewport fraction`,async()=>{
+ const {view,viewer,container}=fixture({mode});
+ view._pageNavigation={mode:'continuous'};
+ container.scrollHeight=5400;container.scrollWidth=3600;
+ container.scrollTop=1180;container.scrollLeft=1180;
+ const axis=mode===1?'scrollLeft':'scrollTop';
+ let turns=0;view._navigateToPage=()=>turns++;
+ assert.equal(await move(view,true,.5),'scroll');
+ assert.equal(container[axis],1180+(mode===1?200:300));
+ assert.equal(turns,0);
+ assert.equal(await move(view,false,.5),'scroll');assert.equal(container[axis],1180);
+ container[axis]=mode===1?3200:4800;
+ assert.equal(await move(view,true,.5),'none');assert.equal(turns,0);
+});

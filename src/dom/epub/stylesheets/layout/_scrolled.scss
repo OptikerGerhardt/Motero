@@ -61,4 +61,6 @@
 
 :root[data-margins="custom"] &:not(.fixed-layout) > .sections { margin-inline: var(--reader-side-margin); > .section-container { max-inline-size: 100%; } }
 
-:root[data-vertical-margins="custom"] &:not(.fixed-layout) > .sections { padding-block: var(--reader-block-margin); }
+:root[data-vertical-margins="custom"] &:not(.fixed-layout) > .sections {
+    padding-block: max(0px, calc(var(--reader-safe-inset, 0px) + var(--reader-block-margin)));
+}

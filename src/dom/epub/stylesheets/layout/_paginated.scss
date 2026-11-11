@@ -176,4 +176,6 @@
     }
 }
 
-:root[data-vertical-margins="custom"] &:not(.fixed-layout) { --block-margin: var(--reader-block-margin); }
+:root[data-vertical-margins="custom"] &:not(.fixed-layout) {
+    --block-margin: max(0px, calc(var(--reader-safe-inset, 0px) + var(--reader-block-margin)));
+}

@@ -34,6 +34,7 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   async function fit(reference,includeMarginalia=false,margin=.01){await page.evaluate(async o=>window.setPageFitting(o),{mode:'width',reference,margin,includeMarginalia,revision:9});await page.waitForTimeout(160);return state();}
   function state(){return page.evaluate(()=>{let view=window._view._view,f=view._pageFitting,v=f.viewer,p=v.getPageView(v.currentPageNumber-1),c=v.container;return{page:v.currentPageNumber,scale:v.currentScale,bounds:f.applied?.bounds,clip:p.div.style.clipPath,x:c.scrollLeft,y:c.scrollTop,pw:p.div.clientWidth,ph:p.div.clientHeight,width:c.clientWidth,height:c.clientHeight};});}
   await open('/fixture.pdf',8,{mode:'width',reference:'content',margin:.01});
+  await page.evaluate(()=>window.setPageNavigation('jumped'));
   for(const mode of [0,1,2]){
    await page.evaluate(m=>window._view._view.setScrollMode(m),mode);
    let text=await fit('content'),crop=await fit('cropped-content');

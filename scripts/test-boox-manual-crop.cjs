@@ -67,8 +67,10 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   assert.equal(await page.evaluate(()=>window.turnPageWithHardwareButton(true,0)),'ignored');
   assert.equal((await read()).page,before.page);
   await setRect([.12,.14,.82,.84]);
+  await page.evaluate(()=>{const e=window._view._view._pageFitting.editor;window.cropEvents=[];for(const type of ['pointerdown','pointerup','click'])e.root.addEventListener(type,event=>window.cropEvents.push({type,target:event.target.dataset.action,prevented:event.defaultPrevented}),true);});
   await action('cancel');
-  await page.waitForFunction(()=>window.messages.some(x=>x.message?.event==='onCropEditorChanged' && x.message.params.open===false));
+  try {await page.waitForFunction(()=>window.messages.some(x=>x.message?.event==='onCropEditorChanged' && x.message.params.open===false));}
+  catch(error){console.error('CROP CANCEL STATE',await page.evaluate(()=>({editor:!!window._view._view._pageFitting.editor,events:window.cropEvents,gesture:window._view._view._directHighlight.gesture.active})));throw error;}
   assert.deepEqual((await read()).options,before.options);
   assert.equal(await page.evaluate(()=>window.messages.filter(x=>x.message?.event==='onManualCropChanged').length),0);
   console.log('PASS cancelling manual crop preserves document settings; hardware navigation is blocked inside the editor');

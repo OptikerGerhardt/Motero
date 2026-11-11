@@ -139,6 +139,7 @@ export class AndroidPageFitting {
 			if (this.active) this.schedule();
 		};
         this.onSpread = () => {
+            this.spreadNeedsRender = true;
             this.token++; this.inputEpoch++; this.clearClips(); this.applied=null;
             this.preparedPages.clear(); this.geometry.clear(); this.layoutEpoch++;
             this.active=this.configured && this.options.mode !== 'none'; this.presentation='reading';
@@ -191,6 +192,7 @@ export class AndroidPageFitting {
 			manualCrop: normalizeCrops(options?.manualCrop === undefined ? this.options.manualCrop : options.manualCrop),
             cropMode,
 		};
+        if (this.options.mode !== 'width' || this.options.reference === 'page' || this.options.cropMode === 'manual' || this.viewer.spreadMode) this.column = null;
 		this.configured = true;
 		if (!apply) return Promise.resolve(false);
 		this.token++;
@@ -205,7 +207,7 @@ export class AndroidPageFitting {
 		this.masks = null;
 		this.active = this.options.mode !== 'none';
 		this.applied = null;
-		if (!this.active) this.view._booxReader?.rememberReadingView();
+		if (!this.active) { this.view._booxReader?.rememberReadingView(); this.view._pageNavigation?.sync(); }
 		this.view._render();
 		return this.active ? this.apply({ alignTop: true }) : Promise.resolve(true);
 	}
@@ -639,13 +641,23 @@ export class AndroidPageFitting {
 
 		let pdfPage = await v.pdfDocument.getPage(index + 1);
 		let base = pdfPage.getViewport({ scale: 96 / 72, rotation: pdfPage.rotate + rotation });
-		let fit = getReadingFit({ ...options, bounds, width, height, pageWidth: base.width, pageHeight: base.height });
+        const geometry = await this.cache.get(index);
+        const columns = options.mode === 'width' && options.reference !== 'page' && options.cropMode !== 'manual'
+            && !v.spreadMode && rotation % 180 === 0 ? geometry?.columns?.map(b=>rotateReadingBounds(b,rotation)) : null;
+        if (columns && rotation % 360 === 180) columns.reverse();
+        const columnIndex = this.column?.pageIndex === index ? this.column.index : 0;
+        const columnBounds = columns?.[columnIndex];
+        // Ragged line endings must not change the font size when switching columns.
+        const columnFit = columnBounds && [0,columnBounds[1],Math.max(...columns.map(b=>b[2]-b[0])),columnBounds[3]];
+        let fit = getReadingFit({ ...options, bounds:columnFit || bounds, width, height, pageWidth: base.width, pageHeight: base.height });
+        // Crop only the paper margins. Column fitting changes zoom/pan, never the PDF's coordinate plane.
+        if (columnBounds) fit = {...fit,bounds:getReadingFrame(bounds,options)};
 		const rawBounds = bounds;
 		bounds = fit.bounds;
 		let page = await this.cache.get(index);
 		let marginalia = cropForPage(options.manualCrop, index) ? []
 			: (page?.marginalia || []).map(r => rotateReadingBounds(r, rotation));
-		let prepared = { index, key: this.key(options), bounds, rawBounds, base, pdfPage, fit, rotation, inputEpoch, width, height, marginalia };
+		let prepared = { index, key: this.key(options), bounds, rawBounds, base, pdfPage, fit, rotation, inputEpoch, width, height, marginalia, columns, columnIndex };
         if (includeNeighbors) prepared.neighbors = [...this.preparedPages.values()].filter(p=>p.index!==index && Math.abs(p.index-index)<=4 && p.key===prepared.key && p.rotation===rotation);
 		return prepared;
 	}
@@ -658,6 +670,7 @@ export class AndroidPageFitting {
 				|| prepared.inputEpoch !== this.inputEpoch || this.pointers.size
 				|| prepared.width !== c.clientWidth || prepared.height !== c.clientHeight) return false;
 		let { index, bounds, pdfPage, fit } = prepared;
+        if (prepared.columns && direction < 0 && this.column?.pageIndex !== index) prepared.columnIndex = prepared.columns.length - 1;
 		let page = v.getPageView(index);
 		if (!page) return false;
 		this.token++; this.pendingPage = false; this.win.clearTimeout(this.timer);
@@ -671,6 +684,7 @@ export class AndroidPageFitting {
 			const preserveScroll = this.peekAnchor;
 			v.currentScale = fit.scale;
 			if (this.usesCropLayout()) {
+                if (this.columnLayout !== !!prepared.columns) { this.columnLayout = !!prepared.columns; this.layoutEpoch++; }
 				for (const member of prepared.unitPages || [prepared]) this.rememberPrepared(member);
 				for (const neighbor of prepared.neighbors || []) this.rememberPrepared(neighbor);
 				this.layout.apply(this.geometry);
@@ -700,17 +714,51 @@ export class AndroidPageFitting {
 				c.scrollTop = Math.max(0, d.offsetTop + d.clientTop + preserveScroll.fraction * d.clientHeight - preserveScroll.screenY);
 			}
 			this.peekAnchor = null;
-			this.view._pageNavigation?.centerCurrentPage({ direction, preservePosition: !navigate && !alignTop });
+			this.view._pageNavigation?.centerCurrentPage({ direction, preservePosition: !navigate && !alignTop, force: true });
+            this.positionColumn(prepared, {alignTop, direction, preservePosition: !navigate && !alignTop});
 			this.applied = { scale: v.currentScale, bounds, pageIndex: index, left: c.scrollLeft, top: c.scrollTop };
 			this.view._booxReader?.rememberReadingView();
 		}
 		finally { this.applying = false; }
 		this.view._render();
 		this.view._pageNavigation?.sync();
+        if (this.spreadNeedsRender) {
+            this.spreadNeedsRender = false;
+            v.renderingQueue?.renderHighestPriority(); // Repaint the rebuilt spread without promoting its partner page.
+        }
 		this.view._updateViewStats();
 		this.prefetchVisible();
 		return true;
 	}
+
+    get columnActive() {
+        return this.active && !this.zooming && this.options.mode === 'width' && !this.viewer.spreadMode
+            && this.column?.pageIndex === this.viewer.currentPageNumber - 1;
+    }
+
+    positionColumn(prepared, {alignTop = false, direction = 0, preservePosition = false} = {}) {
+        if (!prepared.columns?.length) { this.column = null; return; }
+        const index = prepared.columnIndex;
+        this.column = {pageIndex:prepared.index,index,bounds:prepared.columns[index],columns:prepared.columns};
+        const c=this.viewer.container, d=this.viewer.getPageView(prepared.index).div, b=this.column.bounds;
+        c.scrollLeft=Math.max(0,d.offsetLeft+d.clientLeft+(b[0]+b[2])*d.clientWidth/2-c.clientWidth/2);
+        if (!preservePosition || alignTop || direction) c.scrollTop=Math.max(0,d.offsetTop+d.clientTop+
+            (direction<0 ? b[3]*d.clientHeight+prepared.fit.pad-c.clientHeight : b[1]*d.clientHeight-prepared.fit.pad));
+    }
+
+    turnColumn(next) {
+        const col=this.column;
+        if (!this.columnActive) return false;
+        const index=col.index+(next?1:-1);
+        if (index<0 || index>=col.columns.length) return false;
+        const prepared=this.preparedPages.get(col.pageIndex);
+        if (!prepared) return false;
+        this.column={...col,index,bounds:col.columns[index]};
+        prepared.columnIndex=index;
+        this.positionColumn(prepared,{direction:next?1:-1});
+        this.applied={...this.applied,left:this.viewer.container.scrollLeft,top:this.viewer.container.scrollTop};
+        return true;
+    }
 
 	isCroppedWidth() { return this.options.mode === 'width' && this.options.reference === 'cropped-content'; }
 

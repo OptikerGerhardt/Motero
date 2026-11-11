@@ -218,6 +218,7 @@ export class PDFBooxReader {
 				// The second scrollPageIntoView reset X; reapply this page's content fit.
 				await view.fitToContent({ margin: view._contentFit.margin });
 			}
+			view._pageNavigation?.centerCurrentPage({force:true});
 			view._updateViewStats();
 		}
 		finally { if (this.entering === request) this.entering = null; }

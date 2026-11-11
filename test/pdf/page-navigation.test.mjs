@@ -46,3 +46,13 @@ test('Jumped centers short pages but enters tall pages at the directional edge a
  fitting.layout.boxes[0].height=400;place({direction:1});assert.equal(c.scrollTop,1800);
  place({direction:-1});assert.equal(c.scrollTop,1800);
 });
+
+test('explicit fitting and overview restoration center Continuous without constraining ordinary scrolling',()=>{
+ const c={clientWidth:600,clientHeight:900,scrollLeft:0,scrollTop:1500};
+ const fitting={layout:{boxes:[{x:30,y:1800,width:250,height:400},{x:292,y:1800,width:250,height:400}]}},
+ viewer={container:c,currentPageNumber:1,pagesCount:2,spreadMode:1,getPageView:()=>({})};
+ const n={mode:'continuous',viewer,view:{_pageFitting:fitting},clearSpacing(){}};
+ PDFPageNavigation.prototype.centerCurrentPage.call(n);assert.equal(c.scrollTop,1500);
+ PDFPageNavigation.prototype.centerCurrentPage.call(n,{force:true});assert.equal(c.scrollTop,1550);
+ assert.equal(c.scrollLeft,0);
+});

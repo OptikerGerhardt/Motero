@@ -175,6 +175,7 @@ window.focusReaderBookmark = window.focusReaderAnnotation;
 window.cancelManualCrop = () => window._view?._activeView?._pageFitting?.editor?.close();
 window.setDirectHighlight = enabled => window._view.setDirectHighlight(enabled);
 window.setReaderChromeVisible = visible => window._view?.setReaderChromeVisible(visible);
+window.setReaderViewportInset = value => window._view?._view?.setReaderViewportInset?.(value);
 
 window.setContentFit = (options) => {
 	log("Set content fit: " + JSON.stringify(options));
@@ -268,7 +269,7 @@ window.turnPageWithHardwareButton = (next, fraction = 2 / 3) => {
         let element = active?._iframeWindow?.document?.activeElement;
         if (element?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(element?.tagName)) return 'ignored';
         let result = await navigateWithHardwareButton(active, next, fraction);
-        if (result === 'page' || result === 'scroll') postMessage('onEdgePageTurnTap');
+        if (result === 'page' || result === 'scroll' || result === 'column') postMessage('onEdgePageTurnTap');
         return result;
     });
     return hardwareNavigationQueue;

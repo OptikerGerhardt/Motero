@@ -507,6 +507,9 @@ const Note: React.FC<NoteProps> = (props) => {
     let x = rect.left + (rtl ? -25 : rect.width + 25) + (rtl ? -1 : 1) * staggerOffset;
     if (bookmark && rect.right >= doc.defaultView.scrollX && rect.left < doc.defaultView.scrollX + doc.defaultView.innerWidth) x = doc.defaultView.scrollX + doc.defaultView.innerWidth - 24 - staggerOffset;
 	let y = rect.top + staggerOffset;
+    if (bookmark && rect.bottom > doc.defaultView.scrollY && rect.top < doc.defaultView.scrollY + doc.defaultView.innerHeight) {
+        y = doc.defaultView.scrollY + 24 + staggerOffset;
+    }
 	return (
 		<CommentIcon
 			ref={dragImageRef}
@@ -843,7 +846,7 @@ type ResizerProps = {
 };
 
 let CommentIcon = React.forwardRef<SVGSVGElement, CommentIconProps>((props, ref) => {
-	let size = props.large ? 24 : 14;
+	let size = props.large ? (isBlackReaderBookmark(props.annotation) ? 32 : 24) : 14;
 	let x = props.x - size / 2;
 	let y = props.y - size / 2;
 	return <>

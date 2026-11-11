@@ -23,7 +23,7 @@ function fixture(options = {}) {
 	async function hold() {
 		for (let [id, timer] of [...timers]) {
 			timers.delete(id);
-			assert.equal(timer.delay, 450);
+			assert.equal(timer.delay, 250);
 			await timer.callback();
 		}
 	}

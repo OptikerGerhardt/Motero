@@ -1,5 +1,5 @@
 import { wordRange } from './mobile-word-range.mjs';
-import { HoldToHighlight } from '../../pdf/hold-to-highlight.mjs';
+import { HoldToHighlight, HIGHLIGHT_HOLD_DELAY } from '../../pdf/hold-to-highlight.mjs';
 import { showAnnotationPalette } from '../../common/mobile-annotation-palette';
 import { ANNOTATION_COLORS } from '../../common/defines';
 
@@ -52,12 +52,12 @@ export class DOMDirectHighlight {
             if (this.inControls(event) || view._penInput?.rejects?.(event)) return;
             if (this.host.palette) { this.closePalette(); this.dismissPointer = event.pointerId; return; }
             if (event.isPrimary && event.button === 0 && view._tool.type === 'pointer' && !view._options.readOnly
-                && event.clientX >= this.win.innerWidth/2 && event.clientY >= 0 && event.clientY <= this.win.innerHeight/11
+                && view.isBookmarkCorner?.(event.clientX, event.clientY)
                 && this.win.getSelection()?.isCollapsed && !view._selectedAnnotationIDs.filter(Boolean).length) {
                 this.bookmarkDown = {x:event.clientX,y:event.clientY,time:Date.now()};
             }
             const annotation = this.annotationAt(event);
-            this.gesture.delay = annotation?.id === this.editableNoteID ? 0 : 450;
+            this.gesture.delay = annotation?.id === this.editableNoteID ? 0 : HIGHLIGHT_HOLD_DELAY;
             if (annotation?.id !== this.editableNoteID) this.editableNoteID = null;
             this.gesture.down(event);
 		});

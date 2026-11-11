@@ -12,12 +12,17 @@ const root=path.resolve(__dirname,'../build/android'),fixture=path.resolve(__dir
   const errors=[];page.on('pageerror',e=>errors.push(e.stack));
   const origin='http://127.0.0.1:'+server.address().port,cdp=await page.context().newCDPSession(page);
   const touch=(type,points=[])=>cdp.send('Input.dispatchTouchEvent',{type,touchPoints:points.map((p,i)=>({...p,id:i+1,radiusX:2,radiusY:2}))});
-  for(const spreadMode of process.env.BOOX_SPREAD_MODE?[Number(process.env.BOOX_SPREAD_MODE)]:[1,2])for(const scrollMode of process.env.BOOX_SPREAD_SCROLL?[Number(process.env.BOOX_SPREAD_SCROLL)]:[0,1,2]){
+  for(const activation of ['initial','switch'])for(const spreadMode of process.env.BOOX_SPREAD_MODE?[Number(process.env.BOOX_SPREAD_MODE)]:[1,2])for(const scrollMode of process.env.BOOX_SPREAD_SCROLL?[Number(process.env.BOOX_SPREAD_SCROLL)]:[0,1,2]){
    await page.goto(origin+'/view.html');await page.evaluate(()=>{window.messages=[];const c=new MessageChannel();c.port1.onmessage=e=>window.messages.push(JSON.parse(e.data));window.postMessage('initPort','*',[c.port2]);});
    await page.waitForFunction(()=>window.messages.some(m=>m.message?.event==='onInitialized'));
    await page.evaluate(o=>window.createView(btoa(JSON.stringify(o))),{type:'pdf',url:origin+'/fixture.pdf',annotations:[],pageNavigation:'jumped',
-    viewState:{pageIndex:5,scale:'page-width',scrollMode,spreadMode},pageFitting:{mode:'content',reference:'cropped-content',margin:0}});
+    viewState:{pageIndex:5,scale:'page-width',scrollMode,spreadMode:activation==='initial'?spreadMode:0},pageFitting:{mode:'content',reference:'cropped-content',margin:0}});
    await page.waitForFunction(()=>window._view?._view?._pageFitting?.applied);
+   if(activation==='switch'){
+    await page.evaluate(m=>window._view.setSpreadMode(m),spreadMode);
+    await page.waitForFunction(m=>{const f=window._view._view._pageFitting;return f.applied&&f.viewer.spreadMode===m&&f.layout.boxes&&f.preparedPages.size>=2;},spreadMode);
+    await page.waitForFunction(()=>{const v=window._view._view,w=v._pageFitting.viewer;return w._getVisiblePages().views.every(p=>p.view.div.querySelector('canvas'));});
+   }
    const pair=()=>page.evaluate(()=>{const v=window._view._view,f=v._pageFitting,w=f.viewer;
     return{index:w.currentPageNumber-1,spread:w.spreadMode,scale:w.currentScale,active:f.active,
      visible:w._pages.filter(p=>getComputedStyle(p.div).visibility!=='hidden').map(p=>p.id-1),
@@ -26,6 +31,8 @@ const root=path.resolve(__dirname,'../build/android'),fixture=path.resolve(__dir
     await page.evaluate(mode=>window._view._view._pageFitting.configure({mode,reference:'cropped-content',margin:0}),mode);
     const state=await pair();assert.equal(state.active,true);assert.equal(state.visible.length,2,JSON.stringify({spreadMode,scrollMode,mode,state}));
     const boxes=state.visible.map(i=>state.frames[i]);const mid=(Math.min(...boxes.map(b=>b.left))+Math.max(...boxes.map(b=>b.right)))/2;
+    const top=Math.min(...boxes.map(b=>b.top)),bottom=Math.max(...boxes.map(b=>b.bottom));
+    if(bottom-top<=state.viewport.bottom-state.viewport.top+2) assert.ok(Math.abs((top+bottom-state.viewport.top-state.viewport.bottom)/2)<3,'short spreads must be vertically centered '+JSON.stringify({activation,mode,top,bottom,viewport:state.viewport}));
     assert.ok(Math.abs(mid-(state.viewport.left+state.viewport.right)/2)<3,'spread centers as a unit '+JSON.stringify({spreadMode,scrollMode,mode,mid,boxes,viewport:state.viewport}));
    }
    await page.evaluate(()=>window._view._view._pageFitting.configure({mode:'content',cropMode:'manual',
@@ -56,7 +63,13 @@ const root=path.resolve(__dirname,'../build/android'),fixture=path.resolve(__dir
    assert.ok(fitted.every(b=>b.left>=restored.viewport.left-3&&b.right<=restored.viewport.right+3
     &&b.top>=restored.viewport.top-3&&b.bottom<=restored.viewport.bottom+3),'overview tap restores Fit to Content for the destination unit');
    assert.equal(restored.worker,true,'raster crop work uses the actual packaged Worker');
-   console.log(`PASS spread ${spreadMode}, scroll ${scrollMode}: all fits, both pages, edge turn, persistent overview and tap-to-restore`);
+   if(activation==='switch'&&spreadMode===1&&scrollMode===0){
+    await page.evaluate(async()=>{const v=window._view._view;window.setPageNavigation('continuous');await v._pageFitting.configure({mode:'none'});await v._booxReader.enterPage(0);});
+    await page.waitForTimeout(350);
+    const center=await page.evaluate(()=>{const f=window._view._view._pageFitting,c=f.viewportFrame(),frames=f.pageFrames().slice(0,2);return{mid:(Math.min(...frames.map(p=>p.top))+Math.max(...frames.map(p=>p.bottom)))/2,expected:(c.top+c.bottom)/2};});
+    assert.ok(Math.abs(center.mid-center.expected)<3,'Continuous overview return stays centered even with fitting Off '+JSON.stringify(center));
+   }
+   console.log(`PASS ${activation} spread ${spreadMode}, scroll ${scrollMode}: all fits, both pages, edge turn, persistent overview and tap-to-restore`);
   }
   assert.deepEqual(errors,[]);
  }finally{await browser?.close();await new Promise(r=>server.close(r));}

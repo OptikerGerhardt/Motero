@@ -1,3 +1,4 @@
+import { navigateWithHardwareButton, getHardwareScrollLimits } from './hardware-navigation.mjs';
 import { readingUnit, unitFrame } from './reading-unit.mjs';
 
 // Android's single-page swipe mode is independent of layout direction and crop.
@@ -23,7 +24,8 @@ export class PDFPageNavigation {
         this.viewer._getVisiblePages = this.visible;
         this.style = this.win.document.createElement('style');
         this.style.textContent = '.motero-jumped .page:not(.motero-current-page){visibility:hidden!important;pointer-events:none!important}'
-            + '.motero-page-spacing{padding-block:var(--motero-page-gap,0px)!important}';
+            + '.motero-page-spacing{padding-block:var(--motero-page-gap,0px)!important}'
+            + '.motero-column-reading #viewerContainer{touch-action:none!important}';
         this.win.document.head.append(this.style);
         this.onStart = event => {
             if (event.touches.length > 1) {
@@ -31,13 +33,25 @@ export class PDFPageNavigation {
             }
             if (!this.enabled || !this.isPageTarget(event.target) || this.view.getSelectedAnnotations().length) return;
             const p = event.touches[0];
-            this.gesture = { x: p.clientX, y: p.clientY, time: Date.now(), dx: 0, dy: 0 };
+            this.gesture = { x: p.clientX, y: p.clientY, time: Date.now(), dx: 0, dy: 0,
+                column:!!this.view._pageFitting?.columnActive, startTop:this.viewer.container.scrollTop };
+            if (this.gesture.column) this.gesture.limits=getHardwareScrollLimits(this.view,this.viewer,this.viewer.getPageView(this.viewer.currentPageNumber-1));
         };
         this.onMove = event => {
             if (!this.gesture || event.touches.length !== 1 || !this.enabled) return;
-            if (this.view._directHighlight?.gesture.active) { this.gesture.selection = true; return; }
+            if (this.view._directHighlight?.gesture.active || this.view._nativeTextSelection?.shouldDeferEvent(event)) { this.gesture.selection = true; return; }
             const p = event.touches[0], g = this.gesture;
             g.dx = p.clientX - g.x; g.dy = p.clientY - g.y;
+            if (g.column && this.mode === 'continuous') {
+                g.boundary = g.dy < 0 ? g.startTop >= g.limits.max - 2 : g.startTop <= g.limits.min + 2;
+                if (!g.boundary) {
+                    // Keep a single finger inside this column, including a swipe
+                    // that overshoots its bottom. The next swipe reads the other column.
+                    this.viewer.container.scrollTop = Math.max(g.limits.min,Math.min(g.limits.max,g.startTop-g.dy));
+                    if (event.cancelable) event.preventDefault();
+                    return;
+                }
+            }
             // Let the existing text selection handler see the movement, while
             // preventing WebView's continuous scrolling and kinetic overshoot.
             if (event.cancelable) event.preventDefault();
@@ -54,14 +68,24 @@ export class PDFPageNavigation {
             if (!g || g.selection || event.type === 'touchcancel' || !this.enabled || this.view._directHighlight?.gesture.active) return;
             const p = event.changedTouches?.[0];
             if (p) { g.dx = p.clientX - g.x; g.dy = p.clientY - g.y; }
-            const axis = this.viewer.scrollMode === 1 ? g.dx : g.dy;
-            const cross = this.viewer.scrollMode === 1 ? g.dy : g.dx;
+            const axis = !g.column && this.viewer.scrollMode === 1 ? g.dx : g.dy;
+            const cross = !g.column && this.viewer.scrollMode === 1 ? g.dy : g.dx;
             const elapsed = Date.now() - g.time;
             // A deliberate swipe, never a tap or the tail of a text selection.
             if (Math.abs(axis) < 48 || Math.abs(axis) < Math.abs(cross) * 1.2 || elapsed > 900) return;
             this.view._directHighlight?.reset();
             this.view._pointerDownTap = null;
             this.view._suppressCompatibilityMouseUntil = Date.now() + 500;
+            if (g.column) {
+                if (this.mode !== 'continuous') navigateWithHardwareButton(this.view,axis<0).catch(error=>console.error(error));
+                else if (g.boundary) {
+                    this.view._onManualNavigation(); this.view._cancelPendingPageTurn?.();
+                    // The gesture started at the boundary; do not reclassify it
+                    // after late layout/scroll events have adjusted its offset.
+                    if (!this.view._pageFitting.turnColumn(axis<0)) navigateWithHardwareButton(this.view,axis<0,0).catch(error=>console.error(error));
+                }
+                return;
+            }
             this.turn(axis < 0 ? 1 : -1);
         };
         this.onWheel = event => {
@@ -85,7 +109,7 @@ export class PDFPageNavigation {
         this.configure(view._options.pageNavigation);
     }
     get enabled() {
-        return this.mode === 'jumped' && !this.multitouch && !this.view._destroyed
+        return (this.mode === 'jumped' || !!this.view._pageFitting?.columnActive) && !this.multitouch && !this.view._destroyed
             && !this.view._pageFitting?.zooming && !this.view._pageFitting?.editor
             && !this.view._booxReader?.isOverview() && !this.view._penInput?.busy
             && (this.view._tool.type === 'pointer' || this.view._isPenInUse?.());
@@ -108,11 +132,16 @@ export class PDFPageNavigation {
         }
     }
     sync() {
+        const root=this.win?.document.documentElement;
+        const column=!!this.view._pageFitting?.columnActive && !this.multitouch && !this.view._pageFitting?.editor;
+        if (root && root.classList.contains('motero-column-reading')!==column) root.classList.toggle('motero-column-reading',column);
         // Drawing tools still show the single reading page; only pinch/overview
         // releases the visual restriction. No page nodes or canvases are removed.
         const single = this.mode === 'jumped' && !this.multitouch && !this.view._pageFitting?.zooming
             && !this.view._booxReader?.isOverview() && !this.view._pageFitting?.editor;
-        if (!single || this.view._pageFitting?.layout.boxes) this.clearSpacing();
+        if ((!single && !this.keepCenterSpacing) || this.view._pageFitting?.layout.boxes
+                || this.multitouch || this.view._pageFitting?.zooming || this.view._booxReader?.isOverview()
+                || this.view._pageFitting?.editor) this.clearSpacing();
         const indices = single ? readingUnit(this.viewer.currentPageNumber-1, this.viewer.pagesCount || this.viewer._pages?.length || this.viewer.currentPageNumber, this.viewer.spreadMode) : [];
         const current = single ? this.viewer.getPageView(this.viewer.currentPageNumber - 1)?.div : null;
         const unitKey = indices.join(',');
@@ -127,11 +156,15 @@ export class PDFPageNavigation {
         this.current = current;
     }
     turn(direction) {
+        if (this.view._pageFitting?.columnActive) {
+            navigateWithHardwareButton(this.view,direction>0).catch(error=>console.error(error));
+            return;
+        }
         this.view._onManualNavigation();
         this.view._navigateToAdjacentPage(direction)?.catch(error => console.error(error));
     }
-    centerCurrentPage({ direction = 0, preservePosition = false } = {}) {
-        if (this.mode !== 'jumped' || this.view._pageFitting?.zooming || this.view._pageFitting?.editor
+    centerCurrentPage({ direction = 0, preservePosition = false, force = false } = {}) {
+        if ((!force && this.mode !== 'jumped') || this.view._pageFitting?.zooming || this.view._pageFitting?.editor
                 || this.view._booxReader?.isOverview()) return;
         const v = this.viewer, c = v.container, index = v.currentPageNumber - 1;
         const indices = readingUnit(index,v.pagesCount || v._pages?.length || index+1,v.spreadMode);
@@ -152,6 +185,7 @@ export class PDFPageNavigation {
             // above/below it so centering is possible at the document edges.
             v.viewer.style.setProperty('--motero-page-gap', Math.max(0, (c.clientHeight - page.div.clientHeight) / 2) + 'px');
             v.viewer.classList.add('motero-page-spacing');
+            this.keepCenterSpacing = force && this.mode === 'continuous';
             const rects = indices.map(i=>v.getPageView(i)?.div.getBoundingClientRect()).filter(Boolean);
             const r = {left:Math.min(...rects.map(r=>r.left)),top:Math.min(...rects.map(r=>r.top)),
                 width:Math.max(...rects.map(r=>r.right??r.left+r.width))-Math.min(...rects.map(r=>r.left)),
@@ -165,6 +199,7 @@ export class PDFPageNavigation {
         }
     }
     clearSpacing() {
+        this.keepCenterSpacing = false;
         if (!this.viewer.viewer.classList.contains('motero-page-spacing')) return;
         this.viewer.viewer.classList.remove('motero-page-spacing');
         this.viewer.viewer.style.removeProperty('--motero-page-gap');
@@ -173,6 +208,7 @@ export class PDFPageNavigation {
         for (const [name, listener] of [['touchstart',this.onStart],['touchmove',this.onMove],['touchend',this.onEnd],['touchcancel',this.onEnd],['wheel',this.onWheel]]) this.win.removeEventListener(name, listener, true);
         for (const name of ['pagechanging','pagesinit','scalechanging','updateviewarea']) this.bus.off(name, this.onChange);
         this.viewer.viewer.classList.remove('motero-jumped');
+        this.win.document.documentElement?.classList.remove('motero-column-reading');
         this.clearSpacing();
         if (this.viewer._getVisiblePages === this.visible) this.viewer._getVisiblePages = this.originalVisible;
         for (const div of this.currentUnit || []) div.classList.remove('motero-current-page');

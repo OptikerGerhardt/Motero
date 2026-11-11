@@ -65,6 +65,25 @@ export async function navigateWithHardwareButton(view, next, fraction = 2 / 3) {
 		await navigate.call(view);
 		return 'page';
 	}
+    fraction = Number.isFinite(fraction) ? clamp(fraction, 0, 1) : 2 / 3;
+    const c = viewer.container;
+    if (view._pageNavigation?.mode === 'continuous' && fraction > 0 && !view._pageFitting?.columnActive) {
+        const horizontal = viewer.scrollMode === 1;
+        const axis = horizontal ? 'scrollLeft' : 'scrollTop';
+        const size = horizontal ? c.clientWidth : c.clientHeight;
+        const extent = horizontal ? c.scrollWidth : c.scrollHeight;
+        if (Number.isFinite(extent)) {
+            const origin=c[axis], target=clamp(origin+(next?1:-1)*size*fraction,0,Math.max(0,extent-size));
+            if (Math.abs(target-origin)<.1) return 'none';
+            view._onManualNavigation?.(); view._cancelPendingPageTurn?.();
+            const edge=view._booxReader?.captureEdge(next);
+            c[axis]=target;
+            viewer.update?.();
+            view._pageFitting?.prefetchVisible();
+            view._booxReader?.showEdge(edge);
+            return 'scroll';
+        }
+    }
 	let index = viewer.currentPageNumber - 1;
 	let page = viewer.getPageView(index);
 	let limits = getHardwareScrollLimits(view, viewer, page);
@@ -82,6 +101,7 @@ export async function navigateWithHardwareButton(view, next, fraction = 2 / 3) {
 		view._booxReader?.showEdge(edge);
 		return 'scroll';
 	}
+    if (view._pageFitting?.turnColumn?.(next)) return 'column';
 	const unit=readingUnit(index,viewer.pagesCount || viewer._pages?.length || index+2,viewer.spreadMode);
     let targetIndex=next ? unit.at(-1)+1 : unit[0]-1;
 	let target = viewer.getPageView(targetIndex);

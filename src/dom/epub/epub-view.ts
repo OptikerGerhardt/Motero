@@ -84,9 +84,29 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
     private _disposed = false;
     private _onFocusReturn = () => this._handleVisibilityChange();
 
+    setReaderViewportInset(value: number) {
+        const inset = Number.isFinite(value) ? Math.max(0, value) : 0;
+        if (this._options.viewportInset === inset) return;
+        this._options.viewportInset = inset;
+        if (!this.initialized) {
+            this.initializedPromise.then(() => {
+                if (!this._disposed) this._iframeDocument.documentElement.style.setProperty("--reader-safe-inset", (this._options.viewportInset || 0) + "px");
+            });
+            return;
+        }
+        this._keepPosition(() => {
+            this._iframeDocument.documentElement.style.setProperty("--reader-safe-inset", inset + "px");
+            this._handleViewUpdate();
+        });
+    }
+
     private _bookmarkPointer: { x: number, y: number, time: number } | null = null;
 
-    // Android uses the PDF reader's upper-right shortcut, with a reflow-safe text anchor.
+    isBookmarkCorner(x: number, y: number): boolean {
+        return x >= this._iframeWindow.innerWidth - 64 && x <= this._iframeWindow.innerWidth && y >= 0 && y <= 64;
+    }
+
+    // The shortcut belongs to the viewport corner, independent of text margins.
     tryCreateAndroidBookmark(x: number, y: number, target: Element): boolean {
         let start = this._bookmarkPointer;
         this._bookmarkPointer = null;
@@ -94,8 +114,7 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
                 || this._tool.type !== 'pointer' || this._hadSelectionOnPointerDown
                 || this._selectionChangedWhilePointerDown || this._pointerMovementWhileDown > 8
                 || Date.now() - start.time > 400 || Math.hypot(x - start.x, y - start.y) > 8
-                || x < this._iframeWindow.innerWidth / 2 || y > this._iframeWindow.innerHeight / 11
-                || start.x < this._iframeWindow.innerWidth / 2 || start.y > this._iframeWindow.innerHeight / 11
+                || !this.isBookmarkCorner(x, y) || !this.isBookmarkCorner(start.x, start.y)
                 || !this._iframeWindow.getSelection()?.isCollapsed) return false;
         return this.addAndroidBookmark();
     }

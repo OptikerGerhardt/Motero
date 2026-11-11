@@ -5,7 +5,7 @@ function setStyles(element, styles) {
 }
 // Keep the original full-size PDF coordinate plane. Only page positions and the
 // visible frame change; selection, annotation rectangles and PDF.js stay intact.
-export function layoutReadingPages(pages, { width, height, mode, gap = 12, spreadMode = 0 }) {
+export function layoutReadingPages(pages, { width, height, mode, gap = 12, spreadMode = 0, sidePadding = 0 }) {
     const units = [];
     for (let i = 0; i < pages.length;) {
         const indices = readingUnit(i, pages.length, spreadMode), group = indices.map(i => pages[i]);
@@ -22,10 +22,10 @@ export function layoutReadingPages(pages, { width, height, mode, gap = 12, sprea
         row.pages.push(...unit.pages); row.width += unit.width; row.height = Math.max(row.height,unit.height);
     }
     if (row.pages.length) rows.push(row);
-    const totalWidth = Math.max(width, ...rows.map(r=>r.width)), boxes = [];
+    const totalWidth = Math.max(width, ...rows.map(r=>r.width + sidePadding * 2)), boxes = [];
     let y = rows.length ? Math.max(0,(height-rows[0].height)/2) : 0;
     for (const row of rows) {
-        let x = mode === 1 ? 0 : (totalWidth-row.width)/2;
+        let x = mode === 1 ? sidePadding : (totalWidth-row.width)/2;
         for (const page of row.pages) {
             boxes.push({...page,x,y:y+(row.height-page.height)/2}); x += page.width+gap;
         }
@@ -64,7 +64,7 @@ export class CroppedPageLayout {
 	apply(preparedPages, { preservePosition = false } = {}) {
         const v = this.viewer, c = v.container, host = v.viewer;
         const signature = [this.fitting.layoutEpoch, c.clientWidth, c.clientHeight,
-            v.currentScale, v.pagesRotation, v.scrollMode, v.spreadMode, this.fitting.options.margin];
+            v.currentScale, v.pagesRotation, v.scrollMode, v.spreadMode, this.fitting.options.margin, !!this.fitting.columnLayout];
         // PDF.js replaces PageViewport when a page's real dimensions or scale
         // changes. Reuse the entire layout only while both frames and viewports
         // are unchanged; scrolling alone does not require rebuilding all pages.
@@ -94,7 +94,7 @@ export class CroppedPageLayout {
 			const right = Math.min(w, bounds[2] * w + pad), bottom = Math.min(h, bounds[3] * h + pad);
 			return { index, width: right - left, height: bottom - top, left, top, right: w - right, bottom: h - bottom, ready: !!prepared };
 		});
-		const result = layoutReadingPages(pages, { width: c.clientWidth, height: c.clientHeight, mode: v.scrollMode, spreadMode:v.spreadMode });
+		const result = layoutReadingPages(pages, { width: c.clientWidth, height: c.clientHeight, mode: v.scrollMode, spreadMode:v.spreadMode, sidePadding:this.fitting.columnLayout ? c.clientWidth/2 : 0 });
 		setStyles(host, { position: 'relative', width: result.width + 'px', height: result.height + 'px', overflow: 'clip', padding: '0', margin: '0' });
         let changed = !this.boxes || result.width !== this.width || result.height !== this.height;
 		for (const box of result.boxes) {

@@ -81,6 +81,7 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   await page.setViewportSize({width:600,height:800});await configure();
   await page.evaluate(()=>window.setContainerInsets({top:42}));await page.waitForTimeout(220);let safe=await state();fitted(safe);assert.equal(safe.frameTop,42);assert.equal(safe.height,758);
   for(const visible of [true,false,true,false]){await page.evaluate(x=>window.setReaderChromeVisible(x),visible);await page.waitForTimeout(100);let now=await state();assert.equal(now.height,safe.height);assert.equal(now.frameTop,42);assert.ok(Math.abs(now.scale-safe.scale)<.002);}
+  await page.evaluate(()=>window.setPageNavigation('jumped'));
   for(const mode of [0,1,2]){await page.evaluate(x=>window._view._view.setScrollMode(x),mode);await configure();await page.evaluate(()=>window.turnPageWithHardwareButton(true,2/3));await page.waitForTimeout(120);let now=await state();fitted(now);assert.equal(now.frameTop,42);}
   console.log('PASS simulated camera safe area stays constant through toolbar toggles and hardware page turns in all scroll modes');
   if(fixtures['/fuchs.pdf']){
