@@ -41,7 +41,7 @@ internal fun ReaderSidebar(
     annotationsLazyListState: LazyListState,
     annotationMaxSideSize: Int,
 ) {
-    val sidebarModifier = if (viewState.isPdfOrHtml()) Modifier.statusBarsPadding().padding(top = 64.dp) else Modifier
+    val sidebarModifier = Modifier.statusBarsPadding().padding(top = 64.dp)
     Column(sidebarModifier.rejectPenPalms().background(MaterialTheme.colorScheme.surface)) {
         val selectorOptions = if (viewState.fileType == ReaderFileType.PDF) {
             pdfSliderOptions

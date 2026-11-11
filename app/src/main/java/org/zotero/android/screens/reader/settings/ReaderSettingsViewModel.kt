@@ -89,6 +89,7 @@ internal class ReaderSettingsViewModel @Inject constructor(
                 wordSpacing = readerSettings.wordSpacing,
                 letterSpacing = readerSettings.letterSpacing,
                 pageWidth = readerSettings.effectiveMargins(),
+                verticalMargins = readerSettings.effectiveVerticalMargins(),
                 fontFamily = readerSettings.effectiveFontFamily(),
                 selectedFitToContentOption = when (readerSettings.pageFitMode()) {
                     "width" -> ReaderSettingsOptions.FitToWidth
@@ -319,6 +320,13 @@ internal class ReaderSettingsViewModel @Inject constructor(
         scheduleDebouncedApply()
     }
 
+    fun onVerticalMarginsChanged(value: Float) {
+        val rounded = value.coerceIn(0f, 15f).roundToInt().toFloat()
+        readerSettings.epubVerticalMargins = rounded
+        updateState { copy(verticalMargins = rounded) }
+        scheduleDebouncedApply()
+    }
+
     fun onFontFamilyChanged(value: String) {
         if (value !in setOf("original", "serif", "sans-serif")) return
         readerSettings.epubFontFamily = value
@@ -452,6 +460,7 @@ internal data class ReaderSettingsViewState(
     val wordSpacing: Float = 0f,
     val letterSpacing: Float = 0f,
     val pageWidth: Float = 8f,
+    val verticalMargins: Float = 3f,
     val fontFamily: String = "serif",
     val selectedFitToContentOption: ReaderSettingsOptions = ReaderSettingsOptions.FitToContentOff,
     val selectedFitReferenceOption: ReaderSettingsOptions = ReaderSettingsOptions.FitReferencePage,

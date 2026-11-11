@@ -1,0 +1,4 @@
+PASS jumped swipe, tap threshold, continuous, two-finger overview and page return; mode 0
+PASS jumped swipe, tap threshold, continuous, two-finger overview and page return; mode 1
+PASS jumped swipe, tap threshold, continuous, two-finger overview and page return; mode 2
+PASS jumped page navigation without cropping and mouse-wheel input

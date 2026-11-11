@@ -195,7 +195,7 @@ internal fun ReaderScreen(
         CustomScaffoldM3(
             shouldIncludeTopBarAndNavBarPaddings = false,
             topBar = {
-                AnimatedContent(
+                org.zotero.android.ereader.DeviceAnimatedContent(
                     targetState = viewState.isTopBarVisible && !viewState.manualCropOpen,
                     label = ""
                 ) { isTopBarVisible ->

@@ -122,8 +122,16 @@ internal fun ReaderBox(
                 } else WindowInsets(0, 0, 0, 0)
                 safeInsets
             }
+            // EPUB keeps one stable, centered reading frame. Reserve the same
+            // space above and below, including the progress strip and cutout.
+            val epubEdge = with(density) {
+                maxOf(WindowInsets.statusBarsIgnoringVisibility.union(WindowInsets.displayCutout).getTop(this),
+                    WindowInsets.navigationBarsIgnoringVisibility.getBottom(this) + 40.dp.roundToPx()).toDp()
+            }
             val readingModifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)
-                .then(if (viewState.fileType == ReaderFileType.EPUB) Modifier.windowInsetsPadding(WindowInsets.navigationBarsIgnoringVisibility).padding(bottom = 40.dp)
+                .then(if (viewState.fileType == ReaderFileType.EPUB) Modifier
+                    .windowInsetsPadding(WindowInsets.navigationBarsIgnoringVisibility.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal))
+                    .padding(vertical = epubEdge)
                     else if (viewState.fileType == ReaderFileType.HTML) Modifier.windowInsetsPadding(readingInsets) else Modifier)
 
             ReaderWebView(viewModel = viewModel, modifier = readingModifier)

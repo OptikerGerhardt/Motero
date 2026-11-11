@@ -1,0 +1,9 @@
+AssertionError [ERR_ASSERTION]: ordinary horizontal swipe starting on text must turn the EPUB page
+    at /workspace/Motero/reader/scripts/test-boox-epub-layout.cjs:37:10 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 'epubcfi(/6/2!/4/2/1:0)',
+  expected: 'epubcfi(/6/2!/4/2/1:0)',
+  operator: 'notStrictEqual',
+  diff: 'simple'
+}

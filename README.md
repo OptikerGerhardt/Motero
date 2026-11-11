@@ -14,7 +14,7 @@ This fork is maintained independently and is not affiliated with or endorsed by 
 - Black bookmark flags, a bookmark filter, and direct jump/delete shortcuts. Every annotation card offers a direct jump and its options in the header.
 - Reader appearance applied at startup, matching system-bar contrast and page previews.
 - Continuous cropped PDF pages, temporary two-finger access to full pages, and an overview that stays open when two complete pages are visible.
-- Font size, font choice, spacing and percentage-based side margins for EPUBs and Reading Mode. EPUB controls float above the text without moving the reading position.
+- Font size, font choice, spacing and percentage-based side margins, plus independent EPUB top/bottom margins for EPUBs and Reading Mode. EPUB controls float above the text without moving the reading position.
 - Automatic content fitting with controls for margins and marginal notes, local chapter/layout learning, Roman and Arabic folio detection, a text-only analysis shortcut, and a bounded geometry cache.
 - Automatic or manual content cropping, shared by the page-fitting modes. Manual frames for all, odd, or even pages are saved per attachment.
 - SmartScroll, hardware-button navigation, and edge taps in vertical, horizontal, and wrapped PDF layouts.

@@ -59,5 +59,5 @@ data class CreateReaderPageFitting(val mode: String, val reference: String, val 
 data class CreateReaderReflowableAppearance(
     val lineHeight: Double, val wordSpacing: Double, val letterSpacing: Double,
     val pageWidth: Int, val useOriginalFont: Boolean = false, val textScale: Double? = null,
-    val margins: Double? = null, val fontFamily: String? = null,
+    val margins: Double? = null, val fontFamily: String? = null, val verticalMargins: Double? = null,
 )

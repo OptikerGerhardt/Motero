@@ -1,0 +1,11 @@
+PASS word-start swipe turns EPUB page without annotation or toolbar toggle
+PASS reverse EPUB swipe returns to the previous page
+AssertionError [ERR_ASSERTION]: right margin tap must turn the EPUB page
+    at /workspace/Motero/reader/scripts/test-boox-epub-layout.cjs:46:10 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 'epubcfi(/6/2!/4/2/1:0)',
+  expected: 'epubcfi(/6/2!/4/2/1:0)',
+  operator: 'notStrictEqual',
+  diff: 'simple'
+}

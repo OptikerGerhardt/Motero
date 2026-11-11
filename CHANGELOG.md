@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.0.7-322 — 2026-11-11
+
+- Restore EPUB page swipes beginning on text: the pending drag-highlight gesture releases navigation rather than consuming pointer-up. Annotation handles, long holds and palette dismissal retain their priority.
+- EPUB has independent top/bottom margins, a stable symmetric reading frame outside system/cutout areas, and a sidebar positioned below the shared toolbar so its bookmark filter is accessible.
+- Limit Android's JavaScript thumbnail images to 32 entries and an 8 MiB budget (a single oversized requested image may exceed that budget). Metadata and render IDs survive eviction; missing images render again on demand.
+- Learn crop models from text first, then process raster samples sequentially. Reuse unchanged whole-document page layouts, retain all frame/viewport invalidations, and yield between background samples.
+- In E-Reader mode, use immediate top-toolbar visibility and a smaller adjacent-page preparation radius; pause background crop work during touch input and briefly afterward while foreground navigation stays available.
+- PDF.js, production signing identity, annotation formats and stored manual crops are unchanged. [Scope and measurements](docs/READER_322.md).
+
 ## 1.0.6-321 — 2026-11-10
 
 - Touch editing of existing PDF highlights, underlines, area boxes and notes; EPUB range editing and anchored note movement, preserving annotation IDs and Undo.

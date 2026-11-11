@@ -151,6 +151,14 @@ internal fun ReaderSettingsTable(
                 valueLabel = "${(viewState.letterSpacing * 1000).roundToInt()}%",
                 onValueChange = viewModel::onLetterSpacingChanged,
             )
+            if (viewState.fileType == ReaderFileType.EPUB) readerSettingsSliderRow(
+                titleResId = R.string.reader_vertical_margins,
+                value = viewState.verticalMargins,
+                valueRange = 0f..15f,
+                steps = 14,
+                valueLabel = "${viewState.verticalMargins.roundToInt()}%",
+                onValueChange = viewModel::onVerticalMarginsChanged,
+            )
             readerSettingsSliderRow(
                 titleResId = R.string.reader_margins,
                 value = viewState.pageWidth,

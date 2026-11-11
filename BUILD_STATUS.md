@@ -1,3 +1,11 @@
+# Build 322 / Motero 1.0.7 — lokal geprüft, Release-Prüfungen folgen
+
+- EPUB-Seitenwechsel auf Text korrigiert; obere/untere Ränder als eigener Regler, zentrierter sicherer Textrahmen und erreichbarer Bookmark-Filter in der Sidebar.
+- Begrenzter Miniaturspeicher, Raster-Samples nacheinander, wiederverwendete Seitenlayouts. E-Reader-Hintergrundarbeit während Fingereingaben pausiert; obere Leiste ohne normale Einblendanimation.
+- 382 Reader-Tests, 43 Engine-Pixeltests, 145 native Tests in 35 Suiten und 20 Browser-Suiten bestanden. APK, TypeScript, Signierschutz und Receiver-Prüfungen erfolgreich; 104 Reader-Quellen, 207 PDF.js- und 45 Runtime-Dateien geprüft.
+- Synthetischer Speichervergleich: beobachtete Crop-Samples 23,04 → 3,84 MB, Miniaturen 96 → 32. Keine Messung des gesamten Prozess-RAM oder physischer BOOX-Latenz.
+- Signierte Android-Updates und unabhängiger öffentlicher Download werden vor Abschluss geprüft. [Umfang](docs/READER_322.md), [Nachweise](qa/build322/).
+
 # Build 321 / Motero 1.0.6 — veröffentlicht und unabhängig geprüft
 
 - Release: https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.6-321 ; erfolgreicher Build-/Release-Prüflauf: https://github.com/OptikerGerhardt/Motero/actions/runs/42911476446 .

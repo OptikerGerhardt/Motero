@@ -574,6 +574,7 @@ class ReaderWebCallChainExecutor @Inject constructor(
                     settings.letterSpacing.toDouble(), settings.pageWidth,
                     textScale = data.savedEpubViewState?.scale ?: settings.effectiveTextScale().toDouble(),
                     margins = settings.effectiveMargins().toDouble(), fontFamily = settings.effectiveFontFamily(),
+                    verticalMargins = settings.effectiveVerticalMargins().toDouble(),
                 )
             }
             data.savedEpubViewState?.restoreInto(createReaderViewOptions.viewState)
@@ -792,10 +793,11 @@ class ReaderWebCallChainExecutor @Inject constructor(
         pageWidth: Int,
         margins: Double = defaults.getReaderSettings().effectiveMargins().toDouble(),
         fontFamily: String = defaults.getReaderSettings().effectiveFontFamily(),
+        verticalMargins: Double = defaults.getReaderSettings().effectiveVerticalMargins().toDouble(),
     ) {
         return suspendCancellableCoroutine { cont ->
             val javascript =
-                "javascript:setAppearance({ lineHeight: $lineHeight, wordSpacing: $wordSpacing, letterSpacing: $letterSpacing, pageWidth: $pageWidth, margins: $margins, fontFamily: ${org.json.JSONObject.quote(fontFamily)}, useOriginalFont: ${fontFamily == "original"}, textScale: ${defaults.getReaderSettings().effectiveTextScale()} });"
+                "javascript:setAppearance({ lineHeight: $lineHeight, wordSpacing: $wordSpacing, letterSpacing: $letterSpacing, pageWidth: $pageWidth, margins: $margins, verticalMargins: $verticalMargins, fontFamily: ${org.json.JSONObject.quote(fontFamily)}, useOriginalFont: ${fontFamily == "original"}, textScale: ${defaults.getReaderSettings().effectiveTextScale()} });"
             readerWebViewHandler.evaluateJavascript(javascript) {
                 cont.resume(Unit)
             }

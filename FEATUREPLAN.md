@@ -1,6 +1,14 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 10. November 2026. Build 321 / Motero 1.0.6 erweitert EPUB-Bedienung und Annotationsbearbeitung. PDF.js 5.7.330 und die bisherigen PDF-/Stift-/Syncformate bleiben erhalten.
+Stand: 11. November 2026. Build 322 / Motero 1.0.7 korrigiert EPUB-Gesten und Seitenabstände und begrenzt zusätzlichen Bildspeicher. PDF.js 5.7.330 und die bisherigen PDF-/Stift-/Syncformate bleiben erhalten.
+
+## EPUB und Ressourcenverbrauch: Build 322 / 1.0.7
+
+- EPUB-Wischen auf Text wieder möglich; ausstehendes Drag-Highlighting blockiert den Seitenwechsel nicht mehr. Markieren, Handles und Paletten schließen behalten ihre getrennten Gesten.
+- EPUB mit zusätzlichem Regler für obere/untere Ränder, dauerhaft sicherem und symmetrischem Textfeld sowie erreichbarem Bookmark-Filter in der Sidebar.
+- Begrenzter JavaScript-Miniaturspeicher; Crop-Lernen ohne gleichzeitiges Halten aller Raster-Samples. Unveränderte Seitenrahmen werden beim erneuten Blättern wiederverwendet.
+- E-Reader: obere Leiste ohne normale Einblendanimation, weniger entfernte Seiten gleichzeitig vorbereiten und Hintergrundanalyse während Fingereingaben zurückstellen.
+- [Messungen, Grenzen und Prüfumfang](docs/READER_322.md). Physische Geräte und Kontosync bleiben separat.
 
 ## Reader und EPUB: Build 321 / 1.0.6
 

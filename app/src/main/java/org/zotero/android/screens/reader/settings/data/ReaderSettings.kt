@@ -57,8 +57,10 @@ data class ReaderSettings(
     // Null migrates older installations to their existing continuous scrolling.
     var pageNavigation: String? = null,
     var epubMargins: Float? = null,
+    var epubVerticalMargins: Float? = null,
     var epubFontFamily: String? = null,
 ) {
+    fun effectiveVerticalMargins(): Float = epubVerticalMargins?.takeIf { it.isFinite() }?.coerceIn(0f, 15f) ?: 3f
     fun effectiveMargins(): Float = epubMargins?.takeIf { it.isFinite() }?.coerceIn(0f, 20f)
         ?: when (pageWidth) { -1 -> 12f; 1 -> 2f; else -> 8f }
     fun effectiveFontFamily(): String = epubFontFamily?.takeIf { it in setOf("original", "serif", "sans-serif") } ?: "serif"
