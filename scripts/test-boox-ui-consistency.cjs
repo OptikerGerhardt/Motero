@@ -91,13 +91,19 @@ const root = path.resolve(__dirname, '../build/android');
   const restored=await page.evaluate(()=>{const f=window._view._view._pageFitting;return {learning:!!f.persistent.learning,pages:f.persistent.pages.size,work:f.work.jobs.size};});
   assert.ok(restored.learning && restored.pages>0,JSON.stringify(restored));
   console.log('PASS automatic geometry and numeric learning restore on reopen; browser opening milliseconds '+JSON.stringify({cold,warm,...restored}));
-  await page.waitForFunction(()=>{const v=window._view._view,f=v._pageFitting;return !v._scrolling&&!v._pendingPageTurn&&!f.pendingPage&&!f.applying;});
-  const inkPoint=await page.evaluate(()=>{
-   const f=window._view._view._pageFitting,v=f.viewportFrame();
+  // A warm first page can be a legitimately tiny cropped cover. Wait for
+  // an actually laid-out, prepared body page before measuring a pen target;
+  // "no pending fit" alone does not mean neighbouring preparation has finished.
+  const inkTarget=await page.waitForFunction(()=>{
+   const view=window._view._view,f=view._pageFitting,v=f.viewportFrame();
+   if(view._scrolling||view._pendingPageTurn||f.pendingPage||f.applying||!f.active)return false;
    const frames=f.pageFrames().map(r=>({...r,top:Math.max(r.top,v.top),bottom:Math.min(r.bottom,v.bottom)}))
-    .filter(r=>r.bottom-r.top>60&&f.preparedPages.has(r.index)).sort((a,b)=>(b.bottom-b.top)-(a.bottom-a.top));
-   const r=frames[0];return {index:r.index,x:(Math.max(r.left,v.left)+Math.min(r.right,v.right))/2,y:(r.top+r.bottom)/2};
+    .filter(r=>r.bottom-r.top>60&&f.preparedPages.has(r.index)&&f.layout.boxes?.[r.index]?.ready)
+    .sort((a,b)=>(b.bottom-b.top)-(a.bottom-a.top));
+   const r=frames[0];
+   return r?{index:r.index,x:(Math.max(r.left,v.left)+Math.min(r.right,v.right))/2,y:(r.top+r.bottom)/2}:false;
   });
+  const inkPoint=await inkTarget.jsonValue();await inkTarget.dispose();
   await page.evaluate(index=>window._view._view._ensureBasicPageData(index),inkPoint.index);
   await page.evaluate(()=>window.setTool({type:'ink',color:'#000000',size:2}));
   const cdp=await page.context().newCDPSession(page);
