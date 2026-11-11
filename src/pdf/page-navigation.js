@@ -1,3 +1,5 @@
+import { readingUnit, unitFrame } from './reading-unit.mjs';
+
 // Android's single-page swipe mode is independent of layout direction and crop.
 // PDF.js remains responsible for zoom, rendering and annotation coordinates.
 export class PDFPageNavigation {
@@ -12,8 +14,11 @@ export class PDFPageNavigation {
         this.visible = () => {
             const result = this.originalVisible.call(this.viewer);
             if (!this.single) return result;
-            const views = result.views.filter(p => p.id === this.viewer.currentPageNumber);
-            return {...result, views, ids:new Set(views.map(p=>p.id)),first:views[0],last:views.at(-1)};
+            const allowed = new Set(readingUnit(this.viewer.currentPageNumber-1, this.viewer.pagesCount || this.viewer._pages?.length || this.viewer.currentPageNumber, this.viewer.spreadMode).map(i=>i+1));
+            const views = result.views.filter(p => allowed.has(p.id));
+            const documentOrder=views.slice().sort((a,b)=>a.id-b.id);
+            views.sort((a,b)=>(b.id===this.viewer.currentPageNumber)-(a.id===this.viewer.currentPageNumber));
+            return {...result, views, ids:new Set(views.map(p=>p.id)),first:documentOrder[0],last:documentOrder.at(-1)};
         };
         this.viewer._getVisiblePages = this.visible;
         this.style = this.win.document.createElement('style');
@@ -108,15 +113,18 @@ export class PDFPageNavigation {
         const single = this.mode === 'jumped' && !this.multitouch && !this.view._pageFitting?.zooming
             && !this.view._booxReader?.isOverview() && !this.view._pageFitting?.editor;
         if (!single || this.view._pageFitting?.layout.boxes) this.clearSpacing();
+        const indices = single ? readingUnit(this.viewer.currentPageNumber-1, this.viewer.pagesCount || this.viewer._pages?.length || this.viewer.currentPageNumber, this.viewer.spreadMode) : [];
         const current = single ? this.viewer.getPageView(this.viewer.currentPageNumber - 1)?.div : null;
-        if (this.single === single && this.current === current) return;
+        const unitKey = indices.join(',');
+        if (this.single === single && this.current === current && this.unitKey === unitKey) return;
+        this.unitKey = unitKey;
         this.single = single;
         if (this.viewer.viewer.classList.contains('motero-jumped') !== single) this.viewer.viewer.classList.toggle('motero-jumped', single);
-        if (this.current !== current) {
-            this.current?.classList.remove('motero-current-page');
-            current?.classList.add('motero-current-page');
-            this.current = current;
-        }
+        const next = indices.map(i=>i===this.viewer.currentPageNumber-1 ? current : this.viewer.getPageView(i)?.div).filter(Boolean);
+        for (const div of this.currentUnit || []) if (!next.includes(div)) div.classList.remove('motero-current-page');
+        for (const div of next) if (!this.currentUnit?.includes(div)) div.classList.add('motero-current-page');
+        this.currentUnit = next;
+        this.current = current;
     }
     turn(direction) {
         this.view._onManualNavigation();
@@ -126,7 +134,11 @@ export class PDFPageNavigation {
         if (this.mode !== 'jumped' || this.view._pageFitting?.zooming || this.view._pageFitting?.editor
                 || this.view._booxReader?.isOverview()) return;
         const v = this.viewer, c = v.container, index = v.currentPageNumber - 1;
-        const page = v.getPageView(index), box = this.view._pageFitting?.layout.boxes?.[index];
+        const indices = readingUnit(index,v.pagesCount || v._pages?.length || index+1,v.spreadMode);
+        const frames = this.view._pageFitting?.layout.boxes;
+        const frame = frames && unitFrame(frames,indices);
+        const box = frame && {x:frame.left,y:frame.top,width:frame.right-frame.left,height:frame.bottom-frame.top};
+        const page = v.getPageView(index);
         if (!page) return;
         if (box) {
             this.clearSpacing();
@@ -140,7 +152,11 @@ export class PDFPageNavigation {
             // above/below it so centering is possible at the document edges.
             v.viewer.style.setProperty('--motero-page-gap', Math.max(0, (c.clientHeight - page.div.clientHeight) / 2) + 'px');
             v.viewer.classList.add('motero-page-spacing');
-            const r = page.div.getBoundingClientRect(), viewport = c.getBoundingClientRect();
+            const rects = indices.map(i=>v.getPageView(i)?.div.getBoundingClientRect()).filter(Boolean);
+            const r = {left:Math.min(...rects.map(r=>r.left)),top:Math.min(...rects.map(r=>r.top)),
+                width:Math.max(...rects.map(r=>r.right??r.left+r.width))-Math.min(...rects.map(r=>r.left)),
+                height:Math.max(...rects.map(r=>r.bottom??r.top+r.height))-Math.min(...rects.map(r=>r.top))};
+            const viewport = c.getBoundingClientRect();
             c.scrollLeft += r.left + r.width / 2 - viewport.left - c.clientWidth / 2;
             const start = c.scrollTop + r.top - viewport.top - c.clientTop;
             const end = start + r.height - c.clientHeight;
@@ -159,7 +175,7 @@ export class PDFPageNavigation {
         this.viewer.viewer.classList.remove('motero-jumped');
         this.clearSpacing();
         if (this.viewer._getVisiblePages === this.visible) this.viewer._getVisiblePages = this.originalVisible;
-        this.current?.classList.remove('motero-current-page');
+        for (const div of this.currentUnit || []) div.classList.remove('motero-current-page');
         this.style.remove();
     }
 }

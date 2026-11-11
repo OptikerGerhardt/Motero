@@ -1,3 +1,4 @@
+import { readerResourceBudget } from '../common/reader-resource-budget.mjs';
 /* Copyright 2012 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -234,6 +235,13 @@ class PDFThumbnails {
 
     // Android also has a bounded native bitmap cache. Bound the duplicate
     // JavaScript data URLs too; page metadata and render identity remain intact.
+    trimMemory() {
+        for (const index of this._imageLRU?.keys() || []) {
+            this._thumbnails[index]={...this._thumbnails[index],image:undefined};
+        }
+        this._imageLRU?.clear(); this._imageBytes=0;
+    }
+
     _touchImage(index) {
         if (this._pdfView._options?.platform !== 'android') return;
         const image = this._thumbnails[index]?.image;
@@ -244,7 +252,8 @@ class PDFThumbnails {
         this._imageLRU.delete(index);
         const bytes = image.length * 2;
         this._imageLRU.set(index, bytes); this._imageBytes += bytes;
-        while (this._imageLRU.size > 1 && (this._imageLRU.size > 32 || this._imageBytes > 8 * 1024 * 1024)) {
+        const budget = readerResourceBudget(this._pdfView._options?.deviceProfile);
+        while (this._imageLRU.size > 1 && (this._imageLRU.size > budget.thumbnailCount || this._imageBytes > budget.thumbnailBytes)) {
             const [oldest, size] = this._imageLRU.entries().next().value;
             this._imageLRU.delete(oldest); this._imageBytes -= size;
             this._thumbnails[oldest] = {...this._thumbnails[oldest], image:undefined};

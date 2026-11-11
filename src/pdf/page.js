@@ -562,7 +562,7 @@ export default class Page {
 		}
 		let position = this._p2v(annotation2.position);
 		let style = {
-			color: annotation2.color,
+			color: '#4072e5',
 			blend: this._layer._themeColorScheme === 'light' ? 'multiply' : undefined
 		};
 		let padding = 1;
@@ -578,20 +578,28 @@ export default class Page {
 				|| rotation === 270 && [x1, y1 - padding, x2, y1 + padding]
 			);
 		};
+        const pushGrip = (chars,pdfRect,viewRect,end) => {
+            const rect=gripperRect(chars,pdfRect,viewRect,end);
+            this._pushRect(items,rect,{...style,radius:1});
+            const rotation=normalizeDegrees(this._getTextRotation(chars,pdfRect)+(end?180:0));
+            const x=rotation===0?(rect[0]+rect[2])/2:rotation===180?(rect[0]+rect[2])/2:rotation===90?rect[2]:rect[0];
+            const y=rotation===0?rect[1]:rotation===180?rect[3]:(rect[1]+rect[3])/2;
+            items.push({kind:'circle',cx:round(x),cy:round(y),r:3,fill:style.color});
+        };
 		let { chars } = this._layer._pdfPages[this._pageIndex];
 		let pdfPosition = annotation2.position;
 		if (pdfPosition.nextPageRects) {
 			if (position.pageIndex + 1 === this._pageIndex) {
 				let { chars } = this._layer._pdfPages[this._pageIndex + 1];
-				this._pushRect(items, gripperRect(chars, pdfPosition.nextPageRects.at(-1), position.nextPageRects.at(-1), true), style);
+				pushGrip(chars, pdfPosition.nextPageRects.at(-1), position.nextPageRects.at(-1), true);
 			}
 			else {
-				this._pushRect(items, gripperRect(chars, pdfPosition.rects[0], position.rects[0], false), style);
+				pushGrip(chars, pdfPosition.rects[0], position.rects[0], false);
 			}
 		}
 		else {
-			this._pushRect(items, gripperRect(chars, pdfPosition.rects[0], position.rects[0], false), style);
-			this._pushRect(items, gripperRect(chars, pdfPosition.rects.at(-1), position.rects.at(-1), true), style);
+			pushGrip(chars, pdfPosition.rects[0], position.rects[0], false);
+			pushGrip(chars, pdfPosition.rects.at(-1), position.rects.at(-1), true);
 		}
 	}
 

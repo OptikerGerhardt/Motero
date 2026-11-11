@@ -144,3 +144,15 @@ test('content margin is included in scroll limits and changing crop settings inv
 	view._contentFit.margin = 0.04;
 	assert.deepEqual(getHardwareScrollLimits(view, viewer, list[0]), { min: 0, max: 1400, viewportHeight: 600 });
 });
+
+test('spread SmartScroll uses the taller partner and advances to the next pair',async()=>{
+ const {view,viewer,container}=fixture({pages:4});viewer.pagesCount=4;viewer.spreadMode=1;
+ view._pageFitting={active:true,layout:{boxes:[
+  {x:0,y:100,width:200,height:300},{x:212,y:100,width:200,height:1500},
+  {x:0,y:1612,width:200,height:300},{x:212,y:1612,width:200,height:800}]}};
+ view._navigateToPage=async({direction})=>{viewer.currentPageNumber+=direction*2;};
+ assert.deepEqual(getHardwareScrollLimits(view,viewer,viewer.getPageView(0)),{min:100,max:1000,viewportHeight:600});
+ container.scrollTop=100;assert.equal(await move(view,true),'scroll');assert.equal(container.scrollTop,500);
+ container.scrollTop=1000;assert.equal(await move(view,true),'page');assert.equal(viewer.currentPageNumber,3);
+ assert.equal(container.scrollTop,1612);
+});

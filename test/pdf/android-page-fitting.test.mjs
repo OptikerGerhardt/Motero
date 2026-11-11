@@ -278,3 +278,42 @@ test('E-reader touch pauses background crop work while foreground pages remain a
  fitting.resetInput();
  assert.equal(fitting.work.backgroundPaused,false);
 });
+
+test('odd/even spreads prepare both page crops at a common scale in every scroll layout',async()=>{
+ for(const spreadMode of [1,2])for(const scrollMode of [0,1,2])for(const mode of ['content','width','height']){
+  const {fitting,viewer,container}=fixture();viewer.spreadMode=spreadMode;viewer.scrollMode=scrollMode;
+  await fitting.configure({mode,reference:'cropped-content',margin:0},false);fitting.active=true;
+  const prepared=await fitting.prepare(1);
+  assert.equal(prepared.unitPages.length,2);
+  assert.equal(prepared.unitPages[0].fit.scale,prepared.unitPages[1].fit.scale);
+  assert.equal(fitting.commit(prepared,{alignTop:true}),true);
+  for(const p of prepared.unitPages)assert.ok(fitting.layout.boxes[p.index].ready);
+  const [a,b]=prepared.unitPages.map(p=>fitting.layout.boxes[p.index]);
+  assert.ok(Math.abs(container.scrollLeft-Math.max(0,(a.x+b.x+b.width-container.clientWidth)/2))<1e-6);
+  fitting.analysisWorker.close();
+ }
+});
+test('a prepared crop cannot commit after the spread mode changes',async()=>{
+ const {fitting,viewer}=fixture();await fitting.configure({mode:'content',reference:'content'},false);
+ const prepared=await fitting.prepare(1);viewer.spreadMode=1;
+ assert.equal(fitting.commit(prepared),false);
+});
+
+test('two-finger peek captures both contacts on the stable viewport before page reflow',async()=>{
+ const {fitting,container}=fixture(),captured=[];
+ container.setPointerCapture=id=>captured.push(id);
+ await fitting.configure({mode:'content',reference:'content'});
+ fitting.onDown({pointerId:8,pointerType:'touch',clientX:100,clientY:100});
+ fitting.onDown({pointerId:9,pointerType:'touch',clientX:200,clientY:100});
+ assert.deepEqual(captured,[8,9]);
+});
+
+test('the final touchend clears stale touch IDs when reflow swallowed a pointerup',()=>{
+ const {fitting}=fixture();
+ fitting.onDown({pointerId:1,pointerType:'touch',clientX:100,clientY:100});
+ fitting.onDown({pointerId:2,pointerType:'touch',clientX:200,clientY:100});
+ fitting.onUp({pointerId:1,pointerType:'touch'});
+ assert.equal(fitting.pointers.size,1);
+ fitting.onTouch({touches:[]});
+ assert.equal(fitting.pointers.size,0);assert.equal(fitting.touches,0);
+});

@@ -26,7 +26,8 @@ const MAX_TRIMMED_BANDS_PER_SIDE = 2;
 // With at least this many sampled pages, one outlier per edge is ignored
 const OUTLIER_MIN_SAMPLES = 5;
 
-function isInk(data, index) {
+function isInk(data, index, channels = 4) {
+    if (channels === 1) return data[index] < INK_THRESHOLD;
 	return data[index] < INK_THRESHOLD
 		|| data[index + 1] < INK_THRESHOLD
 		|| data[index + 2] < INK_THRESHOLD;
@@ -84,7 +85,7 @@ function trimOuterBands(bands, size, maxBandSize, minGap, {
  * @param {{ data: Uint8ClampedArray, width: number, height: number }} imageData RGBA pixels on white
  * @returns {number[] | null} [x0, y0, x1, y1] as fractions of the page size, or null for blank pages
  */
-export function getInkBounds({ data, width, height }, { trimVertical = true, trimHorizontal = true } = {}) {
+export function getInkBounds({ data, width, height, channels = 4 }, { trimVertical = true, trimHorizontal = true } = {}) {
 	if (!(width > 0) || !(height > 0)) {
 		return null;
 	}
@@ -92,7 +93,7 @@ export function getInkBounds({ data, width, height }, { trimVertical = true, tri
 	let columns = new Uint32Array(width);
 	for (let y = 0; y < height; y++) {
 		for (let x = 0; x < width; x++) {
-			if (isInk(data, (y * width + x) * 4)) {
+			if (isInk(data, (y * width + x) * channels, channels)) {
 				columns[x]++;
 			}
 		}
@@ -117,7 +118,7 @@ export function getInkBounds({ data, width, height }, { trimVertical = true, tri
 	let rowMaxX = new Int32Array(height).fill(-1);
 	for (let y = 0; y < height; y++) {
 		for (let x = x0; x < x1; x++) {
-			if (isInk(data, (y * width + x) * 4)) {
+			if (isInk(data, (y * width + x) * channels, channels)) {
 				rows[y]++;
 				rowMinX[y] = Math.min(rowMinX[y], x);
 				rowMaxX[y] = Math.max(rowMaxX[y], x);

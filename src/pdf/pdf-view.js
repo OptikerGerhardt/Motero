@@ -1,3 +1,6 @@
+import { readerResourceBudget } from '../common/reader-resource-budget.mjs';
+import { beginPaletteEdit, finishPaletteEdit } from '../common/annotation-edit-palette';
+import { readingUnit } from './reading-unit.mjs';
 import { MobilePenInput } from '../common/mobile-pen-input.mjs';
 import { appendInkSamples } from './ink-samples.mjs';
 import Page from './page';
@@ -889,7 +892,7 @@ class PDFView {
 		}
 		else {
 			// The buffer just grew — trim it back to the pages worth keeping
-			this._trimPageBuffer(PAGE_BUFFER_KEEP_RECENT);
+			this._trimPageBuffer(readerResourceBudget(this._options.deviceProfile).recentPages);
 		}
 		let pageIndex = event.pageNumber - 1;
 		let originalPage = event.source;
@@ -2859,8 +2862,10 @@ class PDFView {
                     }
                     else {
                         direction = request.directions.shift();
-                        pageIndex = viewer.currentPageNumber - 1 + direction;
-                        navigate = () => viewer[direction > 0 ? 'nextPage' : 'previousPage']();
+                        const unit = readingUnit(viewer.currentPageNumber-1,viewer.pagesCount || viewer.pdfDocument?.numPages || viewer._pages?.length || viewer.currentPageNumber+1,viewer.spreadMode);
+                        pageIndex = viewer.spreadMode && this._pageFitting?.active ? (direction>0 ? unit.at(-1)+1 : unit[0]-1) : viewer.currentPageNumber-1+direction;
+                        navigate = viewer.spreadMode && this._pageFitting?.active ? () => viewer.scrollPageIntoView({pageNumber:pageIndex+1})
+                            : () => viewer[direction > 0 ? 'nextPage' : 'previousPage']();
                     }
 				}
 				let from = viewer.getPageView(viewer.currentPageNumber - 1);
@@ -3698,6 +3703,12 @@ class PDFView {
         const outside = this._booxReader?.palette && !event.target?.closest?.('.boox-highlight-palette')
             && this._iframeWindow.PDFViewerApplication.pdfViewer.container.contains(event.target);
         if (outside && event.type === 'pointerdown') {
+            const selected = this._annotations ? this.getSelectedAnnotations() : [], position = selected.length ? this.pointerEventToPosition(event) : null;
+            const action = position && selected.length===1 && this.getSelectedAnnotationAction(selected[0],position);
+            if (action && ['updateAnnotationRange','resize','rotate','moveAndDrag'].includes(action.type)) {
+                beginPaletteEdit(this._booxReader,selected);
+                return false;
+            }
             this._paletteDismissPointer = event.pointerId;
             this._booxReader.closePalette();
             this._readerPriorityDown = null;
@@ -5822,6 +5833,9 @@ class PDFView {
 	_releaseTouchTransform() {
 		let transform = this._touchTransform;
 		this._touchTransform = null;
+        if (this._booxReader?.editPaletteIDs) this._iframeWindow.requestAnimationFrame(()=> {
+            if (!this._destroyed) finishPaletteEdit(this._booxReader,this._annotations,this._selectedAnnotationIDs);
+        });
 		if (transform?.target.hasPointerCapture(transform.pointerID)) {
 			transform.target.releasePointerCapture(transform.pointerID);
 		}

@@ -650,7 +650,7 @@ const Resizer: React.FC<ResizerProps> = (props) => {
 	let [lastPointerMove, setLastPointerMove] = useState<React.PointerEvent | null>(null);
 
 	let isCoarsePointer = window.matchMedia('(pointer: coarse').matches;
-	let size = isCoarsePointer ? 6 : 3;
+	let size = isCoarsePointer ? 3 : 2;
 
 	let handlePointerDown = useCallback((event: React.PointerEvent) => {
 		if (event.button !== 0) {
@@ -658,7 +658,8 @@ const Resizer: React.FC<ResizerProps> = (props) => {
 		}
 		event.preventDefault();
 		(event.target as Element).setPointerCapture(event.pointerId);
-	}, []);
+        onResizeStart(annotation);
+	}, [annotation,onResizeStart]);
 
 	let handlePointerUp = useCallback((event: React.PointerEvent) => {
 		if (event.button !== 0
@@ -801,7 +802,8 @@ const Resizer: React.FC<ResizerProps> = (props) => {
 			y={vert ? startRect.top - size : startRect.top}
 			width={vert ? startRect.width : size}
 			height={vert ? size : startRect.height}
-			fill={annotation.color}
+			rx={1.5}
+            fill="#4072e5"
 			className={cx('resizer inherit-pointer-events', { 'resizer-vertical': vert })}
 			onPointerDown={handlePointerDown}
 			onPointerUp={handlePointerUp}
@@ -810,12 +812,15 @@ const Resizer: React.FC<ResizerProps> = (props) => {
 			onGotPointerCapture={event => handleGotPointerCapture(event, 'start')}
 			onLostPointerCapture={handleLostPointerCapture}
 		/>
+        <circle cx={vert ? startRect.left : rtl ? startRect.right+size/2 : startRect.left-size/2}
+            cy={vert ? startRect.top-size/2 : startRect.top} r={3} fill="#4072e5" pointerEvents="none"/>
 		<rect
 			x={vert ? endRect.left : rtl ? endRect.left - size : endRect.right}
 			y={vert ? endRect.bottom : endRect.top}
 			width={vert ? endRect.width : size}
 			height={vert ? size : endRect.height}
-			fill={annotation.color}
+			rx={1.5}
+            fill="#4072e5"
 			className={cx("resizer inherit-pointer-events", { 'resizer-vertical': vert })}
 			onPointerDown={handlePointerDown}
 			onPointerUp={handlePointerUp}
@@ -824,6 +829,8 @@ const Resizer: React.FC<ResizerProps> = (props) => {
 			onGotPointerCapture={event => handleGotPointerCapture(event, 'end')}
 			onLostPointerCapture={handleLostPointerCapture}
 		/>
+        <circle cx={vert ? endRect.right : rtl ? endRect.left-size/2 : endRect.right+size/2}
+            cy={vert ? endRect.bottom+size/2 : endRect.bottom} r={3} fill="#4072e5" pointerEvents="none"/>
 	</>;
 };
 Resizer.displayName = 'Resizer';

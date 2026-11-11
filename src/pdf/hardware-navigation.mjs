@@ -1,3 +1,4 @@
+import {readingUnit,unitFrame} from './reading-unit.mjs';
 // Hardware navigation works in CSS viewport pixels and never crosses a PDF page
 // during a scroll step. A subsequent press at the edge changes pages.
 const EDGE_TOLERANCE = 1.5;
@@ -12,7 +13,10 @@ export function getHardwareScrollLimits(view, viewer, page) {
 		- container.getBoundingClientRect().top - container.clientTop;
 	let fullMax = Math.max(0, div.clientHeight - height);
 	let pageFit = view._pageFitting;
-	let box = pageFit?.active && pageFit.layout?.boxes?.[viewer.currentPageNumber - 1];
+	const indices=readingUnit(viewer.currentPageNumber-1,viewer.pagesCount || viewer._pages?.length || viewer.currentPageNumber+1,viewer.spreadMode);
+    const frames=pageFit?.active && pageFit.layout?.boxes;
+    const frame=frames && unitFrame(frames,indices);
+    let box=frame && {y:frame.top,height:frame.bottom-frame.top};
 	if (box) {
 		const min = Math.max(0, box.height <= height ? box.y + (box.height - height) / 2 : box.y);
 		return { min, max: Math.max(min, box.y + box.height - height), viewportHeight: height };
@@ -24,7 +28,14 @@ export function getHardwareScrollLimits(view, viewer, page) {
 		// hidden paper margins before accepting the next page button press.
 		return { min: pageFit.applied.top, max: pageFit.applied.top, viewportHeight: height };
 	}
-	let start = 0, end = fullMax;
+	if (viewer.spreadMode && indices.length>1) {
+        const rects=indices.map(i=>viewer.getPageView(i)?.div.getBoundingClientRect()).filter(Boolean);
+        const y0=Math.min(...rects.map(r=>r.top)), y1=Math.max(...rects.map((r,i)=>r.bottom??r.top+viewer.getPageView(indices[i]).div.clientHeight));
+        const origin=container.scrollTop+y0-container.getBoundingClientRect().top-container.clientTop;
+        const min=Math.max(0,origin+Math.min(0,(y1-y0-height)/2));
+        return {min,max:Math.max(min,origin+y1-y0-height),viewportHeight:height};
+    }
+    let start = 0, end = fullMax;
 	if (pageFit?.active && pageFit.options.mode === 'width'
 			&& pageFit.options.reference === 'cropped-content'
 			&& pageFit.applied?.pageIndex === viewer.currentPageNumber - 1
@@ -71,7 +82,8 @@ export async function navigateWithHardwareButton(view, next, fraction = 2 / 3) {
 		view._booxReader?.showEdge(edge);
 		return 'scroll';
 	}
-	let targetIndex = index + (next ? 1 : -1);
+	const unit=readingUnit(index,viewer.pagesCount || viewer._pages?.length || index+2,viewer.spreadMode);
+    let targetIndex=next ? unit.at(-1)+1 : unit[0]-1;
 	let target = viewer.getPageView(targetIndex);
 	if (!target) return 'none';
 	// Resolve destination geometry before leaving the page. Abort a delayed
@@ -90,7 +102,7 @@ export async function navigateWithHardwareButton(view, next, fraction = 2 / 3) {
 	}
 	view._onManualNavigation?.();
 	await view._navigateToPage({ direction: next ? 1 : -1 });
-	if (view._destroyed || viewer.currentPageNumber - 1 !== targetIndex) return 'ignored';
+	if (view._destroyed || !readingUnit(viewer.currentPageNumber-1,viewer.pagesCount || viewer._pages?.length || targetIndex+1,viewer.spreadMode).includes(targetIndex)) return 'ignored';
     if (view._pageNavigation?.mode === 'jumped') {
         view._pageNavigation.centerCurrentPage({ direction: next ? 1 : -1 });
         return 'page';

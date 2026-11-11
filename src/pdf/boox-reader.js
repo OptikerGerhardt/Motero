@@ -1,6 +1,7 @@
 import { showAnnotationPalette } from '../common/mobile-annotation-palette';
 import { PDF_NOTE_DIMENSIONS } from '../common/defines';
 import { getSortIndex } from './selection';
+import { readingUnit, unitFrame } from './reading-unit.mjs';
 
 // Small Android-only controls use existing annotation persistence and PDF.js
 // geometry. They do not add a new data format, PDF mutation, or drawing loop.
@@ -99,7 +100,11 @@ export class PDFBooxReader {
 		let v = this.viewer, c = v.container;
 		if (this.view._pageFitting?.presentation === 'overview') return true;
         if (!page?.pdfPage || !(v.currentScale > 0)) return false;
-		let width = page.viewport.width, height = page.viewport.height;
+		const indices = readingUnit(page.id-1,v.pagesCount || v._pages?.length || page.id,v.spreadMode);
+        const rects = indices.map(i=>v.getPageView(i)?.div?.getBoundingClientRect?.()).filter(Boolean);
+        const frame = rects.length === indices.length && unitFrame(rects,rects.map((_,i)=>i));
+        let width = frame ? frame.right-frame.left : page.viewport.width;
+        let height = frame ? frame.bottom-frame.top : page.viewport.height;
 		let reading = this.readingScale || v.currentScale * (c.clientWidth - 32) / width;
 		return width < c.clientWidth * 0.86 && height < c.clientHeight * 0.94
 			&& v.currentScale < reading * 0.86;
@@ -175,7 +180,7 @@ export class PDFBooxReader {
 	async enterPage(pageIndex) {
 		let v = this.viewer, view = this.view;
 		let restoreFit = this.readingMode === 'pageFit' && this.readingFit;
-		let restoreContent = this.readingMode === 'content' && view._contentFit && v.spreadMode === 0;
+		let restoreContent = this.readingMode === 'content' && view._contentFit ;
 		let request = this.entering = {};
 		this.clearNavigation();
 		view._cancelPendingPageTurn();
@@ -187,9 +192,9 @@ export class PDFBooxReader {
 				if (view._destroyed || this.entering !== request) return;
 				await view._pageFitting.configure(restoreFit, false);
 				view._pageFitting.active = true; view._pageFitting.presentation='reading';
-				view._pageFitting.commit(prepared, { alignTop: true,
-					navigate: () => v.scrollPageIntoView({ pageNumber: pageIndex + 1 }) });
-				return;
+				if (view._pageFitting.commit(prepared, { alignTop:true,
+                        navigate:()=>v.scrollPageIntoView({pageNumber:pageIndex+1}) })) return;
+                    if (this.entering !== request) return;
 			}
 			v.scrollPageIntoView({ pageNumber: pageIndex + 1 });
 			if (restoreContent) {

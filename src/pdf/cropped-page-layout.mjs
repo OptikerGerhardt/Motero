@@ -1,29 +1,37 @@
+import { readingUnit } from './reading-unit.mjs';
+
 function setStyles(element, styles) {
     for (const [key,value] of Object.entries(styles)) if (element.style[key] !== value) element.style[key] = value;
 }
 // Keep the original full-size PDF coordinate plane. Only page positions and the
 // visible frame change; selection, annotation rectangles and PDF.js stay intact.
-export function layoutReadingPages(pages, { width, height, mode, gap = 12 }) {
-	let rows = [], row = [], used = 0, rowHeight = 0;
-	for (let page of pages) {
-		if (row.length && (mode === 0 || mode === 2 && used + gap + page.width > width)) {
-			rows.push({ pages: row, width: used, height: rowHeight }); row = []; used = 0; rowHeight = 0;
-		}
-		if (row.length) used += gap;
-		row.push(page); used += page.width; rowHeight = Math.max(rowHeight, page.height);
-	}
-	if (row.length) rows.push({ pages: row, width: used, height: rowHeight });
-	const totalWidth = Math.max(width, ...rows.map(r => r.width));
-	let y = rows.length ? Math.max(0, (height - rows[0].height) / 2) : 0, boxes = [];
-	for (let row of rows) {
-		let x = mode === 1 ? 0 : (totalWidth - row.width) / 2;
-		for (let page of row.pages) {
-			boxes.push({ ...page, x, y: y + (row.height - page.height) / 2 });
-			x += page.width + gap;
-		}
-		y += row.height + gap;
-	}
-	return { boxes, width: totalWidth, height: Math.max(height, y - gap + Math.max(0, (height - (rows.at(-1)?.height || height)) / 2)) };
+export function layoutReadingPages(pages, { width, height, mode, gap = 12, spreadMode = 0 }) {
+    const units = [];
+    for (let i = 0; i < pages.length;) {
+        const indices = readingUnit(i, pages.length, spreadMode), group = indices.map(i => pages[i]);
+        units.push({pages:group, width:group.reduce((w,p)=>w+p.width,0)+gap*(group.length-1),
+            height:Math.max(...group.map(p=>p.height))});
+        i = indices.at(-1)+1;
+    }
+    const rows = []; let row = {pages:[],width:0,height:0};
+    for (const unit of units) {
+        if (row.pages.length && (mode === 0 || mode === 2 && row.width + gap + unit.width > width)) {
+            rows.push(row); row = {pages:[],width:0,height:0};
+        }
+        if (row.pages.length) row.width += gap;
+        row.pages.push(...unit.pages); row.width += unit.width; row.height = Math.max(row.height,unit.height);
+    }
+    if (row.pages.length) rows.push(row);
+    const totalWidth = Math.max(width, ...rows.map(r=>r.width)), boxes = [];
+    let y = rows.length ? Math.max(0,(height-rows[0].height)/2) : 0;
+    for (const row of rows) {
+        let x = mode === 1 ? 0 : (totalWidth-row.width)/2;
+        for (const page of row.pages) {
+            boxes.push({...page,x,y:y+(row.height-page.height)/2}); x += page.width+gap;
+        }
+        y += row.height+gap;
+    }
+    return {boxes,width:totalWidth,height:Math.max(height,y-gap+Math.max(0,(height-(rows.at(-1)?.height||height))/2))};
 }
 
 export class CroppedPageLayout {
@@ -56,7 +64,7 @@ export class CroppedPageLayout {
 	apply(preparedPages, { preservePosition = false } = {}) {
         const v = this.viewer, c = v.container, host = v.viewer;
         const signature = [this.fitting.layoutEpoch, c.clientWidth, c.clientHeight,
-            v.currentScale, v.pagesRotation, v.scrollMode, this.fitting.options.margin];
+            v.currentScale, v.pagesRotation, v.scrollMode, v.spreadMode, this.fitting.options.margin];
         // PDF.js replaces PageViewport when a page's real dimensions or scale
         // changes. Reuse the entire layout only while both frames and viewports
         // are unchanged; scrolling alone does not require rebuilding all pages.
@@ -86,7 +94,7 @@ export class CroppedPageLayout {
 			const right = Math.min(w, bounds[2] * w + pad), bottom = Math.min(h, bounds[3] * h + pad);
 			return { index, width: right - left, height: bottom - top, left, top, right: w - right, bottom: h - bottom, ready: !!prepared };
 		});
-		const result = layoutReadingPages(pages, { width: c.clientWidth, height: c.clientHeight, mode: v.scrollMode });
+		const result = layoutReadingPages(pages, { width: c.clientWidth, height: c.clientHeight, mode: v.scrollMode, spreadMode:v.spreadMode });
 		setStyles(host, { position: 'relative', width: result.width + 'px', height: result.height + 'px', overflow: 'clip', padding: '0', margin: '0' });
         let changed = !this.boxes || result.width !== this.width || result.height !== this.height;
 		for (const box of result.boxes) {

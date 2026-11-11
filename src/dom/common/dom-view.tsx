@@ -1,3 +1,4 @@
+import { beginPaletteEdit, finishPaletteEdit } from '../../common/annotation-edit-palette';
 import { DOMDirectHighlight } from './direct-highlight';
 import { MobilePenInput } from '../../common/mobile-pen-input.mjs';
 import injectCSS from './stylesheets/inject.scss';
@@ -155,6 +156,7 @@ abstract class DOMView<State extends DOMViewState, Data> {
 
 	protected _gotPointerUp = false;
     protected _directHighlight: any;
+    private _scrollRenderFrame: number | null = null;
     protected _domDestroyed = false;
 
 	protected _hadSelectionOnPointerDown = false;
@@ -1703,6 +1705,7 @@ abstract class DOMView<State extends DOMViewState, Data> {
 
 	private _handleAnnotationResizeStart = (id: string) => {
 		this._resizingAnnotationID = id;
+        beginPaletteEdit(this._directHighlight?.host,this._annotations.filter(a=>a.id===id));
 		this._options.onSetAnnotationPopup(null);
 		this._iframeDocument.body.classList.add('resizing-annotation');
 	};
@@ -1710,6 +1713,9 @@ abstract class DOMView<State extends DOMViewState, Data> {
 	private _handleAnnotationResizeEnd = (id: string, range: Range, cancelled: boolean) => {
 		this._resizingAnnotationID = null;
 		this._iframeDocument.body.classList.remove('resizing-annotation');
+        this._iframeWindow.requestAnimationFrame(()=> {
+            if (!this._domDestroyed) finishPaletteEdit(this._directHighlight?.host,this._annotations,this._selectedAnnotationIDs);
+        });
 		if (cancelled) {
 			return;
 		}
@@ -2164,7 +2170,9 @@ abstract class DOMView<State extends DOMViewState, Data> {
 		if (this._readAloud.state?.active && !this._readAloud.scrolling) {
 			this._onManualNavigation();
 		}
-        requestAnimationFrame(() => {
+        if (this._scrollRenderFrame !== null) return;
+        this._scrollRenderFrame = requestAnimationFrame(() => {
+            this._scrollRenderFrame = null;
             if (this._domDestroyed) return;
             this._renderAnnotations();
             this._repositionPopups();
@@ -2296,6 +2304,7 @@ abstract class DOMView<State extends DOMViewState, Data> {
 
     destroy() {
         this._domDestroyed = true;
+        if (this._scrollRenderFrame !== null) cancelAnimationFrame(this._scrollRenderFrame);
         this._directHighlight?.destroy();
         this._penInput?.destroy();
 		this._clearPenActive();

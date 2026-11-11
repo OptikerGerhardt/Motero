@@ -376,3 +376,17 @@ window.resetAndroidReaderInput = key => {
 	if (key && !view?._selectedAnnotationIDs?.includes(key)) return;
 	view?.resetAndroidInput?.();
 };
+
+// Android notifies both native caches and the WebView process under pressure.
+window.trimReaderMemory = () => {
+    const view=window._view?._view;
+    if (!view) return;
+    view._options.deviceProfile={...view._options.deviceProfile,lowMemory:true};
+    view._pageFitting?.work.cancelWhere(key => {
+        const index=typeof key==='number'?key:Number(key.slice(5));
+        return view._pageFitting.work.jobs.get(key)?.priority>0 && Math.abs(index-(view._pageFitting.viewer.currentPageNumber-1))>2;
+    });
+    view._pageFitting?.analysisWorker.cancelWhere((index,priority)=>priority>0 && Math.abs(index-(view._pageFitting.viewer.currentPageNumber-1))>2);
+    view._pdfThumbnails?.trimMemory();
+    view.trimMemory?.();
+};

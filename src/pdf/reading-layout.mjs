@@ -1,3 +1,4 @@
+import { compactReadingImage } from './reading-image.mjs';
 import { getInkBounds } from './content-fit.mjs';
 
 // PDF page indexes, not printed folios. Always sample adjacent odd/even pairs.
@@ -355,16 +356,15 @@ export function getReadingExclusions(lines, model = { repeated: new Set() }, pag
 
 export function getReadingBounds(image, lines, model, pageIndex = null, options = {}) {
 	let ignored = getReadingExclusions(lines, model, pageIndex, options);
+	image = compactReadingImage(image);
 	let { width, height } = image;
 	let data = new Uint8ClampedArray(image.data);
+    const red = image.red && new Uint8ClampedArray(image.red);
+    const whiten=(start,end)=>{data.fill(255,start,end);red?.fill(255,start,end);};
 	// Neutral gray scan paper is not ink. Only normalize it when many distinct
 	// text-like horizontal bands support that interpretation; keep photos intact.
 	if (lines.length < 3) {
-		let histogram = new Uint32Array(256), samples = 0;
-		for (let i = 0; i < data.length; i += 64) {
-			let r = data[i], g = data[i + 1], b = data[i + 2]; samples++;
-			if (Math.max(r, g, b) - Math.min(r, g, b) < 8) histogram[Math.round((r + g + b) / 3)]++;
-		}
+		let histogram = image.histogram, samples = image.samples;
 		let paper = 160;
 		for (let value = 161; value <= 246; value++) if (histogram[value] > histogram[paper]) paper = value;
 		let near = histogram.slice(Math.max(0, paper - 3), paper + 4).reduce((sum, n) => sum + n, 0);
@@ -373,16 +373,16 @@ export function getReadingBounds(image, lines, model, pageIndex = null, options 
 			for (let y = 0; y < height; y++) {
 				let ink = 0;
 				for (let x = 0; x < width; x++) {
-					let i = (y * width + x) * 4;
-					if (Math.min(data[i], data[i + 1], data[i + 2]) < threshold) ink++;
+					let i = (y * width + x);
+					if (data[i] < threshold) ink++;
 				}
 				let textRow = ink > width * 0.015 && ink < width * 0.85;
 				if (textRow && !inBand) bands++;
 				inBand = textRow;
 			}
 			if (bands >= 8) {
-				for (let i = 0; i < data.length; i += 4) {
-					if (Math.min(data[i], data[i + 1], data[i + 2]) >= threshold) data[i] = data[i + 1] = data[i + 2] = 255;
+				for (let i = 0; i < data.length; i++) {
+					if (data[i] >= threshold) {data[i]=255;if(red)red[i]=255;}
 				}
 			}
 		}
@@ -390,7 +390,7 @@ export function getReadingBounds(image, lines, model, pageIndex = null, options 
 	for (let rect of ignored) {
 		let x0 = Math.max(0, Math.floor(rect[0] * width) - 2), y0 = Math.max(0, Math.floor(rect[1] * height) - 2);
 		let x1 = Math.min(width, Math.ceil(rect[2] * width) + 2), y1 = Math.min(height, Math.ceil(rect[3] * height) + 2);
-		for (let y = y0; y < y1; y++) data.fill(255, (y * width + x0) * 4, (y * width + x1) * 4);
+		for (let y = y0; y < y1; y++) whiten(y * width + x0, y * width + x1);
 	}
 	// Running heads can contain vector separators (Höffe: page number — author)
 	// which are absent from the text layer. Clear their band only if no retained
@@ -400,7 +400,7 @@ export function getReadingBounds(image, lines, model, pageIndex = null, options 
 			&& line.rect[1] < rect[3] && line.rect[3] > rect[1])) continue;
 		let y0 = Math.max(0, Math.floor(rect[1] * height) - 2);
 		let y1 = Math.min(height, Math.ceil(rect[3] * height) + 2);
-		data.fill(255, y0 * width * 4, y1 * width * 4);
+		whiten(y0 * width,y1 * width);
 	}
 	// Remove a thin rule belonging to an excluded running header, while keeping
 	// the rules above footnotes and tables intact.
@@ -410,8 +410,8 @@ export function getReadingBounds(image, lines, model, pageIndex = null, options 
 		if (!next) continue;
 		for (let y = Math.ceil(rect[3] * height); y < Math.floor(next.rect[1] * height) - 2; y++) {
 			let ink = 0;
-			for (let x = 0; x < width; x++) if (data[(y * width + x) * 4] < 235) ink++;
-			if (ink > width * 0.5) data.fill(255, y * width * 4, (y + 1) * width * 4);
+			for (let x = 0; x < width; x++) if ((red || data)[y * width + x] < 235) ink++;
+			if (ink > width * 0.5) whiten(y * width,(y+1)*width);
 		}
 	}
 	// No vertical band trimming: even a one-line footnote is part of the page.
@@ -426,15 +426,15 @@ export function getReadingBounds(image, lines, model, pageIndex = null, options 
 		let end = Math.floor(top * height) - 2, run = null;
 		for (let y = start; y <= end; y++) {
 			let ink = 0;
-			if (y < end) for (let x = 0; x < width; x++) if (data[(y * width + x) * 4] < 235) ink++;
+			if (y < end) for (let x = 0; x < width; x++) if ((red || data)[y * width + x] < 235) ink++;
 			if (ink > width * 0.5) { if (run === null) run = y; }
 			else if (run !== null) {
-				if (y - run <= Math.max(2, height * 0.004)) data.fill(255, run * width * 4, y * width * 4);
+				if (y - run <= Math.max(2, height * 0.004)) whiten(run*width,y*width);
 				run = null;
 			}
 		}
 	}
-	let bounds = getInkBounds({ data, width, height }, { trimVertical: false, trimHorizontal: !options.includeMarginalia });
+	let bounds = getInkBounds({ data, width, height, channels:1 }, { trimVertical: false, trimHorizontal: !options.includeMarginalia });
 	return bounds && bounds[2] - bounds[0] > 0.015 && bounds[3] - bounds[1] > 0.015 ? bounds : null;
 }
 

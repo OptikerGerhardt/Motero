@@ -118,7 +118,7 @@ export class DOMDirectHighlight {
 		if (!view.initialized || view._options.readOnly || this.inControls(event) || !['pointer', 'highlight', 'underline'].includes(view._tool.type)) return false;
 		const annotation = this.annotationAt(event);
 		if (annotation) return !annotation.readOnly;
-		return this.enabled && !event.composedPath().some(el => el?.matches?.('a[href]')); // Resolve words only after the hold delay.
+		return view._tool.type === 'pointer' && this.enabled && !event.composedPath().some(el => el?.matches?.('a[href]')); // Resolve words only after the hold delay.
 	}
 	wordAt(event) {
 		const caret = this.view._getCaretRangeAtPoint(event.clientX, event.clientY)?.toRange();

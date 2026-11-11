@@ -36,7 +36,8 @@ function textPDF(count=12,graphics=false){
   browser=await chromium.launch({executablePath:process.env.BOOX_TEST_BROWSER,headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   const page=await browser.newPage({viewport:{width:393,height:700},isMobile:true,hasTouch:true});page.setDefaultTimeout(90000);
   await page.addInitScript(()=>{window.readerLongTasks=[];try{new PerformanceObserver(list=>window.readerLongTasks.push(...list.getEntries().map(e=>e.duration))).observe({type:'longtask',buffered:true});}catch(_){}});
-  const errors=[];page.on('pageerror',e=>{errors.push(e.message);console.error(e.stack);});page.on('console',m=>{if(m.type()==='error')console.error(m.text());});
+  const workerFailures=[];
+  const errors=[];page.on('pageerror',e=>{errors.push(e.message);console.error(e.stack);});page.on('console',m=>{if(m.type()==='error'){console.error(m.text());if(/DataCloneError|already detached|Crop raster ownership expired/.test(m.text()))workerFailures.push(m.text());}});
   const origin='http://127.0.0.1:'+server.address().port;
   async function open(url='/text.pdf'){
    await page.goto(origin+'/view.html');await page.evaluate(()=>{window.messages=[];const channel=new MessageChannel();channel.port1.onmessage=e=>window.messages.push(JSON.parse(e.data));window.postMessage('initPort','*',[channel.port2]);});
@@ -106,6 +107,15 @@ function textPDF(count=12,graphics=false){
   assert.equal(layout.after,layout.before,'warm page turns must reuse unchanged page layout');
   assert.equal(layout.page,6);
   console.log('PERF_MEMORY '+JSON.stringify({samplePeakBytes:peak,samples,thumbnail,layout}));
-  assert.deepEqual(errors,[]);console.log('PASS crop-performance checks; graphics retain raster fallback');
+  const pressure=await page.evaluate(async()=>{
+   const v=window._view._view,f=v._pageFitting,before={page:f.viewer.currentPageNumber,scale:f.viewer.currentScale};
+   window.trimReaderMemory();await new Promise(r=>setTimeout(r,80));
+   return{before,page:f.viewer.currentPageNumber,scale:f.viewer.currentScale,active:f.active,
+    images:v._pdfThumbnails._thumbnails.filter(t=>t.image).length,failed:f.analysisWorker.failed===true};
+  });
+  assert.equal(pressure.page,pressure.before.page);assert.equal(pressure.scale,pressure.before.scale);
+  assert.equal(pressure.active,true);assert.equal(pressure.images,0);assert.equal(pressure.failed,false);
+  assert.deepEqual(workerFailures,[],'shared crop rasters must not be transferred twice');
+  assert.deepEqual(errors,[]);console.log('PASS crop-performance checks; graphics retain raster fallback; memory pressure preserves the reading position');
  }finally{if(browser)await browser.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);process.exitCode=1;});

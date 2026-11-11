@@ -365,7 +365,10 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 		for (let section of this.book.spine.spineItems) {
 			// We should filter to linear sections only,
 			// but we need to be sure it won't break anything
-			await this._displaySection(section, cssRewriter);
+			if (this._disposed) return;
+            await this._displaySection(section, cssRewriter);
+            // Keep startup responsive between chapter parsing/sanitizing tasks.
+            if (this._options.platform === 'android') await new Promise(resolve=>setTimeout(resolve,0));
 		}
 
 		this._iframeDocument.documentElement.style.writingMode = this.book.packaging.metadata.primary_writing_mode
@@ -1441,7 +1444,9 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 	}
 
     override setAppearance(partialAppearance: Partial<ReflowableAppearance>) {
-        const fontChanged = partialAppearance.fontFamily !== this.appearance?.fontFamily;
+        if (Object.entries(partialAppearance).every(([key,value]) => value === (this.appearance as any)?.[key])) return;
+        const fontChanged = Object.prototype.hasOwnProperty.call(partialAppearance,'fontFamily')
+            && partialAppearance.fontFamily !== this.appearance?.fontFamily;
         const cfi = this.flow?.startCFI?.toString(), offset = this.flow?.startCFIOffset;
         const revision = ++this._appearanceRevision;
         this._keepPosition(() => super.setAppearance(partialAppearance));

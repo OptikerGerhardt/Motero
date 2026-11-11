@@ -1,3 +1,4 @@
+import { nearbyTextCaret } from './text-caret.mjs';
 import { isFirefox, isWin } from "../../../common/lib/utilities";
 import { closestElement } from "./nodes";
 import { getBoundingRect, isErrorRect, isPageRectVisible, rectsIntersect } from "./rect";
@@ -256,6 +257,7 @@ export function caretPositionFromPoint(doc: Document, x: number, y: number): Car
 	// Enable CSS hacks for WebKit
 	doc.body.classList.add('reading-caret-position');
 	try {
+		return nearbyTextCaret(doc,x,y,(x: number,y: number) => {
 		if (typeof doc.caretPositionFromPoint == 'function') {
 			let pos = doc.caretPositionFromPoint(x, y);
 			if (!pos) {
@@ -279,6 +281,7 @@ export function caretPositionFromPoint(doc: Document, x: number, y: number): Car
 			};
 		}
 		return null;
+        });
 	}
 	finally {
 		doc.body.classList.remove('reading-caret-position');

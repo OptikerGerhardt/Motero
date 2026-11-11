@@ -35,8 +35,9 @@ const root=path.resolve(__dirname,'../build/android');
    console.log('PASS '+flow+': real touch hold/drag creates a CFI highlight with the shared PDF palette, without Android selection');
    const original=await page.evaluate(()=>{const v=window._view._view,a=window._view._annotationManager._annotations[0];v._directHighlight.closePalette();return{id:a.id,position:JSON.stringify(a.position)};});
    await hold(p);
-   const endHandle=await page.evaluate(()=>{const v=window._view._view;v._directHighlight.closePalette();const h=v._annotationShadowRoot.querySelectorAll('.resizer');if(h.length!==2)throw Error('Missing EPUB selection handles');const r=h[1].getBoundingClientRect(),f=v._iframe.getBoundingClientRect();return{x:f.left+r.left+r.width/2,y:f.top+r.top+r.height/2};});
-   await touch('touchStart',[endHandle]);for(let i=1;i<=5;i++){await touch('touchMove',[{x:endHandle.x+50*i/5,y:endHandle.y}]);await page.waitForTimeout(25);}await touch('touchEnd',[]);await page.waitForTimeout(100);
+   const endHandle=await page.evaluate(()=>{const v=window._view._view;const h=v._annotationShadowRoot.querySelectorAll('.resizer');if(h.length!==2)throw Error('Missing EPUB selection handles');const r=h[1].getBoundingClientRect(),f=v._iframe.getBoundingClientRect();return{x:f.left+r.left+r.width/2,y:f.top+r.top+r.height/2};});
+   await touch('touchStart',[endHandle]);assert.equal(await page.evaluate(()=>!!window._view._view._directHighlight.host.palette),false,'EPUB palette hides during resize');for(let i=1;i<=5;i++){await touch('touchMove',[{x:endHandle.x+50*i/5,y:endHandle.y}]);await page.waitForTimeout(25);}await touch('touchEnd',[]);await page.waitForTimeout(100);
+   assert.equal(await page.evaluate(()=>!!window._view._view._directHighlight.host.palette),true,'EPUB palette returns after resize');
    const resized=await page.evaluate(id=>window._view._annotationManager._annotations.find(a=>a.id===id),original.id);
    assert.ok(resized);assert.notEqual(JSON.stringify(resized.position),original.position,flow+': real EPUB handle drag must change the CFI range');
    await page.evaluate(()=>window._view.undo());assert.equal(await page.evaluate(id=>JSON.stringify(window._view._annotationManager._annotations.find(a=>a.id===id).position),original.id),original.position);
@@ -70,6 +71,32 @@ const root=path.resolve(__dirname,'../build/android');
    const after=await page.evaluate(()=>{const v=window._view._view;return{cfi:v.flow.startCFI.toString(),offset:v.flow.startCFIOffset,height:v._iframe.offsetHeight,transform:v._iframe.style.transform,filter:getComputedStyle(v._iframe).filter};});
    assert.equal(after.cfi,stable.cfi);assert.equal(after.offset,stable.offset);assert.equal(after.height,stable.height);assert.equal(after.transform,'');assert.ok(after.filter==='none'||after.filter==='blur(0px)',JSON.stringify(after));
    console.log('PASS '+flow+': actual margin control and center/focus-return keep the CFI, offset and sharp layout');
+   await open(flow);
+   await page.evaluate(()=>{const v=window._view._view;v._options.deviceProfile={penOnly:false};v.setPenExclusive(false);v.setAppearance({lineHeight:1.8});});
+   await page.waitForTimeout(120);
+   for(const tool of ['pointer','highlight','underline']) {
+    await page.evaluate(tool=>{const v=window._view._view;v._directHighlight.reset();v._options.onSelectAnnotations([]);v.setTool({type:tool,color:'#ffd400'});},tool);
+    const target=await page.evaluate(()=>{
+     const v=window._view._view,d=v._iframeDocument,offset=v._iframe.getBoundingClientRect();
+     const nodes=d.createTreeWalker(d.body,NodeFilter.SHOW_TEXT);let n;
+     while((n=nodes.nextNode())){if(!n.textContent.trim())continue;for(let i=0;i<n.length;i++){
+      const r=d.createRange();r.setStart(n,i);r.setEnd(n,i+1);const b=r.getBoundingClientRect();
+      if(/[a-z]/i.test(n.textContent[i])&&b.width>0&&b.top>260&&b.bottom<600&&b.left>60&&b.right<300){
+       return {x:offset.left+b.left+b.width/2,y:offset.top+(b.top+b.bottom)/2,gap:offset.top+b.bottom+8,top:b.top};
+      }
+     }}throw Error('No lower EPUB text target');
+    });
+    await touch('touchStart',[target]);if(tool==='pointer')await page.waitForTimeout(560);
+    for(const y of [target.y,target.gap,target.gap+3,target.y]){
+     await touch('touchMove',[{x:target.x+40,y}]);await page.waitForTimeout(35);
+     const geometry=await page.evaluate(()=>{const v=window._view._view,range=v._directHighlight.range||v.toDisplayedRange(v._previewAnnotation?.position);
+      return range?{top:range.getBoundingClientRect().top,scroll:v._iframeWindow.scrollY}:null;});
+     if(geometry)assert.ok(geometry.top>target.top-70,tool+': line gap must not jump to chapter start '+JSON.stringify(geometry));
+    }
+    await touch('touchEnd',[]);await page.waitForTimeout(80);
+   }
+   console.log('PASS '+flow+': drag and explicit highlight/underline tools retain a local anchor through white line gaps');
+
   }
   assert.deepEqual(errors,[]);
  }finally{await browser?.close();await new Promise(r=>server.close(r));}
