@@ -48,8 +48,13 @@ const root=path.resolve(__dirname,'../build/android'),fixture=path.resolve(__dir
     return{index:p.index,x:(p.left+p.right)/2,y:(p.top+p.bottom)/2};});
    await touch('touchStart',[target]);await touch('touchEnd');
    try { await page.waitForFunction(index=>{const f=window._view._view._pageFitting;return f.active&&f.presentation==='reading'&&f.viewer.currentPageNumber===index+1;},target.index,{timeout:10000}); } catch(error) {console.error('RESTORE STATE',JSON.stringify({spreadMode,scrollMode,target,state:await pair(),extra:await page.evaluate(()=>{const v=window._view._view;return{presentation:v._pageFitting.presentation,applied:v._pageFitting.applied,readingMode:v._booxReader.readingMode,fit:v._booxReader.readingFit,entering:!!v._booxReader.entering};})}));throw error;}
-   const restored=await pair();assert.equal(restored.visible.length,2);assert.equal(restored.spread,spreadMode);
-   assert.ok(Math.abs(restored.scale-before.scale)<.02,'overview tap restores the spread reading scale');
+   const restored=await pair();assert.equal(restored.spread,spreadMode);
+   const first=spreadMode===1?target.index-target.index%2:target.index===0?0:target.index-(target.index-1)%2;
+   const expected=spreadMode===2&&target.index===0?[0]:[first,first+1].filter(i=>i<restored.frames.length);
+   assert.deepEqual(restored.visible,expected,'cover/final singleton or the complete destination pair must remain visible');
+   const fitted=expected.map(i=>restored.frames[i]);
+   assert.ok(fitted.every(b=>b.left>=restored.viewport.left-3&&b.right<=restored.viewport.right+3
+    &&b.top>=restored.viewport.top-3&&b.bottom<=restored.viewport.bottom+3),'overview tap restores Fit to Content for the destination unit');
    assert.equal(restored.worker,true,'raster crop work uses the actual packaged Worker');
    console.log(`PASS spread ${spreadMode}, scroll ${scrollMode}: all fits, both pages, edge turn, persistent overview and tap-to-restore`);
   }
