@@ -25,3 +25,5 @@ Before changing the memory path, a synthetic 96-page PDF retained up to 23,040,0
 The release retains the existing PDF.js 5.7.330 pin and runtime files, annotation/sync formats, crop settings and production signing identity. Full reader, native and browser regressions and signed Android update checks are required before publication. Physical BOOX/Pixel input, native animation appearance, device WebViews and live account sync remain separate checks.
 
 The stress harness also records an upstream PDF.js link-layer cancellation warning reproduced with the unchanged published Build 321. Its before/after logs are retained alongside the resource measurements; the pinned engine is unchanged.
+
+Verification completed: 382 reader tests, 43 engine pixel cases, 145 native tests and 20 browser suites, plus signed API 31/35 updates from 303/321 and independent public APK/source/checksum verification. [Reports](../qa/build322/README.md).

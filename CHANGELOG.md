@@ -9,6 +9,8 @@
 - In E-Reader mode, use immediate top-toolbar visibility and a smaller adjacent-page preparation radius; pause background crop work during touch input and briefly afterward while foreground navigation stays available.
 - PDF.js, production signing identity, annotation formats and stored manual crops are unchanged. [Scope and measurements](docs/READER_322.md).
 
+- Published and independently verified: 382 reader tests, 43 engine pixel cases, 145 Android tests and 20 browser suites pass. Signed API 31/35 updates from 303/321 retain data and UID; old-key updates are rejected. APK signature, embedded sources, complete source archive, tag and checksums match. [Evidence](qa/build322/).
+
 ## 1.0.6-321 — 2026-11-10
 
 - Touch editing of existing PDF highlights, underlines, area boxes and notes; EPUB range editing and anchored note movement, preserving annotation IDs and Undo.

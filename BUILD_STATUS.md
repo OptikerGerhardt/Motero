@@ -1,10 +1,14 @@
-# Build 322 / Motero 1.0.7 — lokal geprüft, Release-Prüfungen folgen
+# Build 322 / Motero 1.0.7 — veröffentlicht und unabhängig geprüft
 
-- EPUB-Seitenwechsel auf Text korrigiert; obere/untere Ränder als eigener Regler, zentrierter sicherer Textrahmen und erreichbarer Bookmark-Filter in der Sidebar.
-- Begrenzter Miniaturspeicher, Raster-Samples nacheinander, wiederverwendete Seitenlayouts. E-Reader-Hintergrundarbeit während Fingereingaben pausiert; obere Leiste ohne normale Einblendanimation.
-- 382 Reader-Tests, 43 Engine-Pixeltests, 145 native Tests in 35 Suiten und 20 Browser-Suiten bestanden. APK, TypeScript, Signierschutz und Receiver-Prüfungen erfolgreich; 104 Reader-Quellen, 207 PDF.js- und 45 Runtime-Dateien geprüft.
-- Synthetischer Speichervergleich: beobachtete Crop-Samples 23,04 → 3,84 MB, Miniaturen 96 → 32. Keine Messung des gesamten Prozess-RAM oder physischer BOOX-Latenz.
-- Signierte Android-Updates und unabhängiger öffentlicher Download werden vor Abschluss geprüft. [Umfang](docs/READER_322.md), [Nachweise](qa/build322/).
+- Release: https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.7-322 ; erfolgreicher Build-/Release-Prüflauf: https://github.com/OptikerGerhardt/Motero/actions/runs/42929208556 .
+- App-Quelle: `0257b1991b86fe843d25c81e37e76827f2106dbf`; Reader: `0aec12a3114e30c53ff4847ffe9351856d02387e`; PDF.js `5f95f712` / 5.7.330 unverändert.
+- EPUB-Wischen auf Text und Randtippen korrigiert; eigene obere/untere Ränder, stabiles symmetrisches Textfeld außerhalb des Status-/Aussparungsbereichs und erreichbarer Bookmark-Filter.
+- Begrenzter Miniaturspeicher, Raster-Samples nacheinander und wiederverwendete Seitenlayouts. E-Reader-Hintergrundanalyse während Fingereingaben zurückgestellt; obere Leiste ohne normale Einblendanimation.
+- 382 Reader-Tests, 43 Engine-Pixeltests, 145 native Tests in 35 Suiten und 20 Browser-Suiten einschließlich 19 offizieller Viewer-Fälle bestanden. Bestehende Annotationsbearbeitung und Crop-/Stift-/Navigationsregressionen erhalten.
+- Synthetischer lokaler Speichervergleich: beobachtete Sample-Arrays 23,04 → 3,84 MB, Miniaturen 96 → 32. Keine Messung des gesamten Prozess-RAM oder physischer BOOX-Latenz.
+- Öffentliche APK unabhängig geprüft: SHA-256 `9af91ea220698788f9c3bb8784ae970c4207a8cb53ea5d089f1b71c83dc58ebe`. Privater Signierer, Rotation, Receiver-Berechtigung, nicht debuggbar; 104 Reader-Quellen, 207 PDF.js- und 45 Runtime-Dateien stimmen. Tag, vollständige Quellen (9309 Dateien), Berichte und Prüfsummen geprüft.
+- API 31/35: Updates von 303 und 321 erhalten Datenmarker und UID und starten die App; alte Schlüssel für Updates/interne Berechtigungen abgewiesen. Latest-Release liefert 322 mit genau einer APK.
+- Physische BOOX-/Pixel-Prüfung, native Animationen und Kontosync separat. [Umfang](docs/READER_322.md), [Nachweise](qa/build322/).
 
 # Build 321 / Motero 1.0.6 — veröffentlicht und unabhängig geprüft
 
