@@ -1,12 +1,13 @@
+# Build 323 / Motero 1.0.8 — veröffentlicht und unabhängig geprüft
+
+- [APK und vollständige Quellen](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.8-323) veröffentlicht; [Build und Release](https://github.com/OptikerGerhardt/Motero/actions/runs/43031667034) erfolgreich. Anwendung `f3ab0b89`, Reader `db317a71`, PDF.js 5.7.330 unverändert.
+- 402 Reader-Fälle, 147 native Tests in 36 Suiten, 43 Engine-Pixeltests und alle 21 Browser-Suiten bestanden, einschließlich 19 offizieller Viewer-Fälle.
+- EPUB-Auswahl/Griffe/Palette, Odd-/Even-Spreads, Worker-Rückfall und koordinierte Ressourcenbudgets geprüft; keine Änderung der Annotations-/Syncformate oder Signieridentität.
+- Veröffentlichte APK separat heruntergeladen: SHA-256 `10e9017cb1f0433d8c28158b822d99f8b888986b9654aa652b33712bb2dec401`. Signatur, Quellen inklusive Worker, unveränderte Engine/Runtime, Prüfsummen und Source-Snapshot geprüft.
+- API 31/35: Updates von 303 und 322 erhalten Datenmarker und UID, starten die App und verweigern alte Schlüssel. Obtainium-Latest zeigt Build 323.
+- Physische BOOX-/Pixel-Eingaben, native Animationen, Gerätespezifika und Kontosync separat. [Nachweise](qa/build323/README.md).
+
 # Build 322 / Motero 1.0.7 — veröffentlicht und unabhängig geprüft
-
-## Build 323 / Motero 1.0.8 — Release-Kandidat
-
-- Reader `db317a71`: stabile EPUB-Textanker, Bearbeitungspaletten, Odd-/Even-Spreads und gemeinsame Speicher-/Arbeitssteuerung.
-- Lokaler Release-Build und 147 native Tests in 36 Suiten bestanden. 402 Reader-Fälle und alle 21 Browser-Suiten bestanden, einschließlich aller Spread-/Worker-Fälle.
-- Kompakte Crop-Daten stimmen in 96 Vergleichsfällen mit der vorherigen Geometrie überein. PDF.js 5.7.330 unverändert.
-- Signatur, API-31/35-Updates von 303/322 und öffentliche APK-Prüfung sind vor der Freigabe erforderlich. [Details und Grenzen](docs/READER_323.md).
-
 
 - Release: https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.7-322 ; erfolgreicher Build-/Release-Prüflauf: https://github.com/OptikerGerhardt/Motero/actions/runs/42929208556 .
 - App-Quelle: `0257b1991b86fe843d25c81e37e76827f2106dbf`; Reader: `0aec12a3114e30c53ff4847ffe9351856d02387e`; PDF.js `5f95f712` / 5.7.330 unverändert.

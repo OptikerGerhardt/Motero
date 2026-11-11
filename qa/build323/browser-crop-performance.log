@@ -1,0 +1,8 @@
+Failed to load resource: the server responded with a status of 404 (Not Found)
+#injectLinkAnnotations: Error: `render` method must be called before `injectLinkAnnotations`.
+    at AnnotationLayerBuilder.injectLinkAnnotations (http://127.0.0.1:45043/pdf/web/viewer.mjs:11834:13)
+    at #injectLinkAnnotations (http://127.0.0.1:45043/pdf/web/viewer.mjs:13746:34)
+    at async http://127.0.0.1:45043/pdf/web/viewer.mjs:14263:11
+PASS text-only cold/warm crop path, bounded prefetch and directional tall-page entry in all scroll layouts
+{"coldPreparationMs":2003,"stableTurnsMs":[29.59999999962747,25,30.399999998509884,28.299999998882413,31.5,31.199999999254942,31.40000000037253,31.199999999254942],"longTasksMs":[1065],"cold":{"cacheMiss":{"count":9,"totalMs":0,"p50Ms":0,"p95Ms":0},"queue":{"count":9,"totalMs":90,"p50Ms":9.2,"p95Ms":24.8},"text":{"count":12,"totalMs":206,"p50Ms":15.9,"p95Ms":50.6},"textBounds":{"count":20,"totalMs":10,"p50Ms":0.4,"p95Ms":2.1},"layout":{"count":6,"totalMs":7,"p50Ms":1.2,"p95Ms":1.6}},"warm":{"cacheMiss":{"count":10,"totalMs":0,"p50Ms":0,"p95Ms":0},"queue":{"count":10,"totalMs":90,"p50Ms":9.2,"p95Ms":24.8},"text":{"count":12,"totalMs":206,"p50Ms":15.9,"p95Ms":50.6},"textBounds":{"count":21,"totalMs":10,"p50Ms":0.3,"p95Ms":0.8},"layout":{"count":10,"totalMs":9,"p50Ms":0.9,"p95Ms":1.6},"cacheHit":{"count":33,"totalMs":0,"p50Ms":0,"p95Ms":0},"navigation":{"count":14,"totalMs":57,"p50Ms":3.4,"p95Ms":9.7}}}
+PASS crop-performance checks; graphics retain raster fallback

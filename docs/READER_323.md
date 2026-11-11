@@ -37,6 +37,6 @@ The 96-case deterministic gray/color/noise/header/footer corpus has the identica
 
 Reader/native/browser tests, release verification and API 31/35 update gates from original 303 and preceding 322 are required before publication. Final results are recorded in the build report.
 
-Local verification: 402 reader cases, 147 native cases in 36 suites and all 21 browser suites pass, including 43 engine pixel and 19 official viewer cases. [Reports](../qa/build323/README.md). Public signing/update gates remain pending until the protected release workflow finishes.
+Local verification: 402 reader cases, 147 native cases in 36 suites and all 21 browser suites pass, including 43 engine pixel and 19 official viewer cases. [Reports](../qa/build323/README.md). Production signing and both API 31/35 update gates passed in the [protected workflow](https://github.com/OptikerGerhardt/Motero/actions/runs/43031667034). The independently downloaded APK, complete source archive, emitted worker sources and release checksums were verified.
 
 The warm-open pen regression now waits atomically for a visible, prepared body frame. Its first cropped fixture page can legitimately be only about 17 CSS pixels high; neighbouring preparation is asynchronous. The corrected readiness condition passes the complete pen/eraser/palm stream under fourfold CPU throttling. This is test-fixture readiness, not a change to crop detection or pen behaviour.
