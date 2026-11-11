@@ -61,3 +61,15 @@ test('concurrent learning and foreground requests transfer a shared raster once 
   worker.finish();await b;assert.equal(worker.images.size,0);
  }finally{client.close();globalThis.Worker=original;}
 });
+
+test('an analysis error response retires the worker and preserves the local fallback',async()=>{
+ const original=globalThis.Worker;globalThis.Worker=FakeWorker;const client=new ReadingAnalysisWorker();
+ try{
+  const pending=client.analyze(fixture(2),{});await new Promise(setImmediate);
+  const worker=FakeWorker.instances.at(-1),id=worker.jobs[0].id;
+  worker.onmessage({data:{id,error:'Unsupported worker feature'}});
+  await assert.rejects(pending,{name:'ReadingWorkerError'});
+  assert.equal(worker.terminated,true);assert.equal(client.pending.size,0);
+  assert.equal((await client.analyze(fixture(2),{})).index,2);
+ }finally{client.close();globalThis.Worker=original;}
+});

@@ -31,11 +31,11 @@ export class ReadingAnalysisWorker {
                     }
                     const job = this.pending.get(data.id);
                     if (!job) return;
+                    if (data.error) { this.fail(data.error); return; }
                     this.pending.delete(data.id);
                     this.active = null;
                     this.releaseImage(job);
-                    if (data.error) job.reject(new Error(data.error));
-                    else job.resolve(data.result);
+                    job.resolve(data.result);
                     this.drain();
                 };
             } catch (_) { fail(); }
@@ -43,14 +43,14 @@ export class ReadingAnalysisWorker {
         return this.ready;
     }
 
-    fail() {
+    fail(message = 'Crop analysis worker unavailable') {
         clearTimeout(this.initTimer);
         this.resolveReady?.(null);
         this.resolveReady = null;
         this.failed = true;
         this.worker?.terminate();
         this.worker = null;
-        const error = new Error('Crop analysis worker unavailable');
+        const error = new Error(message);
         error.name = 'ReadingWorkerError';
         for (const job of this.pending.values()) job.reject(error);
         this.pending.clear();
@@ -106,11 +106,7 @@ export class ReadingAnalysisWorker {
             this.worker.postMessage({ id, page, model, imageID: image?.id }, transfer);
             if (image) image.sent = true;
         } catch (error) {
-            this.pending.delete(id);
-            this.active = null;
-            this.releaseImage(job);
-            job.reject(error);
-            this.drain();
+            this.fail(String(error?.message || error));
         }
     }
 
