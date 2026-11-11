@@ -1,6 +1,6 @@
 {
   "file_count": 47,
-  "tests": 401,
+  "tests": 402,
   "suites": [
     {
       "file": "test/android/index-android.test.mjs",
@@ -160,7 +160,7 @@
     },
     {
       "file": "test/pdf/reading-worker.test.mjs",
-      "tests": 5
+      "tests": 6
     },
     {
       "file": "test/pdf/scroll-target.test.mjs",

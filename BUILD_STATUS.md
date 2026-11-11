@@ -2,8 +2,8 @@
 
 ## Build 323 / Motero 1.0.8 — Release-Kandidat
 
-- Reader `cf40afbf`: stabile EPUB-Textanker, Bearbeitungspaletten, Odd-/Even-Spreads und gemeinsame Speicher-/Arbeitssteuerung.
-- Lokaler Release-Build und 147 native Tests in 36 Suiten bestanden. 401 Reader-Fälle und alle 21 Browser-Suiten bestanden, einschließlich aller Spread-/Worker-Fälle.
+- Reader `6c45c1cd`: stabile EPUB-Textanker, Bearbeitungspaletten, Odd-/Even-Spreads und gemeinsame Speicher-/Arbeitssteuerung.
+- Lokaler Release-Build und 147 native Tests in 36 Suiten bestanden. 402 Reader-Fälle und alle 21 Browser-Suiten bestanden, einschließlich aller Spread-/Worker-Fälle.
 - Kompakte Crop-Daten stimmen in 96 Vergleichsfällen mit der vorherigen Geometrie überein. PDF.js 5.7.330 unverändert.
 - Signatur, API-31/35-Updates von 303/322 und öffentliche APK-Prüfung sind vor der Freigabe erforderlich. [Details und Grenzen](docs/READER_323.md).
 
@@ -68,7 +68,7 @@
 - 314 Reader-Tests, 125 Android-Tests in 30 Suiten und 13 Browser-Suiten bestanden; lokal zusätzlich elf Infrastrukturtests. Signierte öffentliche APK unabhängig heruntergeladen und gegen Quellen, Signatur und Prüfsummen geprüft.
 - APK-SHA-256: `04e8f145a60bf95739b65297dd11c8b5d11c314f703553fa034040f31c2b7d43`. Unveränderter privater Motero-Signierer; 99 Reader-Quellen, 207 PDF.js- und 45 Runtime-Dateien geprüft. Latest-Release liefert Build 316.
 - API 31/35: Updates von 303 und 315 erhalten Datenmarker und UID und starten die App. Alter Schlüssel kann weder zurückinstallieren noch die interne Berechtigung nutzen.
-- Zentrierungs-Regressionsprüfung reproduziert in Build 315 401,5 CSS-Pixel Versatz nach oben. Korrektur besteht in allen drei Layouts nach Wischen, Randtippen, Hardware-Tasten und Übersichtssprüngen, auch ohne Zuschnitt an den Dokumenträndern.
+- Zentrierungs-Regressionsprüfung reproduziert in Build 315 402,5 CSS-Pixel Versatz nach oben. Korrektur besteht in allen drei Layouts nach Wischen, Randtippen, Hardware-Tasten und Übersichtssprüngen, auch ohne Zuschnitt an den Dokumenträndern.
 - Jump-to und Menü im Kopf aller Karten; Bookmark-Filter mit zustandsabhängigem Löschen/Menü. Menü-Ziel bei anderer ausgewählter Annotation und Sprung aller Annotationstypen nativ getestet.
 - Freie Mitte des Sidebar-Kopfs fängt Berührungen ab. Zusätzlicher nativer Eingabetest ist durch schwarzen Emulator-Output und Startzeitüberschreitungen blockiert; deshalb kein nativer Input-/Sicht-Pass. Physische BOOX-/Pixel-Prüfung und Kontosync separat. Nachweise: `qa/build316/`.
 
@@ -106,7 +106,7 @@
 
 [APK und vollständige Quellen](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.0-312) sind veröffentlicht. Bestanden: 305 Reader-Tests, 119 native Tests, zwölf Browser-Suites und beide echten Android-Update-Gates auf API 31/35. Die Korrektur stellt auch entfernte Miniaturseiten nach einem Renderer-Neustart wieder her.
 
-Die tatsächlich veröffentlichte APK wurde separat heruntergeladen und geprüft: private Motero-Signatur, V3-Rotation, nicht debuggbares Paket, 98 aktuelle Reader-Quellen, 207 unveränderte PDF.js-Dateien und 45 Runtime-Dateien. SHA-256: `7d8a35ad4d5681519e634fba0c2ebe544f59bee761ced7b7fc8b5ac543fe7401`. Prüfsummen und beide Migrationsberichte stimmen überein. Updates von 303 und 311 erhalten Testdaten und UID; alte Schlüssel werden abgewiesen. Die anonyme Latest-Release-API liefert diese APK für Obtainium.
+Die tatsächlich veröffentlichte APK wurde separat heruntergeladen und geprüft: private Motero-Signatur, V3-Rotation, nicht debuggbares Paket, 98 aktuelle Reader-Quellen, 207 unveränderte PDF.js-Dateien und 45 Runtime-Dateien. SHA-256: `7d8a35ad4d5681519e634fba0c2ebe544f59bee761ced7b7fc8b5ac543fe7402`. Prüfsummen und beide Migrationsberichte stimmen überein. Updates von 303 und 311 erhalten Testdaten und UID; alte Schlüssel werden abgewiesen. Die anonyme Latest-Release-API liefert diese APK für Obtainium.
 
 Nachweise: [qa/build312](qa/build312/README.md), [GitHub-Durchlauf](https://github.com/OptikerGerhardt/Motero/actions/runs/42507380160). Physische BOOX-/GrapheneOS- und Kontosync-Tests sind gesondert zu bestätigen.
 # Build 311 — veröffentlicht und unabhängig geprüft, 8. November 2026
