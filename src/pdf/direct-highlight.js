@@ -170,6 +170,10 @@ export class PDFDirectHighlight {
 		}
 		this.pressAnnotation = this.quickAnnotation(event);
 		let handled = this.gesture.down(event);
+        if (this.gesture.state?.event === event) {
+            const container = this.view._pageFitting?.viewer.container;
+            if (container) this.gesture.state.scrollOrigin = [container.scrollLeft, container.scrollTop];
+        }
 		if (handled) {
 			this.view._suppressCompatibilityMouseUntil = Date.now() + 1500;
 			// Pen input emits a compatibility mousedown immediately, unlike finger input.
@@ -177,6 +181,16 @@ export class PDFDirectHighlight {
 		}
 		return handled;
 	}
+
+    onScroll(container) {
+        const state = this.gesture.state;
+        if (!state) return;
+        // Scroll events are delivered asynchronously. An old layout event or a
+        // subpixel correction must not cancel a newly started stationary hold.
+        const origin = state.scrollOrigin;
+        if (!origin || Math.abs(container.scrollLeft - origin[0]) > 1
+            || Math.abs(container.scrollTop - origin[1]) > 1) this.gesture.abort();
+    }
 
 	move(event) {
 		let state = this.gesture.state;

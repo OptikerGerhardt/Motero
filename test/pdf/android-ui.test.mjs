@@ -2308,3 +2308,17 @@ test('a PDF tap dismissing the highlight palette is consumed before chrome, book
  view._paletteDismissUntil=0;
  assert.equal(dismiss(event('pointerdown')),false,'the following PDF tap is handled normally');
 });
+
+
+test('queued scroll and subpixel rounding preserve a stationary hold; actual scrolling cancels it', async () => {
+    const { PDFDirectHighlight } = await import('../../src/pdf/direct-highlight.js');
+    const hold = Object.create(PDFDirectHighlight.prototype);
+    let cancelled = false;
+    hold.gesture = {state:{scrollOrigin:[10,200]}, abort(){cancelled=true;this.state=null;}};
+    hold.onScroll({scrollLeft:10,scrollTop:200});
+    assert.equal(cancelled,false);
+    hold.onScroll({scrollLeft:10.25,scrollTop:200.5});
+    assert.equal(cancelled,false);
+    hold.onScroll({scrollLeft:10,scrollTop:220});
+    assert.equal(cancelled,true);
+});

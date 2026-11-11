@@ -666,7 +666,7 @@ class View {
 			wordSpacing: appearance.wordSpacing,
 			letterSpacing: appearance.letterSpacing,
 			pageWidth: appearance.pageWidth,
-            margins: appearance.margins, fontFamily: appearance.fontFamily,
+            margins: appearance.margins, verticalMargins: appearance.verticalMargins, fontFamily: appearance.fontFamily,
             useOriginalFont: appearance.useOriginalFont ?? this._appearance?.useOriginalFont,
 			textScale: appearance.textScale,
 		};

@@ -156,6 +156,7 @@ class PDFThumbnails {
 		let { width: canvasWidth, height: canvasHeight, scale }
 			= getThumbnailDimensions(viewport, options);
 
+        this._touchImage(pageIndex);
 		let thumbnail = this._thumbnails[pageIndex];
 		if (thumbnail?.image && !thumbnail.forceRerender
 				&& thumbnail.width === canvasWidth
@@ -210,6 +211,7 @@ class PDFThumbnails {
 			this._thumbnails = this._thumbnails.slice();
 			this._thumbnails[pageIndex] = renderedThumbnail;
 			this._renderOptions[pageIndex] = options;
+            this._touchImage(pageIndex);
 
 			// Zeroing the width and height causes Firefox to release graphics
 			// resources immediately, which can greatly reduce memory consumption.
@@ -229,6 +231,25 @@ class PDFThumbnails {
 			this._onUpdate(this._thumbnails);
 		}
 	}
+
+    // Android also has a bounded native bitmap cache. Bound the duplicate
+    // JavaScript data URLs too; page metadata and render identity remain intact.
+    _touchImage(index) {
+        if (this._pdfView._options?.platform !== 'android') return;
+        const image = this._thumbnails[index]?.image;
+        if (!image) return;
+        this._imageLRU ??= new Map();
+        this._imageBytes ??= 0;
+        this._imageBytes -= this._imageLRU.get(index) || 0;
+        this._imageLRU.delete(index);
+        const bytes = image.length * 2;
+        this._imageLRU.set(index, bytes); this._imageBytes += bytes;
+        while (this._imageLRU.size > 1 && (this._imageLRU.size > 32 || this._imageBytes > 8 * 1024 * 1024)) {
+            const [oldest, size] = this._imageLRU.entries().next().value;
+            this._imageLRU.delete(oldest); this._imageBytes -= size;
+            this._thumbnails[oldest] = {...this._thumbnails[oldest], image:undefined};
+        }
+    }
 
 	render(pageIndexes = [], options) {
 		return this._queueRender(pageIndexes, options);
@@ -274,6 +295,7 @@ class PDFThumbnails {
 
 	clear() {
         this._epoch++;
+        this._imageLRU?.clear(); this._imageBytes = 0;
 		this._pending.clear();
 		this._thumbnails = this._thumbnails.map(x => ({ ...x, image: undefined, renderKey: this.renderKey }));
 		this._renderOptions = [];

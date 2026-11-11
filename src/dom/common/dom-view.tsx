@@ -1635,6 +1635,7 @@ abstract class DOMView<State extends DOMViewState, Data> {
 	};
 
     private _handleAnnotationPointerUp = (id: string, event: React.PointerEvent) => {
+        if (this._directHighlight?.navigationUps.has(event.nativeEvent)) return;
         event.stopPropagation();
         if (event.defaultPrevented) return;
 
@@ -1811,6 +1812,7 @@ abstract class DOMView<State extends DOMViewState, Data> {
 
 	protected _handlePointerUp(event: PointerEvent) {
 		this._handledPointerIDs.delete(event.pointerId);
+        if (this._directHighlight?.navigationUps.has(event)) return;
 
 		if (this._isTouchDuringPenAnnotation(event)) {
 			return;
@@ -2404,6 +2406,10 @@ abstract class DOMView<State extends DOMViewState, Data> {
 		};
         this.appearance = appearance;
         const root = this._iframeDocument.documentElement;
+        if (Number.isFinite(appearance.verticalMargins)) {
+            root.dataset.verticalMargins = 'custom';
+            root.style.setProperty('--reader-block-margin', Math.max(0, Math.min(15, appearance.verticalMargins!)) + 'vh');
+        }
         if (Number.isFinite(appearance.margins)) {
             root.dataset.margins = 'custom';
             root.style.setProperty('--reader-side-margin', Math.max(0, Math.min(20, appearance.margins!)) + 'vw');

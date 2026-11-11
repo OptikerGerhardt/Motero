@@ -145,3 +145,35 @@ test('dark thumbnails start with original white paper before the PDF.js theme bl
     await thumbnails._render(0);
     assert.equal(renderContexts[0].background.toLowerCase(), '#ffffff');
 });
+
+test('Android thumbnail images stay bounded while evicted pages remain renderable', async () => {
+    globalThis.window = { devicePixelRatio: 1 };
+    const { thumbnails, renderContexts, rendered } = createThumbnails();
+    thumbnails._pdfView._options = {platform:'android'};
+    thumbnails._thumbnails = Array.from({length:96}, (_,pageIndex)=>({pageIndex}));
+    for (let i=0;i<96;i++) await thumbnails._render(i);
+    assert.equal(rendered.length,96);
+    assert.equal(thumbnails._thumbnails.length,96,'retain metadata for every page');
+    assert.equal(thumbnails._thumbnails.filter(t=>t.image).length,32);
+    assert.equal(thumbnails._thumbnails[0].image,undefined);
+    const renders=renderContexts.length;
+    await thumbnails._render(0);
+    assert.equal(renderContexts.length,renders+1,'an evicted image is rendered on demand');
+    await thumbnails._render(0);
+    assert.equal(renderContexts.length,renders+1,'a recent image is reused');
+    assert.equal(rendered.at(-1).pageIndex,0);
+    assert.equal(rendered.at(-1).renderKey,'test:0');
+    thumbnails.clear();
+    assert.equal(thumbnails._imageBytes,0);
+    assert.equal(thumbnails._imageLRU.size,0);
+});
+
+test('Android thumbnail cache also respects image byte size', () => {
+    const { thumbnails }=createThumbnails();
+    thumbnails._pdfView._options={platform:'android'};
+    thumbnails._thumbnails=Array.from({length:12},(_,pageIndex)=>({pageIndex,image:'x'.repeat(512*1024)}));
+    for(let i=0;i<12;i++) thumbnails._touchImage(i);
+    assert.ok(thumbnails._imageBytes<=8*1024*1024);
+    assert.equal(thumbnails._thumbnails.filter(t=>t.image).length,8);
+    assert.ok(thumbnails._thumbnails[11].image,'retain the most recently requested preview');
+});

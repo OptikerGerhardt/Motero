@@ -6,6 +6,7 @@ export interface ReflowableAppearance {
 	useOriginalFont: boolean;
 	textScale?: number;
     margins?: number;
+    verticalMargins?: number;
     fontFamily?: string;
 }
 

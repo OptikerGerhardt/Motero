@@ -175,3 +175,5 @@
         }
     }
 }
+
+:root[data-vertical-margins="custom"] &:not(.fixed-layout) { --block-margin: var(--reader-block-margin); }

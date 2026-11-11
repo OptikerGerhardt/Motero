@@ -387,7 +387,7 @@ class PDFView {
 					}
 					this._scrolling = true;
 					this._booxReader?.onScroll();
-					this._directHighlight?.gesture.abort();
+					this._directHighlight?.onScroll(event.target);
 					clearTimeout(this._scrollTimeout);
 					this._scrollTimeout = setTimeout(() => {
 						this._scrolling = false;

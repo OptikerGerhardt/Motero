@@ -262,3 +262,19 @@ test('Text preserves full paper height; Text + crop also removes vertical margin
  await fitting.configure({mode:'width',reference:'content',margin:0});
  assert.equal(fitting.applied.bounds[1],0);assert.equal(fitting.applied.bounds[3],1);
 });
+
+test('E-reader touch pauses background crop work while foreground pages remain available', async () => {
+ const {fitting,flush}=fixture();
+ fitting.view._options={deviceProfile:{eReader:true}};
+ fitting.onDown({pointerId:7,pointerType:'touch',clientX:100,clientY:100});
+ const started=[];
+ const background=fitting.work.run('background',async()=>{started.push('background');},5);
+ await fitting.work.run('foreground',async()=>{started.push('foreground');},0);
+ assert.deepEqual(started,['foreground']);
+ fitting.onUp({pointerId:7,pointerType:'touch'});
+ assert.equal(fitting.work.backgroundPaused,true,'allow the reader to paint before background resumes');
+ await flush();await background;
+ assert.deepEqual(started,['foreground','background']);
+ fitting.resetInput();
+ assert.equal(fitting.work.backgroundPaused,false);
+});

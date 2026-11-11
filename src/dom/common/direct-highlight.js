@@ -12,6 +12,7 @@ export class DOMDirectHighlight {
 		this.doc = view._iframeDocument;
 		this.enabled = !!view._options.directHighlight;
 		this.listeners = [];
+        this.navigationUps = new WeakSet();
 		const adapter = {
 			get _annotations() { return view._annotations; },
 			get _readOnly() { return view._options.readOnly; },
@@ -69,6 +70,22 @@ export class DOMDirectHighlight {
                     this.gesture.reset(); event.preventDefault(); view._preventNextClickEvent(); return;
                 }
             }
+            // A pending hold that became a swipe belongs to the EPUB flow.
+            // Keep pointerup unconsumed so page turning works when starting on text.
+            const state = this.gesture.state;
+            const edge = Math.min(64, this.win.innerWidth * .12);
+            const edgeTap = state && !state.active && !state.moved && view._tool.type === 'pointer'
+                && (event.clientX <= edge || event.clientX >= this.win.innerWidth - edge);
+            if (edgeTap && !this.gesture.multitouch) {
+                this.gesture.reset();
+                this.navigationUps.add(event);
+                return;
+            }
+            if (state?.moved && !state.active && !this.gesture.multitouch) {
+                this.gesture.up(event);
+                this.navigationUps.add(event);
+                return;
+            }
             if (this.dismissPointer === event.pointerId || this.gesture.up(event)) {
 				this.dismissPointer = null; event.preventDefault(); view._preventNextClickEvent();
 			}
@@ -101,7 +118,7 @@ export class DOMDirectHighlight {
 		if (!view.initialized || view._options.readOnly || this.inControls(event) || !['pointer', 'highlight', 'underline'].includes(view._tool.type)) return false;
 		const annotation = this.annotationAt(event);
 		if (annotation) return !annotation.readOnly;
-		return this.enabled && !event.composedPath().some(el => el?.matches?.('a[href]')) && !!this.wordAt(event);
+		return this.enabled && !event.composedPath().some(el => el?.matches?.('a[href]')); // Resolve words only after the hold delay.
 	}
 	wordAt(event) {
 		const caret = this.view._getCaretRangeAtPoint(event.clientX, event.clientY)?.toRange();

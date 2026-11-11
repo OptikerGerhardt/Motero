@@ -54,7 +54,19 @@ export class CroppedPageLayout {
 		this.viewer.scrollPageIntoView = this.scroll;
 	}
 	apply(preparedPages, { preservePosition = false } = {}) {
-		const v = this.viewer, c = v.container, host = v.viewer;
+        const v = this.viewer, c = v.container, host = v.viewer;
+        const signature = [this.fitting.layoutEpoch, c.clientWidth, c.clientHeight,
+            v.currentScale, v.pagesRotation, v.scrollMode, this.fitting.options.margin];
+        // PDF.js replaces PageViewport when a page's real dimensions or scale
+        // changes. Reuse the entire layout only while both frames and viewports
+        // are unchanged; scrolling alone does not require rebuilding all pages.
+        if (this.boxes && Number.isFinite(signature[0]) && this.lastSignature
+            && signature.every((n,i) => n === this.lastSignature[i])
+            && v._pages.length === this.lastViewports.length
+            && v._pages.every((page,i) => page.viewport === this.lastViewports[i])) return false;
+        this.lastSignature = signature;
+        this.lastViewports = v._pages.map(page => page.viewport);
+        this.rebuildCount = (this.rebuildCount || 0) + 1;
 		const previousBox = preservePosition && this.boxes?.[v.currentPageNumber - 1];
         const before = previousBox && {left:previousBox.x-previousBox.left,top:previousBox.y-previousBox.top};
 		if (!this.hostBefore) {
