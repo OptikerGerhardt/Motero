@@ -1,4 +1,4 @@
-import { navigateWithHardwareButton, getHardwareScrollLimits } from './hardware-navigation.mjs';
+import { navigateWithHardwareButton } from './hardware-navigation.mjs';
 import { readingUnit, unitFrame } from './reading-unit.mjs';
 
 // Android's single-page swipe mode is independent of layout direction and crop.
@@ -25,6 +25,8 @@ export class PDFPageNavigation {
         this.style = this.win.document.createElement('style');
         this.style.textContent = '.motero-jumped .page:not(.motero-current-page){visibility:hidden!important;pointer-events:none!important}'
             + '.motero-page-spacing{padding-block:var(--motero-page-gap,0px)!important}'
+            + '.motero-continuous-y #viewerContainer{touch-action:pan-y pinch-zoom!important}'
+            + '.motero-continuous-x #viewerContainer{touch-action:pan-x pinch-zoom!important}'
             + '.motero-column-reading #viewerContainer{touch-action:none!important}';
         this.win.document.head.append(this.style);
         this.onStart = event => {
@@ -34,24 +36,13 @@ export class PDFPageNavigation {
             if (!this.enabled || !this.isPageTarget(event.target) || this.view.getSelectedAnnotations().length) return;
             const p = event.touches[0];
             this.gesture = { x: p.clientX, y: p.clientY, time: Date.now(), dx: 0, dy: 0,
-                column:!!this.view._pageFitting?.columnActive, startTop:this.viewer.container.scrollTop };
-            if (this.gesture.column) this.gesture.limits=getHardwareScrollLimits(this.view,this.viewer,this.viewer.getPageView(this.viewer.currentPageNumber-1));
+                column:!!this.view._pageFitting?.columnActive };
         };
         this.onMove = event => {
             if (!this.gesture || event.touches.length !== 1 || !this.enabled) return;
             if (this.view._directHighlight?.gesture.active || this.view._nativeTextSelection?.shouldDeferEvent(event)) { this.gesture.selection = true; return; }
             const p = event.touches[0], g = this.gesture;
             g.dx = p.clientX - g.x; g.dy = p.clientY - g.y;
-            if (g.column && this.mode === 'continuous') {
-                g.boundary = g.dy < 0 ? g.startTop >= g.limits.max - 2 : g.startTop <= g.limits.min + 2;
-                if (!g.boundary) {
-                    // Keep a single finger inside this column, including a swipe
-                    // that overshoots its bottom. The next swipe reads the other column.
-                    this.viewer.container.scrollTop = Math.max(g.limits.min,Math.min(g.limits.max,g.startTop-g.dy));
-                    if (event.cancelable) event.preventDefault();
-                    return;
-                }
-            }
             // Let the existing text selection handler see the movement, while
             // preventing WebView's continuous scrolling and kinetic overshoot.
             if (event.cancelable) event.preventDefault();
@@ -77,13 +68,7 @@ export class PDFPageNavigation {
             this.view._pointerDownTap = null;
             this.view._suppressCompatibilityMouseUntil = Date.now() + 500;
             if (g.column) {
-                if (this.mode !== 'continuous') navigateWithHardwareButton(this.view,axis<0).catch(error=>console.error(error));
-                else if (g.boundary) {
-                    this.view._onManualNavigation(); this.view._cancelPendingPageTurn?.();
-                    // The gesture started at the boundary; do not reclassify it
-                    // after late layout/scroll events have adjusted its offset.
-                    if (!this.view._pageFitting.turnColumn(axis<0)) navigateWithHardwareButton(this.view,axis<0,0).catch(error=>console.error(error));
-                }
+                navigateWithHardwareButton(this.view,axis<0).catch(error=>console.error(error));
                 return;
             }
             this.turn(axis < 0 ? 1 : -1);
@@ -109,7 +94,7 @@ export class PDFPageNavigation {
         this.configure(view._options.pageNavigation);
     }
     get enabled() {
-        return (this.mode === 'jumped' || !!this.view._pageFitting?.columnActive) && !this.multitouch && !this.view._destroyed
+        return this.mode === 'jumped' && !this.multitouch && !this.view._destroyed
             && !this.view._pageFitting?.zooming && !this.view._pageFitting?.editor
             && !this.view._booxReader?.isOverview() && !this.view._penInput?.busy
             && (this.view._tool.type === 'pointer' || this.view._isPenInUse?.());
@@ -122,6 +107,13 @@ export class PDFPageNavigation {
         this.mode = mode === 'jumped' ? 'jumped' : 'continuous';
         this.gesture = null; this.multitouch = false;
         this.wheelDistance = 0; this.wheelLockedUntil = 0; this.sync();
+        if (previous && previous !== this.mode && this.view._pageFitting?.active) {
+            const fitting = this.view._pageFitting;
+            fitting.column = null;
+            fitting.preparedPages.clear();
+            fitting.layoutEpoch++;
+            fitting.schedule(0);
+        }
         if (previous === 'continuous' && this.mode === 'jumped' && this.viewer.pdfDocument
                 && !this.view._booxReader?.isOverview()) {
             // Continuous may show several short pages. Start Jumped on the
@@ -133,6 +125,13 @@ export class PDFPageNavigation {
     }
     sync() {
         const root=this.win?.document.documentElement;
+        // Restrict ordinary one-finger panning to the reading axis. Pinches and
+        // the uncropped overview remain free to move in both directions.
+        const lock = this.mode === 'continuous' && this.view._tool?.type === 'pointer' && !this.multitouch
+            && !this.view._pageFitting?.zooming && !this.view._pageFitting?.editor
+            && !this.view._booxReader?.isOverview();
+        root?.classList.toggle('motero-continuous-x', lock && this.viewer.scrollMode === 1);
+        root?.classList.toggle('motero-continuous-y', lock && this.viewer.scrollMode !== 1);
         const column=!!this.view._pageFitting?.columnActive && !this.multitouch && !this.view._pageFitting?.editor;
         if (root && root.classList.contains('motero-column-reading')!==column) root.classList.toggle('motero-column-reading',column);
         // Drawing tools still show the single reading page; only pinch/overview
@@ -197,6 +196,13 @@ export class PDFPageNavigation {
             c.scrollTop = Math.max(0, r.height <= c.clientHeight ? (start + end) / 2
                 : preservePosition ? Math.max(start, Math.min(end, c.scrollTop)) : direction < 0 ? end : start);
         }
+        // Hardware navigation and overview return also pass through here after
+        // fitting. Center the active column, never the enclosing two-column page.
+        const fitting = this.view._pageFitting;
+        if (fitting?.columnActive) {
+            const prepared = fitting.preparedPages.get(index);
+            if (prepared) fitting.positionColumn(prepared, {preservePosition: true});
+        }
     }
     clearSpacing() {
         this.keepCenterSpacing = false;
@@ -209,6 +215,7 @@ export class PDFPageNavigation {
         for (const name of ['pagechanging','pagesinit','scalechanging','updateviewarea']) this.bus.off(name, this.onChange);
         this.viewer.viewer.classList.remove('motero-jumped');
         this.win.document.documentElement?.classList.remove('motero-column-reading');
+        this.win.document.documentElement?.classList.remove('motero-continuous-x', 'motero-continuous-y');
         this.clearSpacing();
         if (this.viewer._getVisiblePages === this.visible) this.viewer._getVisiblePages = this.originalVisible;
         for (const div of this.currentUnit || []) div.classList.remove('motero-current-page');

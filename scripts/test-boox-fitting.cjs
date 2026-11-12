@@ -120,7 +120,10 @@ const types = { '.html':'text/html', '.js':'text/javascript', '.mjs':'text/javas
   await page.evaluate(()=>window._view._view._navigateToPage({pageIndex:15}));let landscape=await state();
   assert.ok(landscape.bounds[2]<.7,JSON.stringify(landscape));
   await page.evaluate(()=>window._view._view._navigateToPage({pageIndex:16}));let blank=await state();
-  assert.deepEqual(blank.bounds,[0,0,1,1]);
+  const inherited=await page.evaluate(()=>window._view._view._pageFitting.preparedPages.get(16).blankFrame);
+  assert.ok(inherited?.width>0 && inherited?.height>0,'a white page inherits a physical reading frame');
+  assert.ok(blank.bounds[0]>0 && blank.bounds[2]<1,JSON.stringify(blank));
+  assert.ok(Math.abs(blank.bounds[1])<.001 && Math.abs(blank.bounds[3]-1)<.001,'Text preserves the complete non-fitting axis from typical neighboring pages');
   console.log('PASS wider tables, deep footnotes, landscape and blank page fallbacks');
   await page.evaluate(()=>window._view._view._navigateToPage({pageIndex:8}));await fit('content');
   let originFit=await state();

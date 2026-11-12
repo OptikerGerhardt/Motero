@@ -927,7 +927,7 @@ export class PaginatedFlow extends AbstractFlow {
 	};
 
     private _handlePointerDown = (event: PointerEvent) => {
-        if (event.defaultPrevented || event.composedPath().some(target => (target as Element).matches?.('.resizer, .boox-highlight-palette'))) return;
+        if (event.defaultPrevented || event.composedPath().some(target => (target as Element).matches?.('.resizer, .boox-highlight-palette, .motero-reading-progress'))) return;
         if (!event.isPrimary
 				|| (event.pointerType !== 'touch' && event.pointerType !== 'pen')
 				|| (event.composedPath()[0] as Element).closest('.annotation-container') && !this._view.readerNavigationAllowed()) {

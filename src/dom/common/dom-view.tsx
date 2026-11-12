@@ -1753,6 +1753,7 @@ abstract class DOMView<State extends DOMViewState, Data> {
 	}
 
 	protected _handlePointerDown(event: PointerEvent) {
+        if ((event.target as Element)?.closest?.('.motero-reading-progress')) return;
 		// Clean up in case this pointer was left behind in _handledPointerIDs,
 		// since we know this is a new interaction
 		this._handledPointerIDs.delete(event.pointerId);
@@ -1817,6 +1818,7 @@ abstract class DOMView<State extends DOMViewState, Data> {
 	}
 
 	protected _handlePointerUp(event: PointerEvent) {
+        if ((event.target as Element)?.closest?.('.motero-reading-progress')) return;
 		this._handledPointerIDs.delete(event.pointerId);
         if (this._directHighlight?.navigationUps.has(event)) return;
 

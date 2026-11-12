@@ -90,6 +90,7 @@ registerHooks({
 
 globalThis.window = {
 	HTMLElement: function HTMLElement() {},
+    matchMedia: () => ({matches:false}),
 	getComputedStyle: () => ({
 		getPropertyValue(name) {
 			return {

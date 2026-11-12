@@ -13,9 +13,10 @@ test('reopen reuses geometry and keeps documents isolated without saving page co
 test('bounded cache rejects invalid geometry and survives unavailable storage',()=>{
     const s=storage(), a=new ReadingGeometryCache(s,'id',300);
     for(let i=0;i<200;i++)a.put(page(i));
-    a.put({...page(200),bounds:[0,0,NaN,1]}); a.flush();
+    a.put({...page(200),bounds:[0,0,NaN,1]}); a.put({...page(201),blank:'yes'}); a.flush();
     const b=new ReadingGeometryCache(s,'id',300);
     assert.equal(b.pages.size,128);assert.equal(b.get(200),undefined);
+    assert.equal(b.get(201),undefined,'only validated blank-page evidence may enter the cache');
     assert.doesNotThrow(()=>new ReadingGeometryCache({getItem(){throw Error();}},'id',3).flush());
     assert.doesNotThrow(()=>new ReadingGeometryCache({getItem:()=>'{bad',setItem(){throw Error();}},'id',3).flush());
 });

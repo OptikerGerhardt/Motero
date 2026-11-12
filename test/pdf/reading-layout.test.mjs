@@ -8,6 +8,20 @@ const body = [line('This is a complete line of ordinary text.', [.2, .2, .8, .22
 	line('The next full line belongs to the page body.', [.2, .3, .8, .32]),
 	line('Another ordinary line, with more content.', [.2, .5, .8, .52])];
 
+test('an isolated changing running head and its rule are removed with a peer folio, keeping chapter headings',()=>{
+    const head=line('Perspektiven auf eine Philosophie der Zukunft',[.2,.12,.86,.137]);
+    const folio=line('7',[.96,.12,.98,.137]);
+    const lines=[head,folio,...body];
+    const model=buildReadingModel([{index:0,lines:body}]);
+    const excluded=getReadingExclusions(lines,model,6);
+    assert.ok(excluded.includes(head.rect));assert.ok(excluded.includes(folio.rect));
+    const bounds=getReadingBounds(image([...lines.map(l=>l.rect),[.05,.15,.98,.152]]),lines,model,6);
+    assert.ok(bounds[1]>.19,JSON.stringify(bounds));
+    const chapter=line('Chapter 7. A new beginning',[.15,.12,.85,.137]);
+    assert.ok(!getReadingExclusions([chapter,folio,...body],model,6).includes(chapter.rect));
+    assert.ok(!getReadingExclusions([head,...body],model,6).includes(head.rect),'no folio and no repeated header lane remains ambiguous');
+});
+
 test('paired lower folios identify changing footer labels and their rule, keeping complete notes', () => {
 	let pages = Array.from({ length: 8 }, (_, index) => ({ index, lines: [...body,
 		line(`Text ${index % 3 + 1} · PDF ${index + 1} · ${index % 2 ? 'links' : 'rechts'}`, [.1,.947,.32,.958]),

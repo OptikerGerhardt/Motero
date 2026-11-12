@@ -172,6 +172,22 @@ function sameHeaderBand(a, b) {
 	return Math.abs(a.y0 - b.y0) < 0.012 && Math.abs(a.y1 - b.y1) < 0.012;
 }
 
+// An isolated small running head with a separate outer folio is strong local
+// evidence, even when the chapter changes between the sampled pages.
+function hasRunningFolio(line, lines, bodyHeight) {
+    if (!bodyHeight || line.vertical || line.text.length < 8 || line.text.length > 140
+            || line.rect[3] >= .2 || line.rect[3]-line.rect[1] > bodyHeight*1.2
+            || /^(?:chapter|kapitel|section|teil)\s+\d|^\d+[.)]\s/i.test(line.text.trim())) return false;
+    const folio = lines.find(other => other !== line && pageNumber(other.text)
+        && !romanReference(other.text)
+        && (other.rect[2] < .18 || other.rect[0] > .82)
+        && (other.rect[2] < line.rect[0] || other.rect[0] > line.rect[2])
+        && Math.abs(other.rect[1]+other.rect[3]-line.rect[1]-line.rect[3]) < bodyHeight);
+    const next = lines.filter(l => l !== line && l !== folio && l.text.length > 15 && l.rect[1] > line.rect[3])
+        .sort((a,b)=>a.rect[1]-b.rect[1])[0];
+    return !!folio && !!next && next.rect[1]-line.rect[3] > bodyHeight*.7;
+}
+
 function footerCandidatesFor(lines, fallbackHeight = 0) {
 	let bodyHeight = bodyLineHeight(lines) || fallbackHeight;
 	if (!bodyHeight) return [];
@@ -278,6 +294,7 @@ export function getReadingExclusions(lines, model = { repeated: new Set() }, pag
 	const headerCandidates = new Set(headerCandidatesFor(lines));
 	let headers = lines.filter(line => {
 		let [ , y0, , y1] = line.rect;
+		if (hasRunningFolio(line, lines, bodyHeight)) return true;
 		if (line.sideCandidate && marginalReference(line.text)) return false;
 		if (line.vertical || y1 >= 0.23 || bodyHeight && y1 - y0 > bodyHeight * 1.1) return false;
 		let knownBand = model.headerBands?.some(band => (band.parity === undefined
@@ -300,7 +317,13 @@ export function getReadingExclusions(lines, model = { repeated: new Set() }, pag
 			&& l.rect[3] > end && l.rect[0] < 0.85 && l.rect[2] > 0.15)) continue;
 		let next = lines.filter(l => !headers.includes(l) && !excluded.has(l) && l.rect[1] > end
 			&& l.rect[0] < 0.85 && l.rect[2] > 0.15).sort((a, b) => a.rect[1] - b.rect[1])[0];
-		if (next && next.rect[1] - end > height * 0.65) block.forEach(l => excluded.add(l));
+		if (next && next.rect[1] - end > height * 0.65) {
+            block.forEach(l => excluded.add(l));
+            for (const head of block.filter(l=>hasRunningFolio(l,lines,bodyHeight))) {
+                for (const folio of lines) if (pageNumber(folio.text) && (folio.rect[2]<.18 || folio.rect[0]>.82)
+                    && Math.abs(folio.rect[1]+folio.rect[3]-head.rect[1]-head.rect[3])<bodyHeight) excluded.add(folio);
+            }
+        }
 	}
 
 	// A JSTOR URL can be a legitimate footnote. Remove continuation lines only

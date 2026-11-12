@@ -1,4 +1,5 @@
 import { analyzeReadingGeometry } from './reading-geometry.mjs';
+import { typicalReadingFrame } from './blank-page-frame.mjs';
 import { readerResourceBudget } from '../common/reader-resource-budget.mjs';
 import { ReadingAnalysisWorker } from './reading-worker-client.js';
 import { canUseTextBounds, ReadingMetrics } from './reading-analysis.mjs';
@@ -278,7 +279,7 @@ export class AndroidPageFitting {
         this.preparedPages.delete(prepared.index); this.preparedPages.set(prepared.index,prepared);
         const previous = this.geometry.get(prepared.index);
         if (!previous || prepared.fit.bounds.some((n, i) => n !== previous.fit.bounds[i])) this.layoutEpoch++;
-        this.geometry.set(prepared.index, {fit:{bounds:prepared.fit.bounds},bounds:prepared.bounds});
+        this.geometry.set(prepared.index, {fit:{bounds:prepared.fit.bounds},bounds:prepared.bounds,blankFrame:prepared.blankFrame});
         while(this.preparedPages.size>readerResourceBudget(this.view._options?.deviceProfile).cropPages) this.preparedPages.delete(this.preparedPages.keys().next().value);
     }
 
@@ -490,7 +491,7 @@ export class AndroidPageFitting {
                         else this.provisionalPages.add(page.index);
                     }
                     if (this.hasLocalEvidence(page.index)) this.persistent.put(page);
-                    measured.push(page);
+                    if (!page.blank) measured.push(page);
                     } catch (error) { if (!this.view._destroyed && error.name!=='AbortError') console.error(error); }
                     // Let input, toolbar changes and the current page paint between samples.
                     await new Promise(resolve => this.win.setTimeout(resolve, 0));
@@ -618,17 +619,42 @@ export class AndroidPageFitting {
         if (pages.length > 1) {
             const pad = pages[0].fit.pad;
             const content = options.mode === 'content' || options.reference !== 'page';
-            const widths = pages.map(p => { const b=content?p.rawBounds:[0,0,1,1]; return (b[2]-b[0])*p.base.width; });
+            const widths = pages.map(p => { const b=content?p.rawBounds:[0,0,1,1]; return p.blankFrame?.width || (b[2]-b[0])*p.base.width; });
             const sx = Math.max(1,pages[0].width-12-2*pad*pages.length)/widths.reduce((a,b)=>a+b,0);
             const sy = Math.min(...pages.map(p=>{
                 const b=content?p.rawBounds:[0,0,1,1];
-                return Math.max(1,p.height-2*pad)/((b[3]-b[1])*p.base.height);
+                return Math.max(1,p.height-2*pad)/(p.blankFrame?.height || (b[3]-b[1])*p.base.height);
             }));
             const scale = Math.max(.1,Math.min(10,options.mode === 'width'?sx:options.mode === 'height'?sy:Math.min(sx,sy)));
             for (const p of pages) p.fit = {...p.fit,scale};
         }
         const prepared = pages.find(p=>p.index===index) || pages[0];
         return {...prepared,spreadMode,unitPages:pages,neighbors:prepared.neighbors?.filter(p=>!indices.includes(p.index))};
+    }
+
+    async blankFrameFor(index, options, rotation) {
+        const samples = [];
+        // Bounded, nearest-first evidence. Existing page/operator caches are
+        // reused, and ordinary nonempty manual pages never need raster analysis.
+        for (const delta of [-1,1,-2,2,-3,3]) {
+            const i = index + delta;
+            if (i < 0 || i >= this.viewer.pdfDocument.numPages) continue;
+            const bounds = await this.boundsFor(i,options);
+            let geometry = await this.cache.get(i);
+            if (!geometry && options.cropMode === 'manual') {
+                const text = await this.readTextPage(i,0);
+                if (!text.lines.length) {
+                    geometry = await this.readGeometry(await this.readPage(i,0),this.readingModel || {});
+                    this.cache.set(i,Promise.resolve(geometry));
+                }
+            }
+            if (geometry?.blank) continue;
+            const page = await this.viewer.pdfDocument.getPage(i+1);
+            const base = page.getViewport({scale:96/72,rotation:page.rotate+rotation});
+            samples.push({bounds:getReadingFrame(bounds,options),width:base.width,height:base.height});
+            if (samples.length === 3) break;
+        }
+        return typicalReadingFrame(samples);
     }
 
     async preparePage(index, options = this.options, includeNeighbors = true, priority = 0) {
@@ -641,8 +667,17 @@ export class AndroidPageFitting {
 
 		let pdfPage = await v.pdfDocument.getPage(index + 1);
 		let base = pdfPage.getViewport({ scale: 96 / 72, rotation: pdfPage.rotate + rotation });
-        const geometry = await this.cache.get(index);
+        let geometry = await this.cache.get(index);
+        if (!geometry && options.cropMode === 'manual' && pdfPage.getTextContent) {
+            const text = await this.readTextPage(index,priority);
+            if (!text.lines.length) {
+                geometry = await this.readGeometry(await this.readPage(index,priority),this.readingModel || {});
+                this.cache.set(index,Promise.resolve(geometry));
+            }
+        }
+        const blankFrame = geometry?.blank ? await this.blankFrameFor(index,options,rotation) : null;
         const columns = options.mode === 'width' && options.reference !== 'page' && options.cropMode !== 'manual'
+            && this.view._pageNavigation?.mode === 'jumped'
             && !v.spreadMode && rotation % 180 === 0 ? geometry?.columns?.map(b=>rotateReadingBounds(b,rotation)) : null;
         if (columns && rotation % 360 === 180) columns.reverse();
         const columnIndex = this.column?.pageIndex === index ? this.column.index : 0;
@@ -652,12 +687,17 @@ export class AndroidPageFitting {
         let fit = getReadingFit({ ...options, bounds:columnFit || bounds, width, height, pageWidth: base.width, pageHeight: base.height });
         // Crop only the paper margins. Column fitting changes zoom/pan, never the PDF's coordinate plane.
         if (columnBounds) fit = {...fit,bounds:getReadingFrame(bounds,options)};
+		if (blankFrame) {
+            fit = getReadingFit({...options,reference:'page',bounds:[0,0,1,1],width,height,pageWidth:blankFrame.width,pageHeight:blankFrame.height});
+            fit.bounds = [(1-blankFrame.width/base.width)/2,(1-blankFrame.height/base.height)/2,
+                (1+blankFrame.width/base.width)/2,(1+blankFrame.height/base.height)/2];
+        }
 		const rawBounds = bounds;
 		bounds = fit.bounds;
 		let page = await this.cache.get(index);
 		let marginalia = cropForPage(options.manualCrop, index) ? []
 			: (page?.marginalia || []).map(r => rotateReadingBounds(r, rotation));
-		let prepared = { index, key: this.key(options), bounds, rawBounds, base, pdfPage, fit, rotation, inputEpoch, width, height, marginalia, columns, columnIndex };
+		let prepared = { index, key: this.key(options), bounds, rawBounds, base, pdfPage, fit, rotation, inputEpoch, width, height, marginalia, columns, columnIndex, blankFrame };
         if (includeNeighbors) prepared.neighbors = [...this.preparedPages.values()].filter(p=>p.index!==index && Math.abs(p.index-index)<=4 && p.key===prepared.key && p.rotation===rotation);
 		return prepared;
 	}
@@ -733,12 +773,15 @@ export class AndroidPageFitting {
 
     get columnActive() {
         return this.active && !this.zooming && this.options.mode === 'width' && !this.viewer.spreadMode
+            && this.view._pageNavigation?.mode === 'jumped'
             && this.column?.pageIndex === this.viewer.currentPageNumber - 1;
     }
 
     positionColumn(prepared, {alignTop = false, direction = 0, preservePosition = false} = {}) {
         if (!prepared.columns?.length) { this.column = null; return; }
         const index = prepared.columnIndex;
+        const saved = this.preparedPages.get(prepared.index);
+        if (saved) saved.columnIndex = index;
         this.column = {pageIndex:prepared.index,index,bounds:prepared.columns[index],columns:prepared.columns};
         const c=this.viewer.container, d=this.viewer.getPageView(prepared.index).div, b=this.column.bounds;
         c.scrollLeft=Math.max(0,d.offsetLeft+d.clientLeft+(b[0]+b[2])*d.clientWidth/2-c.clientWidth/2);

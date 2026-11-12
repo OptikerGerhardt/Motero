@@ -106,7 +106,7 @@ export class DOMDirectHighlight {
 		this.listeners.push([type, callback]);
 	}
 	inControls(event) {
-		return event.composedPath().some(el => el?.matches?.('.resizer, .boox-highlight-palette, input, textarea, [contenteditable="true"]'));
+		return event.composedPath().some(el => el?.matches?.('.resizer, .boox-highlight-palette, .motero-reading-progress, input, textarea, [contenteditable="true"]'));
 	}
 	annotationAt(event) {
 		if (!this.view._annotationShadowRoot) return null;

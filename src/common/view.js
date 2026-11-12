@@ -59,6 +59,7 @@ class View {
         const background = !options.deviceProfile?.eReader && DEFAULT_THEMES.find(t => t.id === options.pageBackground);
         if (background) this._lightTheme = this._darkTheme = background;
 		this._colorScheme = options.colorScheme;
+		this._syncPaperBackground();
 		if (this._options.platform === 'android') {
 			if (['light', 'dark'].includes(this._colorScheme)) document.documentElement.dataset.colorScheme = this._colorScheme;
 			else delete document.documentElement.dataset.colorScheme;
@@ -473,9 +474,16 @@ class View {
         const light = theme || this._defaultLightTheme, dark = theme || this._defaultDarkTheme;
         if (this._lightTheme === light && this._darkTheme === dark) return;
         this._lightTheme = light; this._darkTheme = dark;
+        this._syncPaperBackground();
         for (const v of [this._view, this._sdtView]) {
             v?.setLightTheme(light); v?.setDarkTheme(dark);
         }
+    }
+
+    _syncPaperBackground() {
+        const dark = getCurrentColorScheme(this._colorScheme) === 'dark';
+        const theme = dark ? this._darkTheme : this._lightTheme;
+        document.getElementById?.('view')?.style.setProperty('background-color', theme?.background || '#FFFFFF');
     }
 
     setDeviceProfile(profile) {
@@ -733,6 +741,7 @@ class View {
 	setColorScheme(scheme) {
 		if (scheme === this._colorScheme) return;
 		this._colorScheme = scheme;
+		this._syncPaperBackground();
 		if (this._options.platform === 'android') {
 			if (['light', 'dark'].includes(this._colorScheme)) document.documentElement.dataset.colorScheme = this._colorScheme;
 			else delete document.documentElement.dataset.colorScheme;

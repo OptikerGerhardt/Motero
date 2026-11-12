@@ -2,8 +2,9 @@ const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path'),http=require('http'),assert=require('assert/strict');
 const root=path.resolve(__dirname,'../build/android'),fixture=path.resolve(__dirname,'../test/fixtures/boox-columns.pdf');
 require('./make-column-fixture.cjs');
+const blankFixture=require('./make-blank-fixture.cjs');
 (async()=>{
- const server=http.createServer((req,res)=>{const u=new URL(req.url,'http://localhost').pathname,file=u==='/fixture.pdf'?fixture:path.join(root,u);
+ const server=http.createServer((req,res)=>{const u=new URL(req.url,'http://localhost').pathname,file=u==='/fixture.pdf'?fixture:u==='/blank.pdf'?blankFixture:path.join(root,u);
   if(!fs.existsSync(file)||!fs.statSync(file).isFile()){res.writeHead(404);return res.end();}
   res.setHeader('Content-Type',({'.js':'text/javascript','.mjs':'text/javascript','.html':'text/html','.css':'text/css','.pdf':'application/pdf','.wasm':'application/wasm'})[path.extname(file)]||'application/octet-stream');fs.createReadStream(file).pipe(res);});
  await new Promise(r=>server.listen(0,'127.0.0.1',r));let browser;
@@ -18,9 +19,9 @@ require('./make-column-fixture.cjs');
    await page.goto(origin+'/view.html');await page.evaluate(()=>{window.messages=[];const c=new MessageChannel();c.port1.onmessage=e=>window.messages.push(JSON.parse(e.data));window.postMessage('initPort','*',[c.port2]);});
    await page.waitForFunction(()=>window.messages.some(m=>m.message?.event==='onInitialized'));
    await page.evaluate(o=>window.createView(btoa(JSON.stringify(o))),{type:'pdf',url:origin+'/fixture.pdf',annotations:[],pageNavigation:mode,viewState:{pageIndex:0,scale:'page-width',scrollMode:0,spreadMode:0},pageFitting:{mode:'width',reference:'cropped-content',margin:0}});
-   await page.waitForFunction(()=>window._view?._view?._pageFitting?.column);
+   await page.waitForFunction(()=>!!window._view?._view?._pageFitting?.applied);
   };
-  for(const mode of ['jumped','continuous']){
+  for(const mode of ['jumped']){
    await open(mode);
    const state=()=>page.evaluate(()=>{const v=window._view._view,f=v._pageFitting,c=f.viewer.container,p=f.viewer.getPageView(f.viewer.currentPageNumber-1),b=f.column.bounds;
     return{index:f.viewer.currentPageNumber-1,column:f.column.index,top:c.scrollTop,left:c.scrollLeft,scale:f.viewer.currentScale,
@@ -31,26 +32,22 @@ require('./make-column-fixture.cjs');
    assert.ok(right.top<before.top+5,'right column starts at its top');assert.equal(right.scale,before.scale);
    await page.evaluate(()=>window._view._view._pageFitting.apply());
    assert.equal((await state()).scale,before.scale,'a right-column refit retains text size despite unequal column widths');
+   await page.waitForTimeout(400);
+   await page.evaluate(()=>window._view._view._pageNavigation.centerCurrentPage({direction:1}));
+   const refit=await state();assert.ok(Math.abs(refit.center-refit.viewport)<3,JSON.stringify(refit));
    for(let step=0;step<12;step++){await page.evaluate(()=>window.turnPageWithHardwareButton(true,.5));if((await state()).index===1)break;}
    const next=await state();assert.equal(next.index,1);assert.equal(next.column,0);
    for(let step=0;step<12;step++){await page.evaluate(()=>window.turnPageWithHardwareButton(false,.5));if((await state()).index===0)break;}
    const previous=await state();assert.equal(previous.index,0);assert.equal(previous.column,1,'backwards entry uses the previous page last column');
    console.log('PASS '+mode+': column width, left-to-right order, next page and reverse reading order');
   }
-  await open('continuous');
-  await page.evaluate(()=>{const v=window._view._view;window.columnTrace=[];for(const type of ['touchstart','touchmove','touchend'])v._iframeWindow.addEventListener(type,e=>{const n=v._pageNavigation,f=v._pageFitting,g=n.gesture;window.columnTrace.push({type,enabled:n.enabled,overview:v._booxReader.isOverview(),tool:v._tool.type,touches:e.touches.length,top:f.viewer.container.scrollTop,column:f.column?.index,inside:f.viewer.container.contains(e.target),g:g&&{dy:g.dy,column:g.column,boundary:g.boundary,startTop:g.startTop,limits:g.limits}});},true);});
-  await page.evaluate(()=>{const f=window._view._view._pageFitting,c=f.viewer.container,b=f.layout.boxes[f.viewer.currentPageNumber-1];c.scrollTop=b.y+30;});
-  await touch('touchStart',[{x:180,y:600}]);
-  for(let i=1;i<=6;i++){await touch('touchMove',[{x:180,y:600-i*80}]);await page.waitForTimeout(20);}
-  await touch('touchEnd');
-  assert.deepEqual(await page.evaluate(()=>{const f=window._view._view._pageFitting;return{page:f.viewer.currentPageNumber,column:f.column.index};}),{page:1,column:0},'a continuous swipe cannot skip the unread right column');
-  await page.evaluate(()=>{const f=window._view._view._pageFitting,c=f.viewer.container,b=f.layout.boxes[f.viewer.currentPageNumber-1];c.scrollTop=b.y+b.height-c.clientHeight;});
-  await touch('touchStart',[{x:180,y:500}]);
-  for(let i=1;i<=5;i++){await touch('touchMove',[{x:180,y:500-i*30}]);await page.waitForTimeout(20);}
-  await touch('touchEnd');
-  try{await page.waitForFunction(()=>window._view._view._pageFitting.column?.index===1,null,{timeout:5000});}
-  catch(error){console.error('COLUMN SWIPE STATE',await page.evaluate(()=>{const v=window._view._view,f=v._pageFitting;return{column:f.column,active:f.columnActive,presentation:f.presentation,current:f.viewer.currentPageNumber,top:f.viewer.container.scrollTop,selected:v._selectedAnnotationIDs,gesture:v._pageNavigation.gesture,trace:window.columnTrace};}));throw error;}
-  console.log('PASS swipe at left-column bottom continues at right-column top');
+  await open('jumped');
+  await page.evaluate(()=>window._view.setPageNavigation('continuous'));
+  await page.waitForFunction(()=>{const f=window._view._view._pageFitting;return !f.columnActive&&!f.columnLayout&&!!f.applied;});
+  assert.equal(await page.evaluate(()=>window._view._view._pageFitting.column),null);
+  console.log('PASS switching to Continuous fits the full text width and disables column navigation');
+  await page.evaluate(()=>window._view.setPageNavigation('jumped'));
+  await page.waitForFunction(()=>window._view._view._pageFitting.columnActive);
   const oldScale=await page.evaluate(()=>window._view._view._pageFitting.viewer.currentScale);
   await touch('touchStart',[{x:100,y:450},{x:290,y:450}]);
   for(let i=1;i<=7;i++){await touch('touchMove',[{x:100+i*10,y:450},{x:290-i*10,y:450}]);await page.waitForTimeout(30);}
@@ -63,6 +60,8 @@ require('./make-column-fixture.cjs');
   await page.evaluate(()=>window._view._view._pageFitting.configure({mode:'width',reference:'cropped-content',cropMode:'manual',manualCrop:{all:[.1,.1,.9,.9]},margin:0}));
   assert.equal(await page.evaluate(()=>window._view._view._pageFitting.column),null,'manual frames retain their exact fitting instead of automatic columns');
   console.log('PASS manual cropping keeps its explicit frame');
+  await page.evaluate(()=>window._view.setPageNavigation('continuous'));
+  await page.waitForFunction(()=>!window._view._view._pageFitting.columnActive);
   await page.evaluate(()=>window._view._view._pageFitting.ensureModel());
   for(const mode of [0,1,2]){
    await page.evaluate(async mode=>{const v=window._view._view;v.setScrollMode(mode);await v._pageFitting.configure({mode:'content',reference:'cropped-content',cropMode:'automatic',margin:0});},mode);
@@ -71,14 +70,49 @@ require('./make-column-fixture.cjs');
    const offset=await page.evaluate(mode=>{const c=window._view._view._pageFitting.viewer.container;return mode===1?c.scrollLeft:c.scrollTop;},mode);
    assert.equal(result,'scroll');assert.ok(Math.abs(offset-Math.min(before.max,before.offset+before.size*.5))<=1,JSON.stringify({mode,before,offset}));
    console.log('PASS continuous '+mode+': real viewport scroll carries the requested fraction across page boundaries');
+   // Verify axis locking with real orthogonal overflow, rather than a
+   // fit-to-content page which could not move sideways anyway.
+   await page.setViewportSize(mode===1?{width:900,height:393}:{width:393,height:900});
+   await page.evaluate(async mode=>{const v=window._view._view;await v._pageFitting.configure({mode:mode===1?'width':'height',reference:'cropped-content',cropMode:'automatic',margin:0});v._pageNavigation.sync();},mode);
+   const cross=await page.evaluate(mode=>{const c=window._view._view._pageFitting.viewer.container;return {offset:mode===1?c.scrollTop:c.scrollLeft,overflow:mode===1?c.scrollHeight-c.clientHeight:c.scrollWidth-c.clientWidth};},mode);
+   assert.ok(cross.overflow>20,JSON.stringify({mode,cross}));
+   const start=mode===1?{x:600,y:180}:{x:250,y:500};
+   await touch('touchStart',[start]);
+   for(let i=1;i<=5;i++){await touch('touchMove',[{x:start.x-i*(mode===1?24:14),y:start.y-i*(mode===1?14:24)}]);await page.waitForTimeout(25);}
+   await touch('touchEnd');await page.waitForTimeout(400);
+   const afterCross=await page.evaluate(mode=>{const c=window._view._view._pageFitting.viewer.container;return mode===1?c.scrollTop:c.scrollLeft;},mode);
+   assert.ok(Math.abs(cross.offset-afterCross)<2,JSON.stringify({mode,cross,afterCross}));
+   console.log('PASS continuous '+mode+': diagonal touch keeps the orthogonal offset even on an oversized page');
   }
   for(const [theme,expected] of [['snow',[236,239,244]],['sepia',[244,236,216]],['dark',[46,52,64]],['black',[0,0,0]]]){
    await page.evaluate(theme=>window._view.setPageBackground(theme),theme);
    await page.waitForFunction(()=>{const f=window._view._view._pageFitting,w=f.viewer;return w.getPageView(w.currentPageNumber-1).renderingState===3;});
+   const gutters=await page.evaluate(()=>{const v=window._view._view,d=v._iframeWindow.document;return [d.body,d.getElementById('viewerContainer'),document.getElementById('view')].map(e=>e.ownerDocument.defaultView.getComputedStyle(e).backgroundColor);});
+   assert.ok(gutters.every(c=>c==='rgb('+expected.join(', ')+')'),JSON.stringify({theme,gutters}));
    const pixel=await page.evaluate(()=>{const f=window._view._view._pageFitting,p=f.viewer.getPageView(f.viewer.currentPageNumber-1),canvas=p.div.querySelector('.canvasWrapper canvas');return Array.from(canvas.getContext('2d').getImageData(0,0,1,1).data).slice(0,3);});
    assert.ok(pixel.every((v,i)=>Math.abs(v-expected[i])<=2),JSON.stringify({theme,pixel,expected}));
   }
   console.log('PASS PDF background colors reach the rendered page pixels');
+  for (const cropMode of ['automatic','manual']) for (const fitMode of ['content','width','height']) {
+   await page.goto(origin+'/view.html');
+   await page.evaluate(()=>{const c=new MessageChannel();c.port1.onmessage=()=>{};window.postMessage('initPort','*',[c.port2]);});
+   await page.evaluate(o=>window.createView(btoa(JSON.stringify(o))),{type:'pdf',url:origin+'/blank.pdf',annotations:[],pageNavigation:'jumped',viewState:{pageIndex:0,scrollMode:0,spreadMode:0},pageFitting:{mode:fitMode,reference:'cropped-content',cropMode,margin:0,manualCrop:cropMode==='manual'?{all:[.1,.1,.9,.9]}:null}});
+   await page.waitForFunction(()=>!!window._view?._view?._pageFitting?.applied);
+   const result=await page.evaluate(async()=>{
+    const f=window._view._view._pageFitting;
+    await f.ensureModel();
+    const a=await f.prepare(0),blank=await f.prepare(1),b=await f.prepare(2);
+    const physical=p=>({width:(p.fit.bounds[2]-p.fit.bounds[0])*p.base.width,height:(p.fit.bounds[3]-p.fit.bounds[1])*p.base.height});
+    await window._view._view._navigateToPage({pageIndex:1});
+    const box=f.layout.boxes[1],c=f.viewer.container;
+    return {frame:blank.blankFrame,a:physical(a),b:physical(b),box:{width:box.width,height:box.height},scale:f.viewer.currentScale,center:box.x+box.width/2-c.scrollLeft-c.clientWidth/2};
+   });
+   assert.ok(result.frame,JSON.stringify({cropMode,fitMode,result}));
+   for(const axis of ['width','height'])assert.ok(Math.abs(result.frame[axis]-(result.a[axis]+result.b[axis])/2)<3,JSON.stringify({cropMode,fitMode,result}));
+   assert.ok(Math.abs(result.center)<2,JSON.stringify(result));
+   assert.ok(Math.abs(result.box.width-result.frame.width*result.scale)<2,JSON.stringify(result));
+   console.log('PASS '+cropMode+' '+fitMode+': large white insert inherits physical reading frame without widening the document');
+  }
   assert.deepEqual(errors,[]);
  }finally{await browser?.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);process.exitCode=1;});

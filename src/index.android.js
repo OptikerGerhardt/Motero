@@ -1,4 +1,5 @@
 import View from './common/view';
+import { ReadingProgress } from './common/reading-progress.mjs';
 import { navigateWithHardwareButton } from './pdf/hardware-navigation.mjs';
 import { createAnnotationSelectionHandler } from './common/annotation-selection-handler.mjs';
 
@@ -44,6 +45,7 @@ function decodeBase64(base64) {
 }
 
 window.createView = (encodedOptions) => {
+	window._readingProgress?.destroy();
 	const options = JSON.parse(decodeBase64(encodedOptions));
 	log("Create " + options.type + " view");
 	log("Loaded " + options.annotations.length + " annotations");
@@ -136,6 +138,15 @@ window.createView = (encodedOptions) => {
 		onCropEditorChanged: (open) => postMessage('onCropEditorChanged', { open }),
         onCropEditorState: params => postMessage('onCropEditorState', params),
 	});
+    if (options.type === 'epub') {
+        const created = window._view;
+        created._view.initializedPromise.then(() => {
+            if (window._view !== created || created._view._disposed) return;
+            window._readingProgress = new ReadingProgress(created._view._iframeDocument,
+                () => postMessage('onCycleEpubProgress'));
+            window.setReaderProgress(created._options.readingProgress || {visible:false});
+        });
+    }
 };
 
 window.setContainerInsets = (options) => {
@@ -176,6 +187,10 @@ window.cancelManualCrop = () => window._view?._activeView?._pageFitting?.editor?
 window.setDirectHighlight = enabled => window._view.setDirectHighlight(enabled);
 window.setReaderChromeVisible = visible => window._view?.setReaderChromeVisible(visible);
 window.setReaderViewportInset = value => window._view?._view?.setReaderViewportInset?.(value);
+window.setReaderProgress = value => {
+    if (window._view) window._view._options.readingProgress = value;
+    window._readingProgress?.update(value);
+};
 
 window.setContentFit = (options) => {
 	log("Set content fit: " + JSON.stringify(options));

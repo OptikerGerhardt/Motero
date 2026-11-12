@@ -1,11 +1,12 @@
 // View geometry only. No PDF text, images, annotation data or credentials.
-const KEY = 'motero.reading-geometry.v5';
-const VERSION = 5;
+const KEY = 'motero.reading-geometry.v6';
+const VERSION = 6;
 const validBounds = b => Array.isArray(b) && b.length === 4 && b.every(n => Number.isFinite(n) && n >= 0 && n <= 1)
     && b[0] < b[2] && b[1] < b[3];
 export function validGeometry(page) {
     return page && Number.isInteger(page.index) && page.index >= 0 && Number.isFinite(page.aspect) && page.aspect > 0
         && validBounds(page.bounds) && validBounds(page.withMarginalia)
+        && (page.blank === undefined || typeof page.blank === 'boolean')
         && (!page.columns || Array.isArray(page.columns) && page.columns.length === 2 && page.columns.every(validBounds))
         && Array.isArray(page.marginalia) && page.marginalia.every(validBounds);
 }
@@ -47,7 +48,7 @@ export class ReadingGeometryCache {
         if (!validGeometry(page) || page.index >= this.count) return;
         this.pages.delete(page.index);
         this.pages.set(page.index, { index: page.index, aspect: page.aspect, bounds: page.bounds,
-            withMarginalia: page.withMarginalia, marginalia: page.marginalia, columns: page.columns || null });
+            withMarginalia: page.withMarginalia, marginalia: page.marginalia, columns: page.columns || null, blank:page.blank === true });
         while (this.pages.size > 128) this.pages.delete(this.pages.keys().next().value);
     }
     flush() {

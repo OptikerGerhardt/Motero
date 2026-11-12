@@ -90,6 +90,11 @@ export class CroppedPageLayout {
 			const prepared = preparedPages.get(index);
 			const bounds = prepared?.fit.bounds || this.fitting.estimatedBounds(index);
 			const w = page.viewport.width, h = page.viewport.height;
+            if (prepared?.blankFrame) {
+                const width = prepared.blankFrame.width * v.currentScale + 2*pad;
+                const height = prepared.blankFrame.height * v.currentScale + 2*pad;
+                return {index,width,height,left:(w-width)/2,top:(h-height)/2,right:(w-width)/2,bottom:(h-height)/2,ready:true};
+            }
 			const left = Math.max(0, bounds[0] * w - pad), top = Math.max(0, bounds[1] * h - pad);
 			const right = Math.min(w, bounds[2] * w + pad), bottom = Math.min(h, bounds[3] * h + pad);
 			return { index, width: right - left, height: bottom - top, left, top, right: w - right, bottom: h - bottom, ready: !!prepared };

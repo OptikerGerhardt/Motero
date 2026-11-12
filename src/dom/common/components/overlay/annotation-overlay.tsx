@@ -505,10 +505,10 @@ const Note: React.FC<NoteProps> = (props) => {
 	let staggerOffset = (staggerIndex || 0) * 15;
     let bookmark = isBlackReaderBookmark(annotation);
     let x = rect.left + (rtl ? -25 : rect.width + 25) + (rtl ? -1 : 1) * staggerOffset;
-    if (bookmark && rect.right >= doc.defaultView.scrollX && rect.left < doc.defaultView.scrollX + doc.defaultView.innerWidth) x = doc.defaultView.scrollX + doc.defaultView.innerWidth - 24 - staggerOffset;
+    if (bookmark && rect.right >= doc.defaultView.scrollX && rect.left < doc.defaultView.scrollX + doc.defaultView.innerWidth) x = doc.defaultView.scrollX + doc.defaultView.innerWidth - 36 - staggerOffset;
 	let y = rect.top + staggerOffset;
     if (bookmark && rect.bottom > doc.defaultView.scrollY && rect.top < doc.defaultView.scrollY + doc.defaultView.innerHeight) {
-        y = doc.defaultView.scrollY + 24 + staggerOffset;
+        y = doc.defaultView.scrollY + 28 + staggerOffset;
     }
 	return (
 		<CommentIcon
@@ -655,14 +655,26 @@ const Resizer: React.FC<ResizerProps> = (props) => {
 	let isCoarsePointer = window.matchMedia('(pointer: coarse').matches;
 	let size = isCoarsePointer ? 3 : 2;
 
+	const pressedSide = useRef<'start' | 'end' | null>(null);
 	let handlePointerDown = useCallback((event: React.PointerEvent) => {
 		if (event.button !== 0) {
 			return;
 		}
+        const first = highlightRects[0], last = highlightRects.at(-1);
+        if (first && last) {
+            const vert = isVertical(annotation.range.commonAncestorContainer), rtl = isRTL(annotation.range.commonAncestorContainer);
+            const win = (event.target as Element).ownerDocument.defaultView!;
+            const x = event.clientX + win.scrollX, y = event.clientY + win.scrollY;
+            const sx = vert ? (first.left+first.right)/2 : rtl ? first.right : first.left;
+            const sy = vert ? first.top : (first.top+first.bottom)/2;
+            const ex = vert ? (last.left+last.right)/2 : rtl ? last.left : last.right;
+            const ey = vert ? last.bottom : (last.top+last.bottom)/2;
+            pressedSide.current = Math.hypot(x-sx,y-sy) <= Math.hypot(x-ex,y-ey) ? 'start' : 'end';
+        }
 		event.preventDefault();
 		(event.target as Element).setPointerCapture(event.pointerId);
         onResizeStart(annotation);
-	}, [annotation,onResizeStart]);
+	}, [annotation,highlightRects,onResizeStart]);
 
 	let handlePointerUp = useCallback((event: React.PointerEvent) => {
 		if (event.button !== 0
@@ -674,7 +686,7 @@ const Resizer: React.FC<ResizerProps> = (props) => {
 	}, [resizingSide]);
 
 	let handleGotPointerCapture = useCallback((event: React.PointerEvent, side: 'start' | 'end') => {
-		setResizingSide(side);
+		setResizingSide(pressedSide.current || side);
 		setPointerCapture({ elem: event.target as Element, pointerId: event.pointerId });
 		onResizeStart(annotation);
 	}, [annotation, onResizeStart]);
@@ -807,11 +819,12 @@ const Resizer: React.FC<ResizerProps> = (props) => {
 			height={vert ? size : startRect.height}
 			rx={1.5}
             fill="#4072e5"
+            stroke="transparent" strokeWidth={isCoarsePointer ? 44 : 0} pointerEvents="all"
 			className={cx('resizer inherit-pointer-events', { 'resizer-vertical': vert })}
 			onPointerDown={handlePointerDown}
 			onPointerUp={handlePointerUp}
 			onPointerCancel={handlePointerUp}
-			onPointerMove={resizingSide == 'start' ? (event => handlePointerMove(event)) : undefined}
+			onPointerMove={resizingSide ? (event => handlePointerMove(event)) : undefined}
 			onGotPointerCapture={event => handleGotPointerCapture(event, 'start')}
 			onLostPointerCapture={handleLostPointerCapture}
 		/>
@@ -824,11 +837,12 @@ const Resizer: React.FC<ResizerProps> = (props) => {
 			height={vert ? size : endRect.height}
 			rx={1.5}
             fill="#4072e5"
+            stroke="transparent" strokeWidth={isCoarsePointer ? 44 : 0} pointerEvents="all"
 			className={cx("resizer inherit-pointer-events", { 'resizer-vertical': vert })}
 			onPointerDown={handlePointerDown}
 			onPointerUp={handlePointerUp}
 			onPointerCancel={handlePointerUp}
-			onPointerMove={resizingSide == 'end' ? (event => handlePointerMove(event)) : undefined}
+			onPointerMove={resizingSide ? (event => handlePointerMove(event)) : undefined}
 			onGotPointerCapture={event => handleGotPointerCapture(event, 'end')}
 			onLostPointerCapture={handleLostPointerCapture}
 		/>
@@ -846,7 +860,7 @@ type ResizerProps = {
 };
 
 let CommentIcon = React.forwardRef<SVGSVGElement, CommentIconProps>((props, ref) => {
-	let size = props.large ? (isBlackReaderBookmark(props.annotation) ? 32 : 24) : 14;
+	let size = props.large ? (isBlackReaderBookmark(props.annotation) ? 40 : 24) : 14;
 	let x = props.x - size / 2;
 	let y = props.y - size / 2;
 	return <>

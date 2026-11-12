@@ -90,6 +90,21 @@ const root=path.resolve(__dirname,'../build/android');
   assert.equal(await page.evaluate(()=>window._view._view._directHighlight.gesture.active),true,'a stationary word hold starts within 320 ms in a prepared EPUB');
   await touch('touchEnd',[]);
   console.log('PASS shorter word hold starts direct highlighting before the old hold threshold');
+  // The footer is an overlay; hiding it cannot repaginate or move the book.
+  const snapshot=()=>page.evaluate(()=>{const v=window._view._view,p=v._iframeDocument.querySelector('p'),r=p.getBoundingClientRect();return {cfi:v.flow.startCFI.toString(),top:r.top,height:r.height,margin:getComputedStyle(v._iframeDocument.body).marginTop};});
+  const layout=await snapshot();
+  for(const hidden of [false,true,false]){
+   await page.evaluate(hidden=>window.setReaderProgress({visible:true,hidden,text:'Location 10 (5%)',bottomInset:24}),hidden);
+   assert.deepEqual(await snapshot(),layout,'progress visibility preserves the exact text frame and CFI');
+  }
+  await tap({x:385,y:870});
+  assert.ok(await page.evaluate(()=>window.messages.some(m=>m.message?.event==='onCycleEpubProgress')),'rightmost footer tap cycles progress instead of turning the page');
+  assert.deepEqual(await snapshot(),layout);
+  // Force an overlap at the bottom to verify real browser hit testing, not just z-index values.
+  await page.evaluate(()=>{const v=window._view._view,p=v._directHighlight.host.palette;p.style.top='auto';p.style.bottom='0px';p.style.left='0px';});
+  const overlap=await page.evaluate(()=>{const v=window._view._view,p=v._directHighlight.host.palette,b=p.querySelector('button'),r=b.getBoundingClientRect(),e=v._iframeDocument.elementFromPoint(r.left+r.width/2,r.top+r.height/2);return e===b||b.contains(e);});
+  assert.equal(overlap,true,'quick annotation palette wins over progress and page edges');
+  console.log('PASS progress overlay preserves pagination, consumes edge taps and stays below the annotation palette');
   assert.deepEqual(errors,[]);
  }finally{await browser?.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);process.exitCode=1;});

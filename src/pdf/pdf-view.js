@@ -323,6 +323,9 @@ class PDFView {
 			}
 			this._updateColorScheme();
 			let root = this._iframeWindow.document.documentElement;
+            // The paper theme includes the gutters and the space between pages.
+            this._iframeWindow.document.body.style.backgroundColor = 'var(--background-color)';
+            this._iframeWindow.document.getElementById('viewerContainer').style.backgroundColor = 'var(--background-color)';
 			root.toggleAttribute('data-mobile-reader', !!this._mobile);
 			this._updatePenActiveState();
 			// This is necessary to make sure this is called after webviewerloaded
@@ -1669,6 +1672,7 @@ class PDFView {
 				&& !(this._directHighlightEnabled && ['highlight', 'underline'].includes(tool.type))
 		);
 		this._tool = tool;
+        this._pageNavigation?.sync();
 		if (!this._isAnnotationToolActive()) this._clearPenActive();
 		this._nativeTextSelection?.updateEnabledState();
 		this.updateCursor();
@@ -3241,6 +3245,20 @@ class PDFView {
 					);
 					endHandle = { rect, vertical: [90, 270].includes(rotation) };
 				}
+				if (this._options.platform === 'android') {
+                    for (const handle of [startHandle, endHandle].filter(Boolean)) {
+                        const r = handle.rect, x = (r[0]+r[2])/2, y = (r[1]+r[3])/2;
+                        const w = Math.max(48, r[2]-r[0]), h = Math.max(48, r[3]-r[1]);
+                        handle.rect = [x-w/2,y-h/2,x+w/2,y+h/2];
+                    }
+                    // Short selections can have overlapping targets. Resolve
+                    // their nearest endpoint instead of always taking the first.
+                    if (startHandle && endHandle && quickIntersectRect(startHandle.rect,p) && quickIntersectRect(endHandle.rect,p)) {
+                        const distance = h => Math.hypot((h.rect[0]+h.rect[2])/2-p[0],(h.rect[1]+h.rect[3])/2-p[1]);
+                        if (distance(endHandle) < distance(startHandle)) startHandle = null;
+                        else endHandle = null;
+                    }
+                }
 				if (startHandle) {
 					let { rect, vertical } = startHandle;
 					if (quickIntersectRect(rect, p)) {
