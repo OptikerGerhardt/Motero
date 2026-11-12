@@ -1144,6 +1144,12 @@ abstract class DOMView<State extends DOMViewState, Data> {
 		else {
 			let pos = supportsCaretPositionFromPoint()
 				&& caretPositionFromPoint(this._iframeDocument, event.clientX, event.clientY);
+            if (pos && pos.offsetNode.nodeType === Node.TEXT_NODE && pos.offsetNode.textContent?.length) {
+                range.setStart(pos.offsetNode, pos.offset);
+                range.collapse(true);
+                collapseToOneCharacter(range);
+                if (!range.collapsed) return range;
+            }
 			let element = closestElement(pos ? pos.offsetNode : target);
 			if (!element) return null;
 			let blockElement = getContainingBlock(element);
@@ -1792,8 +1798,13 @@ abstract class DOMView<State extends DOMViewState, Data> {
 		// Create note annotation on pointer down event, if note tool is active.
 		// The note tool will be automatically deactivated in reader.js,
 		// because this is what we do in PDF reader
-		if ((event.buttons & 1) === 1 && this._tool.type == 'note' && this._previewAnnotation
+		if ((event.buttons & 1) === 1 && this._tool.type == 'note'
 				&& !this._isTouchIgnoredBecauseOfPen(event)) {
+            // Touch has no hover preview. Resolve the actual press, including
+            // after a previous hover, scroll or reflow moved that preview.
+            const range = this._getNoteTargetRange(event);
+            this._previewAnnotation = range ? this.getAnnotationFromRange(range, 'note', this._tool.color) : null;
+            if (!this._previewAnnotation) return;
 			this._options.onAddAnnotation(this._finalizeAnnotation(this._previewAnnotation!), true);
 			this._previewAnnotation = null;
 			this._renderAnnotations(true);

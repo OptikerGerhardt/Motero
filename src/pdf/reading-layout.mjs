@@ -16,7 +16,7 @@ export function getReadingSamples(count) {
 const clamp = n => Math.max(0, Math.min(1, n));
 const normalize = text => text.toLowerCase().replace(/\d+/g, '#').replace(/\s+/g, ' ').trim();
 const pageNumber = text => /^(?:[-–—]?\s*)?(?:\d{1,5}|[ivxlcdm]{1,8})(?:\s*[-–—]?)$/i.test(text.trim());
-const downloadStamp = text => /^(?:(?:this content )?downloaded\s+(?:from|by|on)|(?:accessed|retrieved)\s+(?:on|from)|all use subject to|generated for\b|for private use only\b|ausschlie(?:ß|ss)lich zum privaten gebrauch\b)/i.test(text.trim());
+const downloadStamp = text => /^(?:(?:this content )?downloaded\s+(?:from|by|on)|(?:accessed|retrieved)\s+(?:on|from)|all use subject to|generated for\b|for private use only\b|ausschlie(?:ß|ss)lich zum privaten gebrauch\b)|\b(?:generiert durch|heruntergeladen (?:am|von)|urheberrechtlich geschützter inhalt)\b/i.test(text.trim());
 // A/B folios can be Roman in introductions (Kant: B XLI) and Arabic in
 // the main text. Require canonical Roman numerals so ordinary words such as
 // 'bill' do not become references. Geometry below still requires a margin column.
@@ -176,8 +176,8 @@ function sameHeaderBand(a, b) {
 // evidence, even when the chapter changes between the sampled pages.
 function hasRunningFolio(line, lines, bodyHeight) {
     if (!bodyHeight || line.vertical || line.text.length < 8 || line.text.length > 140
-            || line.rect[3] >= .2 || line.rect[3]-line.rect[1] > bodyHeight*1.2
-            || /^(?:chapter|kapitel|section|teil)\s+\d|^\d+[.)]\s/i.test(line.text.trim())) return false;
+            || line.rect[3] >= .2 || line.rect[3]-line.rect[1] > bodyHeight*1.25
+            || /^(?:\d+\s+)?(?:chapter|kapitel|section|teil)\b|^\d+[.)]\s/i.test(line.text.trim())) return false;
     const folio = lines.find(other => other !== line && pageNumber(other.text)
         && !romanReference(other.text)
         && (other.rect[2] < .18 || other.rect[0] > .82)
@@ -185,7 +185,10 @@ function hasRunningFolio(line, lines, bodyHeight) {
         && Math.abs(other.rect[1]+other.rect[3]-line.rect[1]-line.rect[3]) < bodyHeight);
     const next = lines.filter(l => l !== line && l !== folio && l.text.length > 15 && l.rect[1] > line.rect[3])
         .sort((a,b)=>a.rect[1]-b.rect[1])[0];
-    return !!folio && !!next && next.rect[1]-line.rect[3] > bodyHeight*.7;
+    const merged = line.rect[2]-line.rect[0]>.5 && (line.rect[0]<.13 || line.rect[2]>.87)
+        && line.rect[3]-line.rect[1]<=bodyHeight*1.05
+        && /^(?:\d{1,5}\s+.{8,}|.{8,}\s+\d{1,5})$/.test(line.text.trim());
+    return (!!folio || merged) && !!next && next.rect[1]-line.rect[3] > bodyHeight*.7;
 }
 
 function footerCandidatesFor(lines, fallbackHeight = 0) {
@@ -262,7 +265,7 @@ export function buildReadingModel(pages) {
     return { repeated, headerBands, footerBands, folioBands, bodyHeight };
 }
 
-export function getReadingExclusions(lines, model = { repeated: new Set() }, pageIndex = null, { includeMarginalia = false } = {}) {
+export function getReadingExclusions(lines, model = { repeated: new Set() }, pageIndex = null, { includeMarginalia = false, headerRule = null } = {}) {
 	let excluded = new Set();
 	for (let line of lines) {
 		let [x0, y0, x1, y1] = line.rect;
@@ -294,6 +297,16 @@ export function getReadingExclusions(lines, model = { repeated: new Set() }, pag
 	const headerCandidates = new Set(headerCandidatesFor(lines));
 	let headers = lines.filter(line => {
 		let [ , y0, , y1] = line.rect;
+        const h = y1-y0;
+        const next = lines.filter(l=>l!==line && l.text.length>30 && l.rect[1]>y1).sort((a,b)=>a.rect[1]-b.rect[1])[0];
+        const isolated = next && next.rect[1]-y1 > bodyHeight*.8;
+        if (headerRule && y1 <= headerRule[0]+.003 && headerRule[0]-y1 < .055
+            && y1<.23 && h<=bodyHeight*1.2 && isolated
+            && !/^(?:chapter|kapitel|section|teil)\s|^\d+[.)]\s/i.test(line.text.trim())) return true;
+        // A small detached author list is local evidence even on the first page
+        // of a newly encountered chapter. Preserve ordinary small headings.
+        if (y1 < .15 && isolated && h<bodyHeight*.92 && line.text.split(',').length>=3
+            && line.text.length<180 && !/[.!?]$/.test(line.text.trim())) return true;
 		if (hasRunningFolio(line, lines, bodyHeight)) return true;
 		if (line.sideCandidate && marginalReference(line.text)) return false;
 		if (line.vertical || y1 >= 0.23 || bodyHeight && y1 - y0 > bodyHeight * 1.1) return false;
@@ -367,7 +380,8 @@ export function getReadingExclusions(lines, model = { repeated: new Set() }, pag
                 && Math.abs((other.rect[1]+other.rect[3]-y0-y1)/2) < bodyHeight
                 && other.rect[0] > x1 && other.rect[0]-x1 < .065)) continue;
             const right = -quantile(body.map(l=>-l.rect[2]));
-            if (x1 < left-.004 && x1 < .22 || x0 > right+.004 && x0 > .78) excluded.add(line);
+            if (x1 < left-.004 && x1 < .22 || x0 > right+.004 && x0 > .78
+                || marginalSymbol(line.text) && (x0 >= right-.002 && x0>.82 || x1 <= left+.002 && x1<.18)) excluded.add(line);
         }
         else {
             body = lines.filter(other => !other.sideCandidate && other.text.length > 20 && other.rect[1] < y1 + .03 && other.rect[3] > y0 - .03);
@@ -377,9 +391,30 @@ export function getReadingExclusions(lines, model = { repeated: new Set() }, pag
 	return [...excluded].map(line => line.rect);
 }
 
+function findRunningHeadRule(image, lines) {
+    const {width,height,data} = image;
+    if (!width || !height || !data) return null;
+    const body = bodyLineHeight(lines);
+    if (!body) return null;
+    let start = null;
+    for (let y=0;y<Math.min(height,Math.ceil(height*.23));y++) {
+        let ink=0;
+        for(let x=0;x<width;x++) if(data[y*width+x]<210) ink++;
+        if(ink>width*.55) { if(start===null) start=y; }
+        else if(start!==null) {
+            const band=[start/height,y/height];
+            if(y-start<=Math.max(3,height*.005)
+                && lines.some(l=>l.text.length>5 && l.rect[3]<=band[0]+.003 && band[0]-l.rect[3]<.055)
+                && lines.some(l=>l.text.length>30 && l.rect[1]>band[1] && l.rect[1]-band[1]<.065)) return band;
+            start=null;
+        }
+    }
+    return null;
+}
+
 export function getReadingBounds(image, lines, model, pageIndex = null, options = {}) {
-	let ignored = getReadingExclusions(lines, model, pageIndex, options);
 	image = compactReadingImage(image);
+	let ignored = getReadingExclusions(lines, model, pageIndex, {...options,headerRule:findRunningHeadRule(image,lines)});
 	let { width, height } = image;
 	let data = new Uint8ClampedArray(image.data);
     const red = image.red && new Uint8ClampedArray(image.red);

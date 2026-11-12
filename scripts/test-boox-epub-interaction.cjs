@@ -54,6 +54,25 @@ const root=path.resolve(__dirname,'../build/android');
    await page.evaluate(()=>window._view.undo());assert.equal(await page.evaluate(id=>JSON.stringify(window._view._annotationManager._annotations.find(a=>a.id===id).position),note.id),note.position);
    await page.evaluate(id=>{window._view.selectAnnotations([]);window._view._annotationManager.deleteAnnotations([id]);},note.id);
    console.log('PASS '+flow+': real note hold/drag changes its CFI anchor, preserves ID and Undo restores it');
+   // No-hover touch placement must use this press, not the stale hover preview.
+   const target=await page.evaluate(()=>{
+    const v=window._view._view,d=v._iframeDocument,f=v._iframe.getBoundingClientRect();
+    const p=Array.from(d.querySelectorAll('p')).find(p=>{const r=p.getBoundingClientRect();return r.top>100&&r.top<400&&r.left>=0&&r.left<300;});
+    const t=p.firstChild,r=d.createRange();r.setStart(t,Math.min(90,t.length-3));r.setEnd(t,Math.min(92,t.length-1));
+    const b=r.getClientRects()[0];
+    window._view.setTool({type:'note',color:'#ffd400'});
+    const stale=d.createRange();stale.setStart(t,0);stale.setEnd(t,1);
+    v._previewAnnotation=v.getAnnotationFromRange(stale,'note','#ffd400');
+    return{x:f.left+(b.left+b.right)/2,y:f.top+(b.top+b.bottom)/2};
+   });
+   await tap(target);
+   const placed=await page.evaluate(()=>{const v=window._view._view,a=window._view._annotationManager._annotations.find(a=>a.type==='note'),r=v.toDisplayedRange(a.position),b=r.getBoundingClientRect(),f=v._iframe.getBoundingClientRect();return{id:a.id,text:r.toString(),y:f.top+(b.top+b.bottom)/2};});
+   assert.ok(Math.abs(placed.y-target.y)<3,JSON.stringify({flow,placed,target}));
+   assert.ok(placed.text.length<=2,'a note anchors to the touched character, not the paragraph');
+   await page.evaluate(()=>window._view.setAppearance({lineHeight:1.2,wordSpacing:0,letterSpacing:0,pageWidth:0,margins:12,fontFamily:'serif'}));
+   assert.equal(await page.evaluate(id=>{const v=window._view._view,a=v._annotations.find(a=>a.id===id);return v.toDisplayedRange(a.position).toString();},placed.id),placed.text);
+   await page.evaluate(id=>{window._view.setTool({type:'pointer'});window._view.selectAnnotations([]);window._view._annotationManager.deleteAnnotations([id]);window._view.setAppearance({lineHeight:1.2,wordSpacing:0,letterSpacing:0,pageWidth:0,margins:8,fontFamily:'serif'});},placed.id);
+   console.log('PASS '+flow+': real note-tool tap overrides stale preview and keeps its character anchor through reflow');
    const before=await page.evaluate(()=>window._view._view.flow.startCFI.toString());
    const frame=await page.evaluate(()=>{const v=window._view._view,r=v._iframe.getBoundingClientRect();return{x:r.left+r.width-20,y:r.top+20,width:r.width};});
    await tap({x:frame.x,y:frame.y});await page.waitForFunction(()=>window._view._annotationManager._annotations.some(a=>a.type==='note'));

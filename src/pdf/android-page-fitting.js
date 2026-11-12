@@ -524,7 +524,12 @@ export class AndroidPageFitting {
             }
             let changed = this.refineForce;
             this.refineForce = false;
+            const visible = new Set(this.layout.boxes ? this.layout.getVisiblePages().views.map(p=>p.id-1) : []);
+            if (this.applied) visible.add(this.viewer.currentPageNumber-1);
             for (const index of this.provisionalPages) {
+                // Learning may improve the next visit, never move text that is
+                // already being read. Keep visible frames until navigation/refit.
+                if (visible.has(index) && this.preparedPages.has(index)) continue;
                 if (!this.hasLocalEvidence(index)) continue;
                 this.cache.delete(index); this.marginaliaByPage.delete(index);
                 this.provisionalPages.delete(index); this.preparedPages.delete(index); changed = true;
@@ -533,7 +538,7 @@ export class AndroidPageFitting {
                 this.layoutEpoch++;
                 // Only provisional pages that gained usable evidence are rebuilt.
                 // Valid buffered crops and their coordinates remain available.
-                if (this.active) this.schedule(0);
+                if (this.active && !this.applied) this.schedule(0);
             }
         }, 250);
     }

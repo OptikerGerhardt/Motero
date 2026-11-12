@@ -1,5 +1,5 @@
 // Shared by PDF and EPUB so their touch activation stays consistent.
-export const HIGHLIGHT_HOLD_DELAY = 250;
+export const HIGHLIGHT_HOLD_DELAY = 200;
 // Gesture state is kept separate from PDF coordinates and Android's native selection.
 export class HoldToHighlight {
 	constructor({ canStart, prepare, start, update, finish, cancel, tap,

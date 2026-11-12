@@ -16,7 +16,7 @@ export function showAnnotationPalette(annotations) {
 		for (let name of ['--color-background', '--fill-primary', '--fill-quinary', '--color-border', '--accent-blue']) {
 			let value = theme.getPropertyValue(name); if (value) box.style.setProperty(name, value);
 		}
-		box.style.cssText += 'position:fixed;z-index:10000;display:flex;flex-direction:column;padding:0;max-width:calc(100vw - 12px);background:var(--color-background,#fff);color:var(--fill-primary,#222);border-radius:6px;box-shadow:0 2px 10px #0002,0 0 0 1px var(--color-border,#ddd);box-sizing:border-box;';
+		box.style.cssText += 'position:fixed;z-index:2147483647;isolation:isolate;mix-blend-mode:normal;pointer-events:auto;display:flex;flex-direction:column;padding:0;max-width:calc(100vw - 12px);background:var(--color-background,#fff);color:var(--fill-primary,#222);border-radius:6px;box-shadow:0 2px 10px #0002,0 0 0 1px var(--color-border,#ddd);box-sizing:border-box;';
 		for (let event of ['pointerdown', 'pointerup', 'mousedown', 'touchstart', 'touchend']) box.addEventListener(event, e => e.stopPropagation());
 		let colors = this.doc.createElement('div');
 		colors.style.cssText = 'display:flex;overflow-x:auto;max-width:100%;padding:4px;box-sizing:border-box;';
@@ -73,7 +73,7 @@ export function showAnnotationPalette(annotations) {
 			tools.append(button);
 		}
 		box.append(tools);
-		this.doc.body.append(box); this.palette = box;
+		this.doc.documentElement.append(box); this.palette = box;
 		let rect = this.view.getClientRectForPopup(annotations.at(-1).position);
 		let width = box.offsetWidth, height = box.offsetHeight;
 		let below = rect[3] + height + 10 < this.win.innerHeight;

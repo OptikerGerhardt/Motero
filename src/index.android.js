@@ -191,6 +191,15 @@ window.setReaderProgress = value => {
     if (window._view) window._view._options.readingProgress = value;
     window._readingProgress?.update(value);
 };
+window.dismissReaderSelection = () => {
+    const reader = window._view, view = reader?._activeView;
+    if (!view) return;
+    reader.finishTextAnnotationEditing();
+    view._iframeWindow?.getSelection()?.removeAllRanges();
+    reader.selectAnnotations([]);
+    view._booxReader?.closePalette();
+    view._directHighlight?.reset();
+};
 
 window.setContentFit = (options) => {
 	log("Set content fit: " + JSON.stringify(options));

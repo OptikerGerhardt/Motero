@@ -86,8 +86,8 @@ const root=path.resolve(__dirname,'../build/android');
   assert.equal(await page.evaluate(()=>window._view._view._iframeDocument.documentElement.style.getPropertyValue('--background-color')),'#ffffff');
   console.log('PASS all four desktop page backgrounds and E-Reader override');
   await open('paginated');
-  const fast=await point();await touch('touchStart',[fast]);await page.waitForTimeout(320);
-  assert.equal(await page.evaluate(()=>window._view._view._directHighlight.gesture.active),true,'a stationary word hold starts within 320 ms in a prepared EPUB');
+  const fast=await point();await touch('touchStart',[fast]);await page.waitForTimeout(230);
+  assert.equal(await page.evaluate(()=>window._view._view._directHighlight.gesture.active),true,'a stationary word hold starts within 230 ms in a prepared EPUB');
   await touch('touchEnd',[]);
   console.log('PASS shorter word hold starts direct highlighting before the old hold threshold');
   // The footer is an overlay; hiding it cannot repaginate or move the book.
@@ -102,8 +102,9 @@ const root=path.resolve(__dirname,'../build/android');
   assert.deepEqual(await snapshot(),layout);
   // Force an overlap at the bottom to verify real browser hit testing, not just z-index values.
   await page.evaluate(()=>{const v=window._view._view,p=v._directHighlight.host.palette;p.style.top='auto';p.style.bottom='0px';p.style.left='0px';});
+  await page.evaluate(()=>{const d=window._view._view._iframeDocument,e=d.createElement('div');e.id='test-overlapping-annotation';e.style.cssText='position:fixed;inset:0;background:#5fb236;z-index:2147483647;pointer-events:auto';d.body.append(e);});
   const overlap=await page.evaluate(()=>{const v=window._view._view,p=v._directHighlight.host.palette,b=p.querySelector('button'),r=b.getBoundingClientRect(),e=v._iframeDocument.elementFromPoint(r.left+r.width/2,r.top+r.height/2);return e===b||b.contains(e);});
-  assert.equal(overlap,true,'quick annotation palette wins over progress and page edges');
+  assert.equal(overlap,true,'quick annotation palette wins even over a full-screen maximum-z annotation layer');
   console.log('PASS progress overlay preserves pagination, consumes edge taps and stays below the annotation palette');
   assert.deepEqual(errors,[]);
  }finally{await browser?.close();await new Promise(r=>server.close(r));}

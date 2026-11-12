@@ -148,6 +148,20 @@ test('late same-parity evidence refines only provisional geometry and retains va
     assert.equal(fitting.cache.get(5),pending,'already valid geometry remains cached');
 });
 
+test('late learning never refits or invalidates a visible reading frame',async()=>{
+    const {fitting,viewer,flush}=fixture();
+    const pending=Promise.resolve({bounds:[.1,.1,.9,.9]});
+    fitting.cache.set(1,pending);fitting.provisionalPages.add(1);
+    fitting.preparedPages.set(1,{index:1});fitting.applied={pageIndex:1};
+    fitting.hasLocalEvidence=()=>true;fitting.active=true;
+    fitting.layout.getVisiblePages=()=>({views:[{id:2}]});fitting.layout.boxes=[];
+    viewer.currentPageNumber=2;
+    let refits=0;fitting.schedule=()=>refits++;
+    fitting.refineAfterLearning(true);await flush();
+    assert.equal(fitting.cache.get(1),pending);assert.ok(fitting.preparedPages.has(1));
+    assert.equal(refits,0,'letters cannot move under the reader after background learning');
+});
+
 
 test('background crop refinement waits until the pen stroke has finished',async()=>{
     const {fitting,flush}=fixture();fitting.active=true;

@@ -8,6 +8,45 @@ const body = [line('This is a complete line of ordinary text.', [.2, .2, .8, .22
 	line('The next full line belongs to the page body.', [.2, .3, .8, .32]),
 	line('Another ordinary line, with more content.', [.2, .5, .8, .52])];
 
+test('Born running head and rule are excluded locally even without repeated chapter samples',()=>{
+    const head=line('Marcus Andreas Born',[.14,.075,.52,.091]);
+    const folio=line('10',[.015,.075,.045,.091]);
+    const lines=[head,folio,...body];
+    const raster=image([...lines.map(l=>l.rect),[.015,.102,.98,.104]]);
+    const bounds=getReadingBounds(raster,lines,buildReadingModel([]),0);
+    assert.ok(bounds[1]>.19,JSON.stringify(bounds));
+    const chapter=line('Chapter 1. Genuine chapter title',[.14,.075,.7,.091]);
+    const chapterBounds=getReadingBounds(image([chapter.rect,...body.map(l=>l.rect),[.015,.102,.98,.104]]),[chapter,...body],buildReadingModel([]),0);
+    assert.ok(chapterBounds[1]<.09,'a chapter heading is retained');
+});
+
+test('detached author lists and German publisher notices do not widen the reading frame',()=>{
+    const head=line('Burow, Daniels, Kaiser, Klinkhamer, Kulbatzki, Schütte, Henkel',[.1,.075,.85,.092]);
+    const stamp=line('https://doi.org/10.1234/567 – Generiert durch IP 127.0.0.1. Urheberrechtlich geschützter Inhalt.',[.05,.97,.95,.978]);
+    const footnote=line('2 A genuine footnote with its entire final line.',[.2,.88,.8,.896]);
+    const lines=[head,...body,footnote,stamp,line('10',[.2,.92,.23,.935])];
+    const bounds=getReadingBounds(image(lines.map(l=>l.rect)),lines,buildReadingModel([]),0);
+    assert.ok(bounds[1]>.19 && bounds[3]>.89 && bounds[3]<.91,JSON.stringify(bounds));
+});
+
+test('tight outer stars are marginalia, with Include retaining them and Exclude preserving body text',()=>{
+    const prose=Array.from({length:10},(_,i)=>line('A complete line of prose reaches its normal body edge.',[.08,.2+i*.045,.94,.22+i*.045]));
+    const star=line('*',[.939,.33,.955,.344]);
+    const lines=[...prose,star],model=buildReadingModel([]);
+    assert.ok(getReadingMarginalia(lines,model,0).includes(star.rect));
+    assert.ok(!getReadingExclusions(lines,model,0,{includeMarginalia:true}).includes(star.rect));
+    for(const l of prose) assert.ok(!getReadingExclusions(lines,model,0).includes(l.rect));
+});
+
+test('a folio merged into the running-head text item is recognized on either side',()=>{
+    for(const text of ['320 Vom christlichen Gemeinwesen · XXXIII','Vom christlichen Gemeinwesen · XXXIII 320']) {
+        const head=line(text,[.06,.08,.9,.098]);
+        assert.ok(getReadingExclusions([head,...body],buildReadingModel([]),319).includes(head.rect),text);
+    }
+    const chapter=line('1 Chapter on the actual subject',[.06,.08,.9,.098]);
+    assert.ok(!getReadingExclusions([chapter,...body],buildReadingModel([]),0).includes(chapter.rect));
+});
+
 test('an isolated changing running head and its rule are removed with a peer folio, keeping chapter headings',()=>{
     const head=line('Perspektiven auf eine Philosophie der Zukunft',[.2,.12,.86,.137]);
     const folio=line('7',[.96,.12,.98,.137]);

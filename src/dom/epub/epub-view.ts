@@ -103,7 +103,8 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
     private _bookmarkPointer: { x: number, y: number, time: number } | null = null;
 
     isBookmarkCorner(x: number, y: number): boolean {
-        return x >= this._iframeWindow.innerWidth - 64 && x <= this._iframeWindow.innerWidth && y >= 0 && y <= 64;
+        return x >= this._iframeWindow.innerWidth / 2 && x <= this._iframeWindow.innerWidth
+            && y >= 0 && y <= Math.max(64, this._iframeWindow.innerHeight / 11);
     }
 
     // The shortcut belongs to the viewport corner, independent of text margins.
