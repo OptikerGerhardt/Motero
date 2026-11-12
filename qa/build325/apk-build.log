@@ -1,0 +1,130 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.6.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Calculating task graph as configuration cache cannot be reused because init script 'scripts/test_jvm_agent.gradle' has been added.
+> Task :buildSrc:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :buildSrc:compileKotlin UP-TO-DATE
+> Task :buildSrc:compileJava NO-SOURCE
+> Task :buildSrc:compileGroovy NO-SOURCE
+> Task :buildSrc:pluginDescriptors UP-TO-DATE
+> Task :buildSrc:processResources UP-TO-DATE
+> Task :buildSrc:classes UP-TO-DATE
+> Task :buildSrc:jar UP-TO-DATE
+
+> Configure project :app
+WARNING: The option setting 'android.builtInKotlin=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+Add android.sync.suppressAgpWarnings=UNSUPPORTED_PROJECT_OPTION_USE to the gradle.properties file to suppress this warning.
+WARNING: The option setting 'android.newDsl=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+Add android.sync.suppressAgpWarnings=UNSUPPORTED_PROJECT_OPTION_USE to the gradle.properties file to suppress this warning.
+WARNING: The option setting 'android.defaults.buildfeatures.resvalues=true' is deprecated.
+The current default is 'false'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+Add android.sync.suppressAgpWarnings=UNSUPPORTED_PROJECT_OPTION_USE to the gradle.properties file to suppress this warning.
+WARNING: API 'applicationVariants' is obsolete and has been replaced with 'AndroidComponentsExtension'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+The legacy variant API is disabled by default in AGP 9.0, but can be re-enabled by adding 
+    android.newDsl=false
+to this project's gradle.properties file.
+For more information, see http://developer.android.com/build/r/new-dsl.
+
+To determine what is calling applicationVariants, use -Pandroid.debug.obsoleteApi=true on the command line to display more information.
+Add android.sync.suppressAgpWarnings=DEPRECATED_DSL to the gradle.properties file to suppress this warning.
+WARNING: API 'testVariants' is obsolete and has been replaced with 'AndroidComponentsExtension'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+The legacy variant API is disabled by default in AGP 9.0, but can be re-enabled by adding 
+    android.newDsl=false
+to this project's gradle.properties file.
+For more information, see http://developer.android.com/build/r/new-dsl.
+
+To determine what is calling testVariants, use -Pandroid.debug.obsoleteApi=true on the command line to display more information.
+Add android.sync.suppressAgpWarnings=DEPRECATED_DSL to the gradle.properties file to suppress this warning.
+WARNING: API 'unitTestVariants' is obsolete and has been replaced with 'AndroidComponentsExtension'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+The legacy variant API is disabled by default in AGP 9.0, but can be re-enabled by adding 
+    android.newDsl=false
+to this project's gradle.properties file.
+For more information, see http://developer.android.com/build/r/new-dsl.
+
+To determine what is calling unitTestVariants, use -Pandroid.debug.obsoleteApi=true on the command line to display more information.
+Add android.sync.suppressAgpWarnings=DEPRECATED_DSL to the gradle.properties file to suppress this warning.
+w: [33m[1m⚠️ Deprecated 'org.jetbrains.kotlin.android' plugin usage[0m[0m
+The 'org.jetbrains.kotlin.android' plugin in project ':app' is no longer required for Kotlin support since AGP 9.0.
+[32m[1mSolution:[0m[0m
+[32m[3mRemove both `android.builtInKotlin=true` and `android.newDsl=false` from `gradle.properties`, then migrate to built-in Kotlin.[0m[0m
+[36mSee [0m[34mhttps://kotl.in/gradle/agp-built-in-kotlin[0m[36m for more details.[0m
+
+
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDevReleaseBuild UP-TO-DATE
+> Task :app:injectCrashlyticsMappingFileIdDevRelease UP-TO-DATE
+> Task :app:processDevReleaseGoogleServices UP-TO-DATE
+> Task :app:buildKotlinToolingMetadata UP-TO-DATE
+> Task :app:desugarDevReleaseFileDependencies
+> Task :app:generateDevReleaseResValues UP-TO-DATE
+> Task :app:mergeDevReleaseJniLibFolders
+> Task :app:generateDevReleaseResources UP-TO-DATE
+> Task :app:extractDevReleaseVersionControlInfo UP-TO-DATE
+> Task :app:injectCrashlyticsVersionControlInfoDevRelease UP-TO-DATE
+> Task :app:mergeDevReleaseResources UP-TO-DATE
+> Task :app:mergeDevReleaseArtProfile
+> Task :app:packageDevReleaseResources UP-TO-DATE
+> Task :app:generateDevReleaseBuildConfig UP-TO-DATE
+> Task :app:dataBindingMergeDependencyArtifactsDevRelease UP-TO-DATE
+> Task :app:javaPreCompileDevRelease UP-TO-DATE
+> Task :app:mapDevReleaseSourceSetPaths UP-TO-DATE
+> Task :app:createDevReleaseCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDevRelease UP-TO-DATE
+> Task :app:processDevReleaseNavigationResources UP-TO-DATE
+> Task :app:mergeDevReleaseNativeLibs
+> Task :app:parseDevReleaseLocalResources UP-TO-DATE
+> Task :app:checkDevReleaseAarMetadata UP-TO-DATE
+> Task :app:generateDevReleaseRFile UP-TO-DATE
+> Task :app:compileDevReleaseNavigationResources UP-TO-DATE
+
+> Task :app:stripDevReleaseDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so, libdatastore_shared_counter.so, librealm-jni.so. Run with --info option to learn more.
+
+> Task :app:extractDevReleaseNativeSymbolTables
+> Task :app:mergeDevReleaseNativeDebugMetadata NO-SOURCE
+> Task :app:mergeDevReleaseStartupProfile
+> Task :app:generateDevReleaseAssets UP-TO-DATE
+> Task :app:processDevReleaseMainManifest UP-TO-DATE
+> Task :app:processDevReleaseManifest UP-TO-DATE
+> Task :app:processDevReleaseManifestForPackage UP-TO-DATE
+> Task :app:dataBindingGenBaseClassesDevRelease UP-TO-DATE
+> Task :app:processDevReleaseResources UP-TO-DATE
+> Task :app:mergeDevReleaseAssets
+> Task :app:kspDevReleaseKotlin UP-TO-DATE
+> Task :app:kaptGenerateStubsDevReleaseKotlin UP-TO-DATE
+> Task :app:optimizeDevReleaseResources
+> Task :app:checkDevReleaseDuplicateClasses
+> Task :app:kaptDevReleaseKotlin UP-TO-DATE
+> Task :app:collectDevReleaseDependencies
+> Task :app:compressDevReleaseAssets
+> Task :app:writeDevReleaseAppMetadata
+> Task :app:writeDevReleaseSigningConfigVersions
+> Task :app:sdkDevReleaseDependencyData
+> Task :app:compileDevReleaseKotlin UP-TO-DATE
+> Task :app:compileDevReleaseJavaWithJavac UP-TO-DATE
+> Task :app:devReleaseRealmAccessorsTransformer UP-TO-DATE
+> Task :app:transformDevReleaseClassesWithAsm UP-TO-DATE
+> Task :app:processDevReleaseJavaRes UP-TO-DATE
+> Task :app:mergeDevReleaseJavaResource
+> Task :app:mergeExtDexDevRelease
+> Task :app:dexBuilderDevRelease
+> Task :app:mergeDevReleaseGlobalSynthetics
+> Task :app:mergeDexDevRelease
+> Task :app:compileDevReleaseArtProfile
+> Task :app:packageDevRelease
+> Task :app:assembleDevRelease
+> Task :app:createDevReleaseApkListingFileRedirect
+
+[Incubating] Problems report is available at: file:///workspace/Motero/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 1m 53s
+60 actionable tasks: 23 executed, 37 up-to-date
+Configuration cache entry stored.

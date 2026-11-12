@@ -1,0 +1,958 @@
+FILE test/android/index-android.test.mjs
+✔ Android host-port initialization is acknowledged before view creation (2.118252ms)
+✔ Android view creation exposes every PDF UI callback through the host port (1.854572ms)
+✔ Android annotation selection preserves host ordering and inline-editing focus (0.747074ms)
+✔ Android save delivery selects only a newly created note outside inline text editing (0.646666ms)
+✔ Android PDF UI commands decode their inputs and delegate to the view (1.398958ms)
+✔ hardware presses are serialized rather than racing page navigation (0.95381ms)
+✔ queued hardware presses ignore editing and a replaced document (2.518263ms)
+✔ Android editor cleanup remains safe for non-PDF views without pointer-reset support (0.374734ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 21.154735
+(node:43033) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/Motero/reader/src/index.android.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/Motero/reader/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+FILE test/common/annotation-cleanup.test.mjs
+✔ collects only empty text annotations (2.131391ms)
+✔ skips excluded annotations (0.176821ms)
+✔ skips read-only and external annotations (0.159405ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 26.230499
+
+FILE test/common/annotation-manager.test.mjs
+✔ saveNewAnnotationsImmediately: every creation saves synchronously, even in quick succession (7.989321ms)
+✔ without saveNewAnnotationsImmediately (desktop), rapid consecutive creations are debounced (0.959809ms)
+✔ an immediate-save request survives an in-progress save without affecting later saves (1.204211ms)
+✔ stale deletion requests do not create invalid Undo steps (0.826101ms)
+✔ Undo preserves an unsent deletion when the restored annotation gets a new ID (1.411668ms)
+✔ Redo preserves an unsent deletion when the restored annotation gets a new ID (0.5411ms)
+✔ database echoes preserve undo; a real external content edit clears the affected history (0.431207ms)
+✔ history origin survives an asynchronous save and is consumed before ordinary edits (1.43405ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 22.283995
+(node:43047) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/Motero/reader/src/common/annotation-manager.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/Motero/reader/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+FILE test/common/annotation-selection-handler.test.mjs
+✔ preserves host-first ordering for ordinary annotation selection (1.825779ms)
+✔ selects before deferring an inline-editing notification (0.280936ms)
+✔ touch editing selects handles before notifying the host to suppress its popup (0.147568ms)
+✔ drops a deferred inline-editing notification after selection changes (1.816215ms)
+✔ drops a deferred inline-editing notification superseded by a same-id selection (0.20948ms)
+✔ selects an initial annotation after a replacement view is ready (0.312702ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11.982455
+
+FILE test/common/mobile-pen-input.test.mjs
+✔ a pen takes over an earlier finger; palms cannot move or release its stroke (1.463393ms)
+✔ focus moving between controls does not cancel the pen, while window blur does (1.030844ms)
+✔ all palm contacts remain suppressed until lifted, beyond the 300 ms guard (0.830227ms)
+✔ fresh fingers are guarded for 300 ms; normal scrolling has no delay after that (0.260575ms)
+✔ a palm native touch stream cannot start a pinch during pen ownership (0.234176ms)
+✔ hold and physical eraser restore the tool after release; toggle changes only on press edges (2.636407ms)
+✔ focus loss and cancellation recover ownership and eraser; profile does not change theme (0.20962ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11.722551
+
+FILE test/common/mobile-view.test.mjs
+✔ mobile View wires Android PDF integration and immediate annotation saving (2.880208ms)
+✔ mobile View stores SDT packs in its shared document session (0.36519ms)
+✔ mobile View recreates a password-protected PDF when no active request can resume (0.565686ms)
+✔ complete erasure enters local annotation history before waiting for Android persistence (0.355826ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14.145992
+(node:43068) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/Motero/reader/src/common/view.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/Motero/reader/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+FILE test/common/reader-bookmark.test.mjs
+✔ only semantic black bookmarks receive the special flag (0.95399ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7.301856
+
+FILE test/common/sdt-document-session.test.mjs
+✔ opens and materializes a format-neutral pack after an unavailable pull (8.778528ms)
+✔ rejects incompatible envelope versions and document types (2.716807ms)
+✔ reset aborts stale acquisition and starts a new session (1.619965ms)
+✔ accepts a direct pack and can release its reader after materialization (3.004121ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 24.063055
+
+FILE test/dom/mobile-word-range.test.mjs
+✔ mobile word selection retains accents and attached sentence punctuation (2.525324ms)
+✔ adjacent punctuation does not swallow the following word (0.15558ms)
+✔ blank lines and standalone punctuation are not text selections (0.534891ms)
+✔ CJK selection uses language-aware segmentation instead of an entire paragraph (1.302886ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12.322107
+
+FILE test/dom/pen-input.test.mjs
+✔ paginated swipes ignore other pointers and finish on the owning release (1.664ms)
+✔ a palm does not start a swipe or finish the active pen highlight (0.618394ms)
+✔ a pen release over an annotation completes or cancels the active selection (0.420431ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9.374349
+Browserslist: browsers data (caniuse-lite) is 18 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+FILE test/dom/text-caret.test.mjs
+✔ an offscreen or first-line caret cannot replace the text under a line gap (1.038666ms)
+✔ empty fields retain the previous range by returning no spurious target (0.20324ms)
+✔ the caret search is bounded independently of chapter size (0.154549ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9.147333
+
+FILE test/pdf/android-page-fitting.test.mjs
+✔ prepared buffered pages have compact, centered crops without blocking the target (6.590663ms)
+✔ finger zoom keeps the selected mode and refits only after the final touch ends (3.731918ms)
+✔ the last touch pointer releases fitting even if a page change swallows touchend (0.563183ms)
+✔ one-finger scrolling keeps every crop and never recenters the scroll (2.291078ms)
+✔ a second finger reveals the original page even without changing zoom (1.225562ms)
+✔ Off during a zoom cancels the pending fit and is never undone on release (0.654438ms)
+✔ input during target preparation invalidates the commit (0.457246ms)
+✔ two complete pages retain overview; panning keeps it and zooming back to one page restores fit (2.053205ms)
+✔ uncached landscape analysis does not inherit a portrait width profile (5.43792ms)
+✔ late same-parity evidence refines only provisional geometry and retains valid results (0.66336ms)
+✔ background crop refinement waits until the pen stroke has finished (0.634388ms)
+✔ buffered geometry cannot move the viewport while a page turn owns it (0.998847ms)
+✔ a scheduled reading refit defers to a queued page turn (0.233686ms)
+✔ manual fitting uses its saved frame even after an automatic paper reference (0.164302ms)
+✔ scroll events do not starve the scheduled prefetch and the centered page comes first (0.285031ms)
+✔ refinement retains prepared crops for valid pages and only invalidates provisional pages (0.214036ms)
+✔ unchanged compact geometry requires no DOM layout reads or additional page writes (0.422245ms)
+✔ a cached neighbor can never overwrite a newly prepared current-page crop (0.496624ms)
+✔ a cancelled PDF.js analysis recovers a current fit without rejecting the UI command (0.849846ms)
+✔ buffered reference masks repaint even when their page-frame geometry is unchanged (0.610753ms)
+✔ Text preserves full paper height; Text + crop also removes vertical margins (0.482333ms)
+✔ E-reader touch pauses background crop work while foreground pages remain available (2.458425ms)
+✔ odd/even spreads prepare both page crops at a common scale in every scroll layout (2.94912ms)
+✔ a prepared crop cannot commit after the spread mode changes (0.143703ms)
+✔ two-finger peek captures both contacts on the stable viewport before page reflow (0.403697ms)
+✔ the final touchend clears stale touch IDs when reflow swallowed a pointerup (0.232033ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 43.302722
+(node:43110) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/Motero/reader/src/pdf/android-page-fitting.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/Motero/reader/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+FILE test/pdf/android-ui.test.mjs
+✔ native PDF selection is enabled for the mobile pointer tool and cleared for annotation tools (3.50324ms)
+✔ native selection owns text-layer input, but annotations still win hit testing (0.658614ms)
+✔ native selection synchronizes Reader state and restores transient Android handle ranges (1.410315ms)
+✔ native selection maps a PDF.js text layer and falls back to range geometry (3.4835ms)
+✔ native selection lazily prepares missing PDF page text before synchronizing (3.817414ms)
+✔ native selection remaps a text layer after page rerendering (0.545837ms)
+✔ native selection defers browser-owned gestures while keeping context-menu state synchronized (0.389476ms)
+✔ mobile PDF initialization installs native-selection and touch-transform event ownership (1.189619ms)
+✔ destroying a mobile PDF view releases native selection (0.562222ms)
+✔ primary mobile PDF document initialization requests outline data (0.566017ms)
+✔ PDF text-layer and annotation selection changes stay synchronized with native selection (0.453401ms)
+✔ Android page navigation preserves bounded pan and leaves fitted axes to PDF.js (1.633716ms)
+✔ Android layout changes preserve the original page position across re-fitting (0.954952ms)
+✔ Android layout changes bound pan on overflowing axes and leave fitted axes alone (0.397878ms)
+✔ Unchanged or ignored layout modes do not clamp the existing position (0.375405ms)
+✔ Layout changes leave missing and placeholder page geometry to PDF.js (0.20984ms)
+✔ Desktop, web and iOS layout changes keep PDF.js positioning (0.24335ms)
+✔ Cold page turns resolve geometry before advancing, including queued turns (0.403607ms)
+✔ Returning to the visible page cancels a pending turn or jump without resetting pan (0.8866ms)
+✔ Explicit navigation to the same cold page a turn was loading takes over instead of racing it (0.350969ms)
+✔ A new page turn after panning replaces the stale request instead of being discarded with it (0.270169ms)
+✔ Failed page loads fall back to PDF.js navigation so a broken page can be traversed (0.837047ms)
+✔ Viewport changes and destruction cancel pending turns without applying geometry (0.766453ms)
+✔ Desktop and single-page mode turns do not inspect page geometry (0.255498ms)
+✔ Wrapped and vertical directional turns keep horizontal pan and native vertical entry (0.259414ms)
+✔ Cold page jumps resolve geometry before applying pan (0.219425ms)
+✔ Failed page loads still allow an absolute jump (0.276939ms)
+✔ A replaced page jump does not navigate or save history after loading (0.655169ms)
+✔ An edge tap replaces a loading page jump (0.489864ms)
+✔ Viewport changes discard stale pan without canceling an absolute page jump (0.444988ms)
+✔ Desktop platforms and unsupported scroll modes use plain PDF.js positioning (0.225213ms)
+✔ Android PDF edge taps turn all three scroll modes and preserve zoom (0.397197ms)
+✔ Android PDF edge zones scale on phones and cap on wider viewports (0.252884ms)
+✔ PDF edge taps fall through outside supported Android touch input (0.289458ms)
+✔ Android PDF edge taps delegate every spread mode to PDF.js (0.325181ms)
+✔ Android PDF edge taps support pen input (0.212984ms)
+✔ Android PDF edge taps remain consumed at document boundaries (0.212574ms)
+✔ PDF edge page turns respect existing backdrop gesture exclusions (0.531155ms)
+✔ Android backdrop taps wait for a possible second tap (1.006538ms)
+✔ pen contact cancels a pending Android backdrop or edge tap (1.283037ms)
+✔ Android edge taps tolerate boundary drift and use the delayed pointer path (1.095249ms)
+✔ Android palette input never starts a page action that consumes the next tap (0.229559ms)
+✔ Android double taps suppress only their touch-generated compatibility mouse event (0.294235ms)
+✔ Android touch double-tap candidates wait for tap release before claiming the gesture (0.419691ms)
+✔ Android annotation touches select on tap release, not on scroll start (0.636621ms)
+✔ Android text-tool touches create and focus an inline text annotation immediately (0.445869ms)
+✔ Android touch transforms capture the pointer before moving a selected annotation (0.379301ms)
+✔ tapping a selected text annotation enters editing without stealing an existing caret (0.417206ms)
+✔ Android annotation tools claim touch input without changing pointer or hand behavior (0.543984ms)
+✔ changing Android tools finishes an active text editor exactly once (0.202849ms)
+✔ native touch-end handoff preserves scrolling and active transforms keep app ownership (0.258692ms)
+✔ native-selection gesture deferral leaves touch move and pointer-up to the browser (0.283319ms)
+✔ interrupted Android annotation transforms release pointer capture and reset interaction state (0.330739ms)
+✔ a hovering or touching pen is tracked only while an annotation tool is active (0.341776ms)
+✔ while a pen is in use fingers get no tool actions but still select annotations like the pen (0.756348ms)
+✔ web pen settings preserve finger annotation input (0.303549ms)
+✔ a swallowed pen release is cancelled without touching a completed or newer action (0.408134ms)
+✔ a new mouse or pen contact recovers a missing pen release without accepting palm or compatibility events (0.433962ms)
+✔ only a pen-owned action keeps touchstart away from PDF.js pinch handling (0.202629ms)
+✔ palm moves cannot replace queued pen moves, and finger-only input keeps its release handling (0.214377ms)
+✔ a palm cannot end or cancel the action of a pen, and a pen takes over from a palm (0.401174ms)
+✔ fingers are left to scroll while a pen is in use, but a pen stroke keeps owning touch movement (0.202069ms)
+✔ a palm lifting while another touch remains does not end the pointer action (0.144544ms)
+✔ native selection keeps keyboard range movement in the browser and invalid copies untouched (1.21767ms)
+✔ Escape clears a native PDF selection through the shared selection lifecycle (0.25036ms)
+✔ PDF context menus defer to native Android selection before Reader hit testing (0.274195ms)
+✔ PDF password entry resumes an active request and reports when view recreation is needed (0.223531ms)
+✔ PDF view buffers mobile annotation image requests until its renderer is initialized (0.494341ms)
+✔ Android centered position navigation is synchronous and preserves the zoom preset (0.964536ms)
+✔ Android navigation uses page bounds at nonzero scroll offsets (0.174257ms)
+✔ Android fitted pages keep horizontal placement in vertical and wrapped modes (0.219244ms)
+✔ Android cross-page annotations keep legacy vertical positioning and page-aligned horizontal targets (0.339852ms)
+✔ Position navigation preserves legacy targets outside the Android centered path (0.689439ms)
+✔ edge page turns exclude drawing tools in every PDF scroll mode (1.687545ms)
+✔ long edge presses and moved pointers do not turn a page (0.234147ms)
+✔ a priority edge tap cancels deferred chrome input rather than replaying a ghost down (0.863777ms)
+✔ a PDF tap dismissing the highlight palette is consumed before chrome, bookmark or edge handling (0.37864ms)
+✔ queued scroll and subpixel rounding preserve a stationary hold; actual scrolling cancels it (0.409756ms)
+ℹ tests 78
+ℹ suites 0
+ℹ pass 78
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 63.394618
+(node:43117) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/Motero/reader/src/pdf/pdf-view.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/Motero/reader/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+FILE test/pdf/blank-page-frame.test.mjs
+✔ only a demonstrably white text-free raster is a blank page (8.865478ms)
+✔ blank frames inherit a robust physical crop rather than a larger media-box percentage (0.462204ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 16.778367
+
+FILE test/pdf/chrome-tap-guard.test.mjs
+✔ first annotation tap dismisses chrome without replaying selection, next tap passes through (2.091712ms)
+✔ swipes, long holds and a second pointer replay the original down and keep their gestures (0.947862ms)
+✔ direct highlighter keeps its own hold timer; only its short pointer tap dismisses chrome (0.964275ms)
+✔ cancellation clears delayed actions and active drawing tools remain interactive (4.746367ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 16.163057
+
+FILE test/pdf/content-fit.test.mjs
+✔ returns null for a blank page (5.731033ms)
+✔ finds the body of a single-column page (9.721123ms)
+✔ ignores the rotated arXiv identifier in the left margin (2.620405ms)
+✔ ignores a centered page number and a running header (2.769896ms)
+✔ ignores a running header above a rule close to the body (2.778047ms)
+✔ keeps a table caption above the table rule (2.543921ms)
+✔ keeps a wide footnote at the bottom of the page (2.356764ms)
+✔ keeps both columns of a two-column page (2.410794ms)
+✔ keeps figures that are wider than the text (2.343765ms)
+✔ ignores light anti-aliasing noise (2.363164ms)
+✔ combines page bounds and ignores one outlier per edge (1.165854ms)
+✔ samples pages evenly across the document (0.278742ms)
+✔ fits content width, or both dimensions when requested (0.292873ms)
+✔ centers content within the page and constrains the offset (0.106107ms)
+✔ detects whether the view is still at the fitted offset (0.085567ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 56.582406
+
+FILE test/pdf/cropped-page-layout.test.mjs
+✔ cropped layout 0 separates visible page frames without paper-margin gaps (1.256197ms)
+✔ cropped layout 1 separates visible page frames without paper-margin gaps (0.210521ms)
+✔ cropped layout 2 separates visible page frames without paper-margin gaps (0.28377ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9.432195
+
+FILE test/pdf/direct-selection.test.mjs
+✔ direct word selection retains an attached period, ellipsis and closing quote (1.935842ms)
+✔ punctuation never extends into another word or over a real space or line break (0.298591ms)
+✔ separate lines, distant punctuation and auxiliary footnotes remain untouched (0.239244ms)
+✔ rotated character geometry retains punctuation without crossing a line (1.382404ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12.280667
+
+FILE test/pdf/double-tap-zoom.test.mjs
+✔ recognizes only nearby taps within the Android double-tap interval (11.695251ms)
+✔ returns the tapped paragraph rather than adjacent text (1.550102ms)
+✔ keeps a paragraph column local when text flows into another column (0.462193ms)
+✔ does not snap distant blank-page taps to text (0.180057ms)
+✔ fits blocks with margins and bounds extreme zoom levels (0.264641ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 22.031804
+(node:43159) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/Motero/reader/src/pdf/lib/utilities.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/Motero/reader/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+FILE test/pdf/hardware-navigation.test.mjs
+✔ EPUB hardware navigation respects document ends and ignores an uninitialized flow (1.946398ms)
+✔ forward steps stay inside page; only the following press at bottom turns (0.564475ms)
+✔ last partial step clamps to bottom without skipping visible text (0.181569ms)
+✔ backward scroll clamps to top, then enters previous page at bottom (0.156402ms)
+✔ fitted whole pages, including centered pages, turn immediately (0.217091ms)
+✔ Android content fitting skips hidden paper margins on the first button press (0.20318ms)
+✔ first and last pages cannot move outside document (0.177412ms)
+✔ zero selects page-only mode; step size uses actual viewport (0.145265ms)
+✔ fractional pixels near edge do not require an extra tiny scroll (1.423334ms)
+✔ vertical positions use current page bounds, not document bottom (0.277801ms)
+✔ content fit omits white margins; zoom changes restore full-page bounds (0.182991ms)
+✔ content shorter than viewport after cropping turns immediately (0.302517ms)
+✔ pending geometry load is cancelled by manual scrolling and failed loads stay put (0.303188ms)
+✔ invalid geometry and destroyed readers ignore press; EPUB uses own navigation (0.298521ms)
+✔ an unloaded previous page uses its resolved height for bottom entry (0.20941ms)
+✔ content margin is included in scroll limits and changing crop settings invalidates old bounds (0.173286ms)
+✔ spread SmartScroll uses the taller partner and advances to the next pair (0.278962ms)
+✔ continuous mode 0 crosses page boundaries by exactly the requested viewport fraction (0.133487ms)
+✔ continuous mode 1 crosses page boundaries by exactly the requested viewport fraction (0.049703ms)
+✔ continuous mode 2 crosses page boundaries by exactly the requested viewport fraction (0.070585ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 20.353573
+
+FILE test/pdf/hold-to-highlight.test.mjs
+✔ a quick tap is forwarded without saving an annotation (2.015751ms)
+✔ hold, drag, and lift previews the word and saves exactly once on release (1.074759ms)
+✔ small hand jitter keeps the long press; a swipe cancels it (0.25062ms)
+✔ a second finger before or after the hold aborts marking and consumes remaining lifts (0.301456ms)
+✔ pointer cancellation and reader shutdown discard the preview without saving (0.268848ms)
+✔ slow text extraction cannot start highlighting after a lift, swipe, or second touch (0.636311ms)
+✔ finger and pen support the gesture; mouse, pen button, and ineligible targets keep their handling (0.301356ms)
+✔ a hold on an image or without extractable text never saves a highlight (0.150232ms)
+✔ a rejected extraction is discarded and the next gesture still works (0.333263ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12.433413
+
+FILE test/pdf/ink-eraser.test.mjs
+✔ area eraser removes only the touched portion and leaves other strokes intact (1.325229ms)
+✔ stroke eraser removes the touched stroke rather than all ink in the annotation (0.208949ms)
+✔ stroke hit testing includes pen width and isolated dots without touching nearby strokes (0.144444ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 15.032005
+(node:43180) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/Motero/reader/src/pdf/lib/path.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/Motero/reader/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+FILE test/pdf/ink-rendering.test.mjs
+✔ unchanged completed ink avoids transforming all its points again (1.949502ms)
+✔ replacing a completed ink position updates the displayed path (0.355886ms)
+✔ zoom, rotation and translation invalidate completed ink geometry (0.355937ms)
+✔ ink color and thickness still update without rebuilding its path (1.168207ms)
+✔ points appended to an active ink stroke remain visible (0.228287ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10.020645
+(node:43187) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/Motero/reader/src/pdf/page.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/Motero/reader/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+FILE test/pdf/ink-samples.test.mjs
+✔ coalesced points and release endpoint are retained without duplicates (1.138183ms)
+✔ short strokes, dots and exact final endpoints survive smoothing (0.26359ms)
+✔ malformed and predicted input is not persisted (1.077113ms)
+✔ queued pen hover cannot add ink, while a zero-button release keeps its endpoint (0.176261ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7.873391
+(node:43194) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/Motero/reader/src/pdf/lib/path.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/Motero/reader/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+FILE test/pdf/manual-crop.test.mjs
+✔ all pages use the base crop and PDF page 1 is odd (1.33248ms)
+✔ all explicitly replaces parity overrides; changing one parity preserves the other (0.303239ms)
+✔ invalid, reversed, non-finite and too-small crop rectangles are rejected (0.203751ms)
+✔ dragging inside the frame preserves its size and clamps to the page (0.226795ms)
+✔ corner dragging cannot invert the frame or leave the page (0.201318ms)
+✔ manual geometry returns to the same natural coordinates after every view rotation (0.22388ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8.862503
+
+FILE test/pdf/native-text-selection-map.test.mjs
+✔ maps forward selection endpoints across pages (2.241875ms)
+✔ maps reverse selection endpoints across pages (0.245784ms)
+✔ normalizes whitespace, ligatures, and composed diacritics (0.426991ms)
+✔ matches PDF.js line-end hyphenation to Reader dehyphenation (0.164102ms)
+✔ maps whitespace-free DOM units onto Reader character offsets (0.348215ms)
+✔ realigns local text-layer insertions and omissions (0.20321ms)
+✔ preserves character boundaries for ligatures and diacritics (0.196671ms)
+✔ aligns RTL text without changing logical order (0.122301ms)
+✔ aligns CJK text with layout whitespace omitted (0.180357ms)
+✔ uses geometry fallback only when mapped text does not match (0.265223ms)
+✔ does not calculate fallback when mapped text matches (0.186436ms)
+✔ rejects selection when mapped and fallback text both differ (0.141759ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11.610316
+
+FILE test/pdf/navigation-history.test.mjs
+✔ Android scrubber history waits for its final page, not a superseded load (4.280889ms)
+✔ Android same-page jumps preserve history unless the position changes (0.880542ms)
+✔ manual scrolling during an Android pageIndex page load remains a return point (0.871118ms)
+✔ manual scrolling during an Android pageNumber page load remains a return point (0.508782ms)
+✔ live navigation records only source and final destination, including exact offsets (0.908693ms)
+✔ overlapping jumps and drags preserve each gesture boundary (0.807274ms)
+✔ after Back, an unchanged gesture preserves forward history and a changed one clears it (0.470817ms)
+✔ immediate Back saves fresh viewport coordinates and ignores the pending completion (0.367794ms)
+✔ ordinary navigation retains time-based grouping and waits for the latest save (0.520279ms)
+✔ a jump after scrub release suppresses synchronous viewport updates until its save (0.905098ms)
+✔ an unavailable viewport does not leave history saving disabled (0.544646ms)
+✔ a group waits for a delayed dest before saving its destination (0.529012ms)
+✔ a group waits for a delayed pageLabel before saving its destination (0.214137ms)
+✔ a failed old navigation cannot finish a newer gesture (0.414062ms)
+✔ manual scrolling while pageLabel loads remains a return point (0.42577ms)
+✔ manual scrolling while pageNumber loads remains a return point (0.223811ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 20.186565
+(node:43215) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/Motero/reader/src/pdf/pdf-view.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/Motero/reader/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+FILE test/pdf/page-navigation.test.mjs
+✔ single-page visibility updates only the old and new page, even in a large document (5.548754ms)
+✔ Jumped centers short pages but enters tall pages at the directional edge and preserves an in-page refit (0.414994ms)
+✔ explicit fitting and overview restoration center Continuous without constraining ordinary scrolling (0.213926ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10.912344
+(node:43222) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/Motero/reader/src/pdf/page-navigation.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/Motero/reader/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+FILE test/pdf/pdf-document-data.test.mjs
+✔ keeps the native PDF page usable without semantic data (3.632431ms)
+✔ owns semantic page projection independently for each PDF view (1.841583ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12.570665
+
+FILE test/pdf/pdf-sdt-position-mapper.test.mjs
+✔ maps valid PDF positions and rejects unrepresentable ranges (15.497874ms)
+✔ does not use block geometry for unanchored whitespace (0.262818ms)
+✔ maps detached search spans without retaining SDT content (6.105136ms)
+✔ bounds and clears expanded PDF run-data caches (0.587218ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 48.44853
+
+FILE test/pdf/pdf-thumbnails.test.mjs
+✔ thumbnail dimensions preserve aspect ratio within optional bounds (2.246341ms)
+✔ PDF thumbnails fit intrinsically rotated pages into the requested bounds (0.789327ms)
+✔ PDF thumbnails reuse only matching dimensions (0.33845ms)
+✔ annotation rerenders preserve the requested thumbnail bounds (0.40529ms)
+✔ theme change discards an in-flight thumbnail instead of caching its old pixels (1.651822ms)
+✔ pending thumbnail work is bounded and reports cancellations to its host (0.367894ms)
+✔ dark thumbnails start with original white paper before the PDF.js theme blender (0.180977ms)
+✔ Android thumbnail images stay bounded while evicted pages remain renderable (2.863373ms)
+✔ Android thumbnail cache also respects image byte size (0.275037ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 13.689349
+(node:43243) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/Motero/reader/src/pdf/pdf-thumbnails.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/Motero/reader/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+FILE test/pdf/pdfjs-compatibility.test.mjs
+✔ mobile PDF.js compatibility methods match the APIs used by the current viewer (3.601184ms)
+✔ mobile PDF.js compatibility does not replace WebView implementations that already exist (2.839368ms)
+✔ mobile PDF.js builds prepend compatibility code to every executable viewer bundle (0.362937ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14.640786
+
+FILE test/pdf/reading-analysis.test.mjs
+✔ text analysis shortcut refuses painted graphics, scans, invisible OCR, forms and unknown operators (1.906934ms)
+✔ performance samples remain bounded and report recent median and p95 without page content (0.672694ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10.24368
+
+FILE test/pdf/reading-columns.test.mjs
+✔ detects two prose columns with unequal line endings and full-width title (5.430899ms)
+✔ ordinary prose, short lists and sparse pages stay single-column (1.52821ms)
+✔ full-width prose in the column body prevents a false split (0.552307ms)
+✔ side references and vertical text never become reading columns (0.62932ms)
+✔ scan fallback requires two separated text-like regions and rejects a solid photograph (16.02343ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 33.461803
+
+FILE test/pdf/reading-edge-timeout.test.mjs
+✔ reading edge expires after five seconds and a new edge gets its own lifetime (3.806608ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12.435566
+
+FILE test/pdf/reading-geometry-cache.test.mjs
+✔ reopen reuses geometry and keeps documents isolated without saving page content (3.128435ms)
+✔ bounded cache rejects invalid geometry and survives unavailable storage (3.191969ms)
+✔ cached learning contains only validated geometry, never repeated header text (0.594729ms)
+✔ the revised detector never reuses previous-generation crop geometry (0.282998ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 16.792147
+
+FILE test/pdf/reading-image.test.mjs
+✔ compact analysis planes preserve grayscale and colored ink without retaining RGBA (2.157159ms)
+✔ 96 gray/color/noise/header/footer corpora retain the pre-worker crop geometry (197.703037ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 207.748348
+
+FILE test/pdf/reading-interaction.test.mjs
+✔ a previous-page fragment cannot receive the centered page bookmark (1.513107ms)
+✔ overview requires two complete full pages with only rounding tolerance (0.2163ms)
+✔ analysis queue deduplicates pending jobs, bounds concurrency, and prioritizes the destination (4.85612ms)
+✔ obsolete work and document close reject pending jobs and cancel active work (1.113727ms)
+✔ background learning leaves a worker for a new reading target and promotes queued targets (0.380683ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12.715109
+
+FILE test/pdf/reading-layout.test.mjs
+✔ an isolated changing running head and its rule are removed with a peer folio, keeping chapter headings (43.467166ms)
+✔ paired lower folios identify changing footer labels and their rule, keeping complete notes (30.819947ms)
+✔ a repeated note at the bottom stays even beside a folio and a model footer band (0.958768ms)
+✔ small repeated bottom text without a separate folio remains ambiguous content (0.332732ms)
+✔ vector separators in excluded running-head bands do not hold the upper crop edge (6.913212ms)
+✔ optional edition and line columns are independent of footnotes and running heads (14.781534ms)
+✔ Roman A/B folios in either margin are optional while body and footnotes stay (112.876386ms)
+✔ a Roman marginal item is separated before the adjacent body line is merged (0.956124ms)
+✔ Roman folios joined into one OCR item split only at a detached same-baseline margin (2.435291ms)
+✔ ordinary Roman numerals and words resembling numerals are not edition references (2.110721ms)
+✔ a smaller line number inside one OCR item is split by glyph geometry; superscripts stay (0.300304ms)
+✔ cropped text width uses the same width scale while taller pages remain scrollable (0.19606ms)
+✔ detached footnote labels and explicitly included outer editions are kept (0.226495ms)
+✔ visible margin masks contain only excluded reference boxes, never footnotes or their markers (0.197101ms)
+✔ isolated stars and dots on either margin follow Include/Exclude while body markers stay (0.536563ms)
+✔ document samples cover front matter, middle and final sections in paired pages (0.185204ms)
+✔ all sample indexes are valid and include both parities in short documents (0.349266ms)
+✔ short, repeated and small footnotes remain content, including the rule (25.4651ms)
+✔ download stamp, link and page number are removed below a real footnote (4.507254ms)
+✔ repeated long footnotes and JSTOR citations at the extreme bottom remain content (4.140221ms)
+✔ running headers are detected across pages; first body lines remain (5.433573ms)
+✔ an unrepeated heading is retained when its role is ambiguous (0.16228ms)
+✔ changing running titles at a stable header position are excluded (0.58164ms)
+✔ a rule underneath an excluded header is excluded without trimming footnote rules (6.044206ms)
+✔ natural reading bounds transform exactly with display rotation (0.208518ms)
+✔ isolated line-number column is excluded without excluding body numbers (0.349056ms)
+✔ edition references in a separate outer column are excluded (0.142671ms)
+✔ odd/even profiles retain different centers and a common reading width (0.53389ms)
+✔ a wider table and deeper footnote expand the sampled frame (0.318641ms)
+✔ blank pages have no invented text bounds (3.174654ms)
+✔ width fitting is independent of page height (0.132736ms)
+✔ height fitting is independent of page width (0.084795ms)
+✔ content fitting fits the complete content in both dimensions (0.111635ms)
+✔ page reference includes the physical paper and ignores content margins (0.130263ms)
+✔ larger margins lower the zoom without changing detected bounds (0.089142ms)
+✔ PDF text positions respect the actual viewport transform and font ascent (0.126817ms)
+✔ image-only gray paper crops text bands and retains the footnote (15.961058ms)
+✔ gray photograph with no separate text bands keeps its outer frame (9.938795ms)
+✔ full color image is not treated as gray scan paper (22.023852ms)
+✔ two-line changing running headers are recognized per parity with chapter-opening outliers (23.87717ms)
+✔ a small running header below fifteen percent is excluded while footnotes remain (4.249213ms)
+✔ a larger chapter title at a known running-header position stays in the content (0.773724ms)
+✔ ordinary first paragraphs are not learned as lower headers from position alone (3.756233ms)
+✔ two-line headers do not remove a genuine section heading below them (3.833929ms)
+✔ a short first body paragraph near the top is not mistaken for a running header (0.760664ms)
+✔ header separation tolerates body-font boxes that overlap adjacent text lines (5.015145ms)
+✔ Kant standalone Roman margin folios are separated before body-word merging (0.598274ms)
+✔ publisher download-watermark blocks and attached DOI are excluded, real DOI footnotes remain (3.290705ms)
+✔ a detached numerical label beside a genuine footnote at the extreme bottom remains content (0.152295ms)
+✔ Kant gutter folios beside a short heading use the page body column (0.464546ms)
+✔ a learned sequential bottom folio survives a tight gap while footnote text remains (0.300525ms)
+✔ sequential Roman folios in a tight lower band are distinct from section titles and footnotes (0.342246ms)
+✔ learned footer lanes above the old fixed edge keep nearby note lines (0.485458ms)
+✔ font-distinct running heads below the old top band require learned position and whitespace (0.594609ms)
+✔ local evidence stays within a chapter even when alternating running heads have different labels (0.464297ms)
+✔ text-only geometry applies exclusions and keeps the complete final footnote (0.394052ms)
+✔ normalized repeated body lines within the expanded header band remain content (1.183119ms)
+✔ continuously changing running titles do not destroy usable local geometric evidence (0.17593ms)
+✔ Text fitting preserves the full non-fit axis in both directions (0.111255ms)
+✔ a small footnote star beside footnote text remains readable (0.201938ms)
+✔ a zero-advance gutter star is still extracted as a separate marginal span (0.180247ms)
+✔ merged OCR margin stars split without shrinking equal-font body text (1.005657ms)
+✔ a large title period is not misidentified as a tiny gutter dot (0.113077ms)
+ℹ tests 63
+ℹ suites 0
+ℹ pass 63
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 382.850068
+
+FILE test/pdf/reading-unit.test.mjs
+✔ spread parity preserves the cover and final unpaired pages (1.950824ms)
+✔ a complete spread is a reading unit, not an overview of two units (0.307554ms)
+✔ vertical, horizontal and wrapped layouts never split a spread, including mixed page heights (0.773374ms)
+✔ e-reader and low memory hints coordinate bounded image and geometry budgets (0.257571ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 27.351128
+
+FILE test/pdf/reading-work-queue.test.mjs
+✔ pen input pauses queued background analysis while foreground work and resumption remain available (2.027548ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8.40019
+
+FILE test/pdf/reading-worker.test.mjs
+✔ worker transfers raster ownership, publishes only geometry, and prioritizes foreground over waiting samples (3.626002ms)
+✔ a worker failure rejects in-flight transfers and subsequent work uses the portable fallback (1.026418ms)
+✔ superseded queued analyses release their buffers without disturbing the running page (1.763798ms)
+✔ closing before worker startup releases the waiting caller immediately (0.308676ms)
+✔ concurrent learning and foreground requests transfer a shared raster once and release it after the last use (0.564274ms)
+✔ an analysis error response retires the worker and preserves the local fallback (0.606537ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12.85093
+(node:43324) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/Motero/reader/src/pdf/reading-worker-client.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/Motero/reader/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+FILE test/pdf/scroll-target.test.mjs
+✔ keeps the existing centered navigation behavior by default (1.892108ms)
+✔ horizontal clipping does not cause vertical recentering (0.184152ms)
+✔ fitted page navigation keeps PDF.js alignment on each axis (0.313384ms)
+✔ overflowing axes center within the page and keep oversized targets at their start (1.635919ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11.866124
+
+FILE test/pdf/sdt-integration.test.mjs
+✔ each PDF view opens its own lazy document after its first page is ready (3.124079ms)
+✔ retries when the shared reader was temporarily unavailable (0.482123ms)
+✔ does not retry document or search data that failed validation (1.380571ms)
+✔ skips SDT search results that cannot be represented as PDF positions (0.43968ms)
+✔ publishes the inactive state when a PDF search closes (1.085796ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14.364107
+
+FILE test/pdf/sdt-search.test.mjs
+✔ searches logical SDT content in document order and skips excluded flow (4.548816ms)
+✔ matches across part boundaries and maps dehyphenated text to both parts (2.966646ms)
+✔ builds equivalent detached search data one pack chunk at a time (1.356476ms)
+✔ supports normalized case-sensitive whole-word search across scripts (14.63698ms)
+✔ normalizes PDF text without losing source offsets (9.210548ms)
+✔ searches linked visible text once without indexing targets or joining unrelated blocks (9.047927ms)
+✔ cancels a search without invalidating the shared immutable index (4.510879ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 51.858262
+
+FILE test/pdf/search-session.test.mjs
+✔ changes in SDT eligibility affect only the next query (1.208897ms)
+✔ an SDT failure replaces only the current session with PDF fallback (0.33191ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9.331717
+
+FILE test/pdf/selection-flow.test.mjs
+✔ keeps only the anchor flow in both selection directions (1.327333ms)
+✔ does not alter selections before SDT flow metadata exists (0.131153ms)
+✔ reconstructs discontinuous selections without guessing spacing (1.301995ms)
+✔ waits for one semantic generation before filtering a cross-page selection (0.495433ms)
+✔ derives native selection endpoints before applying document flow (0.760955ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11.211966
+
+FILE test/pdf/semantic-overlays.test.mjs
+✔ keeps native PDF link annotations independent from structured page data (2.499696ms)
+✔ preserves native PDF links alongside overlapping semantic links (0.173577ms)
+✔ opens PDF SDT metadata without materializing content and reads only a requested page (3.430472ms)
+✔ leaves an incomplete citation to the native PDF fallback (2.7392ms)
+✔ prunes valid nested page ranges and rejects invalid ones (2.077462ms)
+✔ targeted projection does not fall back to cross-page block geometry (15.759399ms)
+✔ projects PDF SDT links, citations, and exact text-flow geometry (1.360561ms)
+✔ projects safe targets and rejects unsafe or out-of-range targets (0.726244ms)
+✔ indexes cross-page SDT interactions on every affected PDF page (0.653957ms)
+✔ yields during projection and honors cancellation (0.76447ms)
+✔ rejects SDT from another processor, page count, or page geometry (0.349347ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 37.981175
+
+FILE test/pdf/touch-annotation-transform.test.mjs
+✔ starts inline text editing only for Android touch input (0.758631ms)
+✔ starts transforms only on Android, for selected annotations and supported actions (1.346792ms)
+✔ ignores touch jitter until drag slop is reached (0.152956ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9.932635
