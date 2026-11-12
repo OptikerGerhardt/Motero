@@ -1,7 +1,11 @@
-# Build 324 / Motero 1.0.9 — lokaler Release-Kandidat
+# Build 324 / Motero 1.0.9 — veröffentlicht und unabhängig geprüft
 
-- Gesammelte Gesten-, EPUB-, Bookmark-, Farb-, Spalten-, Spread- und Continuous-Änderungen umgesetzt. [Umfang und Grenzen](docs/READER_324.md).
-- Finaler Browser-/Android-Prüflauf und signierte API-31/35-Updates vor Veröffentlichung erforderlich. [Nachweise](qa/build324/README.md).
+- [APK und vollständige Quellen](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.9-324); [Build, Signatur und Updates](https://github.com/OptikerGerhardt/Motero/actions/runs/43124008618) erfolgreich. Anwendung `8419a39e`, Reader `b9b28564`; PDF.js 5.7.330 unverändert.
+- 411 Reader-Fälle in 48 Dateien, 149 native Tests in 36 Suiten, alle 22 Browser-Suiten, 43 Engine-Pixel- und 19 offizielle Viewer-Fälle bestanden.
+- Kürzere Haltegeste, Stylus per langem Stiftdruck, EPUB-Ränder/Bookmarks, Desktop-Seitenfarben, Spaltenerkennung/Leserichtung, Spread-Fitting/Zentrierung und echtes Continuous-Volume-Scrolling umgesetzt. [Umfang und Grenzen](docs/READER_324.md).
+- Öffentliche APK separat heruntergeladen: SHA-256 `bf72620240b003efbbc21c7dbe4c87a8c732160804c8e3d71e19fbce65b36c1e`. Privater Motero-Signierer, eingeschränkte Rotation, Receiver-Berechtigung, Android 9+, nicht debuggbar; Quellen einschließlich Worker, vollständiges Quellarchiv, Prüfsummen und unveränderte Engine/Runtime geprüft.
+- API 31/35: Updates von 303 und 323 erhalten Datenmarker und UID, starten die App und verweigern alte Schlüssel. Latest-Release zeigt genau eine APK für Build 324.
+- Physische BOOX-/Pixel-Eingaben, native Animationen und Kontosync separat. Die quellenspezifische EPUB-Überschriftenfrage bleibt wie vereinbart zur Beobachtung offen. [Nachweise](qa/build324/README.md).
 
 # Build 323 / Motero 1.0.8 — veröffentlicht und unabhängig geprüft
 

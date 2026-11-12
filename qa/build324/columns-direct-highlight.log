@@ -1,0 +1,9 @@
+PASS jumped: column width, left-to-right order, next page and reverse reading order
+PASS continuous: column width, left-to-right order, next page and reverse reading order
+PASS swipe at left-column bottom continues at right-column top
+PASS two-finger pinch still zooms and restores column reading
+PASS manual cropping keeps its explicit frame
+PASS continuous 0: real viewport scroll carries the requested fraction across page boundaries
+PASS continuous 1: real viewport scroll carries the requested fraction across page boundaries
+PASS continuous 2: real viewport scroll carries the requested fraction across page boundaries
+PASS PDF background colors reach the rendered page pixels

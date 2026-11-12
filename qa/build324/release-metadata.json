@@ -1,0 +1,10 @@
+{
+  "version": "1.0.9-324",
+  "version_code": 324,
+  "tag": "v1.0.9-324",
+  "apk": "Motero_Build324.apk",
+  "source": "Motero_Build324_Source.zip",
+  "release_title": "Motero 1.0.9",
+  "unsigned": false,
+  "signing_certificate_sha256": "f6b9547e9644f44e23bcceac94ec32cfd6576b5f732af7e12094699307de778d"
+}

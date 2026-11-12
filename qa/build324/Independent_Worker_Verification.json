@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "unique_reader_sources": 115,
+  "worker_chunks": {
+    "115.view.js": "12bc23c627708c0b4400538d097739ebd4b3f3ab88e0c72f6ac2e6700cb714a1",
+    "317.view.js": "5e3a99b0110318b51cebeae7e7e7a9fd94c92026687ca7e371936c5eb5a09237",
+    "825.view.js": "611a9e6527de74516a8cb1366235a1a773e27fb39db3a311ae1bc9d2718727ff",
+    "903.view.js": "13ad91821ad200b7347864c42431d332dec9ed90f921a6df3254b31a8ea4beef"
+  },
+  "worker_source_verified": true
+}

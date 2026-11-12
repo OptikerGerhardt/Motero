@@ -1,0 +1,9 @@
+PASS word-start swipe turns EPUB page without annotation or toolbar toggle
+PASS reverse EPUB swipe returns to the previous page
+PASS EPUB margin taps keep page-turn priority over pending holds
+PASS swiping from an existing annotation keeps page-turn priority
+PASS paginated: independent top/bottom margin control is symmetric and applied to layout
+PASS scrolled: independent top/bottom margin control is symmetric and applied to layout
+PASS viewport corner toggles a larger unclipped EPUB bookmark independently of content margins
+PASS all four desktop page backgrounds and E-Reader override
+PASS shorter word hold starts direct highlighting before the old hold threshold

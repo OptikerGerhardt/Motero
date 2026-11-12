@@ -38,6 +38,6 @@ This is geometric recognition, not semantic reflow: complex mixed layouts, irreg
 
 ## Verification
 
-411 Reader cases in 48 files and 149 native cases in 36 suites pass locally. Final actual results, browser logs, APK/source checks and API 31/35 update reports are recorded in [qa/build324](../qa/build324/README.md). Publication requires both updates from original 303 and signed 323 to preserve the private marker/UID and reject old-key updates.
+411 Reader cases in 48 files, 149 native cases in 36 suites, all 22 browser suites, 43 engine pixel tests and 19 official viewer cases pass. The [protected release workflow](https://github.com/OptikerGerhardt/Motero/actions/runs/43124008618) passed production signing and both API 31/35 update gates from original 303 and signed 323, preserving the private marker/UID and rejecting old-key updates. The independently downloaded APK, source maps including the worker, complete source archive and all release checksums were verified. [Evidence](../qa/build324/README.md).
 
 Physical BOOX/Pixel touch and stylus behavior, native animation appearance, device-specific WebViews and live-account synchronization remain separate tests. No claim of measured physical-device latency or total process RAM is made.

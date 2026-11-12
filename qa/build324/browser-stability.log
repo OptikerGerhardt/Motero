@@ -1,0 +1,12 @@
+DIAG page-turn frames [{"x":120,"y":191,"scale":1.2115384615384615},{"x":120,"y":191,"scale":1.2115384615384615},{"x":120,"y":191,"scale":1.2115384615384615},{"x":120,"y":191,"scale":1.2115384615384615},{"x":120,"y":191,"scale":1.2115384615384615},{"x":120,"y":191,"scale":1.2115384615384615},{"x":120,"y":191,"scale":1.2115384615384615},{"x":120,"y":191,"scale":1.2115384615384615},{"x":120,"y":191,"scale":1.2115384615384615},{"x":120,"y":191,"scale":1.2115384615384615},{"x":120,"y":191,"scale":1.2115384615384615},{"x":120,"y":191,"scale":1.2115384615384615},{"x":120,"y":191,"scale":1.2115384615384615},{"x":120,"y":191,"scale":1.2115384615384615},{"x":120,"y":191,"scale":1.2115384615384615},{"x":120,"y":191,"scale":1.2115384615384615},{"x":120,"y":191,"scale":1.2115384615384615},{"x":120,"y":191,"scale":1.2115384615384615},{"x":120,"y":191,"scale":1.2115384615384615}]
+PASS page turn paints only prepared target geometry
+PASS input during preparation cancels pending page fitting
+PASS deleting selected annotation clears pointer and first backdrop tap works
+PASS stale editor close preserves newer selection
+PASS exact Zotero colors, borderless buttons, pointer and dark theme
+PASS palette mode buttons fill equal thirds with centered icons and edge touch targets
+PASS canonical underline conversion preserves comments tags text and sends deletion
+PASS bookmark uses raw content frame independent of selected fit and margins
+PASS protected bookmark is retained without changing its position
+PASS image-only gray paper and footnote bounds without OCR [0.2,0.15,0.775,0.92375]
+PASS: all Android reader stability checks
