@@ -1,6 +1,11 @@
-# Build 325 / Motero 1.0.10 — Freigabeprüfung
+# Build 325 / Motero 1.0.10 — veröffentlicht und unabhängig geprüft
 
-Die 15 nach Build 324 gesammelten Punkte sind implementiert. 414 Reader-Fälle in 49 Dateien, 153 native Tests in 36 Suiten und alle 22 Browser-Suiten bestanden. APK-Build, eingebettete Reader-/Worker-Quellen, unveränderte Engine-/Runtime-Hashes und 16 Infrastruktur-/Signatur-Schutztests bestanden. Die geschützte Release-Prüfung folgt. [Umfang](docs/READER_325.md). PDF.js 5.7.330, Signierer und Annotations-/Syncformate unverändert. Physische Geräte und Kontosync separat.
+- [APK und vollständige Quellen](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.10-325); [Build, Signatur und Updates](https://github.com/OptikerGerhardt/Motero/actions/runs/43272546142) erfolgreich. Anwendung `20436e1c`, Reader `787471d4`; PDF.js 5.7.330 unverändert.
+- 414 Reader-Fälle in 49 Dateien, 153 native Tests in 36 Suiten, alle 22 Browser-Suiten, 43 Engine-Pixel- und 19 offizielle Viewer-Fälle bestanden. Zusätzlich 16 Infrastruktur-/Signatur-Schutztests bestanden.
+- Alle 15 nach Build 324 gesammelten Punkte umgesetzt: stabile Spalten, Continuous-Achsensperre, Kopf-/Leerblatt-Erkennung, gemeinsame Appearance, erhaltene Farbpalette, größere Griffe und EPUB-Leisten/Ränder ohne Umbruch. [Umfang und Grenzen](docs/READER_325.md).
+- Öffentliche APK separat heruntergeladen: SHA-256 `bb9eb476319b86cd5ec1d0f37d283a139c86d7e081bdde355f3b8967bd9922c5`. Privater Motero-Signierer und eingeschränkte Rotation, Receiver-Berechtigung, Android 9+, nicht debuggbar; 114 Hauptbundle- und 117 eindeutige Reader-/Worker-Quellen, 207 Engine- und 45 Runtime-Dateien sowie 9450 Quellarchiv-Dateien und Release-Prüfsummen geprüft.
+- API 31/35: Updates von 303 und 324 erhalten Datenmarker und UID, starten die App und verweigern alte Schlüssel. Latest-Release zeigt Build 325 mit genau einer APK.
+- Physische BOOX-/Pixel-Eingaben, native Animationen und Kontosync separat. Die quellenspezifische EPUB-Überschriftenfrage bleibt zur Gegenprobe offen. [Nachweise](qa/build325/README.md).
 
 # Build 324 / Motero 1.0.9 — veröffentlicht und unabhängig geprüft
 

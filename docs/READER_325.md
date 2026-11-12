@@ -36,6 +36,6 @@ The Kundera heading observation remains deferred for comparison with another EPU
 
 ## Verification
 
-414 Reader cases in 49 files, 153 native cases in 36 suites and all 22 browser suites pass locally. The local and protected release checks are recorded in [the Build 325 evidence](../qa/build325/README.md). They cover reader/native units, real Chromium touch input, unchanged PDF.js pixel/viewer cases and the signed API 31/35 update gates from original 303 and preceding 324.
+414 Reader cases in 49 files, 153 native cases in 36 suites, all 22 browser suites, 43 engine pixel cases and 19 official viewer cases pass. The [protected release workflow](https://github.com/OptikerGerhardt/Motero/actions/runs/43272546142) passed production signing and both API 31/35 update gates from original 303 and preceding signed 324. Private markers/UIDs survive both updates, the app starts and old-key updates/internal permission access are rejected. The independently downloaded APK, main/worker source maps, complete 9450-file source archive, all release checksums and unchanged pinned runtime/engine files were verified. [Evidence](../qa/build325/README.md).
 
 Physical BOOX/Pixel input, device-specific WebViews, native animation appearance and live-account synchronization require separate device checks. Synthetic documents exercise the reported structures; no claim is made of testing the user's original PDFs or measuring physical-device latency/RAM.
