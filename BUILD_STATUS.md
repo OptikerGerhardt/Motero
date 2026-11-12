@@ -1,3 +1,7 @@
+# Build 325 / Motero 1.0.10 — Freigabeprüfung
+
+Die 15 nach Build 324 gesammelten Punkte sind implementiert. 414 Reader-Fälle in 49 Dateien, 153 native Tests in 36 Suiten und alle 22 Browser-Suiten bestanden. APK-Build, eingebettete Reader-/Worker-Quellen, unveränderte Engine-/Runtime-Hashes und 16 Infrastruktur-/Signatur-Schutztests bestanden. Die geschützte Release-Prüfung folgt. [Umfang](docs/READER_325.md). PDF.js 5.7.330, Signierer und Annotations-/Syncformate unverändert. Physische Geräte und Kontosync separat.
+
 # Build 324 / Motero 1.0.9 — veröffentlicht und unabhängig geprüft
 
 - [APK und vollständige Quellen](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.0.9-324); [Build, Signatur und Updates](https://github.com/OptikerGerhardt/Motero/actions/runs/43124008618) erfolgreich. Anwendung `8419a39e`, Reader `b9b28564`; PDF.js 5.7.330 unverändert.

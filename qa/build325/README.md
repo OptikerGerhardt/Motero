@@ -1,0 +1,11 @@
+# Motero 1.0.10 / Build 325 verification
+
+Reader source: `787471d4`. PDF.js remains 5.7.330 / `5f95f712bc629ac11159cb4859ed8091fdffa87b`. The application source is the release commit that contains this evidence directory; subsequent documentation commits do not replace release tags or assets.
+
+414 Reader cases in 49 files and 153 native cases in 36 suites pass, with individual case counts retained in the JSON and per-file log. All 22 browser suites pass. The initial full run was followed by successful fitting/columns/navigation runs after updating the legacy blank-page expectation to the newly requested inherited frame; the final relevant logs are included here. Existing engine checks retain 43 pixel cases and 19 official viewer cases.
+
+The added browser coverage checks right-column alignment after refitting/recentering and reverse entry, switching Continuous column fitting off/on, actual diagonal touches with orthogonal overflow in all directions, two-finger zoom and overview return, six automatic/manual × content/width/height blank-frame combinations, actual theme pixels/gutters, larger PDF/EPUB endpoint hit targets, stable annotation IDs and Undo, and progress/quick-palette/page-edge priority without EPUB reflow. Native tests cover appearance migration and separate remembered light/dark choices, screen-specific margin endpoints and precise line-height values.
+
+The local non-debuggable Android-9+ APK builds, its reader/worker sources match the checkout, and all 207 engine and 45 runtime files retain their pinned hashes. All 16 infrastructure/signing-refusal tests pass. Production publication evidence is added after the protected API 31/35 update gates finish. Updates must be checked from original 303 and preceding signed 324, including private marker/UID retention, app start, old-key refusal and internal-permission denial. No unsigned APK is distributed.
+
+Physical BOOX/Pixel input, native animation appearance, device-specific WebViews, the user's original documents and live-account sync remain separate checks. No physical-device latency or total-process-RAM measurement is claimed. The Kundera heading observation remains deferred for comparison with another EPUB. See [scope and implementation](../../docs/READER_325.md).

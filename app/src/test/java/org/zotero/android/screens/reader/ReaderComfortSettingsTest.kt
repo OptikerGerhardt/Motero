@@ -59,4 +59,35 @@ class ReaderComfortSettingsTest {
         assertEquals("default",restored.effectivePageBackground())
         assertEquals(-20f,restored.effectiveVerticalMargins(),0f)
     }
+
+    @Test fun `automatic remembers the light and dark paper families independently across restart`() {
+        val settings = ReaderSettings.default()
+        settings.selectAppearance("sepia")
+        settings.selectAppearance("black")
+        settings.selectAppearance("automatic")
+        val restored = Gson().fromJson(Gson().toJson(settings), ReaderSettings::class.java)
+        assertEquals("sepia", restored.effectivePageBackground(false))
+        assertEquals("black", restored.effectivePageBackground(true))
+        assertEquals(org.zotero.android.screens.reader.settings.data.PageAppearanceMode.AUTOMATIC, restored.effectiveAppearanceMode())
+        restored.selectAppearance("snow")
+        assertEquals("snow", restored.effectivePageBackground(true))
+        assertEquals(org.zotero.android.screens.reader.settings.data.PageAppearanceMode.LIGHT, restored.effectiveAppearanceMode())
+        restored.selectAppearance("automatic")
+        assertEquals("snow", restored.effectivePageBackground(false))
+        assertEquals("black", restored.effectivePageBackground(true))
+    }
+    @Test fun `legacy paper choices migrate with their family and survive switching to automatic`() {
+        val settings = ReaderSettings.default().copy(pageBackground="sepia")
+        assertEquals("sepia", settings.effectiveAppearance())
+        assertEquals(org.zotero.android.screens.reader.settings.data.PageAppearanceMode.LIGHT, settings.effectiveAppearanceMode())
+        settings.selectAppearance("automatic")
+        assertEquals("sepia", settings.effectivePageBackground(false))
+        assertEquals("dark", settings.effectivePageBackground(true))
+    }
+    @Test fun `the negative margin endpoint reaches the physical screen without a dead range`() {
+        assertEquals(-7f,ReaderSettings.minimumVerticalMargin(60f,900f),0f)
+        assertEquals(-3f,ReaderSettings.minimumVerticalMargin(30f,1200f),0f)
+        assertEquals(0f,ReaderSettings.minimumVerticalMargin(0f,900f),0f)
+        assertEquals(-7f,ReaderSettings.minimumVerticalMargin(60f,0f),0f)
+    }
 }

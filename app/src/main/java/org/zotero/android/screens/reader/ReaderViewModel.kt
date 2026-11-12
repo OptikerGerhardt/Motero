@@ -439,7 +439,7 @@ class ReaderViewModel @Inject constructor(
     fun retryReaderRenderer() {
         updateState { copy(rendererFailed = false, isReaderLoading = true, rendererGeneration = rendererGeneration + 1) }
     }
-    fun initialReaderIsDark(osDark: Boolean): Boolean = when(defaults.getReaderSettings().appearanceMode) {
+    fun initialReaderIsDark(osDark: Boolean): Boolean = when(defaults.getReaderSettings().effectiveAppearanceMode()) {
         PageAppearanceMode.LIGHT -> false
         PageAppearanceMode.DARK -> true
         PageAppearanceMode.AUTOMATIC -> osDark
@@ -504,7 +504,7 @@ class ReaderViewModel @Inject constructor(
         readerOsDark = isDark
         if (!readerThemeInitialized) {
             readerThemeInitialized = true
-            val mode = when(defaults.getReaderSettings().appearanceMode) {
+            val mode = when(defaults.getReaderSettings().effectiveAppearanceMode()) {
                 PageAppearanceMode.LIGHT -> org.zotero.android.pdf.data.PageAppearanceMode.LIGHT
                 PageAppearanceMode.DARK -> org.zotero.android.pdf.data.PageAppearanceMode.DARK
                 PageAppearanceMode.AUTOMATIC -> org.zotero.android.pdf.data.PageAppearanceMode.AUTOMATIC
@@ -1790,6 +1790,7 @@ class ReaderViewModel @Inject constructor(
             ReaderWebData.toggleInterfaceVisibility -> {
                 decideTopBarAndBottomBarVisibility()
             }
+            ReaderWebData.onCycleEpubProgress -> cycleEpubProgress()
             ReaderWebData.onDismissReaderChrome -> setReaderChromeVisible(false)
 
             ReaderWebData.onEdgePageTurnTap -> {
@@ -2492,12 +2493,12 @@ class ReaderViewModel @Inject constructor(
     }
 
     fun setPdfToolColor(hex: String) {
-        val tool = viewState.activeTool ?: return
+        val tool = viewState.activeTool ?: viewState.pdfOptionsTool ?: return
         viewModelScope.launch { setToolOptions(hex, null, tool) }
     }
 
     fun setPdfToolSize(size: Float) {
-        val tool = viewState.activeTool ?: return
+        val tool = viewState.activeTool ?: viewState.pdfOptionsTool ?: return
         if (!size.isFinite()) return
         val bounded = size.coerceIn(if (tool == ReaderAnnotationTool.text) 6f else .5f,
             if (tool == ReaderAnnotationTool.text) 72f else 25f)
@@ -2677,7 +2678,7 @@ class ReaderViewModel @Inject constructor(
         }
         _select(key = null, didSelectInDocument = true)
         updateState {
-            copy(activeTool = annotationTool)
+            copy(activeTool = annotationTool, pdfOptionsTool = annotationTool)
         }
         triggerEffect(ReaderViewEffect.ScreenRefresh)
     }
@@ -2825,6 +2826,7 @@ class ReaderViewModel @Inject constructor(
 
     fun navigateToReaderSettings() {
         val args = ReaderSettingsArgs(
+            minimumVerticalMargin = minimumVerticalMargin,
             readerSettings = defaults.getReaderSettings(),
             fileType = viewState.fileType,
             readingModeEnabled = viewState.readingModeEnabled,
@@ -2958,7 +2960,25 @@ class ReaderViewModel @Inject constructor(
         return updateAppearanceAccordingToSettings(isSettingsUpdate = true, applyFit = applyFit)
     }
 
-    fun setReaderViewportInset(value: Float) = readerWebCallChainExecutor.setReaderViewportInset(value)
+    fun setReaderProgress(bottomInset: Float) {
+        val state = viewState
+        readerWebCallChainExecutor.setReaderProgress(mapOf(
+            "text" to when(state.progressMode) {
+                "position" -> state.progressPosition.orEmpty()
+                "percent" -> state.progressPercent.orEmpty()
+                else -> state.pageProgress.orEmpty()
+            },
+            "hidden" to (state.progressMode == "hidden"),
+            "visible" to (state.fileType == ReaderFileType.EPUB && !state.isTopBarVisible),
+            "bottomInset" to bottomInset,
+        ))
+    }
+
+    private var minimumVerticalMargin = -7f
+    fun setReaderViewportInset(value: Float, viewportHeight: Float) {
+        minimumVerticalMargin = ReaderSettings.minimumVerticalMargin(value, viewportHeight)
+        readerWebCallChainExecutor.setReaderViewportInset(value)
+    }
 
     private fun updateAppearanceAccordingToSettings(isSettingsUpdate: Boolean, applyFit: Boolean = false): kotlinx.coroutines.Job {
         return viewModelScope.launch {
@@ -2993,7 +3013,7 @@ class ReaderViewModel @Inject constructor(
     }
 
     private fun updatePdfPageAppearanceMode(readerSettings: ReaderSettings) {
-        val oldPageAppearanceMode = when (readerSettings.appearanceMode) {
+        val oldPageAppearanceMode = when (readerSettings.effectiveAppearanceMode()) {
             PageAppearanceMode.LIGHT -> {
                 org.zotero.android.pdf.data.PageAppearanceMode.LIGHT
             }
@@ -3101,6 +3121,7 @@ data class ReaderViewState(
     val isDark: Boolean = false,
     val error: ReaderViewModel.Error? = null,
     val activeTool: ReaderAnnotationTool? = null,
+    val pdfOptionsTool: ReaderAnnotationTool? = null,
     val selectedAnnotationKey: String? = null,
     val selectedAnnotationCommentActive: Boolean = false,
     val focusSidebarKey: String? = null,

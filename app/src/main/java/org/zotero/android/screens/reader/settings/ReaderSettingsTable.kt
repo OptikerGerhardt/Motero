@@ -32,8 +32,13 @@ internal fun ReaderSettingsTable(
     ) {
         readerSettingsSettingRow(
             titleResId = Strings.pdf_settings_appearance_title,
-            options = viewState.appearanceOptions,
-            selectedOption = viewState.selectedAppearanceOption,
+            options = if (eReader.eReader) listOf(ReaderSettingsOptions.AppearanceLight, ReaderSettingsOptions.AppearanceDark, ReaderSettingsOptions.AppearanceAutomatic) else viewState.appearanceOptions,
+            columns = 3,
+            selectedOption = if (eReader.eReader) when(viewState.selectedAppearanceOption) {
+                ReaderSettingsOptions.AppearanceSnow, ReaderSettingsOptions.AppearanceSepia -> ReaderSettingsOptions.AppearanceLight
+                ReaderSettingsOptions.AppearanceBlack -> ReaderSettingsOptions.AppearanceDark
+                else -> viewState.selectedAppearanceOption
+            } else viewState.selectedAppearanceOption,
             optionSelected = viewModel::onOptionSelected
         )
         if (viewState.fileType == ReaderFileType.PDF && !viewState.readingModeEnabled) {
@@ -48,34 +53,6 @@ internal fun ReaderSettingsTable(
                 selectedOption = if (viewState.pageNavigation == "jumped") ReaderSettingsOptions.NavigationJumped else ReaderSettingsOptions.NavigationContinuous,
                 optionSelected = viewModel::onOptionSelected,
             )
-        }
-        if (!eReader.eReader) {
-            item {
-                Column(Modifier.fillMaxWidth().padding(16.dp)) {
-                    Text(stringResource(R.string.reader_page_background), style = MaterialTheme.typography.bodyMedium)
-                    Spacer(Modifier.height(8.dp))
-                    for (choices in listOf("default" to "Default", "snow" to "Snow", "sepia" to "Sepia", "dark" to "Dark", "black" to "Black").chunked(3)) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                            choices.forEachIndexed { index, (value, label) ->
-                                androidx.compose.material3.ToggleButton(
-                                    checked = viewState.pageBackground == value,
-                                    onCheckedChange = { viewModel.onPageBackgroundChanged(value) },
-                                    modifier = Modifier.weight(1f),
-                                    colors = androidx.compose.material3.ToggleButtonDefaults.toggleButtonColors(
-                                        checkedContainerColor = MaterialTheme.colorScheme.secondary,
-                                        checkedContentColor = MaterialTheme.colorScheme.onSecondary,
-                                    ),
-                                    shapes = when(index) {
-                                        0 -> androidx.compose.material3.ButtonGroupDefaults.connectedLeadingButtonShapes()
-                                        choices.lastIndex -> androidx.compose.material3.ButtonGroupDefaults.connectedTrailingButtonShapes()
-                                        else -> androidx.compose.material3.ButtonGroupDefaults.connectedMiddleButtonShapes()
-                                    },
-                                ) { Text(label) }
-                            }
-                        }
-                    }
-                }
-            }
         }
         // Fitting applies to the PDF pages, not to Reading Mode's reflowed text
         if (viewState.fileType == ReaderFileType.PDF && !viewState.readingModeEnabled) {
@@ -159,8 +136,8 @@ internal fun ReaderSettingsTable(
                 titleResId = Strings.pdf_settings_line_height_title,
                 value = viewState.lineHeight,
                 valueRange = 0.80f..2.00f,
-                steps = 2,
-                valueLabel = String.format(Locale.getDefault(), "%.1f", viewState.lineHeight),
+                steps = 23,
+                valueLabel = String.format(Locale.getDefault(), "%.2f", viewState.lineHeight),
                 onValueChange = viewModel::onLineHeightChanged,
             )
             readerSettingsSliderRow(
@@ -182,8 +159,8 @@ internal fun ReaderSettingsTable(
             if (viewState.fileType == ReaderFileType.EPUB) readerSettingsSliderRow(
                 titleResId = R.string.reader_vertical_margins,
                 value = viewState.verticalMargins,
-                valueRange = -20f..15f,
-                steps = 34,
+                valueRange = viewState.minimumVerticalMargin..15f,
+                steps = (15 - viewState.minimumVerticalMargin.toInt() - 1).coerceAtLeast(0),
                 valueLabel = "${viewState.verticalMargins.roundToInt()}%",
                 onValueChange = viewModel::onVerticalMarginsChanged,
             )

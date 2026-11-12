@@ -60,8 +60,39 @@ data class ReaderSettings(
     var epubVerticalMargins: Float? = null,
     var epubFontFamily: String? = null,
     var pageBackground: String? = null,
+    var appearanceChoice: String? = null,
+    var lastLightAppearance: String? = null,
+    var lastDarkAppearance: String? = null,
 ) {
-    fun effectivePageBackground(): String = pageBackground?.takeIf { it in setOf("snow", "sepia", "dark", "black") } ?: "default"
+    // Older versions saved the paper and interface separately. Migrate an
+    // explicit paper first; subsequent choices have one source of truth.
+    fun effectiveAppearance(): String = appearanceChoice?.takeIf { it in APPEARANCES }
+        ?: pageBackground?.takeIf { it in setOf("snow", "sepia", "dark", "black") }
+        ?: when(appearanceMode) { PageAppearanceMode.LIGHT -> "light"; PageAppearanceMode.DARK -> "dark"; else -> "automatic" }
+    fun effectivePageBackground(dark: Boolean = false): String {
+        val choice = effectiveAppearance()
+        val paper = if (choice != "automatic") choice else if (dark) {
+            lastDarkAppearance?.takeIf { it in setOf("dark", "black") } ?: "dark"
+        } else lastLightAppearance?.takeIf { it in setOf("light", "snow", "sepia") } ?: "light"
+        return if (paper == "light") "default" else paper
+    }
+    fun effectiveAppearanceMode(): PageAppearanceMode = when (effectiveAppearance()) {
+        "light", "snow", "sepia" -> PageAppearanceMode.LIGHT
+        "dark", "black" -> PageAppearanceMode.DARK
+        else -> PageAppearanceMode.AUTOMATIC
+    }
+    fun selectAppearance(choice: String) {
+        if (choice !in APPEARANCES) return
+        // Remember the migrated choice even when the first action is Automatic.
+        val old = effectiveAppearance()
+        if (old in setOf("light", "snow", "sepia")) lastLightAppearance = old
+        if (old in setOf("dark", "black")) lastDarkAppearance = old
+        appearanceChoice = choice
+        if (choice in setOf("light", "snow", "sepia")) lastLightAppearance = choice
+        if (choice in setOf("dark", "black")) lastDarkAppearance = choice
+        appearanceMode = effectiveAppearanceMode()
+        pageBackground = if (choice in setOf("light", "automatic")) null else choice
+    }
     fun effectiveVerticalMargins(): Float = epubVerticalMargins?.takeIf { it.isFinite() }?.coerceIn(-20f, 15f) ?: 3f
     fun effectiveMargins(): Float = epubMargins?.takeIf { it.isFinite() }?.coerceIn(0f, 20f)
         ?: when (pageWidth) { -1 -> 12f; 1 -> 2f; else -> 8f }
@@ -90,6 +121,11 @@ data class ReaderSettings(
     }
 
     companion object {
+        val APPEARANCES = setOf("light", "snow", "sepia", "dark", "black", "automatic")
+        fun minimumVerticalMargin(inset: Float, viewportHeight: Float): Float =
+            if (inset.isFinite() && viewportHeight.isFinite() && viewportHeight > 0)
+                -kotlin.math.ceil(inset.coerceAtLeast(0f) * 100f / viewportHeight).coerceAtMost(20f)
+            else -7f
         fun default(): ReaderSettings {
             return ReaderSettings(
                 appearanceMode = PageAppearanceMode.AUTOMATIC,

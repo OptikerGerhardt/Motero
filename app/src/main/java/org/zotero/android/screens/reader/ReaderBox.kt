@@ -54,6 +54,7 @@ internal fun ReaderBox(
     isOverlayMode: Boolean,
 ) {
     val density = LocalDensity.current
+    var viewportHeight by remember { mutableStateOf(0f) }
     val positionalThreshold = { distance: Float -> distance * 0.5f }
     val velocityThreshold = { with(density) { 1000.dp.toPx() } }
     val animationSpec = tween<Float>()
@@ -99,6 +100,7 @@ internal fun ReaderBox(
                 .fillMaxWidth()
                 .weight(1f)
                 .onSizeChanged { layoutSize ->
+                    viewportHeight = layoutSize.height / density.density
                     val dragEndPoint = layoutSize.width - rightTargetAreaXOffset
                     anchoredDraggableState.updateAnchors(
                         DraggableAnchors {
@@ -126,10 +128,10 @@ internal fun ReaderBox(
             // space above and below, including the progress strip and cutout.
             val epubEdge = with(density) {
                 maxOf(WindowInsets.statusBarsIgnoringVisibility.union(WindowInsets.displayCutout).getTop(this),
-                    WindowInsets.navigationBarsIgnoringVisibility.getBottom(this) + (if (viewState.progressMode == "hidden") 0.dp else 40.dp).roundToPx()).toDp()
+                    WindowInsets.navigationBarsIgnoringVisibility.getBottom(this) + 40.dp.roundToPx()).toDp()
             }
-            androidx.compose.runtime.LaunchedEffect(epubEdge, viewState.fileType, viewState.progressMode) {
-                viewModel.setReaderViewportInset(if (viewState.fileType == ReaderFileType.EPUB) epubEdge.value else 0f)
+            androidx.compose.runtime.LaunchedEffect(epubEdge, viewportHeight, viewState.fileType) {
+                viewModel.setReaderViewportInset(if (viewState.fileType == ReaderFileType.EPUB) epubEdge.value else 0f, viewportHeight)
             }
             val readingModifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)
                 .then(if (viewState.fileType == ReaderFileType.EPUB) Modifier
@@ -137,33 +139,13 @@ internal fun ReaderBox(
                     else if (viewState.fileType == ReaderFileType.HTML) Modifier.windowInsetsPadding(readingInsets) else Modifier)
 
             ReaderWebView(viewModel = viewModel, modifier = readingModifier)
-        if (viewState.fileType == ReaderFileType.EPUB) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter).fillMaxWidth()
-                    .windowInsetsPadding(WindowInsets.navigationBarsIgnoringVisibility)
-                    .height(40.dp).clickable(onClick = viewModel::cycleEpubProgress)
-                    .background(if (viewState.progressMode == "hidden" || viewState.isTopBarVisible) androidx.compose.ui.graphics.Color.Transparent else MaterialTheme.colorScheme.surface)
-            ) {
-                // EPUB: When bars are hidden, show page progress in the empty space
-                val pageProgress = viewState.pageProgress
-                if (!viewState.isTopBarVisible
-                    && pageProgress != null
-                ) {
-                    Text(
-                        modifier = Modifier.align(Alignment.Center),
-                        text = when(viewState.progressMode) {
-                            "hidden" -> ""
-                            "position" -> viewState.progressPosition.orEmpty()
-                            "percent" -> viewState.progressPercent.orEmpty()
-                            else -> pageProgress
-                        },
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
+            if (viewState.fileType == ReaderFileType.EPUB) {
+                val progressBottomInset = with(density) { WindowInsets.navigationBarsIgnoringVisibility.getBottom(this).toDp().value }
+                androidx.compose.runtime.LaunchedEffect(viewState.pageProgress, viewState.progressPosition, viewState.progressPercent,
+                    viewState.progressMode, viewState.isTopBarVisible, viewState.isReaderLoading, progressBottomInset) {
+                    viewModel.setReaderProgress(progressBottomInset)
                 }
             }
-        }
             // This is an overlay, never a reserved strip in the PDF viewport.
             // Stable insets avoid a second layout jump as Android shows its bars.
             androidx.compose.animation.AnimatedVisibility(

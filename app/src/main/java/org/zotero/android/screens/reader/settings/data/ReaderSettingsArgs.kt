@@ -7,4 +7,5 @@ data class ReaderSettingsArgs(
     val fileType: ReaderFileType,
     val readingModeEnabled: Boolean = false,
     val cropMode: String = "automatic",
+    val minimumVerticalMargin: Float = -7f,
 )

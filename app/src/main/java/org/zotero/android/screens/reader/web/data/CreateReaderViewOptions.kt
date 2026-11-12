@@ -20,6 +20,7 @@ data class CreateReaderViewOptions(
     var colorScheme: String = "light",
     var viewportInset: Double = 0.0,
     var pageBackground: String = "default",
+    var readingProgress: Map<String, Any>? = null,
 )
 
 data class CreateReaderContentFit(

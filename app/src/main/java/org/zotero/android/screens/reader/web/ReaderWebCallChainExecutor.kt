@@ -41,8 +41,14 @@ class ReaderWebCallChainExecutor @Inject constructor(
     private val defaults: Defaults,
 ) {
 
+    private var readingProgress: Map<String, Any> = mapOf("visible" to false)
+    fun setReaderProgress(value: Map<String, Any>) {
+        readingProgress = value
+        readerWebViewHandler.evaluateJavascript("window.setReaderProgress?.(${gson.toJson(value)});") {}
+    }
     private var viewportInset = 0f
     fun setReaderViewportInset(value: Float) {
+        if (viewportInset == value) return
         viewportInset = value
         readerWebViewHandler.evaluateJavascript("window.setReaderViewportInset?.($value);") {}
     }
@@ -290,6 +296,7 @@ class ReaderWebCallChainExecutor @Inject constructor(
                             )
                         }
 
+                        "onCycleEpubProgress" -> observable.emitAsync(Result.Success(ReaderWebData.onCycleEpubProgress))
                         "onDismissReaderChrome" -> {
                             observable.emitAsync(Result.Success(ReaderWebData.onDismissReaderChrome))
                         }
@@ -539,7 +546,8 @@ class ReaderWebCallChainExecutor @Inject constructor(
             directHighlight = !defaults.getReaderSettings().nativeTextSelection,
             readerChromeVisible = chromeVisible,
             viewportInset = viewportInset.toDouble(),
-            pageBackground = defaults.getReaderSettings().effectivePageBackground(),
+            readingProgress = readingProgress,
+            pageBackground = defaults.getReaderSettings().effectivePageBackground(isDark),
             pageNavigation = defaults.getReaderSettings().effectivePageNavigation(),
             deviceProfile = org.zotero.android.ereader.DeviceProfileStore.state.value.copy(
                 eraserSize = defaults.getActiveEraserSize(), eraserMode = defaults.getActiveEraserMode()),
@@ -657,7 +665,7 @@ class ReaderWebCallChainExecutor @Inject constructor(
 
     suspend fun updateInterface(isDark: Boolean) {
         val appearanceString = if (isDark) "dark" else "light"
-        val background = gson.toJson(defaults.getReaderSettings().effectivePageBackground())
+        val background = gson.toJson(defaults.getReaderSettings().effectivePageBackground(isDark))
         return suspendCancellableCoroutine { cont ->
             readerWebViewHandler.evaluateJavascript("window._view.setColorScheme('$appearanceString');window._view.setPageBackground($background);") {
                 cont.resume(Unit)

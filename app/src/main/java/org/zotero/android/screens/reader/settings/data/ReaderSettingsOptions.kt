@@ -39,4 +39,7 @@ enum class ReaderSettingsOptions(@StringRes val optionStringId: Int) {
     CropManual(org.zotero.android.R.string.reader_crop_manual),
     NavigationJumped(org.zotero.android.R.string.reader_navigation_jumped),
     NavigationContinuous(org.zotero.android.R.string.reader_navigation_continuous),
+    AppearanceSnow(org.zotero.android.R.string.reader_appearance_snow),
+    AppearanceSepia(org.zotero.android.R.string.reader_appearance_sepia),
+    AppearanceBlack(org.zotero.android.R.string.reader_appearance_black),
 }

@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "refs": [
+    "HEAD"
+  ],
+  "git_objects": 16441,
+  "git_blobs": 5648,
+  "git_bytes": 139823669,
+  "archive_entries": 0,
+  "archive_bytes": 0,
+  "unreviewed_findings": 0,
+  "findings": [],
+  "scope": "High-confidence formats, sensitive filenames and known personal document names; not a guarantee that no other secrets exist."
+}

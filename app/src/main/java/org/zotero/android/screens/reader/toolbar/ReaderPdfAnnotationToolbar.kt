@@ -70,9 +70,9 @@ internal fun ReaderPdfAnnotationToolbar(viewModel: ReaderViewModel, state: Reade
             }
         }
         // A stable seventh slot keeps the dock from moving when tools change.
-        val hex = state.activeTool?.let { state.toolColors[it] }
+        val hex = (state.activeTool ?: state.pdfOptionsTool)?.let { state.toolColors[it] }
         val optionsLabel = stringResource(R.string.reader_tool_options)
-        IconButton(onClick = viewModel::togglePdfToolOptions, enabled = enabled && state.activeTool != null,
+        IconButton(onClick = viewModel::togglePdfToolOptions, enabled = enabled && (state.activeTool ?: state.pdfOptionsTool) != null,
             modifier = Modifier.size(48.dp).semantics { contentDescription = optionsLabel }) {
             Surface(Modifier.size(24.dp), shape = RoundedCornerShape(12.dp),
                 color = hex?.let { runCatching { Color(android.graphics.Color.parseColor(it)) }.getOrNull() }
@@ -84,7 +84,7 @@ internal fun ReaderPdfAnnotationToolbar(viewModel: ReaderViewModel, state: Reade
 /** The native Zotero palette and size controls, in the dock instead of a modal. */
 @Composable
 internal fun ReaderPdfToolOptions(viewModel: ReaderViewModel, state: ReaderViewState, modifier: Modifier = Modifier) {
-    val tool = state.activeTool ?: return
+    val tool = state.activeTool ?: state.pdfOptionsTool ?: return
     val eraser = tool == ReaderAnnotationTool.eraser
     val storedSize = when (tool) {
         ReaderAnnotationTool.ink -> state.inkWidth

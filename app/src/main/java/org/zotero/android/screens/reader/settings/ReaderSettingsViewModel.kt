@@ -18,7 +18,6 @@ import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.pdf.data.PdfReaderThemeDecider
 import org.zotero.android.screens.reader.ARG_READER_SETTINGS_SCREEN
 import org.zotero.android.screens.reader.data.ReaderFileType
-import org.zotero.android.screens.reader.settings.data.PageAppearanceMode
 import org.zotero.android.screens.reader.settings.data.PageContentMargin
 import org.zotero.android.screens.reader.settings.data.PageLayoutFlowMode
 import org.zotero.android.screens.reader.settings.data.PageScrollMode
@@ -79,7 +78,7 @@ internal class ReaderSettingsViewModel @Inject constructor(
         readerSettings = loadedArgs.readerSettings.copy()
         updateState {
             copy(
-                selectedAppearanceOption = convert(readerSettings.appearanceMode),
+                selectedAppearanceOption = appearanceOption(readerSettings.effectiveAppearance()),
                 selectedScrollModeOption = convert(readerSettings.scrollMode),
                 pageNavigation = readerSettings.effectivePageNavigation(),
                 selectedSpreadsOption = convert(readerSettings.spreadsMode),
@@ -89,9 +88,9 @@ internal class ReaderSettingsViewModel @Inject constructor(
                 wordSpacing = readerSettings.wordSpacing,
                 letterSpacing = readerSettings.letterSpacing,
                 pageWidth = readerSettings.effectiveMargins(),
-                verticalMargins = readerSettings.effectiveVerticalMargins(),
+                verticalMargins = readerSettings.effectiveVerticalMargins().coerceAtLeast(loadedArgs.minimumVerticalMargin),
+                minimumVerticalMargin = loadedArgs.minimumVerticalMargin,
                 fontFamily = readerSettings.effectiveFontFamily(),
-                pageBackground = readerSettings.effectivePageBackground(),
                 selectedFitToContentOption = when (readerSettings.pageFitMode()) {
                     "width" -> ReaderSettingsOptions.FitToWidth
                     "height" -> ReaderSettingsOptions.FitToHeight
@@ -115,18 +114,13 @@ internal class ReaderSettingsViewModel @Inject constructor(
         }
     }
 
-    private fun convert(transition: PageAppearanceMode): ReaderSettingsOptions {
-        return when (transition) {
-            PageAppearanceMode.LIGHT -> {
-                ReaderSettingsOptions.AppearanceLight
-            }
-            PageAppearanceMode.DARK -> {
-                ReaderSettingsOptions.AppearanceDark
-            }
-            PageAppearanceMode.AUTOMATIC -> {
-                ReaderSettingsOptions.AppearanceAutomatic
-            }
-        }
+    private fun appearanceOption(choice: String): ReaderSettingsOptions = when(choice) {
+        "snow" -> ReaderSettingsOptions.AppearanceSnow
+        "sepia" -> ReaderSettingsOptions.AppearanceSepia
+        "black" -> ReaderSettingsOptions.AppearanceBlack
+        "light" -> ReaderSettingsOptions.AppearanceLight
+        "dark" -> ReaderSettingsOptions.AppearanceDark
+        else -> ReaderSettingsOptions.AppearanceAutomatic
     }
 
     private fun convert(scrollMode: PageScrollMode): ReaderSettingsOptions {
@@ -201,7 +195,8 @@ internal class ReaderSettingsViewModel @Inject constructor(
                 updateState { copy(pageNavigation = if (option == ReaderSettingsOptions.NavigationJumped) "jumped" else "continuous") }
             }
             ReaderSettingsOptions.CropAutomatic, ReaderSettingsOptions.CropManual -> Unit
-            ReaderSettingsOptions.AppearanceLight, ReaderSettingsOptions.AppearanceDark, ReaderSettingsOptions.AppearanceAutomatic -> {
+            ReaderSettingsOptions.AppearanceLight, ReaderSettingsOptions.AppearanceSnow, ReaderSettingsOptions.AppearanceSepia,
+            ReaderSettingsOptions.AppearanceDark, ReaderSettingsOptions.AppearanceBlack, ReaderSettingsOptions.AppearanceAutomatic -> {
                 updateState {
                     copy(selectedAppearanceOption = option)
                 }
@@ -267,9 +262,10 @@ internal class ReaderSettingsViewModel @Inject constructor(
     }
 
     fun onLineHeightChanged(value: Float) {
-        readerSettings.lineHeight = value
+        val rounded = (value.coerceIn(.8f, 2f) * 20).roundToInt() / 20f
+        readerSettings.lineHeight = rounded
         updateState {
-            copy(lineHeight = value)
+            copy(lineHeight = rounded)
         }
         scheduleDebouncedApply()
     }
@@ -317,16 +313,9 @@ internal class ReaderSettingsViewModel @Inject constructor(
     }
 
     fun onVerticalMarginsChanged(value: Float) {
-        val rounded = value.coerceIn(-20f, 15f).roundToInt().toFloat()
+        val rounded = value.coerceIn(viewState.minimumVerticalMargin, 15f).roundToInt().toFloat()
         readerSettings.epubVerticalMargins = rounded
         updateState { copy(verticalMargins = rounded) }
-        scheduleDebouncedApply()
-    }
-
-    fun onPageBackgroundChanged(value: String) {
-        if (value !in setOf("default", "snow", "sepia", "dark", "black")) return
-        readerSettings.pageBackground = value
-        updateState { copy(pageBackground = value) }
         scheduleDebouncedApply()
     }
 
@@ -354,17 +343,12 @@ internal class ReaderSettingsViewModel @Inject constructor(
     private fun updatePdfSettings(option: ReaderSettingsOptions) {
         when (option) {
             ReaderSettingsOptions.CropAutomatic, ReaderSettingsOptions.CropManual -> Unit
-            ReaderSettingsOptions.AppearanceLight -> {
-                readerSettings.appearanceMode = PageAppearanceMode.LIGHT
-            }
-
-            ReaderSettingsOptions.AppearanceDark -> {
-                readerSettings.appearanceMode = PageAppearanceMode.DARK
-            }
-
-            ReaderSettingsOptions.AppearanceAutomatic -> {
-                readerSettings.appearanceMode = PageAppearanceMode.AUTOMATIC
-            }
+            ReaderSettingsOptions.AppearanceLight -> readerSettings.selectAppearance("light")
+            ReaderSettingsOptions.AppearanceSnow -> readerSettings.selectAppearance("snow")
+            ReaderSettingsOptions.AppearanceSepia -> readerSettings.selectAppearance("sepia")
+            ReaderSettingsOptions.AppearanceDark -> readerSettings.selectAppearance("dark")
+            ReaderSettingsOptions.AppearanceBlack -> readerSettings.selectAppearance("black")
+            ReaderSettingsOptions.AppearanceAutomatic -> readerSettings.selectAppearance("automatic")
 
             ReaderSettingsOptions.ScrollModeVertical -> {
                 readerSettings.scrollMode = PageScrollMode.VERTICAL
@@ -464,7 +448,7 @@ internal data class ReaderSettingsViewState(
     val letterSpacing: Float = 0f,
     val pageWidth: Float = 8f,
     val verticalMargins: Float = 3f,
-    val pageBackground: String = "default",
+    val minimumVerticalMargin: Float = -7f,
     val fontFamily: String = "serif",
     val selectedFitToContentOption: ReaderSettingsOptions = ReaderSettingsOptions.FitToContentOff,
     val selectedFitReferenceOption: ReaderSettingsOptions = ReaderSettingsOptions.FitReferencePage,
@@ -482,7 +466,10 @@ internal data class ReaderSettingsViewState(
     )
     val appearanceOptions = listOf(
         ReaderSettingsOptions.AppearanceLight,
+        ReaderSettingsOptions.AppearanceSnow,
+        ReaderSettingsOptions.AppearanceSepia,
         ReaderSettingsOptions.AppearanceDark,
+        ReaderSettingsOptions.AppearanceBlack,
         ReaderSettingsOptions.AppearanceAutomatic
     )
 

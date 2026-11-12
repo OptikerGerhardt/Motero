@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.0.10 — Build 325
+
+- Rechte Spalte stabil halten; Spaltenlesen auf Jumped begrenzen und Continuous-Wischen auf die Leserichtung beschränken.
+- Wechselnde Kopfzeilen mit Seitenzahl/Trennlinie besser erkennen; leere Seiten an benachbarte physische Leserahmen anpassen, auch bei manuellen Zuschnitten.
+- Gemeinsame Appearance-Auswahl Light/Snow/Sepia/Dark/Black/Automatic mit getrennt gemerkten hellen/dunklen Varianten und passenden Seitenzwischenräumen.
+- Notiz-Farbpalette nach Platzieren/Löschen erhalten; größere unsichtbare Highlight-Endpunktziele für PDF/EPUB.
+- EPUB-Fortschritt als reine Einblendung unter der Schnellpalette; größere, eingerückte Bookmarks, feinere Zeilenhöhe und brauchbarer negativer Randbereich.
+- Bestehende Engine, Signatur und Datenformate erhalten. [Umfang und Prüfgrenzen](docs/READER_325.md).
+
 ## 1.0.9 — Build 324
 
 - Kürzere gemeinsame PDF-/EPUB-Haltegeste; Stylus-Einstellungen per langem Druck auf den oberen Stift statt in Appearance.

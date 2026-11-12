@@ -1,6 +1,17 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 11. November 2026. Build 324 / Motero 1.0.9 ergänzt die nach Build 323 gesammelten Reader-Änderungen. PDF.js 5.7.330 und die bisherigen PDF-/Stift-/Syncformate bleiben erhalten.
+Stand: 12. November 2026. Build 325 / Motero 1.0.10 setzt die 15 nach Build 324 gesammelten Punkte um. PDF.js 5.7.330 und die bestehenden Annotations-/Syncformate bleiben erhalten.
+
+## Spalten, Appearance und EPUB-Leisten: Build 325 / 1.0.10
+
+- Rechte Spalte nach Seitenzentrierung erhalten; Spaltenlesen nur in Jumped, Continuous ohne Spaltenrouting und mit Achsensperre bei Ein-Finger-Gesten.
+- Kleine isolierte Kopfzeile mit äußerer arabischer Seitenzahl samt Trennlinie erkennen; echte Kapitelüberschriften und Include/Exclude-Randreferenzen erhalten.
+- Leere PDF-Seiten übernehmen typische physische Leserahmen der Nachbarseiten, in Automatic/Manual und den Fit-Richtungen.
+- Appearance vereinigt Light, Snow, Sepia, Dark, Black und Automatic; Automatic merkt helle/dunkle Varianten getrennt. Seitenzwischenräume folgen der Papierfarbe; E-Reader-Ausnahme bleibt.
+- Notiz-Farben nach Platzieren/Löschen in der offenen Werkzeugpalette erhalten; Bereichsfarben wie Zotero Desktop; größere unsichtbare Endpunkt-Hitboxen.
+- EPUB-Fortschritt bleibt unter der Annotation Quick Toolbar und über Rand-Tippbereichen; Ausblenden ändert weder Textfeld noch Umbruch.
+- EPUB-Bookmark größer und weiter eingerückt; Zeilenhöhe in 0,05-Schritten; negative Top-/Bottom-Margins nur bis zum tatsächlich nutzbaren Bildschirmrand.
+- [Umfang und Prüfgrenzen](docs/READER_325.md). Die quellenspezifische Kundera-Überschriftenbeobachtung bleibt zur Gegenprobe offen.
 
 ## Lesegesten, Spalten und Darstellung: Build 324 / 1.0.9
 
