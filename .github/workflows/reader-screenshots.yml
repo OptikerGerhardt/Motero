@@ -12,6 +12,8 @@ permissions:
 
 jobs:
   capture:
+    permissions:
+      contents: read
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:
@@ -52,3 +54,37 @@ jobs:
           path: screenshot-previews/
           if-no-files-found: warn
           retention-days: 14
+
+  publish:
+    name: Publish reviewed browser screenshot previews
+    needs: capture
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: true
+      - name: Download captures from this workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download "${{ github.run_id }}" --repo "$GITHUB_REPOSITORY" \
+            --name motero-boox-sized-reader-screenshots --dir screenshot-previews
+      - name: Update public reader preview gallery
+        run: |
+          mkdir -p docs/screenshots
+          cp screenshot-previews/01-pdf-reader.png docs/screenshots/
+          cp screenshot-previews/02-highlights-and-ink.png docs/screenshots/
+          cp screenshot-previews/03-bookmarks.png docs/screenshots/
+          cp screenshot-previews/04-dark-appearance.png docs/screenshots/
+          git add docs/screenshots/
+          if git diff --cached --quiet; then
+            echo "Screenshots are unchanged."
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'docs: refresh browser-rendered Motero reader screenshots'
+          git push origin HEAD:main
