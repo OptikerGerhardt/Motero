@@ -76,7 +76,8 @@ export class CroppedPageLayout {
         this.lastViewports = v._pages.map(page => page.viewport);
         this.rebuildCount = (this.rebuildCount || 0) + 1;
 		const previousBox = preservePosition && this.boxes?.[v.currentPageNumber - 1];
-        const before = previousBox && {left:previousBox.x-previousBox.left,top:previousBox.y-previousBox.top};
+        const before = previousBox && {left:previousBox.x-previousBox.left,top:previousBox.y-previousBox.top,
+            scrollLeft:c.scrollLeft,scrollTop:c.scrollTop};
 		if (!this.hostBefore) {
 			this.hostBefore = {};
 			for (let key of ['position', 'width', 'height', 'overflow', 'padding', 'margin']) this.hostBefore[key] = host.style[key];
@@ -120,8 +121,10 @@ export class CroppedPageLayout {
 		this.boxes = result.boxes; this.width=result.width; this.height=result.height;
 		if (before) {
 			const after=this.boxes[v.currentPageNumber-1];
-            c.scrollLeft += after.x-after.left-before.left;
-            c.scrollTop += after.y-after.top-before.top;
+            // Changing the host extent may already clamp the live scroll value.
+            // Restore from the pre-layout snapshot, not that clamped value.
+            c.scrollLeft = before.scrollLeft + after.x-after.left-before.left;
+            c.scrollTop = before.scrollTop + after.y-after.top-before.top;
 		}
         return changed;
 	}

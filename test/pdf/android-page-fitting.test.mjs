@@ -235,6 +235,27 @@ test('unchanged compact geometry requires no DOM layout reads or additional page
  assert.equal(reads,0);assert.equal(writes,0);
 });
 
+test('neighbor layout restores the screen anchor from before browser scroll clamping',async()=>{
+    const {fitting,viewer,pages,container}=fixture();
+    await fitting.configure({mode:'width',reference:'cropped-content',margin:0});
+    const before=pages[1].div.getBoundingClientRect();
+    const host=viewer.viewer;
+    host.style=new Proxy(host.style,{set(target,key,value){
+        target[key]=value;
+        // Updating a scrollable element can clamp both live offsets before
+        // the remaining layout writes and anchor restoration run.
+        if(key==='width') container.scrollLeft=0;
+        if(key==='height') container.scrollTop=0;
+        return true;
+    }});
+    for(const index of [0,2,3]) fitting.geometry.set(index,{fit:{bounds:[.1,.2,.71,.6]}});
+    fitting.layoutEpoch++;
+    fitting.layout.apply(fitting.geometry,{preservePosition:true});
+    const after=pages[1].div.getBoundingClientRect();
+    assert.ok(Math.abs(before.left-after.left)<.001);
+    assert.ok(Math.abs(before.top-after.top)<.001);
+});
+
 
 test('a cached neighbor can never overwrite a newly prepared current-page crop',async()=>{
  const {fitting}=fixture();await fitting.configure({mode:'width',reference:'cropped-content',margin:0});
