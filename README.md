@@ -36,6 +36,8 @@ View cropping does not modify the PDF file or annotation coordinates. Manual cro
 
 **Requires Android 9 or later.** Download `Motero_Build<number>.apk` from the [latest release](https://github.com/OptikerGerhardt/Motero/releases/latest). Each release also includes source code, test reports, and SHA-256 checksums.
 
+**Before installing or updating:** Back up your Zotero data and any important PDFs. Motero is an unofficial, experimental fork; automated checks do not replace testing on your particular device or with your Zotero account. See [Tests and project status](#tests-and-project-status) for verification limits.
+
 Release APKs are signed with a dedicated Motero key. The public certificate and signing policy are available in [signing/](signing/). The application ID is `org.zotero.android.debug`; this is retained for compatibility with earlier Motero installations. Release APKs are not debuggable.
 
 Use **Build 307 or later** when updating an earlier Motero test build. Build 306 has a receiver-permission conflict that prevents this migration. The corrected update retains the application ID and uses a new internal permission alongside signing-key rotation. Back up your data before updating. A successful Build 307 update has been reported on a Pixel 8 running GrapheneOS; BOOX confirmation is still pending. See [SECURITY.md](SECURITY.md).
@@ -44,9 +46,13 @@ You can also track this repository with [Obtainium](https://github.com/ImranR98/
 
 **Motero 1.0** starts with Build 315. Earlier releases are labeled Alpha. Release titles are separate from the retained build tags and increasing Android version codes, so existing Obtainium installations can continue updating. Keep the default tag-based version detection; custom filters matching old release titles may need updating.
 
-## Development with ChatGPT
+## About this hobby project and AI-assisted development
 
-All Motero-specific changes and their integration were programmed using **ChatGPT / OpenAI Codex**, including the accompanying tests and build configuration. The project maintainer is responsible for requirements, review, and release decisions.
+Motero started as a personal hobby project to make reading and annotating academic PDFs on a BOOX e-reader work better for my own needs. I'm relatively new to software development, and the Motero-specific changes, their integration, tests, and build configuration have been developed largely with **ChatGPT / OpenAI Codex**. I define the requirements, try out changes, and make the maintenance and release decisions. This is not a professionally maintained alternative to Zotero.
+
+There are automated tests and documented verification steps, but AI-generated code and passing tests do **not** guarantee correctness, security, or compatibility with every device. In particular, new reader behavior on physical BOOX devices and synchronization with live Zotero accounts require separate verification; see [Tests and project status](#tests-and-project-status) and [device-specific limitations](docs/E_READER_AND_STYLUS.md).
+
+Motero is entirely unofficial. I do not expect Zotero's developers to support this fork or incorporate its changes. Feedback is welcome, including concerns or preferences from upstream maintainers about how the fork is presented, distributed, or maintained. Please report Motero-specific problems here rather than in Zotero's official support channels.
 
 The underlying Zotero code and incorporated community contributions retain their original authorship. Motero includes selected pull requests and fixes from the upstream projects; some have been merged upstream, while others were incorporated into this fork from open pull requests. [UPSTREAM_CHANGES.md](UPSTREAM_CHANGES.md) lists the contributions and their upstream status.
 
@@ -93,7 +99,7 @@ Further development notes: [feature plan](FEATUREPLAN.md), [changelog](CHANGELOG
 
 ## Contributing and support
 
-Report Motero bugs and feature requests in [this repository's issues](https://github.com/OptikerGerhardt/Motero/issues). Include the build number, device, Android version, and steps to reproduce. See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidance and [SECURITY.md](SECURITY.md) for security reports. Please keep personal documents and credentials out of reports.
+Report Motero bugs, compatibility issues, and feature requests in [this repository's issues](https://github.com/OptikerGerhardt/Motero/issues), **not to Zotero's official support team**. Include the build number, device, Android version, and steps to reproduce. Constructive technical feedback and suggestions on how to maintain this fork responsibly are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidance and [SECURITY.md](SECURITY.md) for security reports. Please keep personal documents and credentials out of reports.
 
 ## License
 
