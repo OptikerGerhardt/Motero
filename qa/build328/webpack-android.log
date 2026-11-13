@@ -1,0 +1,52 @@
+Browserslist: browsers data (caniuse-lite) is 18 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+android:
+  assets by path pdf/web/cmaps/*.bcmap 1.11 MiB
+    asset pdf/web/cmaps/UniCNS-UTF8-H.bcmap 52.4 KiB [compared for emit] [from: build/mobile/pdf/web/cmaps/UniCNS-UTF8-H.bcmap] [copied]
+    + 167 assets
+  assets by path pdf/web/standard_fonts/ 762 KiB 16 assets
+  assets by path pdf/web/wasm/ 1.43 MiB 13 assets
+  assets by status 6.56 MiB [emitted]
+    assets by path *.js 6.55 MiB 5 assets
+    + 2 assets
+  assets by path pdf/build/*.mjs 2.93 MiB
+    asset pdf/build/pdf.worker.mjs 2.13 MiB [compared for emit] [from: build/mobile/pdf/build/pdf.worker.mjs] [copied] [big]
+    asset pdf/build/pdf.mjs 827 KiB [compared for emit] [from: build/mobile/pdf/build/pdf.mjs] [copied] [big]
+  assets by path pdf/web/iccs/ 14.7 KiB
+    asset pdf/web/iccs/CGATS001Compat-v2-micro.icc 8.27 KiB [compared for emit] [from: build/mobile/pdf/web/iccs/CGATS001Compat-v2-micro.icc] [copied]
+    asset pdf/web/iccs/LICENSE 6.4 KiB [compared for emit] [from: build/mobile/pdf/web/iccs/LICENSE] [copied]
+  + 6 assets
+  Entrypoint view [big] 4.99 MiB (7.85 MiB) = view.css 11.2 KiB view.js 4.98 MiB 2 auxiliary assets
+  orphan modules 3.97 MiB (javascript) 1.83 KiB (runtime) [orphan] 190 modules
+  runtime modules 6.8 KiB 15 modules
+  modules by path ./node_modules/ 2.52 MiB 361 modules
+  modules by path ./src/ 4.01 MiB (javascript) 11.1 KiB (css/mini-extract)
+    javascript modules 4.01 MiB
+      modules by path ./src/common/stylesheets/*.scss 100 bytes 2 modules
+      modules by path ./src/dom/ 2.73 KiB 2 modules
+      ./src/index.android.js + 176 modules 3.95 MiB [built] [code generated]
+      ./src/pdf/reading-analysis-worker.js + 5 modules 53.7 KiB [built] [code generated]
+    css modules 11.1 KiB
+      css ./node_modules/css-loader/dist/cjs.js!./node_modules/postcss-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[1].use[3]!./src/common/stylesheets/view.scss 579 bytes [built] [code generated]
+      css ./node_modules/css-loader/dist/cjs.js!./node_modules/postcss-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[1].use[3]!./src/common/stylesheets/android-theme.scss 10.6 KiB [built] [code generated]
+
+  WARNING in asset size limit: The following asset(s) exceed the recommended size limit (244 KiB).
+  This can impact web performance.
+  Assets: 
+    view.js (4.98 MiB)
+    903.view.js (1.51 MiB)
+    pdf/web/viewer.mjs (634 KiB)
+    pdf/build/pdf.mjs (827 KiB)
+    pdf/web/wasm/openjpeg.wasm (246 KiB)
+    pdf/web/wasm/openjpeg_nowasm_fallback.js (441 KiB)
+    pdf/web/wasm/quickjs-eval.wasm (422 KiB)
+    pdf/build/pdf.worker.mjs (2.13 MiB)
+
+  WARNING in entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.
+  Entrypoints:
+    view (4.99 MiB)
+        view.css
+        view.js
+
+  android (webpack 5.99.9) compiled with 2 warnings in 11585 ms

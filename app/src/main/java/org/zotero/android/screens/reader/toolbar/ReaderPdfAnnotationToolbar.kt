@@ -94,8 +94,7 @@ internal fun ReaderPdfToolOptions(viewModel: ReaderViewModel, state: ReaderViewS
     }
     val sizeLabel = stringResource(Strings.size)
     var draftSize by remember(tool, storedSize) { mutableFloatStateOf(storedSize ?: 2f) }
-    Row(modifier.padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(modifier.padding(horizontal = 8.dp), verticalArrangement = Arrangement.Center) {
         if (!eraser) {
             val type = when (tool) {
                 ReaderAnnotationTool.ink -> AnnotationType.ink
@@ -103,16 +102,15 @@ internal fun ReaderPdfToolOptions(viewModel: ReaderViewModel, state: ReaderViewS
                 ReaderAnnotationTool.image -> AnnotationType.image
                 else -> AnnotationType.note
             }
-            BoxWithConstraints(Modifier.weight(1f)) {
+            BoxWithConstraints(Modifier.fillMaxWidth().height(44.dp)) {
                 val colors = AnnotationsConfig.colors(type)
-                // Four scrolling slots and an anchored purple slot. Extra
-                // colors remain reachable without changing the dock geometry.
+                // Keep purple anchored; use the full row for all remaining colors.
                 val purple = colors.firstOrNull { it.equals("#a28ae5", true) } ?: colors.getOrNull(4)
                 val scrolling = colors.filter { it != purple }
-                val slot = minOf(40.dp, maxWidth / 5)
+                val slot = 40.dp
                 val paletteScroll = rememberLazyListState()
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                    LazyRow(Modifier.width(slot * 4), state = paletteScroll,
+                    LazyRow(Modifier.weight(1f), state = paletteScroll,
                         flingBehavior = rememberSnapFlingBehavior(paletteScroll)) {
                         items(scrolling.size) { i -> ReaderToolColor(scrolling[i], state.toolColors[tool], slot, viewModel::setPdfToolColor) }
                     }
@@ -120,22 +118,24 @@ internal fun ReaderPdfToolOptions(viewModel: ReaderViewModel, state: ReaderViewS
                 }
             }
         }
-        if (storedSize != null) {
-            Slider(value = draftSize, onValueChange = { draftSize = it },
-                onValueChangeFinished = { viewModel.setPdfToolSize(draftSize) },
-                valueRange = if (tool == ReaderAnnotationTool.text) 6f..72f else .5f..25f,
-                modifier = (if (eraser) Modifier.weight(1f) else Modifier.width(68.dp))
-                    .semantics { contentDescription = sizeLabel })
-            Text(String.format(Locale.getDefault(), "%.1f", draftSize),
-                style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(30.dp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        if (eraser) {
-            SingleChoiceSegmentedButtonRow {
-                listOf("area" to R.string.reader_area_eraser, "stroke" to R.string.reader_stroke_eraser).forEachIndexed { i, (mode, label) ->
-                    SegmentedButton(selected = state.eraserMode == mode, onClick = { viewModel.setPdfEraserMode(mode) },
-                        shape = SegmentedButtonDefaults.itemShape(i, 2), icon = {}) {
-                        Text(stringResource(label), style = MaterialTheme.typography.labelSmall)
+        if (storedSize != null || eraser) Row(Modifier.fillMaxWidth().height(44.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (storedSize != null) {
+                Slider(value = draftSize, onValueChange = { draftSize = it },
+                    onValueChangeFinished = { viewModel.setPdfToolSize(draftSize) },
+                    valueRange = if (tool == ReaderAnnotationTool.text) 6f..72f else .5f..25f,
+                    modifier = Modifier.weight(1f)
+                        .semantics { contentDescription = sizeLabel })
+                Text(String.format(Locale.getDefault(), "%.1f", draftSize),
+                    style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(30.dp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            if (eraser) {
+                SingleChoiceSegmentedButtonRow {
+                    listOf("area" to R.string.reader_area_eraser, "stroke" to R.string.reader_stroke_eraser).forEachIndexed { i, (mode, label) ->
+                        SegmentedButton(selected = state.eraserMode == mode, onClick = { viewModel.setPdfEraserMode(mode) },
+                            shape = SegmentedButtonDefaults.itemShape(i, 2), icon = {}) {
+                            Text(stringResource(label), style = MaterialTheme.typography.labelSmall)
+                        }
                     }
                 }
             }

@@ -22,15 +22,34 @@ import org.zotero.android.screens.settings.elements.NewSettingsSectionTitle
 
 @Composable
 fun EReaderSettingsScreen(stylusOnly: Boolean = false, nativeSelection: Boolean = false,
-    onNativeSelection: (Boolean) -> Unit = {}, onPageTurning: () -> Unit = {},
+    onNativeSelection: (Boolean) -> Unit = {},
     darkTheme: Boolean = androidx.compose.foundation.isSystemInDarkTheme(), onBack: () -> Unit) {
+    val view = androidx.compose.ui.platform.LocalView.current
+    val window = (view.parent as? androidx.compose.ui.window.DialogWindowProvider)?.window
+    if (window != null) {
+        org.zotero.android.screens.reader.ReaderSystemBars(window, view, true, darkTheme)
+        DisposableEffect(window) {
+            window.setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT)
+            window.setDimAmount(0f)
+            @Suppress("DEPRECATION") val navigationColor = window.navigationBarColor
+            val navigationContrast = if (android.os.Build.VERSION.SDK_INT >= 29) window.isNavigationBarContrastEnforced else false
+            @Suppress("DEPRECATION")
+            window.navigationBarColor = android.graphics.Color.TRANSPARENT
+            if (android.os.Build.VERSION.SDK_INT >= 29) window.isNavigationBarContrastEnforced = false
+            onDispose {
+                @Suppress("DEPRECATION")
+                window.navigationBarColor = navigationColor
+                if (android.os.Build.VERSION.SDK_INT >= 29) window.isNavigationBarContrastEnforced = navigationContrast
+            }
+        }
+    }
     val profile by DeviceProfileStore.state.collectAsState()
     val diagnostics by DeviceInput.diagnostics.collectAsState()
     var learning by remember { mutableStateOf(false) }
     DisposableEffect(Unit) { onDispose { DeviceInput.learnKey = false; DeviceInput.reset() } }
     LaunchedEffect(diagnostics) { if (!DeviceInput.learnKey) learning = false }
     AppThemeM3(darkTheme = darkTheme) {
-        CustomScaffoldM3(topBar = {
+        CustomScaffoldM3(modifier = Modifier.fillMaxSize(), topBar = {
             TopAppBar(colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface,
                 scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer),
                 title = { Text(stringResource(if (stylusOnly) R.string.reader326_stylus_title else R.string.reader326_controls_title),
@@ -44,7 +63,8 @@ fun EReaderSettingsScreen(stylusOnly: Boolean = false, nativeSelection: Boolean 
                     ReaderControlSwitch(R.string.reader326_ink_mode, profile.eReader) { DeviceProfileStore.update(profile.copy(eReader = it)) }
                     ControlDescription(R.string.reader326_ink_description)
                     NewSettingsDivider()
-                    NewSettingsItem(stringResource(Strings.settings_page_turning_title), onItemTapped = onPageTurning)
+                    NewSettingsSectionTitle(Strings.settings_page_turning_title)
+                    org.zotero.android.screens.settings.pageturning.ReaderPageTurningControls()
                     NewSettingsDivider()
                     NewSettingsSectionTitle(R.string.reader326_selection_title)
                     var androidSelection by remember(nativeSelection) { mutableStateOf(nativeSelection) }

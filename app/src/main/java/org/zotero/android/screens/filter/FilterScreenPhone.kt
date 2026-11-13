@@ -49,14 +49,7 @@ internal fun FilterScreenPhone(
                     scrollBehavior = scrollBehavior,
                 )
             },
-            bottomBar = {
-                Box(
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.surfaceContainer)
-                        .fillMaxWidth()
-                        .windowInsetsPadding(BottomAppBarDefaults.windowInsets)
-                )
-            }
+
         ) {
             FilterScreen(viewModel = viewModel, viewState = viewState)
         }

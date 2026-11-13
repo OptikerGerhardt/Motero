@@ -8,6 +8,8 @@ This fork is maintained independently and is not affiliated with or endorsed by 
 
 ## Motero 1.1
 
+[1.1.2 / Build 328](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.2-328) improves system-bar spacing, restores room for the full pen palette, puts Page Turning directly in Reader Controls, keeps double-tapped column focus during SmartScroll and separates Continuous pages more clearly. [Changes and limits](docs/READER_328.md).
+
 [1.1.1 / Build 327](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.1-327) fixes the Reader toolbar Back arrow when Protect reader is enabled, on phones and tablets. Explicit exit bypasses Android system Back protection; the protection still handles system navigation.
 
 [Motero 1.1 / Build 326](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.0-326) adds 200 ms drag highlighting, unified Zotero-style Reader Controls with nested Page Turning, standard Android Back protection, wider EPUB bookmark tapping, precise EPUB note anchors and a quick palette that stays above highlights. Adaptive dock transitions and stable reading frames accompany improved running-head, separator, author-list and publisher-notice recognition. [Changes and verification limits](docs/READER_326.md).

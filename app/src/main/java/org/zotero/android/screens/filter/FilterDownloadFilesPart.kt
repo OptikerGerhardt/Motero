@@ -23,13 +23,8 @@ internal fun DownloadFilesPart(
     viewState: FilterViewState,
     viewModel: FilterViewModel
 ) {
-    Row(
-        modifier = Modifier
-            .background(MaterialTheme.colorScheme.surfaceContainer)
-            .navigationBarsPadding()
-            .padding(horizontal = 8.dp, vertical = 8.dp)
-            .height(64.dp),
-        verticalAlignment = Alignment.CenterVertically
+    androidx.compose.material3.FlexibleBottomAppBar(
+        containerColor = MaterialTheme.colorScheme.surfaceContainer
     ) {
         Spacer(modifier = Modifier.width(16.dp))
         Text(

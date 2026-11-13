@@ -1,3 +1,7 @@
+# Build 328 / Motero 1.1.2 — Freigabeprüfung
+
+Gesammelte Leisten-, Stylus-, Paletten-, Continuous- und Spaltenkorrekturen implementiert. Lokale und geschützte Release-Prüfungen laufen; physische BOOX/Pixel-Prüfung separat. [Umfang](docs/READER_328.md).
+
 # Build 327 / Motero 1.1.1 — veröffentlicht und unabhängig geprüft
 
 - [APK und vollständige Quellen](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.1-327); [Build, Signatur und Updates](https://github.com/OptikerGerhardt/Motero/actions/runs/43391083194) erfolgreich. Anwendung `f4a7e6c4`, unveränderter Reader `9a5947ff`; PDF.js 5.7.330.

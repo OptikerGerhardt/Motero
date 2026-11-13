@@ -1,6 +1,6 @@
 package org.zotero.android.screens.settings.pageturning
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -18,15 +18,16 @@ internal fun SettingsButtonPageTurningSwitchItem(
     isChecked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    Box(
+    Row(
         modifier = Modifier.Companion
             .fillMaxWidth()
-            .heightIn(min = 48.dp)
+            .heightIn(min = 56.dp).padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(16.dp)
     ) {
         Text(
             modifier = Modifier.Companion
-                .align(Alignment.Companion.CenterStart)
-                .padding(start = 16.dp),
+                .weight(1f),
             text = title,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface,
@@ -34,9 +35,6 @@ internal fun SettingsButtonPageTurningSwitchItem(
         CustomSwitch(
             checked = isChecked,
             onCheckedChange = onCheckedChange,
-            modifier = Modifier.Companion
-                .align(Alignment.Companion.CenterEnd)
-                .padding(end = 16.dp),
         )
     }
 }
@@ -47,15 +45,16 @@ internal fun SettingsButtonKeepZoomSwitchItem(
     isChecked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    Box(
+    Row(
         modifier = Modifier.Companion
             .fillMaxWidth()
-            .heightIn(min = 48.dp)
+            .heightIn(min = 56.dp).padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(16.dp)
     ) {
         Text(
             modifier = Modifier.Companion
-                .align(Alignment.Companion.CenterStart)
-                .padding(start = 16.dp),
+                .weight(1f),
             text = title,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface,
@@ -63,9 +62,6 @@ internal fun SettingsButtonKeepZoomSwitchItem(
         CustomSwitch(
             checked = isChecked,
             onCheckedChange = onCheckedChange,
-            modifier = Modifier.Companion
-                .align(Alignment.Companion.CenterEnd)
-                .padding(end = 16.dp),
         )
     }
 }

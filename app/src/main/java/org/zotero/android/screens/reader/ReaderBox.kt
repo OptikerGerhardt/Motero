@@ -124,6 +124,8 @@ internal fun ReaderBox(
                 } else WindowInsets(0, 0, 0, 0)
                 safeInsets
             }
+            val cropInsets = WindowInsets.statusBarsIgnoringVisibility.union(WindowInsets.displayCutout)
+                .union(WindowInsets.navigationBarsIgnoringVisibility.only(WindowInsetsSides.Bottom))
             // EPUB keeps one stable, centered reading frame. Reserve the same
             // space above and below, including the progress strip and cutout.
             val epubEdge = with(density) {
@@ -178,11 +180,11 @@ internal fun ReaderBox(
                     org.zotero.android.screens.reader.toolbar.ReaderEpubAnnotationDock(viewModel, viewState)
                 }
             }
-            if (viewState.manualCropOpen) Box(Modifier.fillMaxSize().windowInsetsPadding(readingInsets)) { ReaderCropControls(viewModel, viewState,
-                topInset = readingInsets.getTop(density).toDouble() / density.density,
-                bottomInset = 12.0 + maxOf(WindowInsets.navigationBarsIgnoringVisibility.getBottom(density), readingInsets.getBottom(density)) / density.density,
-                leftInset = readingInsets.getLeft(density, LocalLayoutDirection.current).toDouble() / density.density,
-                rightInset = readingInsets.getRight(density, LocalLayoutDirection.current).toDouble() / density.density) }
+            if (viewState.manualCropOpen) Box(Modifier.fillMaxSize().windowInsetsPadding(cropInsets)) { ReaderCropControls(viewModel, viewState,
+                topInset = cropInsets.getTop(density).toDouble() / density.density,
+                bottomInset = 12.0 + maxOf(WindowInsets.navigationBarsIgnoringVisibility.getBottom(density), cropInsets.getBottom(density)) / density.density,
+                leftInset = cropInsets.getLeft(density, LocalLayoutDirection.current).toDouble() / density.density,
+                rightInset = cropInsets.getRight(density, LocalLayoutDirection.current).toDouble() / density.density) }
             if (viewState.fileType == ReaderFileType.PDF && !viewState.manualCropOpen) {
                 val isScrubberVisible = viewState.isScrubberVisible() && !viewState.showCreationToolbar
                 androidx.compose.animation.AnimatedVisibility(

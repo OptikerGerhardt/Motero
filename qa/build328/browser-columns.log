@@ -1,0 +1,18 @@
+PASS jumped: column width, left-to-right order, next page and reverse reading order
+PASS real double tap on the right column retains its focus through SmartScroll with a stable page raster
+PASS switching to Continuous fits the full text width and disables column navigation
+PASS two-finger pinch still zooms and restores column reading
+PASS manual cropping keeps its explicit frame
+PASS continuous 0: real viewport scroll carries the requested fraction across page boundaries
+PASS continuous 0: diagonal touch keeps the orthogonal offset even on an oversized page
+PASS continuous 1: real viewport scroll carries the requested fraction across page boundaries
+PASS continuous 1: diagonal touch keeps the orthogonal offset even on an oversized page
+PASS continuous 2: real viewport scroll carries the requested fraction across page boundaries
+PASS continuous 2: diagonal touch keeps the orthogonal offset even on an oversized page
+PASS PDF background colors reach the rendered page pixels
+PASS automatic content: large white insert inherits physical reading frame without widening the document
+PASS automatic width: large white insert inherits physical reading frame without widening the document
+PASS automatic height: large white insert inherits physical reading frame without widening the document
+PASS manual content: large white insert inherits physical reading frame without widening the document
+PASS manual width: large white insert inherits physical reading frame without widening the document
+PASS manual height: large white insert inherits physical reading frame without widening the document

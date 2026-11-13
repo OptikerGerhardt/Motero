@@ -37,7 +37,7 @@ internal fun SettingsScreen(
     var showDeviceSettings by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
     if (showDeviceSettings) {
         androidx.activity.compose.BackHandler { showDeviceSettings = false }
-        org.zotero.android.ereader.EReaderSettingsScreen(nativeSelection = viewModel.nativeSelection(), onNativeSelection = viewModel::setNativeSelection, onPageTurning = toPageTurningScreen) { showDeviceSettings = false }
+        org.zotero.android.ereader.EReaderSettingsScreen(nativeSelection = viewModel.nativeSelection(), onNativeSelection = viewModel::setNativeSelection) { showDeviceSettings = false }
         return
     }
     AppThemeM3 {

@@ -1,5 +1,13 @@
 # Änderungen
 
+## 1.1.2 — Build 328
+
+- Filter-Downloadleiste an die Sammlungsleiste angleichen; Crop-Bedienung auch ohne Notch unter der Statusleiste halten.
+- Stylus-Einstellungen bildschirmfüllend mit passenden Systemleisten; Page Turning direkt in Reader Controls statt auf einer Unterseite.
+- Vollbreite Stiftpalette mit allen Farben und separater Größenregelung.
+- Doppeltipp aktiviert die gewählte Textspalte in Jumped; SmartScroll behält den Fokus. Begrenztes stabiles Seitenraster vermeidet Detail-Nachzeichnen im Spaltenmodus.
+- In Continuous einen klaren Hintergrundstreifen zwischen Seiten vorsehen, ohne den inneren Spread-Abstand zu verändern. [Umfang und Grenzen](docs/READER_328.md).
+
 ## 1.1.1 — Build 327
 
 - Zurück-Pfeil im Reader schließt auf Telefonen und Tablets wieder das Dokument, auch wenn Protect reader aktiviert ist. Der ausdrückliche Ausgang umgeht den Android-System-Zurück-Dispatcher; Schutz und das gezielte Schließen von Suche/Sidebar/Auswahl bleiben bestehen.

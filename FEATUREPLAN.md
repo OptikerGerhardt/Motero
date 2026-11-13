@@ -1,6 +1,14 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 13. November 2026. Motero 1.1.1 / Build 327 behebt den blockierten Reader-Ausgang und enthält die in Build 326 umgesetzten Punkte. PDF.js 5.7.330 und die Annotations-/Syncformate bleiben erhalten.
+Stand: 13. November 2026. Motero 1.1.2 / Build 328 setzt die nach Build 327 gesammelten Bedienungs- und Spaltenkorrekturen um. PDF.js 5.7.330 und die Annotations-/Syncformate bleiben erhalten.
+
+## Bildschirmabstände und Spalten: Build 328 / 1.1.2
+
+- Filter-Downloadleiste wie die Sammlungsleiste; Crop-Bedienung berücksichtigt Statusleiste auch ohne Notch.
+- Stylus-Dialog füllt den Bildschirm mit passenden Systemleisten. Page Turning steht direkt in Reader Controls.
+- Stiftpalette nutzt die volle Breite, Größenregelung steht darunter; alle bisherigen Farben bleiben erreichbar.
+- Doppeltipp auf eine Spalte aktiviert ihren Fokus in Jumped und erhält ihn beim SmartScroll. Continuous behält vollständige Seiten und klarere Seitenzwischenräume.
+- Spaltenlesen verwendet ein stabiles, speicherbegrenztes Seitenraster statt nachträglich nachgezeichneter Detailflächen. [Prüfumfang und Grenzen](docs/READER_328.md).
 
 ## Reader-Ausgang: Build 327 / 1.1.1
 

@@ -52,8 +52,11 @@ internal fun ReaderPdfBottomDock(viewModel: ReaderViewModel, state: ReaderViewSt
         }
         val width = animatedWidth.value.dp
         val slide = animatedSlide.value
+        val optionTool = state.activeTool ?: state.pdfOptionsTool
+        val optionSize = if (optionTool == org.zotero.android.screens.reader.data.ReaderAnnotationTool.ink ||
+            optionTool == org.zotero.android.screens.reader.data.ReaderAnnotationTool.text) 96.dp else 48.dp
         val optionsHeight by animateDpAsState(
-            if (tools && state.pdfToolOptionsVisible) 60.dp else 0.dp,
+            if (tools && state.pdfToolOptionsVisible) optionSize else 0.dp,
             tween(180), label = "dock options height")
         val travelPx = with(density) { 60.dp.toPx() }
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -62,7 +65,7 @@ internal fun ReaderPdfBottomDock(viewModel: ReaderViewModel, state: ReaderViewSt
                 Column {
                     Box(Modifier.fillMaxWidth().height(optionsHeight).clipToBounds(), contentAlignment = Alignment.BottomCenter) {
                         if (tools && state.pdfToolOptionsVisible || optionsHeight > 0.dp) {
-                            ReaderPdfToolOptions(viewModel, state, Modifier.fillMaxWidth().height(60.dp))
+                            ReaderPdfToolOptions(viewModel, state, Modifier.fillMaxWidth().height(optionSize))
                         }
                     }
                     Box(Modifier.fillMaxWidth().height(60.dp).clipToBounds()) {

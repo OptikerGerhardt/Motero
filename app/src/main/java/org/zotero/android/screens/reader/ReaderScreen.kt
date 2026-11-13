@@ -122,7 +122,7 @@ internal fun ReaderScreen(
     AppThemeM3(darkTheme = viewState.isDark) {
         if (stylusSettings) androidx.compose.ui.window.Dialog(
             onDismissRequest = { stylusSettings = false },
-            properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
+            properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
         ) {
             org.zotero.android.ereader.EReaderSettingsScreen(stylusOnly = true,
                 darkTheme = viewState.isDark, onBack = { stylusSettings = false })
