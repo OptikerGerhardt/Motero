@@ -71,10 +71,10 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   // Consecutive content frames are adjacent: the physical paper margins no longer take layout space.
   const boxes=await page.evaluate(()=>window._view._view._pageFitting.layout.boxes.slice(6,12));
   for(let i=1;i<boxes.length;i++) {
-   if(mode===1) assert.ok(Math.abs(boxes[i].x-boxes[i-1].x-boxes[i-1].width-12)<1);
-   else assert.ok(Math.abs(boxes[i].y-boxes[i-1].y-boxes[i-1].height-12)<1);
+   if(mode===1) assert.ok(Math.abs(boxes[i].x-boxes[i-1].x-boxes[i-1].width-24)<1);
+   else assert.ok(Math.abs(boxes[i].y-boxes[i-1].y-boxes[i-1].height-24)<1);
   }
-  console.log('PASS mode '+mode+': one-finger scrolling keeps every buffered crop and compact page spacing');
+  console.log('PASS mode '+mode+': one-finger scrolling keeps every buffered crop and visible 24px Continuous page spacing');
   }
 
   // The user's complete PDF is checked independently of the synthetic fixtures.
