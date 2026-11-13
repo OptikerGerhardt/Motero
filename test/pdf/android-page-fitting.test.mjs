@@ -352,3 +352,40 @@ test('the final touchend clears stale touch IDs when reflow swallowed a pointeru
  fitting.onTouch({touches:[]});
  assert.equal(fitting.pointers.size,0);assert.equal(fitting.touches,0);
 });
+
+
+test('double-tapped right column keeps SmartScroll focus and restores the previous fit',async()=>{
+ const {fitting,viewer,pages}=fixture();
+ fitting.view._pageNavigation={mode:'jumped',sync(){},centerCurrentPage(){}};
+ pages[1].pdfPage.view=[0,0,450,600];
+ fitting.cache.set(1,Promise.resolve({columns:[[.1,.1,.45,.9],[.55,.1,.9,.9]]}));
+ await fitting.configure({mode:'content',reference:'cropped-content'});
+ assert.equal(await fitting.focusColumn({pageIndex:1,rects:[[320,300,320,300]]}),true);
+ assert.equal(fitting.columnActive,true);assert.equal(fitting.column.index,1);
+ const left=viewer.container.scrollLeft;
+ await fitting.apply();assert.equal(fitting.column.index,1);assert.equal(viewer.container.scrollLeft,left);
+ assert.equal(await fitting.focusColumn({pageIndex:1,rects:[[320,300,320,300]]}),true);
+ assert.equal(fitting.options.mode,'content');assert.equal(fitting.columnActive,false);
+ fitting.analysisWorker.close();
+});
+
+test('column raster stays bounded and restores detail rendering outside column reading',()=>{
+ const {fitting,viewer,pages}=fixture();viewer.enableDetailCanvas=true;
+ let resets=0;pages[1].enableDetailCanvas=true;pages[1].detailView={reset(){resets++;}};
+ fitting.setStableColumnRaster(true);
+ assert.equal(viewer.enableDetailCanvas,false);assert.equal(pages[1].enableDetailCanvas,false);
+ assert.equal(pages[1].detailView,null);assert.equal(resets,1);
+ fitting.clearClips();assert.equal(viewer.enableDetailCanvas,true);assert.equal(pages[1].enableDetailCanvas,true);
+ fitting.analysisWorker.close();
+});
+
+test('a delayed double tap never overwrites a newer explicit appearance choice',async()=>{
+ const {fitting}=fixture();fitting.view._pageNavigation={mode:'jumped',sync(){},centerCurrentPage(){}};
+ await fitting.configure({mode:'content',reference:'cropped-content'});
+ let release;fitting.boundsFor=()=>new Promise(resolve=>release=resolve);
+ const pending=fitting.focusColumn({pageIndex:1,rects:[[320,300,320,300]]});
+ await fitting.configure({mode:'height',reference:'content'},false);
+ release([.1,.1,.9,.9]);await pending;
+ assert.equal(fitting.options.mode,'height');assert.equal(fitting.doubleTapReturn,null);
+ fitting.analysisWorker.close();
+});

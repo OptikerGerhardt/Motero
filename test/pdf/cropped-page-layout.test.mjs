@@ -17,3 +17,12 @@ for(const mode of [0,1,2]) test(`cropped layout ${mode} separates visible page f
     if(mode===1) assert.equal(result.boxes[1].x-result.boxes[0].x-result.boxes[0].width,12);
     if(mode===2) {assert.equal(result.boxes[1].x-result.boxes[0].x-result.boxes[0].width,12);assert.ok(result.boxes[2].y>result.boxes[1].y+result.boxes[1].height);}
 });
+
+
+test('Continuous page separators grow without widening the gutter within a spread',()=>{
+ const p=Array.from({length:4},(_,index)=>({index,width:200,height:400}));
+ const r=layoutReadingPages(p,{width:900,height:800,mode:1,spreadMode:1,pageGap:24});
+ assert.equal(r.boxes[1].x-r.boxes[0].x-200,12);
+ assert.equal(r.boxes[2].x-r.boxes[1].x-200,24);
+ assert.equal(r.boxes[3].x-r.boxes[2].x-200,12);
+});

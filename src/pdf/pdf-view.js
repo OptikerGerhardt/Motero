@@ -2401,7 +2401,7 @@ class PDFView {
 		}));
 	}
 
-	_handleDoubleTapZoom(event, position) {
+	_handleDoubleTapZoom(event, position, skipColumn = false) {
 		if (!position) {
 			return false;
 		}
@@ -2412,6 +2412,14 @@ class PDFView {
 		if (!page) {
 			return false;
 		}
+
+        if (!skipColumn && this._options.platform==='android' && this._pageNavigation?.mode==='jumped'
+                && !pdfViewer.spreadMode && this._pageFitting.options.cropMode!=='manual') {
+            this._pageFitting.focusColumn(position).then(focused=>{
+                if (!focused && !this._destroyed) this._handleDoubleTapZoom(event,position,true);
+            }).catch(error=>console.error(error));
+            return true;
+        }
 
 		// With Fit to Content, zooming out returns to the fit instead of the page width,
 		// and a fitted view zooms in like a page-width one

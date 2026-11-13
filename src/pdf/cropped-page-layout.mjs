@@ -5,7 +5,7 @@ function setStyles(element, styles) {
 }
 // Keep the original full-size PDF coordinate plane. Only page positions and the
 // visible frame change; selection, annotation rectangles and PDF.js stay intact.
-export function layoutReadingPages(pages, { width, height, mode, gap = 12, spreadMode = 0, sidePadding = 0 }) {
+export function layoutReadingPages(pages, { width, height, mode, gap = 12, spreadMode = 0, sidePadding = 0, pageGap = gap }) {
     const units = [];
     for (let i = 0; i < pages.length;) {
         const indices = readingUnit(i, pages.length, spreadMode), group = indices.map(i => pages[i]);
@@ -15,10 +15,10 @@ export function layoutReadingPages(pages, { width, height, mode, gap = 12, sprea
     }
     const rows = []; let row = {pages:[],width:0,height:0};
     for (const unit of units) {
-        if (row.pages.length && (mode === 0 || mode === 2 && row.width + gap + unit.width > width)) {
+        if (row.pages.length && (mode === 0 || mode === 2 && row.width + pageGap + unit.width > width)) {
             rows.push(row); row = {pages:[],width:0,height:0};
         }
-        if (row.pages.length) row.width += gap;
+        if (row.pages.length) row.width += pageGap;
         row.pages.push(...unit.pages); row.width += unit.width; row.height = Math.max(row.height,unit.height);
     }
     if (row.pages.length) rows.push(row);
@@ -26,12 +26,15 @@ export function layoutReadingPages(pages, { width, height, mode, gap = 12, sprea
     let y = rows.length ? Math.max(0,(height-rows[0].height)/2) : 0;
     for (const row of rows) {
         let x = mode === 1 ? sidePadding : (totalWidth-row.width)/2;
-        for (const page of row.pages) {
-            boxes.push({...page,x,y:y+(row.height-page.height)/2}); x += page.width+gap;
+        for (let i=0;i<row.pages.length;i++) {
+            const page=row.pages[i];
+            boxes.push({...page,x,y:y+(row.height-page.height)/2});
+            const sameUnit=i+1<row.pages.length && readingUnit(page.index,pages.length,spreadMode).includes(row.pages[i+1].index);
+            x += page.width+(sameUnit?gap:pageGap);
         }
-        y += row.height+gap;
+        y += row.height+pageGap;
     }
-    return {boxes,width:totalWidth,height:Math.max(height,y-gap+Math.max(0,(height-(rows.at(-1)?.height||height))/2))};
+    return {boxes,width:totalWidth,height:Math.max(height,y-pageGap+Math.max(0,(height-(rows.at(-1)?.height||height))/2))};
 }
 
 export class CroppedPageLayout {
@@ -72,6 +75,7 @@ export class CroppedPageLayout {
             && signature.every((n,i) => n === this.lastSignature[i])
             && v._pages.length === this.lastViewports.length
             && v._pages.every((page,i) => page.viewport === this.lastViewports[i])) return false;
+        host.classList?.add('motero-cropped-layout');
         this.lastSignature = signature;
         this.lastViewports = v._pages.map(page => page.viewport);
         this.rebuildCount = (this.rebuildCount || 0) + 1;
@@ -100,7 +104,7 @@ export class CroppedPageLayout {
 			const right = Math.min(w, bounds[2] * w + pad), bottom = Math.min(h, bounds[3] * h + pad);
 			return { index, width: right - left, height: bottom - top, left, top, right: w - right, bottom: h - bottom, ready: !!prepared };
 		});
-		const result = layoutReadingPages(pages, { width: c.clientWidth, height: c.clientHeight, mode: v.scrollMode, spreadMode:v.spreadMode, sidePadding:this.fitting.columnLayout ? c.clientWidth/2 : 0 });
+		const result = layoutReadingPages(pages, { width: c.clientWidth, height: c.clientHeight, mode: v.scrollMode, spreadMode:v.spreadMode, pageGap:this.fitting.view?._pageNavigation?.mode==='continuous'?24:12, sidePadding:this.fitting.columnLayout ? c.clientWidth/2 : 0 });
 		setStyles(host, { position: 'relative', width: result.width + 'px', height: result.height + 'px', overflow: 'clip', padding: '0', margin: '0' });
         let changed = !this.boxes || result.width !== this.width || result.height !== this.height;
 		for (const box of result.boxes) {
@@ -150,6 +154,7 @@ export class CroppedPageLayout {
 		return { first, last, views, ids };
 	}
 	clear() {
+        this.viewer.viewer.classList?.remove('motero-cropped-layout');
 		this.boxes = null;
 		for (const [element, before] of this.saved) Object.assign(element.style, before);
 		this.saved.clear();

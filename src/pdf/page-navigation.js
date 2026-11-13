@@ -27,7 +27,9 @@ export class PDFPageNavigation {
             + '.motero-page-spacing{padding-block:var(--motero-page-gap,0px)!important}'
             + '.motero-continuous-y #viewerContainer{touch-action:pan-y pinch-zoom!important}'
             + '.motero-continuous-x #viewerContainer{touch-action:pan-x pinch-zoom!important}'
-            + '.motero-column-reading #viewerContainer{touch-action:none!important}';
+            + '.motero-column-reading #viewerContainer{touch-action:none!important}'
+            + '.motero-continuous-layout-y .pdfViewer:not(.motero-cropped-layout)>:is(.page,.spread){margin-bottom:24px!important}'
+            + '.motero-continuous-layout-x .pdfViewer:not(.motero-cropped-layout)>:is(.page,.spread){margin-right:24px!important}';
         this.win.document.head.append(this.style);
         this.onStart = event => {
             if (event.touches.length > 1) {
@@ -109,7 +111,7 @@ export class PDFPageNavigation {
         this.wheelDistance = 0; this.wheelLockedUntil = 0; this.sync();
         if (previous && previous !== this.mode && this.view._pageFitting?.active) {
             const fitting = this.view._pageFitting;
-            fitting.column = null;
+            fitting.column = null; fitting.doubleTapReturn=null;
             fitting.preparedPages.clear();
             fitting.layoutEpoch++;
             fitting.schedule(0);
@@ -126,6 +128,8 @@ export class PDFPageNavigation {
     sync() {
         const root=this.win?.document.documentElement;
         const fitting=this.view._pageFitting;
+        root?.classList.toggle('motero-continuous-layout-x', this.mode==='continuous' && this.viewer.scrollMode===1);
+        root?.classList.toggle('motero-continuous-layout-y', this.mode==='continuous' && this.viewer.scrollMode!==1);
         // Page reflow may swallow touchend while both pointerup events still
         // arrive. Share fitting's authoritative contacts so a finished pinch
         // cannot leave Jumped visibility or Continuous axis locking disabled.
@@ -223,7 +227,7 @@ export class PDFPageNavigation {
         for (const name of ['pagechanging','pagesinit','scalechanging','updateviewarea']) this.bus.off(name, this.onChange);
         this.viewer.viewer.classList.remove('motero-jumped');
         this.win.document.documentElement?.classList.remove('motero-column-reading');
-        this.win.document.documentElement?.classList.remove('motero-continuous-x', 'motero-continuous-y');
+        this.win.document.documentElement?.classList.remove('motero-continuous-x', 'motero-continuous-y', 'motero-continuous-layout-x', 'motero-continuous-layout-y');
         this.clearSpacing();
         if (this.viewer._getVisiblePages === this.visible) this.viewer._getVisiblePages = this.originalVisible;
         for (const div of this.currentUnit || []) div.classList.remove('motero-current-page');

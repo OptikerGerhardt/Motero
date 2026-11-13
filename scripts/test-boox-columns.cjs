@@ -10,7 +10,7 @@ const blankFixture=require('./make-blank-fixture.cjs');
  await new Promise(r=>server.listen(0,'127.0.0.1',r));let browser;
  try{
   browser=await chromium.launch({executablePath:process.env.BOOX_TEST_BROWSER,headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
-  const page=await browser.newPage({viewport:{width:900,height:1000},isMobile:true,hasTouch:true});page.setDefaultTimeout(60000);
+  const page=await browser.newPage({viewport:{width:900,height:1000},isMobile:true,hasTouch:true,deviceScaleFactor:3});page.setDefaultTimeout(60000);
   const errors=[];page.on('pageerror',e=>errors.push(e.stack));
   const origin='http://127.0.0.1:'+server.address().port,cdp=await page.context().newCDPSession(page);
   const touch=(type,points=[])=>cdp.send('Input.dispatchTouchEvent',{type,touchPoints:points.map((p,i)=>({...p,id:i+1,radiusX:2,radiusY:2}))});
@@ -18,7 +18,7 @@ const blankFixture=require('./make-blank-fixture.cjs');
   const open=async(mode='jumped')=>{
    await page.goto(origin+'/view.html');await page.evaluate(()=>{window.messages=[];const c=new MessageChannel();c.port1.onmessage=e=>window.messages.push(JSON.parse(e.data));window.postMessage('initPort','*',[c.port2]);});
    await page.waitForFunction(()=>window.messages.some(m=>m.message?.event==='onInitialized'));
-   await page.evaluate(o=>window.createView(btoa(JSON.stringify(o))),{type:'pdf',url:origin+'/fixture.pdf',annotations:[],pageNavigation:mode,viewState:{pageIndex:0,scale:'page-width',scrollMode:0,spreadMode:0},pageFitting:{mode:'width',reference:'cropped-content',margin:0}});
+   await page.evaluate(o=>window.createView(btoa(JSON.stringify(o))),{type:'pdf',url:origin+'/fixture.pdf',annotations:[],directHighlight:true,pageNavigation:mode,viewState:{pageIndex:0,scale:'page-width',scrollMode:0,spreadMode:0},pageFitting:{mode:'width',reference:'cropped-content',margin:0}});
    await page.waitForFunction(()=>!!window._view?._view?._pageFitting?.applied);
   };
   for(const mode of ['jumped']){
@@ -41,6 +41,22 @@ const blankFixture=require('./make-blank-fixture.cjs');
    const previous=await state();assert.equal(previous.index,0);assert.equal(previous.column,1,'backwards entry uses the previous page last column');
    console.log('PASS '+mode+': column width, left-to-right order, next page and reverse reading order');
   }
+  await open('jumped');
+  await page.evaluate(()=>window._view._view._pageFitting.configure({mode:'content',reference:'cropped-content',margin:0}));
+  await page.evaluate(()=>window._view._view.initializedPromise);
+  await page.waitForFunction(()=>window._view._view._pageFitting.viewer.getPageView(0).renderingState===3);
+  await page.waitForFunction(()=>!window._view._view._scrolling);
+  const point=await page.evaluate(()=>{const v=window._view._view,r=v.getClientRect([360,500,360,500],0);return{x:r[0],y:r[1]};});
+  for(let i=0;i<2;i++){await touch('touchStart',[point]);await touch('touchEnd');await page.waitForTimeout(70);}
+  await page.waitForFunction(()=>window._view._view._pageFitting.doubleTapReturn&&window._view._view._pageFitting.column?.index===1);
+  await page.waitForFunction(()=>window._view._view._pageFitting.viewer.getPageView(0).renderingState===3);
+  await page.evaluate(()=>window.stableCanvas=window._view._view._pageFitting.viewer.getPageView(0).canvas);
+  await page.evaluate(()=>window.turnPageWithHardwareButton(true,.33));
+  const focus=await page.evaluate(()=>{const v=window._view._view,f=v._pageFitting,c=f.viewer.container,p=f.viewer.getPageView(0),b=f.column.bounds;return{column:f.column.index,offset:p.div.getBoundingClientRect().left+(b[0]+b[2])*p.div.clientWidth/2-c.clientWidth/2,detail:p.enableDetailCanvas};});
+  assert.equal(focus.column,1);assert.ok(Math.abs(focus.offset)<3,JSON.stringify(focus));assert.equal(focus.detail,false);
+  await page.waitForTimeout(400);
+  assert.equal(await page.evaluate(()=>{const p=window._view._view._pageFitting.viewer.getPageView(0);return p.canvas===window.stableCanvas&&!p.detailView&&p.canvas.width*p.canvas.height<=p.maxCanvasPixels*1.01;}),true,'column scrolling reuses its bounded raster at device pixel ratio 3');
+  console.log('PASS real double tap on the right column retains its focus through SmartScroll with a stable page raster');
   await open('jumped');
   await page.evaluate(()=>window._view.setPageNavigation('continuous'));
   await page.waitForFunction(()=>{const f=window._view._view._pageFitting;return !f.columnActive&&!f.columnLayout&&!!f.applied;});

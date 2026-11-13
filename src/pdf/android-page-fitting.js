@@ -181,6 +181,8 @@ export class AndroidPageFitting {
     }
 
 	configure(options, apply = true) {
+        this.doubleTapReturn=null;
+        this.setStableColumnRaster(false);
         const cropMode = options?.cropMode === 'automatic' ? 'automatic' : options?.cropMode === 'manual' ? 'manual'
             : (options?.manualCrop || Object.keys(this.options.manualCrop || {}).length ? 'manual' : 'automatic');
 		this.options = {
@@ -353,7 +355,8 @@ export class AndroidPageFitting {
 	}
 
 	suspend() {
-		this.token++; this.active = false; this.applied = null;
+		this.setStableColumnRaster(false);
+        this.token++; this.active = false; this.applied = null;
 		this.win.clearTimeout(this.timer); this.pendingPage = false; this.clearClips();
 		this.masks = null; this.view._render();
 	}
@@ -761,6 +764,7 @@ export class AndroidPageFitting {
 			this.peekAnchor = null;
 			this.view._pageNavigation?.centerCurrentPage({ direction, preservePosition: !navigate && !alignTop, force: true });
             this.positionColumn(prepared, {alignTop, direction, preservePosition: !navigate && !alignTop});
+            this.setStableColumnRaster(!!prepared.columns);
 			this.applied = { scale: v.currentScale, bounds, pageIndex: index, left: c.scrollLeft, top: c.scrollTop };
 			this.view._booxReader?.rememberReadingView();
 		}
@@ -780,6 +784,53 @@ export class AndroidPageFitting {
         return this.active && !this.zooming && this.options.mode === 'width' && !this.viewer.spreadMode
             && this.view._pageNavigation?.mode === 'jumped'
             && this.column?.pageIndex === this.viewer.currentPageNumber - 1;
+    }
+
+    async focusColumn(position) {
+        const v=this.viewer, index=position.pageIndex, epoch=this.inputEpoch, key=this.key();
+        if (v.spreadMode || v.pagesRotation % 180 || this.options.cropMode==='manual'
+                || this.view._pageNavigation?.mode!=='jumped') return false;
+        if (this.doubleTapReturn) {
+            const previous=this.doubleTapReturn; this.doubleTapReturn=null;
+            await this.configure(previous); return true;
+        }
+        await this.boundsFor(index,{...this.options,reference:'cropped-content'});
+        const geometry=await this.cache.get(index);
+        if (this.view._destroyed || epoch!==this.inputEpoch || key!==this.key() || v.currentPageNumber!==index+1) return true;
+        if (!geometry?.columns?.length) return false;
+        const page=v.getPageView(index).pdfPage;
+        const point=position.rects[0], x=(point[0]-page.view[0])/(page.view[2]-page.view[0]);
+        const selected=geometry.columns.reduce((best,b,i)=>Math.abs((b[0]+b[2])/2-x)
+            < Math.abs((geometry.columns[best][0]+geometry.columns[best][2])/2-x)?i:best,0);
+        const previous={...this.options};
+        const options={...this.options,mode:'width',reference:'cropped-content'};
+        const prepared=await this.prepare(index,options);
+        if (!prepared || this.view._destroyed || epoch!==this.inputEpoch || key!==this.key()
+                || v.currentPageNumber!==index+1 || prepared.width!==v.container.clientWidth
+                || prepared.height!==v.container.clientHeight) return true;
+        prepared.columnIndex=v.pagesRotation%360===180 ? geometry.columns.length-1-selected : selected;
+        await this.configure(options,false);
+        this.active=true; this.presentation='reading';
+        if (this.commit(prepared,{alignTop:true})) { this.doubleTapReturn=previous; return true; }
+        return true;
+    }
+
+    setStableColumnRaster(enabled) {
+        const v=this.viewer;
+        if (enabled===!!this.stableRaster) return;
+        if (enabled) {
+            this.stableRaster={default:v.enableDetailCanvas, pages:new Map()};
+            v.enableDetailCanvas=false;
+            for (const page of v._pages) {
+                this.stableRaster.pages.set(page,page.enableDetailCanvas);
+                page.enableDetailCanvas=false;
+                page.detailView?.reset(); page.detailView=null;
+            }
+        } else {
+            const saved=this.stableRaster; this.stableRaster=null;
+            v.enableDetailCanvas=saved.default;
+            for (const page of v._pages) page.enableDetailCanvas=saved.pages.get(page) ?? saved.default;
+        }
     }
 
     positionColumn(prepared, {alignTop = false, direction = 0, preservePosition = false} = {}) {
@@ -839,7 +890,7 @@ export class AndroidPageFitting {
 		if (this.zooming) this.schedule();
 	}
 
-	clearClips() { this.layout.clear(); }
+	clearClips() { this.setStableColumnRaster(false); this.layout.clear(); }
 
 	destroy() {
 		this.editor?.close();
