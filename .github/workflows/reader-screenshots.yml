@@ -1,0 +1,98 @@
+name: Motero BOOX-sized reader screenshots
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'After reviewing previews, update the public README gallery images'
+        type: boolean
+        required: false
+        default: false
+  push:
+    paths:
+      - ".github/workflows/reader-screenshots.yml"
+      - "scripts/capture_reader_previews.cjs"
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    permissions:
+      contents: read
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: reader/package-lock.json
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - name: Prepare and build real Motero Reader web assets
+        run: |
+          python3 scripts/prepare_reader_assets.py
+          cd reader
+          npm ci --no-audit --no-fund
+          npx webpack --config-name android
+      - name: Install pinned browser screenshot tools
+        run: npm install --prefix .browser-tools --no-audit --no-fund playwright@1.56.1
+      - name: Capture reader screenshots and annotation palette
+        env:
+          NODE_PATH: ${{ github.workspace }}/.browser-tools/node_modules
+          BOOX_SCREENSHOT_OUTPUT: ${{ github.workspace }}/screenshot-previews
+          BOOX_QA_IMAGES: ${{ github.workspace }}/screenshot-previews
+        run: |
+          export BOOX_TEST_BROWSER="$(command -v google-chrome || command -v chromium)"
+          test -n "$BOOX_TEST_BROWSER"
+          node scripts/capture_reader_previews.cjs
+          node reader/scripts/test-boox-annotation-tools.cjs
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: motero-boox-sized-reader-screenshots
+          path: screenshot-previews/
+          if-no-files-found: warn
+          retention-days: 14
+
+  publish:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish == true
+    name: Publish reviewed browser screenshot previews
+    needs: capture
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Download captures from this workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download "${{ github.run_id }}" --repo "$GITHUB_REPOSITORY" \
+            --name motero-boox-sized-reader-screenshots --dir screenshot-previews
+      - name: Update public reader preview gallery
+        run: |
+          mkdir -p docs/screenshots
+          cp screenshot-previews/01-pdf-reader.png docs/screenshots/
+          cp screenshot-previews/02-highlights-and-ink.png docs/screenshots/
+          cp screenshot-previews/03-bookmarks.png docs/screenshots/
+          cp screenshot-previews/04-dark-appearance.png docs/screenshots/
+          git add docs/screenshots/
+          if git diff --cached --quiet; then
+            echo "Screenshots are unchanged."
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'docs: refresh browser-rendered Motero reader screenshots'
+          git push origin HEAD:main
