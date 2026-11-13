@@ -53,8 +53,21 @@ const root=path.resolve(__dirname,'../build/android'),fixture=path.resolve(__dir
    try{await page.waitForFunction(()=>window._view._view._pageFitting.presentation==='overview',null,{timeout:5000});}catch(error){console.error('OVERVIEW STATE',JSON.stringify({spreadMode,scrollMode,state:await pair(),extra:await page.evaluate(()=>{const f=window._view._view._pageFitting;return{origin:f.gestureOrigin,presentation:f.presentation,zooming:f.zooming,pointers:f.pointers.size,touches:f.touches};})}));throw error;}
    const target=await page.evaluate(()=>{const f=window._view._view._pageFitting,c=f.viewportFrame();const p=f.pageFrames().find(p=>p.left>=c.left&&p.right<=c.right&&p.top>=c.top&&p.bottom<=c.bottom);
     return{index:p.index,x:(p.left+p.right)/2,y:(p.top+p.bottom)/2};});
+   const staleFrame=activation==='initial'&&spreadMode===2&&scrollMode===1;
+   if(staleFrame) await page.evaluate(()=>{
+    const f=window._view._view._pageFitting,commit=f.commit,apply=f.apply;
+    f.commit=function(prepared,...args){this.commit=commit;return commit.call(this,{...prepared,width:prepared.width+1},...args);};
+    f.apply=async function(...args){this.apply=apply;window.fallbackPending=true;await new Promise(resolve=>window.releaseFallback=resolve);return apply.apply(this,args);};
+   });
    await touch('touchStart',[target]);await touch('touchEnd');
-   try { await page.waitForFunction(index=>{const f=window._view._view._pageFitting;return f.active&&f.presentation==='reading'&&f.viewer.currentPageNumber===index+1;},target.index,{timeout:10000}); } catch(error) {console.error('RESTORE STATE',JSON.stringify({spreadMode,scrollMode,target,state:await pair(),extra:await page.evaluate(()=>{const v=window._view._view;return{presentation:v._pageFitting.presentation,applied:v._pageFitting.applied,readingMode:v._booxReader.readingMode,fit:v._booxReader.readingFit,entering:!!v._booxReader.entering};})}));throw error;}
+   if(staleFrame){
+    await page.waitForFunction(()=>window.fallbackPending);
+    assert.equal(await page.evaluate(index=>{const v=window._view._view,f=v._pageFitting;return !!v._booxReader.entering&&f.active&&f.presentation==='reading'&&f.viewer.currentPageNumber===index+1;},target.index),true,'reading flags can precede the completed stale-geometry fallback');
+    await page.evaluate(()=>{window.releaseFallback();delete window.releaseFallback;delete window.fallbackPending;});
+   }
+   // enterPage may need a second preparation after a viewport change. Its
+   // reading flags alone do not mean the destination fit has been committed.
+   try { await page.waitForFunction(index=>{const v=window._view._view,f=v._pageFitting;return !v._booxReader.entering&&f.active&&!f.zooming&&f.presentation==='reading'&&f.viewer.currentPageNumber===index+1&&f.applied?.pageIndex===index&&Math.abs(f.applied.scale-f.viewer.currentScale)<.002;},target.index,{timeout:10000}); } catch(error) {console.error('RESTORE STATE',JSON.stringify({spreadMode,scrollMode,target,state:await pair(),extra:await page.evaluate(()=>{const v=window._view._view;return{presentation:v._pageFitting.presentation,applied:v._pageFitting.applied,readingMode:v._booxReader.readingMode,fit:v._booxReader.readingFit,entering:!!v._booxReader.entering};})}));throw error;}
    const restored=await pair();assert.equal(restored.spread,spreadMode);
    const first=spreadMode===1?target.index-target.index%2:target.index===0?0:target.index-(target.index-1)%2;
    const expected=spreadMode===2&&target.index===0?[0]:[first,first+1].filter(i=>i<restored.frames.length);
