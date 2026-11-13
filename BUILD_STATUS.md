@@ -1,6 +1,10 @@
-# Build 327 / Motero 1.1.1 — Freigabeprüfung
+# Build 327 / Motero 1.1.1 — veröffentlicht und unabhängig geprüft
 
-Toolbar-Zurück auf Telefon/Tablet direkt an den Reader-Navigationsstapel anbinden, damit Protect reader den ausdrücklichen Ausgang nicht abfängt. Die zwei neuen nativen Regressionen bestehen. Vollständige lokale und geschützte Release-Prüfungen folgen. Reader und PDF.js bleiben auf dem unabhängig geprüften Build-326-Stand.
+- [APK und vollständige Quellen](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.1-327); [Build, Signatur und Updates](https://github.com/OptikerGerhardt/Motero/actions/runs/43391083194) erfolgreich. Anwendung `f4a7e6c4`, unveränderter Reader `9a5947ff`; PDF.js 5.7.330.
+- Der obere Reader-Zurück-Pfeil schließt auf Telefon/Tablet wieder das Dokument bei aktiviertem Protect reader. Der ausdrückliche Ausgang geht direkt an den Navigationsstapel; der Android-System-Zurück-Schutz bleibt aktiv. [Umfang und Prüfung](docs/READER_327.md).
+- 157 native Tests in 38 Suiten, 421 Reader-Fälle in 49 Dateien, alle 23 CI-Browser-Suiten, 43 Engine-Pixel- und 19 offizielle Viewer-Fälle bestanden. Lokal Reader-Controls/UI-Konsistenz und kompletter APK-Build zusätzlich geprüft.
+- Öffentliche APK unabhängig heruntergeladen: SHA-256 `786dd8e8fba192fe2fa4a174cb3001027d4b81e8bf73f6934f046ddf7cdcee21`. Privater Motero-Signierer, eingeschränkte Rotation, Receiver-Berechtigung, Android 9+, nicht debuggbar; 114 Hauptbundle- und 117 eindeutige Reader-/Worker-Quellen, 207 Engine-, 45 Runtime- und 9515 Quellarchiv-Dateien sowie Prüfsummen geprüft.
+- API 31/35: Updates von 303 und 326 erhalten Datenmarker/UID, starten die App und verweigern alte Schlüssel. Latest-Release zeigt Build 327 mit genau einer APK. Physische BOOX/Pixel-UI und Kontosync separat. [Nachweise](qa/build327/README.md).
 
 # Build 326 / Motero 1.1 — veröffentlicht und unabhängig geprüft
 

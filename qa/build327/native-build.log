@@ -1,0 +1,252 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.6.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Calculating task graph as configuration cache cannot be reused because an input to task ':buildSrc:compileKotlin' has changed.
+> Task :buildSrc:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :buildSrc:pluginDescriptors UP-TO-DATE
+> Task :buildSrc:processResources UP-TO-DATE
+> Task :buildSrc:compileKotlin
+> Task :buildSrc:compileJava NO-SOURCE
+> Task :buildSrc:compileGroovy NO-SOURCE
+> Task :buildSrc:classes UP-TO-DATE
+> Task :buildSrc:jar
+
+> Configure project :app
+WARNING: The option setting 'android.builtInKotlin=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+Add android.sync.suppressAgpWarnings=UNSUPPORTED_PROJECT_OPTION_USE to the gradle.properties file to suppress this warning.
+WARNING: The option setting 'android.newDsl=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+Add android.sync.suppressAgpWarnings=UNSUPPORTED_PROJECT_OPTION_USE to the gradle.properties file to suppress this warning.
+WARNING: The option setting 'android.defaults.buildfeatures.resvalues=true' is deprecated.
+The current default is 'false'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+Add android.sync.suppressAgpWarnings=UNSUPPORTED_PROJECT_OPTION_USE to the gradle.properties file to suppress this warning.
+WARNING: API 'applicationVariants' is obsolete and has been replaced with 'AndroidComponentsExtension'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+The legacy variant API is disabled by default in AGP 9.0, but can be re-enabled by adding 
+    android.newDsl=false
+to this project's gradle.properties file.
+For more information, see http://developer.android.com/build/r/new-dsl.
+
+To determine what is calling applicationVariants, use -Pandroid.debug.obsoleteApi=true on the command line to display more information.
+Add android.sync.suppressAgpWarnings=DEPRECATED_DSL to the gradle.properties file to suppress this warning.
+WARNING: API 'testVariants' is obsolete and has been replaced with 'AndroidComponentsExtension'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+The legacy variant API is disabled by default in AGP 9.0, but can be re-enabled by adding 
+    android.newDsl=false
+to this project's gradle.properties file.
+For more information, see http://developer.android.com/build/r/new-dsl.
+
+To determine what is calling testVariants, use -Pandroid.debug.obsoleteApi=true on the command line to display more information.
+Add android.sync.suppressAgpWarnings=DEPRECATED_DSL to the gradle.properties file to suppress this warning.
+WARNING: API 'unitTestVariants' is obsolete and has been replaced with 'AndroidComponentsExtension'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+The legacy variant API is disabled by default in AGP 9.0, but can be re-enabled by adding 
+    android.newDsl=false
+to this project's gradle.properties file.
+For more information, see http://developer.android.com/build/r/new-dsl.
+
+To determine what is calling unitTestVariants, use -Pandroid.debug.obsoleteApi=true on the command line to display more information.
+Add android.sync.suppressAgpWarnings=DEPRECATED_DSL to the gradle.properties file to suppress this warning.
+w: file:///workspace/Motero/app/build.gradle.kts:29:1: 'fun Project.android(configure: Action<BaseAppModuleExtension>): Unit' is deprecated. Replaced by com.android.build.api.dsl.ApplicationExtension.
+This class is not used for the public extensions in AGP when android.newDsl=true, which is the default in AGP 9.0, and will be removed in AGP 10.0.
+w: [33m[1m⚠️ Deprecated 'org.jetbrains.kotlin.android' plugin usage[0m[0m
+The 'org.jetbrains.kotlin.android' plugin in project ':app' is no longer required for Kotlin support since AGP 9.0.
+[32m[1mSolution:[0m[0m
+[32m[3mRemove both `android.builtInKotlin=true` and `android.newDsl=false` from `gradle.properties`, then migrate to built-in Kotlin.[0m[0m
+[36mSee [0m[34mhttps://kotl.in/gradle/agp-built-in-kotlin[0m[36m for more details.[0m
+
+
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDevReleaseBuild UP-TO-DATE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:injectCrashlyticsMappingFileIdDevRelease
+> Task :app:buildKotlinToolingMetadata
+> Task :app:generateDevReleaseResValues
+> Task :app:processDevReleaseGoogleServices
+> Task :app:extractDevReleaseVersionControlInfo
+> Task :app:injectCrashlyticsVersionControlInfoDevRelease
+> Task :app:generateDevReleaseResources
+> Task :app:generateDevReleaseBuildConfig
+> Task :app:packageDevReleaseResources
+> Task :app:javaPreCompileDevRelease
+> Task :app:processDevReleaseNavigationResources
+> Task :app:dataBindingMergeDependencyArtifactsDevRelease
+> Task :app:checkDevReleaseAarMetadata
+> Task :app:mapDevReleaseSourceSetPaths
+> Task :app:createDevReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksDevRelease
+> Task :app:compileDevReleaseNavigationResources
+> Task :app:preDevReleaseUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileDevReleaseUnitTest
+> Task :app:mergeDevReleaseJniLibFolders
+> Task :app:parseDevReleaseLocalResources
+> Task :app:generateDevReleaseRFile
+> Task :app:mergeDevReleaseNativeLibs
+> Task :app:mergeDevReleaseArtProfile
+> Task :app:desugarDevReleaseFileDependencies
+
+> Task :app:processDevReleaseMainManifest
+/workspace/Motero/app/src/devRelease/AndroidManifest.xml Warning:
+	uses-permission#android.permission.READ_EXTERNAL_STORAGE was tagged at AndroidManifest.xml:0 to remove other declarations but no other declaration present
+/workspace/Motero/app/src/devRelease/AndroidManifest.xml Warning:
+	uses-permission#android.permission.WRITE_EXTERNAL_STORAGE was tagged at AndroidManifest.xml:0 to remove other declarations but no other declaration present
+/workspace/Motero/app/src/devRelease/AndroidManifest.xml Warning:
+	application@android:requestLegacyExternalStorage was tagged at AndroidManifest.xml:0 to replace other declarations but no other declaration present
+
+> Task :app:processDevReleaseManifest
+
+> Task :app:stripDevReleaseDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so, libdatastore_shared_counter.so, librealm-jni.so. Run with --info option to learn more.
+
+> Task :app:processDevReleaseManifestForPackage
+> Task :app:mergeDevReleaseStartupProfile
+> Task :app:generateDevReleaseAssets UP-TO-DATE
+> Task :app:extractDevReleaseNativeSymbolTables
+> Task :app:mergeDevReleaseNativeDebugMetadata NO-SOURCE
+> Task :app:collectDevReleaseDependencies
+> Task :app:mergeDevReleaseAssets
+> Task :app:sdkDevReleaseDependencyData
+> Task :app:writeDevReleaseAppMetadata
+> Task :app:writeDevReleaseSigningConfigVersions
+
+> Task :app:mergeDevReleaseResources
+/workspace/Motero/app/src/main/res/values/imported_strings.xml:281:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-hu/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-hr/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-ig/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-af/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-it/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-is/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-ru/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-ro/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-jv/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-br/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-ja/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-sl/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-bn/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-ka/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-kk/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-sr/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-sk/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-sq/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-sv/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-kn/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-cs/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-de/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-cy/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-ta/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-tr/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-mk/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-uk/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-et/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-lt/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-mn/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-fi/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-en/imported_strings.xml:281:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-vi/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-eu/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-hy/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-nl/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-id/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-fa/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-am/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-fr/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-oc/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-ar/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-gl/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-bg/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-pl/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-ca/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-km/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-ko/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-th/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-da/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-el/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-es/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-he/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+
+> Task :app:checkDevReleaseDuplicateClasses
+> Task :app:compressDevReleaseAssets
+> Task :app:dataBindingGenBaseClassesDevRelease
+> Task :app:processDevReleaseResources
+> Task :app:mergeExtDexDevRelease
+> Task :app:kspDevReleaseKotlin
+> Task :app:optimizeDevReleaseResources
+
+> Task :app:kspDevReleaseKotlin
+w: [ksp] No dependencies reported for generated source org.zotero.android.ZoteroApplication_ComponentTreeDeps.java which willprevent incremental compilation.
+Please file a bug at https://issuetracker.google.com/issues/new?component=413107.
+
+> Task :app:kaptGenerateStubsDevReleaseKotlin
+
+> Task :app:kaptDevReleaseKotlin
+Note: Processing module MainConfigurationDbModule
+Note: Processing module BundledDataConfigurationDbModule
+Note: Processing class RGroup
+Note: Processing class RItem
+Note: Processing class AllItemsDbRow
+Note: Processing class RLink
+Note: Processing class RTypedTag
+Note: Processing class RPathCoordinate
+Note: Processing class RItemField
+Note: Processing class RCondition
+Note: Processing class RObjectChange
+Note: Processing class RStyle
+Note: Processing class RVersions
+Note: Processing class RCreator
+Note: Processing class RLastReadDate
+Note: Processing class RTag
+Note: Processing class RUser
+Note: Processing class RRect
+Note: Processing class RSearch
+Note: Processing class RPath
+Note: Processing class RWebDavDeletion
+Note: Processing class RCustomLibrary
+Note: Processing class RCollection
+Note: Processing class RPageIndex
+Note: Processing class RTranslatorMetadata
+Note: Processing class RRelation
+Note: Creating DefaultRealmModule
+warning: The following options were not recognized by any processor: '[dagger.fastInit, dagger.hilt.android.internal.disableAndroidSuperclassValidation, dagger.hilt.android.internal.projectType, kapt.kotlin.generated]'
+
+> Task :app:compileDevReleaseKotlin
+
+> Task :app:compileDevReleaseJavaWithJavac
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :app:processDevReleaseJavaRes
+> Task :app:bundleDevReleaseClassesToCompileJar
+> Task :app:kspDevReleaseUnitTestKotlin SKIPPED
+> Task :app:mergeDevReleaseJavaResource
+> Task :app:kaptGenerateStubsDevReleaseUnitTestKotlin
+
+> Task :app:kaptDevReleaseUnitTestKotlin
+warning: The following options were not recognized by any processor: '[dagger.fastInit, dagger.hilt.android.internal.disableAndroidSuperclassValidation, dagger.hilt.android.internal.projectType, kapt.kotlin.generated]'
+
+> Task :app:compileDevReleaseUnitTestKotlin
+> Task :app:compileDevReleaseUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDevReleaseUnitTestJavaRes
+> Task :app:devReleaseRealmAccessorsTransformer
+> Task :app:transformDevReleaseClassesWithAsm
+> Task :app:bundleDevReleaseClassesToRuntimeJar
+> Task :app:transformDevReleaseUnitTestClassesWithAsm
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+> Task :app:dexBuilderDevRelease
+> Task :app:mergeDevReleaseGlobalSynthetics
+> Task :app:testDevReleaseUnitTest
+> Task :app:mergeDexDevRelease
+> Task :app:compileDevReleaseArtProfile
+> Task :app:packageDevRelease
+> Task :app:assembleDevRelease
+> Task :app:createDevReleaseApkListingFileRedirect
+
+[Incubating] Problems report is available at: file:///workspace/Motero/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 4m 25s
+69 actionable tasks: 67 executed, 2 up-to-date
+Configuration cache entry stored.
