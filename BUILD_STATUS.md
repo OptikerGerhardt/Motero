@@ -1,6 +1,11 @@
-# Build 326 / Motero 1.1 — Freigabeprüfung
+# Build 326 / Motero 1.1 — veröffentlicht und unabhängig geprüft
 
-Die nach Build 325 gesammelten Punkte sind implementiert. 421 Reader-Fälle in 49 Dateien, 155 native Tests in 37 Suiten, alle 23 Browser-Suiten, 16 Infrastruktur-/Signatur-Schutztests und der APK-Build bestanden. Eingebettete Reader-/Worker-Quellen sowie die unveränderten Engine-/Runtime-Hashes geprüft. Zwei CI-Läufe stoppten vor der Veröffentlichung an der Spread-Rückkehr. Verlorene Touch-Endmeldungen wurden gezielt nachgestellt und der hängenbleibende Zwei-Finger-Zustand behoben. Alle acht betroffenen Browser-Suiten, Reader-Fälle und der neu gebaute APK-Inhalt sind erneut geprüft; die vollständige geschützte Release-Prüfung folgt. [Umfang und Grenzen](docs/READER_326.md). Physische Geräte und Kontosync separat.
+- [APK und vollständige Quellen](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.0-326); [Build, Signatur und Updates](https://github.com/OptikerGerhardt/Motero/actions/runs/43340064847) erfolgreich. Anwendung `62f8a0da`, Reader `9a5947ff`; technische Version 1.1.0-326, Release-Titel Motero 1.1. PDF.js 5.7.330 unverändert.
+- 421 Reader-Fälle in 49 Dateien, 155 native Tests in 37 Suiten, alle 23 Browser-Suiten, 43 Engine-Pixel- und 19 offizielle Viewer-Fälle bestanden. Zusätzlich 16 lokale Infrastruktur-/Signatur-Schutztests.
+- 200-ms-Haltegeste, Page Turning unter Reader Controls, Zotero-UI-Komponenten für Reader/Stylus, Zurück-Schutz, breiterer EPUB-Bookmark-Bereich, adaptive Dock-Reihenfolge, höchste Dokumentebene der Schnellpalette und präzise EPUB-Notizanker umgesetzt. Kopfzeilen/Randsterne/Lizenzhinweise besser erkennen; sichtbare Position bei nachträglichen Layoutänderungen stabil halten. [Umfang und Grenzen](docs/READER_326.md).
+- Öffentliche APK unabhängig heruntergeladen: SHA-256 `5a7b38806765aad9d40d33741d158199f6fc921373c8f0c09aed20ffcb28c400`. Privater Motero-Signierer, eingeschränkte Rotation, Receiver-Berechtigung, Android 9+, nicht debuggbar; 114 Hauptbundle- und 117 eindeutige Reader-/Worker-Quellen, 207 Engine-, 45 Runtime- und 9500 Quellarchiv-Dateien sowie Prüfsummen geprüft.
+- API 31/35: Updates von 303 und 325 erhalten Datenmarker und UID, starten die App und verweigern alte Schlüssel. Latest-Release zeigt Build 326 mit genau einer APK.
+- Physische BOOX-/Pixel-Eingaben, native Animationen und Kontosync separat. Born-/Leviathan-Originale lagen nicht vor; synthetische Testdokumente bilden die gezeigten Strukturen nach. Keine perfekte Erkennung beliebiger PDFs behauptet. [Nachweise](qa/build326/README.md).
 
 # Build 325 / Motero 1.0.10 — veröffentlicht und unabhängig geprüft
 

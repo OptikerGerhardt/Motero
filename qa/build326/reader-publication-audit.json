@@ -1,14 +1,34 @@
 {
   "passed": true,
   "refs": [
-    "HEAD"
+    "HEAD",
+    "refs/remotes/origin/reader"
   ],
-  "git_objects": 16468,
-  "git_blobs": 5664,
-  "git_bytes": 140177225,
+  "git_objects": 37865,
+  "git_blobs": 14929,
+  "git_bytes": 257492874,
   "archive_entries": 0,
   "archive_bytes": 0,
   "unreviewed_findings": 0,
-  "findings": [],
+  "findings": [
+    {
+      "path": "debug.keystore",
+      "kinds": [
+        "sensitive_filename"
+      ],
+      "sha256": "0cac96b95ee3a56de27e30bb92dc49e4dd319a26d47da172d5e41a34388b29bf",
+      "allowed_public_fixture": true,
+      "object": "37ff3cacd04a4617c9a6e56b650a401e365bbb9b"
+    },
+    {
+      "path": "app/zotero.temp.keystore",
+      "kinds": [
+        "sensitive_filename"
+      ],
+      "sha256": "dcd741d20decfd7af9a36dbda568879447eb1ffe9ceac3743c4d2e01168101af",
+      "allowed_public_fixture": true,
+      "object": "3c6c0917273cc383ea36c20a6bf404a99d3661a0"
+    }
+  ],
   "scope": "High-confidence formats, sensitive filenames and known personal document names; not a guarantee that no other secrets exist."
 }
