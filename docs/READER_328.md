@@ -10,3 +10,5 @@
 - Continuous uses a 24 CSS-pixel background strip between reading units; pages within a spread retain their 12-pixel gutter.
 
 Unit, native, browser, source/signature and Android API 31/35 update evidence is retained with the release. Synthetic two-column documents exercise double taps, SmartScroll, raster stability and all scroll layouts. The original reported two-column PDF was unavailable for direct reproduction. Physical BOOX/Pixel interactions have not been tested; screenshot-guided UI changes still need device verification. Live-account sync is separate.
+
+Verification: 425 Reader cases, 158 native cases, all 23 local and CI browser suites, 43 engine pixel cases and 19 official viewer cases pass. The [protected workflow](https://github.com/OptikerGerhardt/Motero/actions/runs/43474721332) passes production signing and API 31/35 updates from 303 and signed 327 with data/UID retention and old-key refusal. The published APK, source archive, embedded sources and checksums were independently downloaded and verified. [Evidence](../qa/build328/README.md).

@@ -1,6 +1,11 @@
-# Build 328 / Motero 1.1.2 — Freigabeprüfung
+# Build 328 / Motero 1.1.2 — veröffentlicht und unabhängig geprüft
 
-Gesammelte Leisten-, Stylus-, Paletten-, Continuous- und Spaltenkorrekturen implementiert. 425 Reader-Fälle, 158 native Tests, alle 23 Browser-Suiten und APK-Inhalte lokal geprüft; geschützte Release-Prüfungen folgen; physische BOOX/Pixel-Prüfung separat. [Umfang](docs/READER_328.md).
+- [APK und vollständige Quellen](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.2-328); [Build, Signatur und Updates](https://github.com/OptikerGerhardt/Motero/actions/runs/43474721332) erfolgreich. Anwendung `e56d3b18`, Reader `6114aeb2`; PDF.js 5.7.330 unverändert.
+- Alle acht gesammelten Punkte umgesetzt: Filter-/Crop-Abstände, bildschirmfüllender Stylus-Dialog, inline Page Turning, vollständige erreichbare Stiftpalette, Doppeltipp-Spaltenfokus, stabiles begrenztes Spaltenraster und klarere Continuous-Abstände. [Details und Grenzen](docs/READER_328.md).
+- 425 Reader-Fälle in 49 Dateien, 158 native Tests in 39 Suiten, alle 23 lokalen und CI-Browser-Suiten, 43 Engine-Pixel- und 19 offizielle Viewer-Fälle bestanden. Echte Doppeltipps/SmartScroll bei Pixeldichte 3 und begrenztes Raster zusätzlich geprüft.
+- Öffentliche APK unabhängig heruntergeladen: SHA-256 `f2f1e944fecb3b818de35633c892222e69d1ba51406b56779852675f065671fd`. Privater Motero-Signierer, eingeschränkte Rotation, Receiver-Berechtigung, Android 9+, nicht debuggbar; 114 Hauptbundle- und 117 eindeutige Reader-/Worker-Quellen, 207 Engine-, 45 Runtime- und 9569 Quellarchiv-Dateien sowie Prüfsummen geprüft.
+- API 31/35: Updates von 303 und 327 erhalten Datenmarker/UID, starten die App und verweigern alte Schlüssel. Latest-Release zeigt Build 328 mit genau einer APK. Parallele README-/Galerieänderungen erhalten.
+- Physische BOOX/Pixel-UI und Kontosync separat; ursprüngliche zweispaltige PDF lag nicht vor. Das unveränderte Raster-Pixellimit kann bei sehr großen/hochauflösenden Seiten die Schärfe im Spaltenmodus begrenzen. [Nachweise](qa/build328/README.md).
 
 # Build 327 / Motero 1.1.1 — veröffentlicht und unabhängig geprüft
 
