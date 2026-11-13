@@ -36,7 +36,7 @@ internal fun NavGraphBuilder.readerNavScreensForTablet(
     navController: NavHostController,
 ) {
     readerScreen(
-        onBack = navigation::onBack,
+        onBack = navigation::closeReader,
         navigateToPdfFilter = navigation::toReaderFilterNavigation,
         navigateToTagPicker = navigateToTagPicker,
         navigateToReaderAnnotation = navigation::toReaderAnnotationNavigation,
@@ -112,7 +112,7 @@ internal fun NavGraphBuilder.readerNavScreensForPhone(
     onOpenWebpage: (url: String) -> Unit,
 ) {
     readerScreen(
-        onBack = navigation::onBack,
+        onBack = navigation::closeReader,
         navigateToPdfFilter = navigation::toReaderFilterScreen,
         navigateToTagPicker = navigateToTagPicker,
         navigateToReaderAnnotation = navigation::toReaderAnnotationScreen,
@@ -162,6 +162,12 @@ private object ReaderDestinations {
     const val READER_COLOR_PICKER = "readerColorPicker"
     const val READER_ANNOTATION_NAVIGATION = "readerAnnotationNavigation"
     const val READER_SETTINGS = "readerSettings"
+}
+
+// The toolbar exit is explicit navigation. Sending it through system Back would
+// let Protect reader consume it just like an accidental Android Back gesture.
+internal fun ZoteroNavigation.closeReader() {
+    navController.popBackStack()
 }
 
 private var isReaderSessionOpen = false

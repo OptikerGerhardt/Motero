@@ -1,6 +1,11 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 13. November 2026. Motero 1.1 / Build 326 setzt die nach Build 325 gesammelten Punkte um. PDF.js 5.7.330 und die Annotations-/Syncformate bleiben erhalten.
+Stand: 13. November 2026. Motero 1.1.1 / Build 327 behebt den blockierten Reader-Ausgang und enthält die in Build 326 umgesetzten Punkte. PDF.js 5.7.330 und die Annotations-/Syncformate bleiben erhalten.
+
+## Reader-Ausgang: Build 327 / 1.1.1
+
+- Ausdrücklichen Toolbar-Zurück-Pfeil auf Telefon/Tablet direkt an den Navigationsstapel anbinden. Protect reader schützt weiterhin vor System-Zurück, kann aber den Ausgang nicht selbst verschlucken.
+- Native Regression mit echter aktiver System-Zurück-Abfangfunktion und ohne Dispatcher; vollständige Update-Prüfungen von Build 326.
 
 ## Reader Controls und Erkennung: Motero 1.1 / Build 326
 

@@ -1,3 +1,7 @@
+# Build 327 / Motero 1.1.1 — Freigabeprüfung
+
+Toolbar-Zurück auf Telefon/Tablet direkt an den Reader-Navigationsstapel anbinden, damit Protect reader den ausdrücklichen Ausgang nicht abfängt. Die zwei neuen nativen Regressionen bestehen. Vollständige lokale und geschützte Release-Prüfungen folgen. Reader und PDF.js bleiben auf dem unabhängig geprüften Build-326-Stand.
+
 # Build 326 / Motero 1.1 — veröffentlicht und unabhängig geprüft
 
 - [APK und vollständige Quellen](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.0-326); [Build, Signatur und Updates](https://github.com/OptikerGerhardt/Motero/actions/runs/43340064847) erfolgreich. Anwendung `62f8a0da`, Reader `9a5947ff`; technische Version 1.1.0-326, Release-Titel Motero 1.1. PDF.js 5.7.330 unverändert.

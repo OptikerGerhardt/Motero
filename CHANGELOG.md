@@ -1,5 +1,10 @@
 # Änderungen
 
+## 1.1.1 — Build 327
+
+- Zurück-Pfeil im Reader schließt auf Telefonen und Tablets wieder das Dokument, auch wenn Protect reader aktiviert ist. Der ausdrückliche Ausgang umgeht den Android-System-Zurück-Dispatcher; Schutz und das gezielte Schließen von Suche/Sidebar/Auswahl bleiben bestehen.
+- Regression mit aktivem Android-Zurück-Callback und ohne Dispatcher; Update-Prüfungen von Build 326. Reader, PDF.js, Datenformate und Signatur unverändert.
+
 ## 1.1 — Build 326
 
 - Gemeinsame PDF-/EPUB-Haltezeit 200 ms; Page Turning unter Reader Controls und Reader-/Stylus-Einstellungen mit vorhandenen Zotero-UI-Komponenten.
