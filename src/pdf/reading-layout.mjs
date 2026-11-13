@@ -16,7 +16,13 @@ export function getReadingSamples(count) {
 const clamp = n => Math.max(0, Math.min(1, n));
 const normalize = text => text.toLowerCase().replace(/\d+/g, '#').replace(/\s+/g, ' ').trim();
 const pageNumber = text => /^(?:[-–—]?\s*)?(?:\d{1,5}|[ivxlcdm]{1,8})(?:\s*[-–—]?)$/i.test(text.trim());
-const downloadStamp = text => /^(?:(?:this content )?downloaded\s+(?:from|by|on)|(?:accessed|retrieved)\s+(?:on|from)|all use subject to|generated for\b|for private use only\b|ausschlie(?:ß|ss)lich zum privaten gebrauch\b)|\b(?:generiert durch|heruntergeladen (?:am|von)|urheberrechtlich geschützter inhalt)\b/i.test(text.trim());
+const downloadStamp = text => {
+    const value = text.trim();
+    // A numbered/source-marked footnote may discuss copyright or downloads.
+    // Keywords inside that note are not evidence of a publisher stamp.
+    if (/^(?:\d+[.)]?\s|[*†‡]\s)/u.test(value)) return false;
+    return /^(?:(?:this content )?downloaded\s+(?:from|by|on)|(?:accessed|retrieved)\s+(?:on|from)|all use subject to|generated for\b|for private use only\b|ausschlie(?:ß|ss)lich zum privaten gebrauch\b)|\b(?:generiert durch|heruntergeladen (?:am|von)|urheberrechtlich geschützter inhalt)\b/i.test(value);
+};
 // A/B folios can be Roman in introductions (Kant: B XLI) and Arabic in
 // the main text. Require canonical Roman numerals so ordinary words such as
 // 'bill' do not become references. Geometry below still requires a margin column.

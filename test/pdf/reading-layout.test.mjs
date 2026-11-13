@@ -29,6 +29,13 @@ test('detached author lists and German publisher notices do not widen the readin
     assert.ok(bounds[1]>.19 && bounds[3]>.89 && bounds[3]<.91,JSON.stringify(bounds));
 });
 
+test('copyright and download wording inside genuine marked footnotes remains content',()=>{
+    for(const text of ['2 Urheberrechtlich geschützter Inhalt wird hier diskutiert.', '* Diese Daten wurden heruntergeladen von einem Archiv.', '3 Downloaded from a source, as a genuine numbered citation.']) {
+        const note=line(text,[.2,.87,.8,.888]);
+        assert.ok(!getReadingExclusions([...body,note],buildReadingModel([]),0).includes(note.rect),text);
+    }
+});
+
 test('tight outer stars are marginalia, with Include retaining them and Exclude preserving body text',()=>{
     const prose=Array.from({length:10},(_,i)=>line('A complete line of prose reaches its normal body edge.',[.08,.2+i*.045,.94,.22+i*.045]));
     const star=line('*',[.939,.33,.955,.344]);
