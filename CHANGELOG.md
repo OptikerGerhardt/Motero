@@ -7,6 +7,7 @@
 - Untere Leiste: erst verbreitern, dann Inhalte wechseln; beim Verkleinern erst Inhalte wechseln. Reihenfolge folgt den tatsächlichen Gerätebreiten.
 - Schnellpalette oberhalb von Markierungen; EPUB-Notizen an der tatsächlichen Tippstelle verankern, auch ohne Hover.
 - Kopftext mit Trennlinie, Autorenlisten, eng anliegende Randsterne und Download-/Lizenzhinweise besser erkennen. Sichtbare Leserahmen nach Hintergrundlernen nicht neu zoomen/verschieben.
+- Nach Zwei-Finger-Gesten den tatsächlichen Kontaktzustand übernehmen, auch wenn ein Touch-Ende beim Layoutwechsel verloren geht; nach Übersichtssprüngen genau das Lese-Seitenpaar wiederherstellen.
 - README und Featureplan für Motero 1.1 aktualisiert; bestehende Engine, Signatur und Datenformate erhalten. [Umfang und Grenzen](docs/READER_326.md).
 
 ## 1.0.10 — Build 325

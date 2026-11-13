@@ -14,6 +14,8 @@ EPUB bookmarking uses the upper-right half of the viewport in a top band of at l
 
 The bottom dock chooses transition order from actual source/target widths: expansion precedes the content swap, contraction follows it. This applies in both directions, including wide BOOX previews. Switching back to a smaller preview no longer clips the outgoing tools during contraction.
 
+Spread navigation reconciles its two-finger flag with fitting's authoritative touch contacts. If page reflow swallows TouchEvent endings after both pointer releases, returning from overview still restores the exact reading pair and Continuous axis locking. The regression deliberately omits those TouchEvent endings rather than relying on a timing-dependent reproduction.
+
 The shared quick palette is a fixed, isolated overlay attached to the document root after the page body, at the maximum stacking level. Page highlights and selection layers cannot paint or receive input above it. It retains the existing Zotero colors, shape and controls; the fix changes stacking rather than redesigning the palette.
 
 EPUB notes resolve the actual pointer-down location each time, including touches without hover and presses after a stale hover preview. Text notes use a nonempty character range rather than the entire containing paragraph, so the CFI anchor follows the touched text through reflow. Image/annotation anchors keep their existing handling. Notes remain text-anchored EPUB annotations compatible with Zotero Desktop. Existing notes retain their saved anchors and can be moved with the existing touch-editing gesture.

@@ -1,0 +1,23 @@
+AssertionError [ERR_ASSERTION]: cover/final singleton or the complete destination pair must remain visible {"multitouch":true,"single":false,"overview":false,"touches":0,"pointers":0}
++ actual - expected
+
+  [
++   2,
++   3,
++   4,
++   5,
++   6,
+    7,
+    8,
++   9,
++   10
+  ]
+
+    at /workspace/Motero/reader/scripts/test-boox-spreads.cjs:77:11 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: [Array],
+  expected: [Array],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}

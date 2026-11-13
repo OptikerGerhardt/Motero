@@ -9,6 +9,7 @@ Stand: 13. November 2026. Motero 1.1 / Build 326 setzt die nach Build 325 gesamm
 - Dock-Wechsel abhängig von der tatsächlichen Breite korrekt anordnen; Quick Toolbar über allen Dokumentmarkierungen halten.
 - EPUB-Sticky-Notes bei Touch/Hover korrekt an der Tippstelle verankern und bei Umbruch am Text erhalten.
 - Kopfzeile mit Trennlinie, abgesetzte Autorenliste, knappe Randsterne, Download-/Lizenzhinweise: zusätzliche Erkennung und Regressionen. Sichtbaren Text durch Hintergrundlernen nicht nachträglich verschieben.
+- Nach Zwei-Finger-Gesten den tatsächlichen Kontaktzustand übernehmen, auch wenn ein Touch-Ende beim Layoutwechsel verloren geht; nach Übersichtssprüngen genau das Lese-Seitenpaar wiederherstellen.
 - README für Release 1.1 aktualisiert. [Prüfumfang, Originaldatei- und Gerätegrenzen](docs/READER_326.md).
 
 ## Spalten, Appearance und EPUB-Leisten: Build 325 / 1.0.10

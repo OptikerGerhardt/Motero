@@ -17,7 +17,7 @@ android:
     asset pdf/web/iccs/CGATS001Compat-v2-micro.icc 8.27 KiB [compared for emit] [from: build/mobile/pdf/web/iccs/CGATS001Compat-v2-micro.icc] [copied]
     asset pdf/web/iccs/LICENSE 6.4 KiB [compared for emit] [from: build/mobile/pdf/web/iccs/LICENSE] [copied]
   + 6 assets
-  Entrypoint view [big] 4.98 MiB (7.84 MiB) = view.css 11.2 KiB view.js 4.97 MiB 2 auxiliary assets
+  Entrypoint view [big] 4.99 MiB (7.84 MiB) = view.css 11.2 KiB view.js 4.97 MiB 2 auxiliary assets
   orphan modules 3.97 MiB (javascript) 1.83 KiB (runtime) [orphan] 190 modules
   runtime modules 6.8 KiB 15 modules
   modules by path ./node_modules/ 2.52 MiB 361 modules
@@ -45,8 +45,8 @@ android:
 
   WARNING in entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.
   Entrypoints:
-    view (4.98 MiB)
+    view (4.99 MiB)
         view.css
         view.js
 
-  android (webpack 5.99.9) compiled with 2 warnings in 8316 ms
+  android (webpack 5.99.9) compiled with 2 warnings in 7746 ms

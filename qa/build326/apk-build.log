@@ -1,69 +1,125 @@
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.6.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
 Daemon will be stopped at the end of the build 
 Reusing configuration cache.
-> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
 > Task :app:preBuild UP-TO-DATE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
 > Task :app:preDevReleaseBuild UP-TO-DATE
+> Task :app:buildKotlinToolingMetadata UP-TO-DATE
 > Task :app:mergeDevReleaseJniLibFolders UP-TO-DATE
 > Task :app:injectCrashlyticsMappingFileIdDevRelease UP-TO-DATE
 > Task :app:desugarDevReleaseFileDependencies UP-TO-DATE
-> Task :app:buildKotlinToolingMetadata UP-TO-DATE
 > Task :app:generateDevReleaseResValues UP-TO-DATE
 > Task :app:generateDevReleaseResources UP-TO-DATE
-> Task :app:extractDevReleaseVersionControlInfo UP-TO-DATE
-> Task :app:injectCrashlyticsVersionControlInfoDevRelease UP-TO-DATE
+> Task :app:extractDevReleaseVersionControlInfo
+> Task :app:injectCrashlyticsVersionControlInfoDevRelease
 > Task :app:processDevReleaseGoogleServices UP-TO-DATE
 > Task :app:mergeDevReleaseArtProfile UP-TO-DATE
-> Task :app:mergeDevReleaseResources UP-TO-DATE
-> Task :app:packageDevReleaseResources UP-TO-DATE
-> Task :app:generateDevReleaseBuildConfig UP-TO-DATE
-> Task :app:dataBindingMergeDependencyArtifactsDevRelease UP-TO-DATE
-> Task :app:javaPreCompileDevRelease UP-TO-DATE
 > Task :app:mergeDevReleaseNativeLibs UP-TO-DATE
-> Task :app:mapDevReleaseSourceSetPaths UP-TO-DATE
 > Task :app:stripDevReleaseDebugSymbols UP-TO-DATE
 > Task :app:extractDevReleaseNativeSymbolTables UP-TO-DATE
 > Task :app:mergeDevReleaseNativeDebugMetadata NO-SOURCE
-> Task :app:extractDeepLinksDevRelease UP-TO-DATE
-> Task :app:createDevReleaseCompatibleScreenManifests UP-TO-DATE
+> Task :app:dataBindingMergeDependencyArtifactsDevRelease UP-TO-DATE
+> Task :app:generateDevReleaseBuildConfig UP-TO-DATE
+> Task :app:javaPreCompileDevRelease UP-TO-DATE
 > Task :app:processDevReleaseNavigationResources UP-TO-DATE
-> Task :app:parseDevReleaseLocalResources UP-TO-DATE
+> Task :app:mapDevReleaseSourceSetPaths UP-TO-DATE
 > Task :app:checkDevReleaseAarMetadata UP-TO-DATE
-> Task :app:generateDevReleaseRFile UP-TO-DATE
 > Task :app:compileDevReleaseNavigationResources UP-TO-DATE
+> Task :app:createDevReleaseCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDevRelease UP-TO-DATE
+> Task :app:checkDevReleaseDuplicateClasses UP-TO-DATE
 > Task :app:mergeDevReleaseStartupProfile UP-TO-DATE
-> Task :app:generateDevReleaseAssets UP-TO-DATE
 > Task :app:processDevReleaseMainManifest UP-TO-DATE
 > Task :app:processDevReleaseManifest UP-TO-DATE
 > Task :app:processDevReleaseManifestForPackage UP-TO-DATE
-> Task :app:checkDevReleaseDuplicateClasses UP-TO-DATE
-> Task :app:dataBindingGenBaseClassesDevRelease UP-TO-DATE
+> Task :app:generateDevReleaseAssets UP-TO-DATE
 > Task :app:mergeDevReleaseAssets
+> Task :app:packageDevReleaseResources
 > Task :app:compressDevReleaseAssets
-> Task :app:collectDevReleaseDependencies UP-TO-DATE
-> Task :app:sdkDevReleaseDependencyData UP-TO-DATE
-> Task :app:writeDevReleaseAppMetadata UP-TO-DATE
-> Task :app:writeDevReleaseSigningConfigVersions UP-TO-DATE
-> Task :app:kspDevReleaseKotlin UP-TO-DATE
 > Task :app:mergeExtDexDevRelease UP-TO-DATE
-> Task :app:processDevReleaseResources UP-TO-DATE
-> Task :app:optimizeDevReleaseResources UP-TO-DATE
+> Task :app:collectDevReleaseDependencies UP-TO-DATE
+> Task :app:writeDevReleaseAppMetadata UP-TO-DATE
+> Task :app:sdkDevReleaseDependencyData UP-TO-DATE
+> Task :app:writeDevReleaseSigningConfigVersions UP-TO-DATE
+> Task :app:parseDevReleaseLocalResources
+> Task :app:generateDevReleaseRFile UP-TO-DATE
+
+> Task :app:mergeDevReleaseResources
+/workspace/Motero/app/src/main/res/values/imported_strings.xml:281:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-hu/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-hy/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-hr/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-ig/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-id/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-af/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-am/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-it/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-is/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-ar/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-ro/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-ru/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-bg/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-br/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-jv/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-sl/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-kk/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-ca/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-sr/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-km/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-sv/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-de/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-ta/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-ko/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-ja/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-lt/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-bn/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-th/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-uk/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-en/imported_strings.xml:281:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-eu/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-mn/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-ka/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-fa/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-da/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-oc/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-sk/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-vi/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-gl/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-sq/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-el/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-nl/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-kn/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-fr/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-cs/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-es/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-pl/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-cy/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-he/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-tr/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-mk/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-et/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+/workspace/Motero/app/src/main/res/values-fi/imported_strings.xml:280:4: Multiple substitutions specified in non-positional format of string resource string/settings_storage_files_size_and_unit_format. Did you mean to add the formatted="false" attribute?
+
+> Task :app:dataBindingGenBaseClassesDevRelease UP-TO-DATE
+> Task :app:kspDevReleaseKotlin UP-TO-DATE
 > Task :app:kaptGenerateStubsDevReleaseKotlin UP-TO-DATE
 > Task :app:kaptDevReleaseKotlin UP-TO-DATE
 > Task :app:compileDevReleaseKotlin UP-TO-DATE
 > Task :app:compileDevReleaseJavaWithJavac UP-TO-DATE
-> Task :app:devReleaseRealmAccessorsTransformer UP-TO-DATE
 > Task :app:processDevReleaseJavaRes UP-TO-DATE
+> Task :app:mergeDevReleaseJavaResource UP-TO-DATE
+> Task :app:processDevReleaseResources
+> Task :app:devReleaseRealmAccessorsTransformer UP-TO-DATE
 > Task :app:transformDevReleaseClassesWithAsm UP-TO-DATE
 > Task :app:dexBuilderDevRelease UP-TO-DATE
 > Task :app:mergeDexDevRelease UP-TO-DATE
-> Task :app:mergeDevReleaseJavaResource UP-TO-DATE
 > Task :app:mergeDevReleaseGlobalSynthetics UP-TO-DATE
 > Task :app:compileDevReleaseArtProfile UP-TO-DATE
+> Task :app:optimizeDevReleaseResources
 > Task :app:packageDevRelease
 > Task :app:assembleDevRelease
 > Task :app:createDevReleaseApkListingFileRedirect UP-TO-DATE
 
-BUILD SUCCESSFUL in 11s
-56 actionable tasks: 3 executed, 53 up-to-date
+BUILD SUCCESSFUL in 17s
+56 actionable tasks: 10 executed, 46 up-to-date
 Configuration cache entry reused.

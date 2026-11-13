@@ -1,6 +1,6 @@
 # Build 326 / Motero 1.1 — Freigabeprüfung
 
-Die nach Build 325 gesammelten Punkte sind implementiert. 421 Reader-Fälle in 49 Dateien, 155 native Tests in 37 Suiten, alle 23 Browser-Suiten, 16 Infrastruktur-/Signatur-Schutztests und der APK-Build bestanden. Eingebettete Reader-/Worker-Quellen sowie die unveränderten Engine-/Runtime-Hashes geprüft. Die geschützte Release-Prüfung folgt. [Umfang und Grenzen](docs/READER_326.md). Physische Geräte und Kontosync separat.
+Die nach Build 325 gesammelten Punkte sind implementiert. 421 Reader-Fälle in 49 Dateien, 155 native Tests in 37 Suiten, alle 23 Browser-Suiten, 16 Infrastruktur-/Signatur-Schutztests und der APK-Build bestanden. Eingebettete Reader-/Worker-Quellen sowie die unveränderten Engine-/Runtime-Hashes geprüft. Zwei CI-Läufe stoppten vor der Veröffentlichung an der Spread-Rückkehr. Verlorene Touch-Endmeldungen wurden gezielt nachgestellt und der hängenbleibende Zwei-Finger-Zustand behoben. Alle acht betroffenen Browser-Suiten, Reader-Fälle und der neu gebaute APK-Inhalt sind erneut geprüft; die vollständige geschützte Release-Prüfung folgt. [Umfang und Grenzen](docs/READER_326.md). Physische Geräte und Kontosync separat.
 
 # Build 325 / Motero 1.0.10 — veröffentlicht und unabhängig geprüft
 
