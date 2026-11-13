@@ -48,6 +48,9 @@ const root=path.resolve(__dirname,'../build/android'),fixture=path.resolve(__dir
    // Two complete pages are still ordinary spread reading. Only further pinch-out
    // to multiple reading units remains in overview after releasing the fingers.
    assert.equal(await page.evaluate(()=>window._view._view._booxReader.isOverview()),false);
+   // A reflow can swallow TouchEvent endings after the authoritative pointer
+   // releases. Navigation must not retain a stale two-finger visibility lock.
+   if(scrollMode===1) await page.evaluate(()=>{const n=window._view._view._pageNavigation;n.win.removeEventListener('touchend',n.onEnd,true);n.win.removeEventListener('touchcancel',n.onEnd,true);});
    await touch('touchStart',[{x:350,y:450},{x:550,y:450}]);
    await page.evaluate(()=>{window._view._view._pageFitting.viewer.currentScale=.16;});await touch('touchEnd');
    try{await page.waitForFunction(()=>window._view._view._pageFitting.presentation==='overview',null,{timeout:5000});}catch(error){console.error('OVERVIEW STATE',JSON.stringify({spreadMode,scrollMode,state:await pair(),extra:await page.evaluate(()=>{const f=window._view._view._pageFitting;return{origin:f.gestureOrigin,presentation:f.presentation,zooming:f.zooming,pointers:f.pointers.size,touches:f.touches};})}));throw error;}
@@ -71,7 +74,8 @@ const root=path.resolve(__dirname,'../build/android'),fixture=path.resolve(__dir
    const restored=await pair();assert.equal(restored.spread,spreadMode);
    const first=spreadMode===1?target.index-target.index%2:target.index===0?0:target.index-(target.index-1)%2;
    const expected=spreadMode===2&&target.index===0?[0]:[first,first+1].filter(i=>i<restored.frames.length);
-   assert.deepEqual(restored.visible,expected,'cover/final singleton or the complete destination pair must remain visible');
+   assert.deepEqual(restored.visible,expected,'cover/final singleton or the complete destination pair must remain visible '+JSON.stringify(await page.evaluate(()=>{const v=window._view._view,n=v._pageNavigation,f=v._pageFitting;return{multitouch:n.multitouch,single:n.single,overview:v._booxReader.isOverview(),touches:f.touches,pointers:f.pointers.size};})));
+   if(scrollMode===1) await page.evaluate(()=>{const n=window._view._view._pageNavigation;n.win.addEventListener('touchend',n.onEnd,{capture:true,passive:false});n.win.addEventListener('touchcancel',n.onEnd,{capture:true,passive:false});});
    const fitted=expected.map(i=>restored.frames[i]);
    assert.ok(fitted.every(b=>b.left>=restored.viewport.left-3&&b.right<=restored.viewport.right+3
     &&b.top>=restored.viewport.top-3&&b.bottom<=restored.viewport.bottom+3),'overview tap restores Fit to Content for the destination unit');

@@ -30,6 +30,17 @@ test('single-page visibility updates only the old and new page, even in a large 
     assert.equal(viewer._getVisiblePages().views.length,3,'overview retains every visible page');
     overview = false; navigation.sync();
     assert.equal(host.classList.contains('motero-jumped'),true);
+    const fitting=view._pageFitting={layout:{},touches:2,touchPointers:new Set([1,2])};
+    navigation.onStart({touches:[{},{}]});
+    assert.equal(navigation.single,false);
+    fitting.touches=1;fitting.touchPointers.delete(1);navigation.sync();
+    assert.equal(navigation.multitouch,true,'one remaining finger still keeps the pinch active');
+    fitting.touches=0;fitting.touchPointers.clear();overview=true;navigation.sync();
+    assert.equal(navigation.multitouch,false,'pointer releases recover a swallowed touchend');
+    assert.equal(navigation.single,false,'completed overview remains freely visible');
+    overview=false;navigation.sync();
+    assert.equal(navigation.single,true,'returning to reading restores the exact reading unit');
+    assert.deepEqual(viewer._getVisiblePages().views.map(p=>p.id),[1201]);
     navigation.configure('continuous');
     assert.equal(host.classList.contains('motero-jumped'),false);
     navigation.destroy();

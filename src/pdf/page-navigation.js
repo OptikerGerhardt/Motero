@@ -125,6 +125,14 @@ export class PDFPageNavigation {
     }
     sync() {
         const root=this.win?.document.documentElement;
+        const fitting=this.view._pageFitting;
+        // Page reflow may swallow touchend while both pointerup events still
+        // arrive. Share fitting's authoritative contacts so a finished pinch
+        // cannot leave Jumped visibility or Continuous axis locking disabled.
+        if (this.multitouch && fitting?.touches === 0 && fitting.touchPointers?.size === 0) {
+            this.multitouch = false;
+            this.gesture = null;
+        }
         // Restrict ordinary one-finger panning to the reading axis. Pinches and
         // the uncropped overview remain free to move in both directions.
         const lock = this.mode === 'continuous' && this.view._tool?.type === 'pointer' && !this.multitouch
