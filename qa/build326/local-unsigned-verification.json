@@ -5,9 +5,9 @@
   "package": "org.zotero.android.debug",
   "minimum_api": 28,
   "debuggable": false,
-  "apk_sha256": "eaf42bc820c3d729a1939597193207df66844cb6003572c59bce44583d99d6bb",
+  "apk_sha256": "6970ed0e3f4ac412f6fbc0d019f9e3414f9a3657ef0ccce3053e05b999127360",
   "runtime_files": 45,
   "pdfjs_files": 207,
   "unique_reader_sources": 117,
-  "reader_commit": "8a8117152f50f82eee6472aba6c693a7d70883db"
+  "reader_commit": "090316e62964834858a78575799cef5a094b4e35"
 }

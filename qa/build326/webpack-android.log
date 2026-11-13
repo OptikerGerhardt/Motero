@@ -8,7 +8,7 @@ android:
   assets by path pdf/web/standard_fonts/ 762 KiB 16 assets
   assets by path pdf/web/wasm/ 1.43 MiB 13 assets
   assets by status 6.56 MiB [emitted]
-    assets by path *.js 6.54 MiB 5 assets
+    assets by path *.js 6.55 MiB 5 assets
     + 2 assets
   assets by path pdf/build/*.mjs 2.93 MiB
     asset pdf/build/pdf.worker.mjs 2.13 MiB [compared for emit] [from: build/mobile/pdf/build/pdf.worker.mjs] [copied] [big]
@@ -26,7 +26,7 @@ android:
       modules by path ./src/common/stylesheets/*.scss 100 bytes 2 modules
       modules by path ./src/dom/ 2.73 KiB 2 modules
       ./src/index.android.js + 176 modules 3.95 MiB [built] [code generated]
-      ./src/pdf/reading-analysis-worker.js + 5 modules 53.4 KiB [built] [code generated]
+      ./src/pdf/reading-analysis-worker.js + 5 modules 53.7 KiB [built] [code generated]
     css modules 11.1 KiB
       css ./node_modules/css-loader/dist/cjs.js!./node_modules/postcss-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[1].use[3]!./src/common/stylesheets/view.scss 579 bytes [built] [code generated]
       css ./node_modules/css-loader/dist/cjs.js!./node_modules/postcss-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[1].use[3]!./src/common/stylesheets/android-theme.scss 10.6 KiB [built] [code generated]
@@ -36,11 +36,11 @@ android:
   Assets: 
     view.js (4.97 MiB)
     903.view.js (1.51 MiB)
-    pdf/web/viewer.mjs (634 KiB)
-    pdf/build/pdf.mjs (827 KiB)
     pdf/web/wasm/openjpeg.wasm (246 KiB)
     pdf/web/wasm/openjpeg_nowasm_fallback.js (441 KiB)
     pdf/web/wasm/quickjs-eval.wasm (422 KiB)
+    pdf/web/viewer.mjs (634 KiB)
+    pdf/build/pdf.mjs (827 KiB)
     pdf/build/pdf.worker.mjs (2.13 MiB)
 
   WARNING in entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.
@@ -49,4 +49,4 @@ android:
         view.css
         view.js
 
-  android (webpack 5.99.9) compiled with 2 warnings in 8500 ms
+  android (webpack 5.99.9) compiled with 2 warnings in 8316 ms

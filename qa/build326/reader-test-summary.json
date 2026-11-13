@@ -1,6 +1,6 @@
 {
   "passed": true,
-  "tests": 419,
+  "tests": 421,
   "files": 49,
   "results": [
     {
@@ -60,7 +60,7 @@
     },
     {
       "file": "test/pdf/android-page-fitting.test.mjs",
-      "tests": 27,
+      "tests": 28,
       "passed": true
     },
     {
@@ -195,7 +195,7 @@
     },
     {
       "file": "test/pdf/reading-layout.test.mjs",
-      "tests": 67,
+      "tests": 68,
       "passed": true
     },
     {
