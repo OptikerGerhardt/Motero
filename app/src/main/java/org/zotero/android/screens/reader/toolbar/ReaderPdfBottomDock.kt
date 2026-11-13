@@ -1,11 +1,9 @@
 package org.zotero.android.screens.reader.toolbar
 
 import org.zotero.android.ereader.rejectPenPalms
-import androidx.compose.animation.core.animateDp
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateDpAsState
 import org.zotero.android.ereader.deviceTween as tween
-import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -36,15 +34,24 @@ internal fun ReaderPdfBottomDock(viewModel: ReaderViewModel, state: ReaderViewSt
         val previewWidth = minOf(maxWidth * .8f, 560.dp,
             (previews.thumbnailCache.size.coerceAtLeast(1) * 38 + 10).dp).coerceAtLeast(48.dp)
         val toolWidth = minOf(maxWidth, 344.dp)
-        val transition = updateTransition(tools, label = "reader dock mode")
-        // Complete the width change before swapping layers, whether the target
-        // is wider (phone) or narrower (tablet/e-reader).
-        val width by transition.animateDp(transitionSpec = {
-            tween(durationMillis = 140)
-        }, label = "dock width") { if (it) toolWidth else previewWidth }
-        val slide by transition.animateFloat(transitionSpec = {
-            tween(durationMillis = 180, delayMillis = 140)
-        }, label = "dock tools slide") { if (it) 1f else 0f }
+        val targetWidth = if (tools) toolWidth.value else previewWidth.value
+        val animatedWidth = remember { Animatable(targetWidth) }
+        val animatedSlide = remember { Animatable(if (tools) 1f else 0f) }
+        // Sequence from the actual animated width. Reversing mid-transition or
+        // receiving more thumbnails cannot turn an expansion into early clipping.
+        LaunchedEffect(tools, targetWidth) {
+            val timing = dockTiming(animatedWidth.value, targetWidth)
+            val targetSlide = if (tools) 1f else 0f
+            if (timing.widthDelay == 0) {
+                if (animatedWidth.value != targetWidth) animatedWidth.animateTo(targetWidth, tween(timing.contentDelay))
+                if (animatedSlide.value != targetSlide) animatedSlide.animateTo(targetSlide, tween(180))
+            } else {
+                if (animatedSlide.value != targetSlide) animatedSlide.animateTo(targetSlide, tween(timing.widthDelay))
+                if (animatedWidth.value != targetWidth) animatedWidth.animateTo(targetWidth, tween(140))
+            }
+        }
+        val width = animatedWidth.value.dp
+        val slide = animatedSlide.value
         val optionsHeight by animateDpAsState(
             if (tools && state.pdfToolOptionsVisible) 60.dp else 0.dp,
             tween(180), label = "dock options height")
@@ -74,3 +81,7 @@ internal fun ReaderPdfBottomDock(viewModel: ReaderViewModel, state: ReaderViewSt
         }
     }
 }
+
+internal data class DockTiming(val widthDelay: Int, val contentDelay: Int)
+internal fun dockTiming(from: Float, to: Float): DockTiming =
+    if (to > from) DockTiming(0, 140) else DockTiming(180, 0)

@@ -1,0 +1,4 @@
+PASS real Chromium pen stroke survives a palm at the bookmark corner without pinch/bookmark side effects
+PASS pen barrel-button erases through right-button events, undo restores ink and the base tool survives
+PASS losing focus during a stroke commits collected samples exactly once
+PASS hardware eraser restores the base tool; native edits use undo/redo; disabling the profile removes its presentation

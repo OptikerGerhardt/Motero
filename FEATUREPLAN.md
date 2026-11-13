@@ -1,6 +1,15 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 12. November 2026. Build 325 / Motero 1.0.10 setzt die 15 nach Build 324 gesammelten Punkte um. PDF.js 5.7.330 und die bestehenden Annotations-/Syncformate bleiben erhalten.
+Stand: 13. November 2026. Motero 1.1 / Build 326 setzt die nach Build 325 gesammelten Punkte um. PDF.js 5.7.330 und die Annotations-/Syncformate bleiben erhalten.
+
+## Reader Controls und Erkennung: Motero 1.1 / Build 326
+
+- 200-ms-Drag-Highlighting in PDF/EPUB, Page Turning unter Reader Controls; Reader-/Stylus-Menüs mit Zotero-Einstellungszeilen, Schaltern und verbundenen Auswahlknöpfen.
+- System-Zurück-Schutz zusätzlich zur Gestenausschluss-Anfrage, mit getrenntem Schließen von Suche/Sidebar/Auswahl. EPUB-Bookmark-Bereich oberer rechter halber Bildschirmstreifen.
+- Dock-Wechsel abhängig von der tatsächlichen Breite korrekt anordnen; Quick Toolbar über allen Dokumentmarkierungen halten.
+- EPUB-Sticky-Notes bei Touch/Hover korrekt an der Tippstelle verankern und bei Umbruch am Text erhalten.
+- Kopfzeile mit Trennlinie, abgesetzte Autorenliste, knappe Randsterne, Download-/Lizenzhinweise: zusätzliche Erkennung und Regressionen. Sichtbaren Text durch Hintergrundlernen nicht nachträglich verschieben.
+- README für Release 1.1 aktualisiert. [Prüfumfang, Originaldatei- und Gerätegrenzen](docs/READER_326.md).
 
 ## Spalten, Appearance und EPUB-Leisten: Build 325 / 1.0.10
 

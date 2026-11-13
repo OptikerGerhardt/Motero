@@ -242,11 +242,11 @@ jobs:
           python3 scripts/create_update_probes.py --build-tools "$ANDROID_HOME/build-tools/36.0.0" --output app/build/update-probes
           gh api -H 'Accept: application/octet-stream' "repos/$GITHUB_REPOSITORY/releases/assets/713064622" > app/build/update-probes/OriginalBuild303.apk
           gh release download v1.0.0-306 --pattern Motero_Build306.apk --dir app/build/update-probes
-          gh release download v1.0.9-324 --pattern Motero_Build324.apk --dir app/build/update-probes
+          gh release download v1.0.10-325 --pattern Motero_Build325.apk --dir app/build/update-probes
           python3 - <<'PY'
           import hashlib
           from pathlib import Path
-          expected={'Motero_Build324.apk':'bf72620240b003efbbc21c7dbe4c87a8c732160804c8e3d71e19fbce65b36c1e', 'OriginalBuild303.apk':'16ea5d9837c89f3121031077e403ade58cf7f9cad557593abcc8d7e5dfb4edfa', 'Motero_Build306.apk':'8d49d8dd599ce6d611e0c43dafb4bf3a04357cef38d9ba5b45f8d3e0a240eb3b'}
+          expected={'Motero_Build325.apk':'bb9eb476319b86cd5ec1d0f37d283a139c86d7e081bdde355f3b8967bd9922c5', 'OriginalBuild303.apk':'16ea5d9837c89f3121031077e403ade58cf7f9cad557593abcc8d7e5dfb4edfa', 'Motero_Build306.apk':'8d49d8dd599ce6d611e0c43dafb4bf3a04357cef38d9ba5b45f8d3e0a240eb3b'}
           for name,digest in expected.items():
               assert hashlib.sha256((Path('app/build/update-probes')/name).read_bytes()).hexdigest()==digest,name
           PY
@@ -275,7 +275,7 @@ jobs:
             emulator_pid=$!
             trap '"$ANDROID_HOME/platform-tools/adb" -s "$serial" emu kill || true' EXIT
             set +e
-            python3 scripts/check_android_update.py --adb "$ANDROID_HOME/platform-tools/adb" --serial "$serial" --boot-timeout 900 --emulator-pid "$emulator_pid" --emulator-log "$RUNNER_TEMP/motero-emulator-$api.log" --baseline-apk app/build/update-probes/OriginalBuild303.apk --current-baseline-apk app/build/update-probes/Motero_Build324.apk --candidate-apk "dist/Motero_Build${VERSION_CODE}.apk" --rejected-apk app/build/update-probes/Motero_Build306.apk --rollback-probe-apk app/build/update-probes/RejectedOldKey9999.apk --legacy-client-apk app/build/update-probes/UntrustedLegacyClient.apk --output "dist/Motero_UpdateVerification_API${api}.json" > "$RUNNER_TEMP/update-gate-$api.log" 2>&1
+            python3 scripts/check_android_update.py --adb "$ANDROID_HOME/platform-tools/adb" --serial "$serial" --boot-timeout 900 --emulator-pid "$emulator_pid" --emulator-log "$RUNNER_TEMP/motero-emulator-$api.log" --baseline-apk app/build/update-probes/OriginalBuild303.apk --current-baseline-apk app/build/update-probes/Motero_Build325.apk --candidate-apk "dist/Motero_Build${VERSION_CODE}.apk" --rejected-apk app/build/update-probes/Motero_Build306.apk --rollback-probe-apk app/build/update-probes/RejectedOldKey9999.apk --legacy-client-apk app/build/update-probes/UntrustedLegacyClient.apk --output "dist/Motero_UpdateVerification_API${api}.json" > "$RUNNER_TEMP/update-gate-$api.log" 2>&1
             gate_status=$?
             set -e
             cat "$RUNNER_TEMP/update-gate-$api.log"

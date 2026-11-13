@@ -98,6 +98,10 @@ internal fun ReaderScreen(
     val deviceProfile by org.zotero.android.ereader.DeviceProfileStore.state.collectAsState()
     val noReaderDialog = !stylusSettings && viewState.readerSettingsArgs == null && viewState.readerColorPickerArgs == null && viewState.readerFilterArgs == null && viewState.readerAnnotationArgs == null && viewState.readerAnnotationMoreArgs == null
     ReaderGestureProtection(deviceProfile.protectReaderEdges && noReaderDialog && !viewState.showSideBar && !viewState.showPdfSearch && !viewState.manualCropOpen && viewState.selectedAnnotationKey == null)
+    BackHandler(enabled = deviceProfile.protectReaderEdges && noReaderDialog && !viewState.manualCropOpen) {
+        viewModel.onProtectedReaderBack()
+    }
+
 
     org.zotero.android.uicomponents.ReaderHardwareButtons(
         enabled = noReaderDialog && !viewState.isReaderLoading && !viewState.showPdfSearch &&

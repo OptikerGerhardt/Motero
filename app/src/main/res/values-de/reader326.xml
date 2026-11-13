@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reader326_controls_title">Reader Controls</string>
+    <string name="reader326_stylus_title">Stift</string>
+    <string name="reader326_ink_mode">E-Reader-Modus</string>
+    <string name="reader326_ink_description">Höherer Kontrast und direkte Übergänge. Die Reader-Darstellung bleibt erhalten.</string>
+    <string name="reader326_selection_title">Textauswahl</string>
+    <string name="reader326_back_protection">Reader vor versehentlichem Verlassen schützen</string>
+    <string name="reader326_back_description">System-Zurückgesten und Rücktasten schließen den Reader nicht. Zum Verlassen den Pfeil in der Toolbar verwenden. Dialoge lassen sich weiterhin normal schließen.</string>
+    <string name="reader326_pen_only">Mit Stift schreiben, mit Fingern navigieren</string>
+    <string name="reader326_pen_only_description">Für Zeichnen mit dem Finger oder als Finger erkannte Stifte ausschalten. Handballenerkennung erfordert einen erkannten Stift.</string>
+    <string name="reader326_eraser_button">Radierertaste</string>
+    <string name="reader326_pointer_button">Stifttaste</string>
+    <string name="reader326_button_hold">Gedrückt halten</string>
+    <string name="reader326_button_toggle">Umschalten</string>
+    <string name="reader326_button_primary">Primär</string>
+    <string name="reader326_button_secondary">Sekundär</string>
+    <string name="reader326_key_learning">Stifttaste drücken… Zum Abbrechen antippen</string>
+    <string name="reader326_assign_key">Hardware-Stifttaste zuweisen</string>
+    <string name="reader326_key_description">Lautstärke-/Seitentasten und Texteingabe bleiben reserviert. Eine von Android gemeldete Radiererspitze wird automatisch erkannt.</string>
+    <string name="reader326_diagnostics_title">Eingabediagnose</string>
+    <string name="reader326_diagnostics_description">Nur lokaler Eingabetyp, Tasten, Druck und Hover. Dokumentinhalt und Koordinaten werden nicht erfasst. Die Eingabe nutzt Android; eine native BOOX-Vorschau ist nicht validiert.</string>
+</resources>

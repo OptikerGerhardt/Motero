@@ -34,10 +34,10 @@ internal fun SettingsScreen(
     toQuickCopyScreen: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
-    var showDeviceSettings by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    var showDeviceSettings by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
     if (showDeviceSettings) {
         androidx.activity.compose.BackHandler { showDeviceSettings = false }
-        org.zotero.android.ereader.EReaderSettingsScreen(nativeSelection = viewModel.nativeSelection(), onNativeSelection = viewModel::setNativeSelection) { showDeviceSettings = false }
+        org.zotero.android.ereader.EReaderSettingsScreen(nativeSelection = viewModel.nativeSelection(), onNativeSelection = viewModel::setNativeSelection, onPageTurning = toPageTurningScreen) { showDeviceSettings = false }
         return
     }
     AppThemeM3 {
@@ -86,10 +86,6 @@ internal fun SettingsScreen(
                     onItemTapped = toCiteScreen,
                 )
                 NewSettingsItem(
-                    title = stringResource(id = Strings.settings_page_turning_title),
-                    onItemTapped = toPageTurningScreen,
-                )
-                NewSettingsItem(
                     title = stringResource(id = Strings.settings_debug),
                     onItemTapped = toDebugScreen,
                 )
@@ -107,7 +103,7 @@ internal fun SettingsScreen(
 
                 NewSettingsDivider()
 
-                NewSettingsItem(title = "Reader controls", onItemTapped = { showDeviceSettings = true })
+                NewSettingsItem(title = stringResource(org.zotero.android.R.string.reader326_controls_title), onItemTapped = { showDeviceSettings = true })
                 NewSettingsDivider()
                 BuildInfo()
             }

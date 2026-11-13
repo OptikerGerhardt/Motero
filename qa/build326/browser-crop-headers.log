@@ -1,0 +1,3 @@
+PASS header case 0: Text + crop removes running head/rule/folio/license, preserves the footnote and holds visible geometry
+PASS header case 1: Text + crop removes running head/rule/folio/license, preserves the footnote and holds visible geometry
+PASS header case 2: Text + crop removes running head/rule/folio/license, preserves the footnote and holds visible geometry

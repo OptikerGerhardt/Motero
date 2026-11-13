@@ -1,0 +1,80 @@
+HTTP /view.html
+HTTP /view.js
+HTTP /view.css
+View HTML loaded
+HTTP /favicon.ico
+HTTP /pdf/web/viewer.html
+HTTP /pdf/web/viewer.css
+HTTP /pdf/build/pdf.mjs
+HTTP /pdf/web/viewer.mjs
+HTTP /pdf/build/pdf.worker.mjs
+HTTP /gesture-test.pdf
+HTTP /pdf/web/images/loading-icon.gif
+Initial reader {
+  scale: 'page-width',
+  width: 560,
+  viewport: 600,
+  native: false,
+  chars: 1426
+}
+Gesture coordinates {
+  a: { x: 78.77458823529412, y: 90.27011764705867 },
+  b: { x: 219.81552941176477, y: 90.27011764705867 },
+  scroll: 18
+}
+After hold { active: true, ranges: 1 }
+Highlight result {
+  saved: [
+    {
+      type: 'highlight',
+      color: '#ffd400',
+      sortIndex: '00000|000000|00088',
+      pageLabel: '1',
+      position: [Object],
+      text: 'Alpha beta gamma delta.',
+      comment: '',
+      tags: [],
+      id: 'KPB9W28J',
+      dateCreated: '2026-11-12T23:50:02.037Z',
+      dateModified: '2026-11-12T23:50:02.037Z'
+    }
+  ],
+  selection: '',
+  scroll: 18
+}
+Quick swipe scroll 279
+Pinch abort { active: false, saves: 1, scale: 0.98 }
+Pinch mode false {
+  calls: [
+    [ null, 1.0714285714285714, [Array] ],
+    [ null, 1.0761904761904761, [Array] ],
+    [ null, 1.0619469026548674, [Array] ],
+    [ null, 1.0666666666666667, [Array] ],
+    [ null, 1.0546875, [Array] ],
+    [ null, 1.0592592592592593, [Array] ],
+    [ null, 1.048951048951049, [Array] ]
+  ],
+  scale: 1.5
+}
+Pinch mode true {
+  calls: [
+    [ null, 1.0714285714285714, [Array] ],
+    [ null, 1.0761904761904761, [Array] ],
+    [ null, 1.0619469026548674, [Array] ],
+    [ null, 1.0666666666666667, [Array] ],
+    [ null, 1.0546875, [Array] ],
+    [ null, 1.0592592592592593, [Array] ],
+    [ null, 1.048951048951049, [Array] ],
+    [ null, 1.0733333333333333, [Array] ],
+    [ null, 1.0745341614906831, [Array] ],
+    [ null, 1.0635838150289016, [Array] ],
+    [ null, 1.065217391304348, [Array] ],
+    [ null, 1.0561224489795917, [Array] ],
+    [ null, 1.0579710144927537, [Array] ],
+    [ null, 1.0502283105022832, [Array] ]
+  ],
+  scale: 2.3
+}
+Pen highlight Alpha beta gamma delta.
+Width after resize { width: 760, viewport: 800, scale: 'page-width' }
+PASS: width and resize, selection fallback, finger and pen highlighting, scrolling, pinch interruption and PDF.js handoff

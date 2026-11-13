@@ -518,6 +518,10 @@ class ReaderWebCallChainExecutor @Inject constructor(
         }
     }
 
+    fun dismissReaderSelection() {
+        readerWebViewHandler.evaluateJavascript("window.dismissReaderSelection?.();") {}
+    }
+
     suspend fun updateView(modifications: JsonArray, insertions: JsonArray, deletions: JsonArray) {
         val encodedDeletions = encodeAsJSONForJavascript(gson = this.gson, data = deletions)
         val encodedInsertions = encodeAsJSONForJavascript(gson = this.gson, data = insertions)

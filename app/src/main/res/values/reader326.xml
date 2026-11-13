@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reader326_controls_title">Reader controls</string>
+    <string name="reader326_stylus_title">Stylus</string>
+    <string name="reader326_ink_mode">E-Reader mode</string>
+    <string name="reader326_ink_description">Higher contrast and instant transitions. Reader appearance stays unchanged.</string>
+    <string name="reader326_selection_title">Text selection</string>
+    <string name="reader326_back_protection">Protect reader navigation</string>
+    <string name="reader326_back_description">Prevent system Back gestures and Back keys from closing the reader. Use the toolbar arrow to leave; dialogs still close normally.</string>
+    <string name="reader326_pen_only">Stylus draws, fingers navigate</string>
+    <string name="reader326_pen_only_description">Turn off for finger drawing or pens reported as fingers. Palm protection requires a recognized stylus.</string>
+    <string name="reader326_eraser_button">Eraser button</string>
+    <string name="reader326_pointer_button">Pointer button</string>
+    <string name="reader326_button_hold">Hold</string>
+    <string name="reader326_button_toggle">Toggle</string>
+    <string name="reader326_button_primary">Primary</string>
+    <string name="reader326_button_secondary">Secondary</string>
+    <string name="reader326_key_learning">Press the stylus key… Tap to cancel</string>
+    <string name="reader326_assign_key">Assign a hardware stylus key</string>
+    <string name="reader326_key_description">Volume/page keys and text input stay reserved. An eraser tip is recognized when Android reports it.</string>
+    <string name="reader326_diagnostics_title">Input diagnostics</string>
+    <string name="reader326_diagnostics_description">Local input type, buttons, pressure and hover only. No document content or coordinates are recorded. Standard Android stylus input is used; native BOOX preview is not validated.</string>
+</resources>

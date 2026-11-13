@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.1 — Build 326
+
+- Gemeinsame PDF-/EPUB-Haltezeit 200 ms; Page Turning unter Reader Controls und Reader-/Stylus-Einstellungen mit vorhandenen Zotero-UI-Komponenten.
+- Optionaler Schutz fängt System-Zurück im Reader ab; Dialoge, Suche und Auswahl bleiben gezielt schließbar. Größerer oberer rechter EPUB-Bookmark-Bereich.
+- Untere Leiste: erst verbreitern, dann Inhalte wechseln; beim Verkleinern erst Inhalte wechseln. Reihenfolge folgt den tatsächlichen Gerätebreiten.
+- Schnellpalette oberhalb von Markierungen; EPUB-Notizen an der tatsächlichen Tippstelle verankern, auch ohne Hover.
+- Kopftext mit Trennlinie, Autorenlisten, eng anliegende Randsterne und Download-/Lizenzhinweise besser erkennen. Sichtbare Leserahmen nach Hintergrundlernen nicht neu zoomen/verschieben.
+- README und Featureplan für Motero 1.1 aktualisiert; bestehende Engine, Signatur und Datenformate erhalten. [Umfang und Grenzen](docs/READER_326.md).
+
 ## 1.0.10 — Build 325
 
 - Rechte Spalte stabil halten; Spaltenlesen auf Jumped begrenzen und Continuous-Wischen auf die Leserichtung beschränken.

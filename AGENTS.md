@@ -13,3 +13,5 @@
 - The existing `debug.keystore` is the verified public upstream Android test key, retained only for development and migration/negative tests. Never commit a new private signing key, account token, credential file or personal PDF. Never print credential values.
 - Legacy debug-signed releases are deliberately quarantined as drafts for public-release preparation. Keep their original assets/tags unchanged; never re-publish them as safe public APKs.
 - Do not publish the cloud environment as part of normal development. Repository commits and GitHub Releases are separate from cloud-environment publication.
+
+- All UI changes must follow the existing Zotero design: reuse its settings rows, controls, spacing, typography, icons and theme colors. Apply this to Reader Controls, Stylus settings and future UI work; do not introduce visually unrelated custom panels.

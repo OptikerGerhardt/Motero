@@ -3044,6 +3044,20 @@ class ReaderViewModel @Inject constructor(
         readerWebCallChainExecutor.deselectText()
     }
 
+    fun onProtectedReaderBack() {
+        when {
+            viewState.showPdfSearch -> hidePdfSearch()
+            viewState.showSideBar -> toggleSideBar()
+            viewState.selectedAnnotationKey != null || viewState.selectedText != null -> viewModelScope.launch {
+                flushPendingComment()
+                _select(key = null, didSelectInDocument = true)
+                readerWebCallChainExecutor.dismissReaderSelection()
+                updateState { copy(selectedText = null) }
+            }
+            else -> setReaderChromeVisible(true)
+        }
+    }
+
     fun navigatePageHistoryBack() {
         if (!viewState.canNavigateBack) {
             return

@@ -1,0 +1,11 @@
+# Motero 1.1 / Build 326 verification
+
+Technical version `1.1.0-326`, public release title **Motero 1.1**. Reader source: `8a8117152f50f82eee6472aba6c693a7d70883db`. PDF.js remains 5.7.330 / `5f95f712bc629ac11159cb4859ed8091fdffa87b`.
+
+419 Reader cases in 49 files, 155 native cases in 37 suites, all 23 browser suites and 16 infrastructure/signing-refusal tests pass locally. The unsigned Android-9+ APK builds without debugging enabled; its main/worker sources and all 207 engine and 45 runtime files match the checkout/pins. It is not distributed as a public APK.
+
+Browser coverage adds actual no-hover EPUB note-tool placement after a stale preview, preservation of the touched character through reflow, a wider upper-right bookmark tap, 200 ms hold timing and quick-palette hit testing above an adversarial maximum-z annotation layer. The generated header fixture covers a running head plus thin rule, detached author list, merged folio/title, marginal stars and publisher strip while retaining the genuine footnote. Visible page origin/scale stays stable during learning; scroll offsets alone are not used as a visual-shift measurement. Existing fitting, spread, zoom, manual-crop, stylus, eraser, Undo, engine and resource gates remain included. Fitting and header gates were repeated after the final small merged-folio adjustment; their final logs are retained here.
+
+Native tests include phone/wide-BOOX dock timing. Reader Controls reuse existing Zotero settings components and theme/typography, and Page Turning is nested beneath them. Back protection preserves independent dialog/manual-crop dismissal and explicit toolbar exit.
+
+The protected release workflow must complete private signing and API 31/35 update gates from original 303 and preceding signed 325 before publication. Independent download/signature/source/checksum/update evidence is added after publication. Physical BOOX/Pixel input, native animation appearance and live-account sync remain separate checks. Original Born/Leviathan PDFs were unavailable; synthetic fixtures reproduce the screenshot structures. No perfect arbitrary-PDF recognition or physical-device latency claim is made. [Implementation and limits](../../docs/READER_326.md).

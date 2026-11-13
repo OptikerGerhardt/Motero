@@ -6,6 +6,10 @@ Motero is an unofficial fork of **[Zotero for Android](https://github.com/zotero
 
 This fork is maintained independently and is not affiliated with or endorsed by Zotero or the Corporation for Digital Scholarship.
 
+## Motero 1.1
+
+[Motero 1.1 / Build 326](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.0-326) adds 200 ms drag highlighting, unified Zotero-style Reader Controls with nested Page Turning, standard Android Back protection, wider EPUB bookmark tapping, precise EPUB note anchors and a quick palette that stays above highlights. Adaptive dock transitions and stable reading frames accompany improved running-head, separator, author-list and publisher-notice recognition. [Changes and verification limits](docs/READER_326.md).
+
 ## Features
 
 - Optional app-wide E-Reader mode, stylus-only annotation with finger navigation, palm protection, configurable eraser buttons and local input diagnostics. [Controls and hardware limits](docs/E_READER_AND_STYLUS.md).
@@ -22,7 +26,7 @@ This fork is maintained independently and is not affiliated with or endorsed by 
 - A top-right bookmark shortcut for the centered reading page: tap to add a black bookmark, then tap again to remove it. Existing bookmark colors are preserved.
 - Tag suggestions ranked by use in the current document and library, with explicit creation of new tags.
 - EPUB navigation, local reading-position restoration, and progress displays cycled by tapping the footer, including hidden.
-- Global reader controls for direct/Android text selection and optional protection against Android Back edge gestures, plus ordinary volume-key list scrolling. [Reader changes](docs/READER_NEXT_UPDATE.md).
+- Global reader controls for direct/Android text selection and optional protection against Android system Back keys/gestures, plus ordinary volume-key list scrolling. [Reader changes](docs/READER_NEXT_UPDATE.md).
 
 View cropping does not modify the PDF file or annotation coordinates. Manual crop settings are stored locally and are not synchronized with Zotero.
 
