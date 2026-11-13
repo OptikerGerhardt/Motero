@@ -1,0 +1,4 @@
+PASS highlight: real long-hold activates touch editing; endpoint/corner/note drag preserves ID and Undo restores geometry
+PASS underline: real long-hold activates touch editing; endpoint/corner/note drag preserves ID and Undo restores geometry
+PASS image: real long-hold activates touch editing; endpoint/corner/note drag preserves ID and Undo restores geometry
+PASS note: real long-hold activates touch editing; endpoint/corner/note drag preserves ID and Undo restores geometry

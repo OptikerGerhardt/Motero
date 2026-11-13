@@ -1,0 +1,17 @@
+PASS current and previous/next pages are cropped before hardware navigation completes
+PASS mode 0: two fingers reveal the full PDF and restore page, crop and zoom on release
+PASS mode 0: one-finger scrolling keeps every buffered crop and visible 24px Continuous page spacing
+PASS mode 1: two fingers reveal the full PDF and restore page, crop and zoom on release
+PASS mode 1: one-finger scrolling keeps every buffered crop and visible 24px Continuous page spacing
+PASS mode 2: two fingers reveal the full PDF and restore page, crop and zoom on release
+PASS mode 2: one-finger scrolling keeps every buffered crop and visible 24px Continuous page spacing
+SKIP private original Plessner PDF; set BOOX_PLESSNER_PDF to run this additional regression
+PASS EPUB font size uses the displayed percentage and reports subsequent pinch/button zoom
+PASS EPUB paginated, rtl=false: forward/backward chapters, end fragments, editing guard and bookmark deletion through persistence
+PASS EPUB font size uses the displayed percentage and reports subsequent pinch/button zoom
+PASS EPUB scrolled, rtl=false: forward/backward chapters, end fragments, editing guard and bookmark deletion through persistence
+PASS EPUB font size uses the displayed percentage and reports subsequent pinch/button zoom
+PASS EPUB paginated, rtl=true: forward/backward chapters, end fragments, editing guard and bookmark deletion through persistence
+PASS EPUB font size uses the displayed percentage and reports subsequent pinch/button zoom
+PASS EPUB scrolled, rtl=true: forward/backward chapters, end fragments, editing guard and bookmark deletion through persistence
+PASS reader update regressions

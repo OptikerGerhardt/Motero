@@ -1,0 +1,12 @@
+DIAG tapping visible overview page {"x":242,"y":539.5,"index":7,"area":249559}
+DIAG tapping visible overview page {"x":253,"y":276,"index":6,"area":264408}
+DIAG tapping visible overview page {"x":304.5,"y":338,"index":4,"area":306560}
+DIAG tapping visible overview page {"x":393.5,"y":338,"index":4,"area":264320}
+DIAG tapping visible overview page {"x":242,"y":404,"index":3,"area":306560}
+DIAG tapping visible overview page {"x":253,"y":257.5,"index":2,"area":246685}
+PASS overview taps in Vertical, Horizontal and Wrapped restore the target page and complete fit
+DIAG tapping visible overview page {"x":112,"y":140.5,"index":0,"area":45080}
+PASS a real zoom-out with two complete pages retains overview and tap restores the reading fit
+PASS explicit Off forgets the old fit instead of restoring it from the overview
+PASS simulated camera safe area stays constant through toolbar toggles and hardware page turns in all scroll modes
+PASS: fit recovery and safe viewport regressions

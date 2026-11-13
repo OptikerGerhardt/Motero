@@ -1,6 +1,6 @@
 # Build 328 / Motero 1.1.2 — Freigabeprüfung
 
-Gesammelte Leisten-, Stylus-, Paletten-, Continuous- und Spaltenkorrekturen implementiert. Lokale und geschützte Release-Prüfungen laufen; physische BOOX/Pixel-Prüfung separat. [Umfang](docs/READER_328.md).
+Gesammelte Leisten-, Stylus-, Paletten-, Continuous- und Spaltenkorrekturen implementiert. 425 Reader-Fälle, 158 native Tests, alle 23 Browser-Suiten und APK-Inhalte lokal geprüft; geschützte Release-Prüfungen folgen; physische BOOX/Pixel-Prüfung separat. [Umfang](docs/READER_328.md).
 
 # Build 327 / Motero 1.1.1 — veröffentlicht und unabhängig geprüft
 
