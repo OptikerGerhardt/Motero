@@ -1,0 +1,12 @@
+PASS initial spread 1, scroll 0: all fits, both pages, edge turn, persistent overview and tap-to-restore
+PASS initial spread 1, scroll 1: all fits, both pages, edge turn, persistent overview and tap-to-restore
+PASS initial spread 1, scroll 2: all fits, both pages, edge turn, persistent overview and tap-to-restore
+PASS initial spread 2, scroll 0: all fits, both pages, edge turn, persistent overview and tap-to-restore
+PASS initial spread 2, scroll 1: all fits, both pages, edge turn, persistent overview and tap-to-restore
+PASS initial spread 2, scroll 2: all fits, both pages, edge turn, persistent overview and tap-to-restore
+PASS switch spread 1, scroll 0: all fits, both pages, edge turn, persistent overview and tap-to-restore
+PASS switch spread 1, scroll 1: all fits, both pages, edge turn, persistent overview and tap-to-restore
+PASS switch spread 1, scroll 2: all fits, both pages, edge turn, persistent overview and tap-to-restore
+PASS switch spread 2, scroll 0: all fits, both pages, edge turn, persistent overview and tap-to-restore
+PASS switch spread 2, scroll 1: all fits, both pages, edge turn, persistent overview and tap-to-restore
+PASS switch spread 2, scroll 2: all fits, both pages, edge turn, persistent overview and tap-to-restore

@@ -1,10 +1,12 @@
 # Motero 1.1 / Build 326 verification
 
-Technical version `1.1.0-326`, public release title **Motero 1.1**. Reader source: `090316e62964834858a78575799cef5a094b4e35`. PDF.js remains 5.7.330 / `5f95f712bc629ac11159cb4859ed8091fdffa87b`.
+Technical version `1.1.0-326`, public release title **Motero 1.1**. Reader source: `1b921a737118c6237300aff86d21ed3ebb3f358e`. PDF.js remains 5.7.330 / `5f95f712bc629ac11159cb4859ed8091fdffa87b`.
 
 421 Reader cases in 49 files, 155 native cases in 37 suites, all 23 browser suites and 16 infrastructure/signing-refusal tests pass locally. The unsigned Android-9+ APK builds without debugging enabled; its main/worker sources and all 207 engine and 45 runtime files match the checkout/pins. It is not distributed as a public APK.
 
 Browser coverage adds actual no-hover EPUB note-tool placement after a stale preview, preservation of the touched character through reflow, a wider upper-right bookmark tap, 200 ms hold timing and quick-palette hit testing above an adversarial maximum-z annotation layer. The generated header fixture covers a running head plus thin rule, detached author list, merged folio/title, marginal stars and publisher strip while retaining the genuine footnote. Visible page origin/scale stays stable during learning; scroll offsets alone are not used as a visual-shift measurement. Existing fitting, spread, zoom, manual-crop, stylus, eraser, Undo, engine and resource gates remain included. The final complete 23-suite run includes the merged-folio and marked-footnote cases and the scroll-clamping fix; its logs are retained here.
+
+The first CI run stopped before publication on an overview-return assertion that observed intermediate reading flags. The spread gate now waits for the completed navigation and matching applied fit, retains strict pair visibility/centering checks, and forces one stale-viewport fallback to cover this transition deterministically. All 12 combinations pass again; an additional run at 4× CPU throttling also passes. Production reader sources are unchanged by this test correction.
 
 Native tests include phone/wide-BOOX dock timing. Reader Controls reuse existing Zotero settings components and theme/typography, and Page Turning is nested beneath them. Back protection preserves independent dialog/manual-crop dismissal and explicit toolbar exit.
 
