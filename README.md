@@ -46,10 +46,6 @@ The following screenshots were captured from the Motero Android app. They show t
 | **Reader and stylus controls** | **Bookmarks list** |
 | ![Reader controls and stylus options](docs/screenshots/android/05-reader-controls.webp) | ![Bookmark list and tag filters](docs/screenshots/android/06-bookmark-list.webp) |
 
-![Reading text with the floating annotation palette](docs/screenshots/android/07-reading-layout.webp)
-
-These are device screenshots of the Android interface. They complement the browser-rendered previews below, which use a synthetic document and do not represent the complete native Android UI.
-
 ## Install and update
 
 **Requires Android 9 or later.** Download `Motero_Build<number>.apk` from the [latest release](https://github.com/OptikerGerhardt/Motero/releases/latest). Each release also includes source code, test reports, and SHA-256 checksums.
