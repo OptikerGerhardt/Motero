@@ -34,6 +34,22 @@ This fork is maintained independently and is not affiliated with or endorsed by 
 
 View cropping does not modify the PDF file or annotation coordinates. Manual crop settings are stored locally and are not synchronized with Zotero.
 
+## Android screenshots
+
+The following screenshots were captured from the Motero Android app. They show the native reader interface and settings; the Android status and navigation bars have been cropped for presentation.
+
+| Reading and annotations | Bookmark navigation |
+| --- | --- |
+| ![PDF reader with annotation controls](docs/screenshots/android/01-annotation-toolbar.webp) | ![Reading page with bookmark](docs/screenshots/android/02-reading-bookmark.webp) |
+| **Reader appearance** | **Typography and layout** |
+| ![Reader appearance settings](docs/screenshots/android/03-pdf-appearance.webp) | ![Typography and reading appearance settings](docs/screenshots/android/04-epub-appearance.webp) |
+| **Reader and stylus controls** | **Bookmarks list** |
+| ![Reader controls and stylus options](docs/screenshots/android/05-reader-controls.webp) | ![Bookmark list and tag filters](docs/screenshots/android/06-bookmark-list.webp) |
+
+![Reading text with the floating annotation palette](docs/screenshots/android/07-reading-layout.webp)
+
+These are device screenshots of the Android interface. They complement the browser-rendered previews below, which use a synthetic document and do not represent the complete native Android UI.
+
 ## Screenshots (browser-rendered previews)
 
 These screenshots show the **actual Motero PDF reader** running in Chromium at a BOOX-like mobile viewport, using a **synthetic demonstration PDF**. They are not photos of a BOOX device or screenshots of the complete Android UI. Native toolbars, physical E-Ink rendering, and stylus latency are not represented.
