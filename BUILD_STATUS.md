@@ -1,8 +1,12 @@
-# Build 329 / Motero 1.1.3 — lokal geprüft, Release-Prüfung läuft
+# Build 329 / Motero 1.1.3 — veröffentlicht und unabhängig geprüft
 
-- Zuschnitt für Kopfzeilen/Trennlinien, Randsterne und römische Folios verbessert; Lila in der gemeinsamen Palette, feste Stiftstärken in 0,5-Punkt-Schritten.
-- Born-Original geprüft; vollständige Leviathan-/Kant-Prüfung wegen 32-MiB-Übertragungsgrenze offen. [Umfang und Grenzen](docs/READER_329.md).
-- 431 Reader-Fälle, 160 native Tests in 40 Suiten, alle 23 Browser-Suiten, TypeScript und 43 Engine-Pixeltests bestanden. Release-APK gebaut; 117 Reader-/Worker-Quellen und alle Engine-/Runtime-Dateien stimmen überein. Signatur und API-31/35-Updates folgen. Physische Geräte und Kontosync separat.
+- [APK und vollständige Quellen](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.3-329); [Build, Signatur und Updates](https://github.com/OptikerGerhardt/Motero/actions/runs/43657962944) erfolgreich. Anwendung `e8d43d14`, Reader `f07ca150`; PDF.js 5.7.330 unverändert.
+- Verbesserte Kopfzeilen-/Trennlinien-/Randmarker-Erkennung; Lila in gemeinsamer Palette; feste Stiftstärken in 0,5-Punkt-Schritten. [Umfang und Grenzen](docs/READER_329.md).
+- 431 Reader-Fälle in 49 Dateien, 160 native Tests in 40 Suiten, alle 23 lokalen und CI-Browser-Suiten, 43 Engine-Pixel- und 19 offizielle Viewer-Fälle bestanden.
+- Born: alle 260 Originalseiten mit Textgeometrie und Originalrastern ausgewertet; 18 Browser-Vorher-/Nachher-Vergleiche entfernen die Kopfzeilen bei unveränderter Unterkante. Zusätzliche Originalprüfung der römischen VII im fertigen Bundle. Keine persönlichen PDF-/Bild-/Textinhalte veröffentlicht.
+- Öffentliche APK unabhängig heruntergeladen: SHA-256 `7cfd2fc3ec1bc61ca35ca55786ec7fd112f40a21116f232bfa02b85930a8fba1`. Privater Motero-Signierer, eingeschränkte Rotation, Receiver-Berechtigung, Android 9+, nicht debuggbar; 114 Hauptbundle- und 117 eindeutige Reader-/Worker-Quellen, 207 Engine-, 45 Runtime- und 9593 Quellarchiv-Dateien sowie Prüfsummen geprüft.
+- API 31/35: Updates von 303 und 328 erhalten Datenmarker/UID, starten die App und verweigern alte Schlüssel. Latest-Release zeigt Build 329 mit genau einer APK. Parallele README-/Galerieänderungen erhalten.
+- Leviathan/Kant überschreiten jeweils die 32-MiB-Übertragungsgrenze: Strukturregressionen vorhanden, vollständige Originalprüfung offen. Physische BOOX/Pixel-UI und Kontosync separat. [Nachweise](qa/build329/README.md).
 
 # Build 328 / Motero 1.1.2 — veröffentlicht und unabhängig geprüft
 
