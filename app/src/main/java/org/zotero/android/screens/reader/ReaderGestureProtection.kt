@@ -29,3 +29,27 @@ internal fun ReaderGestureProtection(enabled: Boolean) {
         onDispose { view.removeOnLayoutChangeListener(listener); view.systemGestureExclusionRects = previous }
     }
 }
+
+
+/** Scope hardware protection to the resumed Reader, never its dialogs or IME. */
+@Composable
+internal fun ReaderHardwareBackProtection(enabled: Boolean, onBack: () -> Unit) {
+    val activity = androidx.activity.compose.LocalActivity.current as? org.zotero.android.screens.dashboard.DashboardActivity ?: return
+    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
+    val callback = rememberUpdatedState(onBack)
+    DisposableEffect(activity, lifecycle, enabled) {
+        val handler: () -> Unit = { callback.value() }
+        fun update() {
+            if (enabled && lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)) {
+                activity.protectedReaderBackHandler = handler
+            } else if (activity.protectedReaderBackHandler === handler) activity.protectedReaderBackHandler = null
+        }
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, _ -> update() }
+        lifecycle.addObserver(observer)
+        update()
+        onDispose {
+            lifecycle.removeObserver(observer)
+            if (activity.protectedReaderBackHandler === handler) activity.protectedReaderBackHandler = null
+        }
+    }
+}

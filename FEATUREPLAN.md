@@ -1,6 +1,14 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 15. November 2026. Motero 1.1.3 / Build 329 verbessert den automatischen Zuschnitt und die Stiftpalette. PDF.js 5.7.330 und Annotations-/Syncformate bleiben erhalten.
+Stand: 15. November 2026. Motero 1.1.4 / Build 330 setzt die seit Build 329 gesammelten Reader-Korrekturen um. PDF.js 5.7.330 und Daten-/Syncformate bleiben unverändert.
+
+## Rotation, EPUB und Stiftbedienung: Build 330 / 1.1.4
+
+- Tablet-Navigationsgraph bei Rotation erhalten; keine prozessglobale Reader-Sperre. Schutz für Hardware-Back/Escape mit freiem ausdrücklichem Toolbar-Ausgang.
+- EPUB: Ausrichtung einschließlich Blocksatz, Schriftdicke und vertikal ausgeglichener Zeilenrahmen bei erhaltenen Rand- und Schriftvorgaben.
+- Adaptive Werkzeugleiste mit direktem Redo und vollständiger Farbreihe bei Platz; unten feine, oben gröbere feste Stiftbreiten. Stift-Tipps bedienen auch die Quickbars.
+- PDF-Schatten am sichtbaren Zuschnitt, enge Spread- und größere Seitenpaar-Abstände. Größeres physisches Seitenfähnchen, ergänzender Bildschirmindikator und passiver Jumped-Seitenwechselpfeil.
+- Physische BOOX-/Galaxy-Tab-S4-Bestätigung bleibt offen; Regressionen prüfen die gefundenen Codepfade und Browser-Geometrie. [Details](docs/READER_330.md).
 
 ## Zuschnitt und Stiftpalette: Build 329 / 1.1.3
 

@@ -33,7 +33,7 @@ internal fun ReaderPdfBottomDock(viewModel: ReaderViewModel, state: ReaderViewSt
         .padding(horizontal = 8.dp, vertical = 12.dp), contentAlignment = Alignment.BottomCenter) {
         val previewWidth = minOf(maxWidth * .8f, 560.dp,
             (previews.thumbnailCache.size.coerceAtLeast(1) * 38 + 10).dp).coerceAtLeast(48.dp)
-        val toolWidth = minOf(maxWidth, 344.dp)
+        val toolWidth = minOf(maxWidth, if (maxWidth >= 392.dp) 416.dp else 344.dp)
         val targetWidth = if (tools) toolWidth.value else previewWidth.value
         val animatedWidth = remember { Animatable(targetWidth) }
         val animatedSlide = remember { Animatable(if (tools) 1f else 0f) }

@@ -19,7 +19,7 @@ import org.zotero.android.screens.reader.ReaderViewState
 internal fun ReaderEpubAnnotationDock(viewModel: ReaderViewModel, state: ReaderViewState) {
     val optionsHeight by animateDpAsState(if (state.pdfToolOptionsVisible) 60.dp else 0.dp, deviceTween(180), label = "epub tool options")
     Surface(Modifier.windowInsetsPadding(WindowInsets.navigationBarsIgnoringVisibility)
-        .padding(horizontal = 8.dp, vertical = 12.dp).widthIn(max = 248.dp).rejectPenPalms(),
+        .padding(horizontal = 8.dp, vertical = 12.dp).widthIn(max = 392.dp).rejectPenPalms(),
         shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceContainer) {
         Column {
             Box(Modifier.fillMaxWidth().height(optionsHeight).clipToBounds()) {

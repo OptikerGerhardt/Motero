@@ -91,6 +91,8 @@ internal class ReaderSettingsViewModel @Inject constructor(
                 verticalMargins = readerSettings.effectiveVerticalMargins().coerceAtLeast(loadedArgs.minimumVerticalMargin),
                 minimumVerticalMargin = loadedArgs.minimumVerticalMargin,
                 fontFamily = readerSettings.effectiveFontFamily(),
+                textAlignment = readerSettings.effectiveTextAlignment(),
+                fontBoldness = readerSettings.effectiveFontBoldness(),
                 selectedFitToContentOption = when (readerSettings.pageFitMode()) {
                     "width" -> ReaderSettingsOptions.FitToWidth
                     "height" -> ReaderSettingsOptions.FitToHeight
@@ -258,6 +260,20 @@ internal class ReaderSettingsViewModel @Inject constructor(
         if (option in viewState.spreadsOptions) {
             reapplyFitting = true
         }
+        scheduleDebouncedApply()
+    }
+
+    fun onTextAlignmentChanged(value: String) {
+        if (value !in setOf("original", "start", "justify", "center", "end")) return
+        readerSettings.epubTextAlignment = value
+        updateState { copy(textAlignment = value) }
+        scheduleDebouncedApply()
+    }
+    fun onFontBoldnessChanged(value: Float) {
+        if (!value.isFinite()) return
+        val rounded = (value.coerceIn(0f, 1f) * 10).roundToInt() / 10f
+        readerSettings.epubFontBoldness = rounded
+        updateState { copy(fontBoldness = rounded) }
         scheduleDebouncedApply()
     }
 
@@ -450,6 +466,8 @@ internal data class ReaderSettingsViewState(
     val verticalMargins: Float = 3f,
     val minimumVerticalMargin: Float = -7f,
     val fontFamily: String = "serif",
+    val textAlignment: String = "original",
+    val fontBoldness: Float = 0f,
     val selectedFitToContentOption: ReaderSettingsOptions = ReaderSettingsOptions.FitToContentOff,
     val selectedFitReferenceOption: ReaderSettingsOptions = ReaderSettingsOptions.FitReferencePage,
     val selectedMarginaliaOption: ReaderSettingsOptions = ReaderSettingsOptions.MarginaliaExclude,

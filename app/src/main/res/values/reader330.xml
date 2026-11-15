@@ -1,0 +1,8 @@
+<resources>
+    <string name="reader_text_alignment">Text alignment</string>
+    <string name="reader_align_start">Left</string>
+    <string name="reader_align_justify">Justified</string>
+    <string name="reader_align_center">Centered</string>
+    <string name="reader_align_end">Right</string>
+    <string name="reader_font_boldness">Font boldness</string>
+</resources>

@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "unsigned": true,
+  "version_code": 330,
+  "package": "org.zotero.android.debug",
+  "minimum_api": 28,
+  "debuggable": false,
+  "apk_sha256": "a2a4058a059e31e2ff575a75c406023515c8a350c282f57ba969841d28a05513",
+  "runtime_files": 45,
+  "pdfjs_files": 207,
+  "unique_reader_sources": 119,
+  "reader_commit": "3fec4826358645afd94d11847f3a3612e00bfd87"
+}

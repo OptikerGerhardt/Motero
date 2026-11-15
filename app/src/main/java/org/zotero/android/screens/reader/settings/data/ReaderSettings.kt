@@ -59,6 +59,8 @@ data class ReaderSettings(
     var epubMargins: Float? = null,
     var epubVerticalMargins: Float? = null,
     var epubFontFamily: String? = null,
+    var epubTextAlignment: String? = null,
+    var epubFontBoldness: Float? = null,
     var pageBackground: String? = null,
     var appearanceChoice: String? = null,
     var lastLightAppearance: String? = null,
@@ -96,6 +98,8 @@ data class ReaderSettings(
     fun effectiveVerticalMargins(): Float = epubVerticalMargins?.takeIf { it.isFinite() }?.coerceIn(-20f, 15f) ?: 3f
     fun effectiveMargins(): Float = epubMargins?.takeIf { it.isFinite() }?.coerceIn(0f, 20f)
         ?: when (pageWidth) { -1 -> 12f; 1 -> 2f; else -> 8f }
+    fun effectiveTextAlignment(): String = epubTextAlignment?.takeIf { it in setOf("original", "start", "justify", "center", "end") } ?: "original"
+    fun effectiveFontBoldness(): Float = epubFontBoldness?.takeIf { it.isFinite() }?.coerceIn(0f, 1f) ?: 0f
     fun effectiveFontFamily(): String = epubFontFamily?.takeIf { it in setOf("original", "serif", "sans-serif") } ?: "serif"
     fun effectivePageNavigation(): String = if (pageNavigation == "jumped") "jumped" else "continuous"
     fun effectiveTextScale(): Float = textScale.takeIf { it.isFinite() && it in 0.6f..1.8f } ?: 1f

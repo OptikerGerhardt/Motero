@@ -124,6 +124,25 @@ internal fun ReaderSettingsTable(
                     }
                 }
             }
+            if (viewState.fileType == ReaderFileType.EPUB) {
+                item {
+                    Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                        Text(stringResource(R.string.reader_text_alignment), style = MaterialTheme.typography.titleSmall)
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            for ((value, label) in listOf("original" to R.string.reader_font_original,
+                                "start" to R.string.reader_align_start, "justify" to R.string.reader_align_justify,
+                                "center" to R.string.reader_align_center, "end" to R.string.reader_align_end)) {
+                                FilterChip(selected = viewState.textAlignment == value,
+                                    onClick = { viewModel.onTextAlignmentChanged(value) }, label = { Text(stringResource(label)) })
+                            }
+                        }
+                    }
+                }
+                readerSettingsSliderRow(titleResId = R.string.reader_font_boldness,
+                    value = viewState.fontBoldness, valueRange = 0f..1f, steps = 9,
+                    valueLabel = "${(viewState.fontBoldness * 100).roundToInt()}%",
+                    onValueChange = viewModel::onFontBoldnessChanged)
+            }
             readerSettingsSliderRow(
                 titleResId = org.zotero.android.R.string.reader_text_size,
                 value = viewState.textScale,

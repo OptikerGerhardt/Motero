@@ -63,4 +63,5 @@ data class CreateReaderReflowableAppearance(
     val lineHeight: Double, val wordSpacing: Double, val letterSpacing: Double,
     val pageWidth: Int, val useOriginalFont: Boolean = false, val textScale: Double? = null,
     val margins: Double? = null, val fontFamily: String? = null, val verticalMargins: Double? = null,
+    val textAlignment: String? = null, val fontBoldness: Double? = null,
 )

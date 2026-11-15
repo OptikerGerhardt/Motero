@@ -42,4 +42,23 @@ class ReaderExitTest {
 
         verify(exactly = 1) { controller.popBackStack() }
     }
+    @Test fun `a new navigation controller can open a reader after the old graph is disposed`() {
+        repeat(2) {
+            val controller = mockk<NavHostController>(relaxed = true)
+            every { controller.getBackStackEntry(any<String>()) } throws IllegalArgumentException("no reader entry")
+            val entry = mockk<androidx.navigation.NavBackStackEntry>(relaxed = true)
+            every { entry.destination.route } returns "readerScreen/{$ARG_READER_SCREEN}?uri={$ARG_READER_SCREEN_ENCODED_FILE_PATH_ARG}"
+            every { controller.currentBackStackEntry } returns entry
+            ZoteroNavigation(controller, null).toReaderScreen("document", "path")
+            verify(exactly = 1) { controller.navigate(any<String>(), any(), any()) }
+        }
+    }
+
+    @Test fun `an existing reader on this controller prevents duplicate sessions`() {
+        val controller = mockk<NavHostController>(relaxed = true)
+        every { controller.getBackStackEntry(any<String>()) } returns mockk(relaxed = true)
+        ZoteroNavigation(controller, null).toReaderScreen("document", "path")
+        verify(exactly = 0) { controller.navigate(any<String>(), any(), any()) }
+    }
+
 }

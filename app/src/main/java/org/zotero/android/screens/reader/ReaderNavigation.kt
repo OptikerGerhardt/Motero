@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -170,26 +168,14 @@ internal fun ZoteroNavigation.closeReader() {
     navController.popBackStack()
 }
 
-private var isReaderSessionOpen = false
-
 fun ZoteroNavigation.toReaderScreen(
     readerParams: String,
     readerEncodedFilePathParam: String,
 ) {
-    if (isReaderSessionOpen) {
-        return
-    }
+    // Navigation owns the session, not a process-global flag left behind by a
+    // recreated tablet graph or Activity. Dialogs above a reader also count.
+    if (runCatching { navController.getBackStackEntry(ReaderDestinations.READER_SCREEN_ROUTE) }.isSuccess) return
     navController.navigate("${ReaderDestinations.READER_SCREEN}/$readerParams?uri=$readerEncodedFilePathParam")
-    val readerEntry = navController.currentBackStackEntry ?: return
-    if (readerEntry.destination.route != ReaderDestinations.READER_SCREEN_ROUTE) {
-        return
-    }
-    isReaderSessionOpen = true
-    readerEntry.lifecycle.addObserver(LifecycleEventObserver { _, event ->
-        if (event == Lifecycle.Event.ON_DESTROY) {
-            isReaderSessionOpen = false
-        }
-    })
 }
 
 private fun ZoteroNavigation.toReaderAnnotationNavigation() {

@@ -1,0 +1,8 @@
+<resources>
+    <string name="reader_text_alignment">Textausrichtung</string>
+    <string name="reader_align_start">Links</string>
+    <string name="reader_align_justify">Blocksatz</string>
+    <string name="reader_align_center">Zentriert</string>
+    <string name="reader_align_end">Rechts</string>
+    <string name="reader_font_boldness">Schriftdicke</string>
+</resources>

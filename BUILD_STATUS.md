@@ -1,3 +1,8 @@
+# Build 330 / Motero 1.1.4 — lokal geprüft, Release-Prüfung läuft
+
+- Gesammelte Rotation-/Back-, EPUB-, Werkzeugleisten-, Stift- und PDF-Abgrenzungskorrekturen umgesetzt; passive Bookmark-/Seitenwechselindikatoren ergänzt. [Umfang](docs/READER_330.md).
+- 437 Reader-Fälle in 51 Dateien, 165 native Tests in 41 Suiten, alle 23 Browser-Suiten, TypeScript und 43 Engine-Pixeltests bestanden. APK und eingebettete Quellen geprüft; geschützte Release-Gates folgen. PDF.js 5.7.330 unverändert. Physische BOOX-/Galaxy-Tab-S4-/Pixel-Prüfung und Kontosync separat.
+
 # Build 329 / Motero 1.1.3 — veröffentlicht und unabhängig geprüft
 
 - [APK und vollständige Quellen](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.3-329); [Build, Signatur und Updates](https://github.com/OptikerGerhardt/Motero/actions/runs/43657962944) erfolgreich. Anwendung `e8d43d14`, Reader `f07ca150`; PDF.js 5.7.330 unverändert.

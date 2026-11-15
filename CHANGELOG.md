@@ -1,5 +1,15 @@
 # Änderungen
 
+## 1.1.4 — Build 330
+
+- Reader-Navigationsgraph über Rotation erhalten und globale Öffnungssperre durch den tatsächlichen Backstack ersetzen; neue Reader lassen sich nach Graph-/Activity-Wechseln wieder öffnen.
+- Protect reader zusätzlich auf Hardware-Back/Escape anwenden, einschließlich gepaarter Tastenausgaben; Tastatur und modale Einstellungen behalten ihre Bedienung. Der ausdrückliche Toolbar-Ausgang bleibt frei.
+- EPUB-Textausrichtung mit Blocksatz und einstellbarer Schriftdicke; Buchschrift und vorhandene Fett-/Kursiv-Auszeichnungen erhalten. Verbleibenden Zeilenplatz symmetrisch auf den Seitenrahmen verteilen.
+- Auf breiteren Werkzeugleisten direkten Redo-Button und alle Zeichenfarben anzeigen. Stiftgrößen unten in 0,1-/0,25-Schritten, oben gröber abstufen; vorhandene Striche nicht umschreiben.
+- Stift-Tipps in PDF-/EPUB-Quickbars vom Zeichnen trennen. Sichtbaren PDF-Zuschnitt mit eigenem Rahmen/Schatten abheben; enger Spread-Abstand und größere Continuous-Zwischenräume bleiben erhalten.
+- Größeres Bookmark-Fähnchen am physischen PDF-Seiteneck darstellen; zusätzlich einen passiven Bildschirmindikator zeigen, wenn es außerhalb des sichtbaren Zuschnitts liegt. Gespeicherte Positionen bleiben unverändert.
+- In Jumped am letzten Scrollstopp einen transparenten Pfeil zum nächsten PDF-Blatt zeigen; weder vor einer weiteren Textspalte noch am Dokumentende. [Umfang und Grenzen](docs/READER_330.md).
+
 ## 1.1.3 — Build 329
 
 - Kopfzeilen auch über Bibliografien, Registern und Bildseiten an Schrift, Seitenzahl und dünner Trennlinie erkennen; römische Kopf-Folios von Randreferenzen unterscheiden.

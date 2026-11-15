@@ -151,13 +151,13 @@ internal class DashboardActivity : BaseActivity() {
                     Box {
                         val viewState by viewModel.viewStates.observeAsState(DashboardViewState())
                         val viewEffect by viewModel.viewEffects.observeAsState()
-                        val isTablet = CustomLayoutSize.calculateLayoutType().isTablet()
+                        val measuredTablet = CustomLayoutSize.calculateLayoutType().isTablet()
+                        val isTablet = androidx.compose.runtime.saveable.rememberSaveable { measuredTablet }
                         LaunchedEffect(key1 = viewModel) {
                             viewModel.init(isTablet = isTablet)
                         }
                         if (viewState.initialLoadData != null) {
-                            val layoutType = CustomLayoutSize.calculateLayoutType()
-                            if (layoutType.isTablet()) {
+                            if (isTablet) {
                                 DashboardRootTopLevelTabletNavigation(
                                     collectionDefaultValue = collectionDefaultValue,
                                     onPickFile = onPickFile,
@@ -189,6 +189,8 @@ internal class DashboardActivity : BaseActivity() {
     }
     var readerPageTurnHandler: ((Boolean) -> Unit)? = null
     var readerInputActive: Boolean = false
+    var protectedReaderBackHandler: (() -> Unit)? = null
+    private val readerBackKeys = org.zotero.android.ereader.ReaderBackKeys()
     var collectionScrollHandler: ((Boolean) -> Unit)? = null
     private val handledPageKeys = mutableSetOf<Int>()
 
@@ -203,6 +205,8 @@ internal class DashboardActivity : BaseActivity() {
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         val ime = androidx.core.view.ViewCompat.getRootWindowInsets(window.decorView)
             ?.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime()) == true
+        if (readerBackKeys.handle(event.keyCode, event.action, event.repeatCount,
+                if (ime || currentFocus?.onCheckIsTextEditor() == true) null else protectedReaderBackHandler)) return true
         if (org.zotero.android.ereader.DeviceInput.key(event, ime || currentFocus?.onCheckIsTextEditor() == true)) return true
         if (event.action == KeyEvent.ACTION_UP && handledPageKeys.remove(event.keyCode)) return true
         val next = when (event.keyCode) {

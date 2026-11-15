@@ -90,4 +90,16 @@ class ReaderComfortSettingsTest {
         assertEquals(0f,ReaderSettings.minimumVerticalMargin(0f,900f),0f)
         assertEquals(-7f,ReaderSettings.minimumVerticalMargin(60f,0f),0f)
     }
+    @Test fun `alignment and boldness persist with original font and crop preferences`() {
+        val old = Gson().fromJson("""{"epubFontFamily":"original","fitToWidth":true}""", ReaderSettings::class.java)
+        assertEquals("original", old.effectiveTextAlignment())
+        assertEquals(0f, old.effectiveFontBoldness(), 0f)
+        old.epubTextAlignment = "justify"; old.epubFontBoldness = .6f
+        val restored = Gson().fromJson(Gson().toJson(old), ReaderSettings::class.java)
+        assertEquals("justify", restored.effectiveTextAlignment())
+        assertEquals(.6f, restored.effectiveFontBoldness(), 0f)
+        assertEquals("original", restored.effectiveFontFamily())
+        assertTrue(restored.fitToWidth)
+    }
+
 }
