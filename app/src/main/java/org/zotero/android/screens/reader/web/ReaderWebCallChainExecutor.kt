@@ -46,6 +46,11 @@ class ReaderWebCallChainExecutor @Inject constructor(
         readingProgress = value
         readerWebViewHandler.evaluateJavascript("window.setReaderProgress?.(${gson.toJson(value)});") {}
     }
+    private var readerIndicatorInsets: Map<String, Float> = emptyMap()
+    fun setReaderIndicatorInsets(top: Float, right: Float) {
+        readerIndicatorInsets = mapOf("top" to top, "right" to right)
+        readerWebViewHandler.evaluateJavascript("window.setReaderIndicatorInsets?.(${gson.toJson(readerIndicatorInsets)});") {}
+    }
     private var viewportInset = 0f
     fun setReaderViewportInset(value: Float) {
         if (viewportInset == value) return
@@ -550,6 +555,7 @@ class ReaderWebCallChainExecutor @Inject constructor(
             directHighlight = !defaults.getReaderSettings().nativeTextSelection,
             readerChromeVisible = chromeVisible,
             viewportInset = viewportInset.toDouble(),
+            indicatorInsets = readerIndicatorInsets,
             readingProgress = readingProgress,
             pageBackground = defaults.getReaderSettings().effectivePageBackground(isDark),
             pageNavigation = defaults.getReaderSettings().effectivePageNavigation(),

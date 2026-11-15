@@ -1,3 +1,8 @@
+# Build 331 / Motero 1.1.5 — Prüfung läuft
+
+- Adaptive Toolbar-Hüllen, zentrierte Werkzeuge, sichere Bookmark-Abstände, Stift-Highlighting und Tablet-Popups korrigiert. Sidebar und Annotationssprünge stabilisiert; vermeidbare Reader-Neuerstellung bei Rotation verhindert. [Umfang](docs/READER_331.md).
+- 443 Reader-Fälle in 52 Dateien, 167 native Tests in 42 Suiten und alle 23 lokalen Browser-Suiten bestanden; abschließende Pfeil-/Inset-Prüfungen ebenfalls bestanden. Geschützte Release-Gates folgen. PDF.js 5.7.330 unverändert. Physische Geräte, Animationseindruck, Rotationstiming und Kontosync separat.
+
 # Build 330 / Motero 1.1.4 — veröffentlicht und unabhängig geprüft
 
 - [APK und vollständige Quellen](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.4-330); [Build, Signatur und Updates](https://github.com/OptikerGerhardt/Motero/actions/runs/43724146838) erfolgreich. Anwendung `df4e68b8`, Reader `3fec4826`; PDF.js 5.7.330 unverändert.

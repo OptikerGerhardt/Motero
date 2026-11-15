@@ -95,11 +95,12 @@ internal fun ReaderColoredTagShortcuts(
 }
 
 @Composable
-internal fun ReaderHighlightQuote(text: String) {
+internal fun ReaderHighlightQuote(text: String, color: Color? = null, availableHeight: androidx.compose.ui.unit.Dp? = null) {
     if (text.isBlank()) return
     val context = LocalContext.current
-    val maxHeight = (LocalConfiguration.current.screenHeightDp * 0.20f).coerceIn(64f, 220f).dp
-    val quoteLineColor = MaterialTheme.colorScheme.outline
+    val maxHeight = availableHeight?.let { (it * .24f).coerceIn(64.dp, 180.dp) }
+        ?: (LocalConfiguration.current.screenHeightDp * 0.20f).coerceIn(64f, 220f).dp
+    val quoteLineColor = color ?: MaterialTheme.colorScheme.outline
     Column(Modifier.fillMaxWidth()) {
         NewSettingsDivider()
         SelectionContainer(Modifier.padding(horizontal = 16.dp)) {

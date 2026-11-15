@@ -134,7 +134,8 @@ internal fun ReaderScreen(
 
         val focusManager = LocalFocusManager.current
         val annotationsLazyListState = rememberLazyListState()
-        val layoutType = CustomLayoutSize.calculateLayoutType()
+        val measuredLayoutType = CustomLayoutSize.calculateLayoutType()
+        val layoutType = androidx.compose.runtime.saveable.rememberSaveable { measuredLayoutType }
         LaunchedEffect(key1 = viewEffect) {
             when (val consumedEffect = viewEffect?.consume()) {
                 is ReaderViewEffect.NavigateBack -> {
@@ -223,6 +224,7 @@ internal fun ReaderScreen(
                         } else {
                             ReaderTopBar(
                                 floating = !viewState.showSideBar,
+                                tabletLayout = layoutType.isTablet(),
                                 onBack = onBack,
                                 onShowHideSideBar = viewModel::toggleSideBar,
                                 toPdfSettings = viewModel::navigateToReaderSettings,

@@ -2077,11 +2077,10 @@ class ReaderViewModel @Inject constructor(
     }
 
     fun toggleToolbarButton() {
-        updateState {
-            copy(showCreationToolbar = !viewState.showCreationToolbar, pdfToolOptionsVisible = false)
-        }
-        val tool = viewState.activeTool ?: return
-        toggle(tool)
+        updateState { copy(showCreationToolbar = !showCreationToolbar, pdfToolOptionsVisible = false, activeTool = null) }
+        // Opening chrome must leave both native and web tool ownership in
+        // pointer mode; choosing a drawing tool is always an explicit action.
+        viewModelScope.launch { readerWebCallChainExecutor.clearTool() }
     }
 
     fun annotation(key: String): ReaderAnnotation? {
@@ -2123,12 +2122,30 @@ class ReaderViewModel @Inject constructor(
         val bookmark = annotation(key) ?: return
         if (canDeleteBookmark(bookmark)) removeAnnotation(key)
     }
+    private var annotationFocusJob: kotlinx.coroutines.Job? = null
+    private var annotationViewportWaiter: kotlinx.coroutines.CompletableDeferred<Unit>? = null
+
+    fun onReaderViewportChanged() {
+        annotationViewportWaiter?.complete(Unit)
+    }
+
     fun focusAnnotation(key: String) {
         if (annotation(key) == null) return
+        annotationFocusJob?.cancel()
+        val resize = if (viewState.showSideBar && isTablet && viewState.fileType != ReaderFileType.EPUB)
+            kotlinx.coroutines.CompletableDeferred<Unit>() else null
+        annotationViewportWaiter = resize
         updateState { copy(isTopBarVisible = false, showSideBar = false, showCreationToolbar = false,
             selectedAnnotationKey = null, readerAnnotationArgs = null, readerAnnotationMoreArgs = null) }
         previousSidebarVisibilityState = false
-        viewModelScope.launch { readerWebCallChainExecutor.focusAnnotation(key) }
+        annotationFocusJob = viewModelScope.launch {
+            try {
+                if (resize != null) kotlinx.coroutines.withTimeoutOrNull(600) { resize.await() }
+                readerWebCallChainExecutor.focusAnnotation(key)
+            } finally {
+                if (annotationViewportWaiter === resize) annotationViewportWaiter = null
+            }
+        }
     }
 
     fun toggleBookmarksOnly() {
@@ -2212,9 +2229,9 @@ class ReaderViewModel @Inject constructor(
 
     fun selectAnnotation(key: String) {
         viewModelScope.launch {
-            if (!this@ReaderViewModel.sidebarEditingEnabled && key != viewState.selectedAnnotationKey) {
-                setCommentActive(true)
-                _select(key = key, didSelectInDocument = false)
+            if (!this@ReaderViewModel.sidebarEditingEnabled) {
+                if (key == viewState.selectedAnnotationKey) selectInDocument(key, centerInDocument = true)
+                else { setCommentActive(true); _select(key = key, didSelectInDocument = false) }
             }
         }
     }
@@ -2975,6 +2992,10 @@ class ReaderViewModel @Inject constructor(
     }
 
     private var minimumVerticalMargin = -7f
+    fun setReaderIndicatorInsets(top: Float, right: Float) {
+        readerWebCallChainExecutor.setReaderIndicatorInsets(top, right)
+    }
+
     fun setReaderViewportInset(value: Float, viewportHeight: Float) {
         minimumVerticalMargin = ReaderSettings.minimumVerticalMargin(value, viewportHeight)
         readerWebCallChainExecutor.setReaderViewportInset(value)

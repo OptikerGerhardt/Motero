@@ -1,5 +1,15 @@
 # Änderungen
 
+## 1.1.5 — Build 331
+
+- Toolbar-Hüllen gemeinsam aus sichtbaren Werkzeugen berechnen: PDF 344/392 dp, EPUB 248/296 dp, jeweils ohne/mit Redo und auf den verfügbaren Platz begrenzt. Werkzeuge vertikal zentrieren; Farben und Regler derselben Breite zuordnen. Redo erst zeigen, wenn die animierte Breite ausreicht.
+- Seitenwechselpfeil oben auf 72 dp vergrößern, mit 40 % Deckkraft über PDF-Highlights zeichnen und weiterhin ohne eigene Tippfläche belassen.
+- Bookmark-Fähnchen weiter einrücken und unter dem Statusleistenbereich halten, einschließlich sicherem Startabstand vor Ankunft der Insets. Tippbereich auf kurzen Querformaten einschließen; verdeckte Seitenfähnchen durch den Bildschirmindikator ersetzen.
+- Öffnen der Werkzeugleiste synchronisiert den Zeiger-Modus, sodass Stift-Drag-Highlighting ohne ausgewähltes Zeichenwerkzeug möglich bleibt.
+- Tablet-Popups: Farben/Quick Tags vor dem Kommentarfeld zeigen, Vorschauhöhe an den tatsächlichen Dialog anpassen und Zitatstrich in der aktuellen Markierungsfarbe zeichnen. Suchlupe nur bei aktiver Suche blau.
+- Sidebar mit einmaliger WebView-Größenänderung und anschließender Positionsanimation öffnen/schließen. Reader-Unterbaum bei Rotation erhalten, um vermeidbare Renderer-Neustarts zu verhindern.
+- Auswahl und Jump zu Annotationen zuerst über die zugeschnittene Seitensteuerung führen; verzögerte/veraltete Sprünge nicht nachträglich auf eine andere Seite anwenden. Jump wartet bei geschlossener Tablet-Sidebar auf die neue Viewportgröße. [Details und Grenzen](docs/READER_331.md).
+
 ## 1.1.4 — Build 330
 
 - Reader-Navigationsgraph über Rotation erhalten und globale Öffnungssperre durch den tatsächlichen Backstack ersetzen; neue Reader lassen sich nach Graph-/Activity-Wechseln wieder öffnen.

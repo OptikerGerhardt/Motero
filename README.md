@@ -8,6 +8,8 @@ This fork is maintained independently and is not affiliated with or endorsed by 
 
 ## Motero 1.1
 
+[1.1.5 / Build 331](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.5-331) sizes PDF/EPUB docks to their tools, centers controls, insets bookmark flags safely, restores pen highlighting with open chrome and improves tablet annotation popups, sidebar transitions and annotation navigation. [Scope and verification limits](docs/READER_331.md).
+
 [1.1.4 / Build 330](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.4-330) keeps tablet navigation stable through rotation, adds hardware Back/Escape protection, EPUB alignment/boldness and balanced page frames, adaptive Redo/colors, finer thin-pen widths, PDF frame shadows and passive bookmark/next-page hints. [Changes and device-testing limits](docs/READER_330.md).
 
 [1.1.3 / Build 329](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.3-329) improves running-head, rule and margin-marker cropping, restores purple to the shared color row and makes pen widths repeatable in 0.5-point steps. [Scope and verification limits](docs/READER_329.md).

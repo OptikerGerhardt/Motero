@@ -120,67 +120,32 @@ internal fun ReaderAnnotationPart(
 ) {
     val annotation = stateAnnotation ?: return
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
-            .windowInsetsPadding(TopAppBarDefaults.windowInsets.union(WindowInsets.displayCutout))
-    ) {
-        val annotationColor =
-            Color(annotation.displayColor.toColorInt())
-        item {
-            ReaderAnnotationHeaderRow(
-                annotation = annotation,
-                annotationColor = annotationColor,
-                onBack = onDone,
-            )
-        }
-
-        item {
-            if (annotation.type == AnnotationType.highlight || annotation.type == AnnotationType.underline) {
-                ReaderHighlightQuote(annotation.text.orEmpty())
+    androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
+        val availableHeight = maxHeight
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface)
+                .windowInsetsPadding(TopAppBarDefaults.windowInsets.union(WindowInsets.displayCutout))
+        ) {
+            val annotationColor =
+                Color(selectedColor.ifBlank { annotation.displayColor }.let { if (it.startsWith("#")) it else "#$it" }.toColorInt())
+            item {
+                ReaderAnnotationHeaderRow(
+                    annotation = annotation,
+                    annotationColor = annotationColor,
+                    onBack = onDone,
+                )
             }
-        }
-        item {
-            when (annotation.type) {
-                AnnotationType.note -> ReaderAnnotationNoteRow(
-                    onColorSelected = onColorSelected,
-                    onCommentTextChange = onCommentTextChange,
-                    selectedColor = selectedColor,
-                    colors = colors,
-                    commentFocusText = commentFocusText,
-                    tags = tags,
-                    onTagsClicked = onTagsClicked
-                )
 
-                AnnotationType.highlight -> ReaderAnnotationHighlightRow(
-                    coloredTags = coloredTags,
-                    canEdit = canEdit,
-                    onColoredTagClicked = onColoredTagClicked,
-                    onColorSelected = onColorSelected,
-                    onCommentTextChange = onCommentTextChange,
-                    selectedColor = selectedColor,
-                    colors = colors,
-                    commentFocusText = commentFocusText,
-                    tags = tags,
-                    onTagsClicked = onTagsClicked
-                )
-
-                AnnotationType.underline -> ReaderAnnotationUnderlineRow(
-                    coloredTags = coloredTags,
-                    canEdit = canEdit,
-                    onColoredTagClicked = onColoredTagClicked,
-                    onColorSelected = onColorSelected,
-                    onCommentTextChange = onCommentTextChange,
-                    selectedColor = selectedColor,
-                    colors = colors,
-                    commentFocusText = commentFocusText,
-                    tags = tags,
-                    onTagsClicked = onTagsClicked
-                )
-
-                AnnotationType.image -> {
-                    ReaderAnnotationImageRow(
+            item {
+                if (annotation.type == AnnotationType.highlight || annotation.type == AnnotationType.underline) {
+                    ReaderHighlightQuote(annotation.text.orEmpty(), annotationColor, availableHeight)
+                }
+            }
+            item {
+                when (annotation.type) {
+                    AnnotationType.note -> ReaderAnnotationNoteRow(
                         onColorSelected = onColorSelected,
                         onCommentTextChange = onCommentTextChange,
                         selectedColor = selectedColor,
@@ -189,41 +154,81 @@ internal fun ReaderAnnotationPart(
                         tags = tags,
                         onTagsClicked = onTagsClicked
                     )
-                }
 
-                AnnotationType.ink -> {
-                    ReaderAnnotationInkRow(
-                        onCommentTextChange = onCommentTextChange,
-                        commentFocusText = commentFocusText,
-                        tags = tags,
-                        onTagsClicked = onTagsClicked,
-                        size = size,
-                        onSizeChanged = onSizeChanged
-                    )
-                }
-
-                AnnotationType.text -> {
-                    ReaderAnnotationTextRow(
-                        fontSize = fontSize,
-                        onFontSizeDecrease = onFontSizeDecrease,
-                        onFontSizeIncrease = onFontSizeIncrease,
-                        tags = tags,
-                        onTagsClicked = onTagsClicked,
+                    AnnotationType.highlight -> ReaderAnnotationHighlightRow(
+                        coloredTags = coloredTags,
+                        canEdit = canEdit,
+                        onColoredTagClicked = onColoredTagClicked,
                         onColorSelected = onColorSelected,
+                        onCommentTextChange = onCommentTextChange,
                         selectedColor = selectedColor,
                         colors = colors,
+                        commentFocusText = commentFocusText,
+                        tags = tags,
+                        onTagsClicked = onTagsClicked
                     )
+
+                    AnnotationType.underline -> ReaderAnnotationUnderlineRow(
+                        coloredTags = coloredTags,
+                        canEdit = canEdit,
+                        onColoredTagClicked = onColoredTagClicked,
+                        onColorSelected = onColorSelected,
+                        onCommentTextChange = onCommentTextChange,
+                        selectedColor = selectedColor,
+                        colors = colors,
+                        commentFocusText = commentFocusText,
+                        tags = tags,
+                        onTagsClicked = onTagsClicked
+                    )
+
+                    AnnotationType.image -> {
+                        ReaderAnnotationImageRow(
+                            onColorSelected = onColorSelected,
+                            onCommentTextChange = onCommentTextChange,
+                            selectedColor = selectedColor,
+                            colors = colors,
+                            commentFocusText = commentFocusText,
+                            tags = tags,
+                            onTagsClicked = onTagsClicked
+                        )
+                    }
+
+                    AnnotationType.ink -> {
+                        ReaderAnnotationInkRow(
+                            onCommentTextChange = onCommentTextChange,
+                            commentFocusText = commentFocusText,
+                            tags = tags,
+                            onTagsClicked = onTagsClicked,
+                            size = size,
+                            onSizeChanged = onSizeChanged
+                        )
+                    }
+
+                    AnnotationType.text -> {
+                        ReaderAnnotationTextRow(
+                            fontSize = fontSize,
+                            onFontSizeDecrease = onFontSizeDecrease,
+                            onFontSizeIncrease = onFontSizeIncrease,
+                            tags = tags,
+                            onTagsClicked = onTagsClicked,
+                            onColorSelected = onColorSelected,
+                            selectedColor = selectedColor,
+                            colors = colors,
+                        )
+                    }
                 }
             }
-        }
-        item {
-            NewSettingsDivider()
-            DeleteButton(onDeleteAnnotation = onDeleteAnnotation)
+            item {
+                NewSettingsDivider()
+                DeleteButton(onDeleteAnnotation = onDeleteAnnotation)
+
+            }
 
         }
-
     }
+
 }
+
 
 @Composable
 private fun DeleteButton(onDeleteAnnotation: () -> Unit) {

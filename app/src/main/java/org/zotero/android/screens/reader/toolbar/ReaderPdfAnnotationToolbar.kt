@@ -43,7 +43,7 @@ import org.zotero.android.uicomponents.Strings
 
 /** An overlay dock: opening tools never resizes the PDF viewport. */
 @Composable
-internal fun ReaderPdfAnnotationToolbar(viewModel: ReaderViewModel, state: ReaderViewState, modifier: Modifier = Modifier, enabled: Boolean = true) {
+internal fun ReaderPdfAnnotationToolbar(viewModel: ReaderViewModel, state: ReaderViewState, modifier: Modifier = Modifier, enabled: Boolean = true, showRedo: Boolean = false) {
     val tools = if (state.fileType == org.zotero.android.screens.reader.data.ReaderFileType.EPUB) listOf(
         Triple(ReaderAnnotationTool.highlight, Drawables.annotate_highlight, Strings.pdf_annotation_toolbar_highlight),
         Triple(ReaderAnnotationTool.underline, Drawables.annotate_underline, Strings.pdf_annotation_toolbar_underline),
@@ -55,39 +55,36 @@ internal fun ReaderPdfAnnotationToolbar(viewModel: ReaderViewModel, state: Reade
         Triple(ReaderAnnotationTool.ink, Drawables.annotate_ink, Strings.pdf_annotation_toolbar_ink),
         Triple(ReaderAnnotationTool.eraser, Drawables.annotate_eraser, Strings.pdf_annotation_toolbar_eraser),
     )
-    BoxWithConstraints(modifier) {
-        val showRedo = maxWidth >= ((tools.size + 3) * 48 + 8).dp
-        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 4.dp),
+    Row(modifier.fillMaxHeight().horizontalScroll(rememberScrollState()).padding(horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-            val historyEnabled = enabled && !state.isReaderLoading
-            Box(Modifier.size(48.dp).clip(CircleShape)
-                .combinedClickable(enabled = historyEnabled && (state.canUndoAnnotation || state.canRedoAnnotation),
-                    onClickLabel = stringResource(R.string.reader_undo_annotation),
-                    onLongClickLabel = stringResource(R.string.reader_redo_annotation),
-                    onClick = viewModel::undoAnnotation, onLongClick = viewModel::redoAnnotation), contentAlignment = Alignment.Center) {
-                Icon(painterResource(Drawables.undo_24px), stringResource(R.string.reader_undo_annotation), Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (historyEnabled && (state.canUndoAnnotation || state.canRedoAnnotation)) 1f else .38f))
+        val historyEnabled = enabled && !state.isReaderLoading
+        Box(Modifier.size(48.dp).clip(CircleShape)
+            .combinedClickable(enabled = historyEnabled && (state.canUndoAnnotation || state.canRedoAnnotation),
+                onClickLabel = stringResource(R.string.reader_undo_annotation),
+                onLongClickLabel = stringResource(R.string.reader_redo_annotation),
+                onClick = viewModel::undoAnnotation, onLongClick = viewModel::redoAnnotation), contentAlignment = Alignment.Center) {
+            Icon(painterResource(Drawables.undo_24px), stringResource(R.string.reader_undo_annotation), Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (historyEnabled && (state.canUndoAnnotation || state.canRedoAnnotation)) 1f else .38f))
+        }
+        if (showRedo) IconButton(onClick = viewModel::redoAnnotation,
+            enabled = historyEnabled && state.canRedoAnnotation, modifier = Modifier.size(48.dp)) {
+            Icon(painterResource(Drawables.undo_24px), stringResource(R.string.reader_redo_annotation),
+                Modifier.size(24.dp).graphicsLayer { scaleX = -1f })
+        }
+        tools.forEach { (type, icon, title) ->
+            IconToggleButton(checked = state.activeTool == type, onCheckedChange = { viewModel.togglePdfTool(type) }, enabled = enabled,
+                modifier = Modifier.size(48.dp)) {
+                Icon(painterResource(icon), stringResource(title), Modifier.size(24.dp))
             }
-            if (showRedo) IconButton(onClick = viewModel::redoAnnotation,
-                enabled = historyEnabled && state.canRedoAnnotation, modifier = Modifier.size(48.dp)) {
-                Icon(painterResource(Drawables.undo_24px), stringResource(R.string.reader_redo_annotation),
-                    Modifier.size(24.dp).graphicsLayer { scaleX = -1f })
-            }
-            tools.forEach { (type, icon, title) ->
-                IconToggleButton(checked = state.activeTool == type, onCheckedChange = { viewModel.togglePdfTool(type) }, enabled = enabled,
-                    modifier = Modifier.size(48.dp)) {
-                    Icon(painterResource(icon), stringResource(title), Modifier.size(24.dp))
-                }
-            }
-            // Keep the options slot present when the active tool changes.
-            val hex = (state.activeTool ?: state.pdfOptionsTool)?.let { state.toolColors[it] }
-            val optionsLabel = stringResource(R.string.reader_tool_options)
-            IconButton(onClick = viewModel::togglePdfToolOptions, enabled = enabled && (state.activeTool ?: state.pdfOptionsTool) != null,
-                modifier = Modifier.size(48.dp).semantics { contentDescription = optionsLabel }) {
-                Surface(Modifier.size(24.dp), shape = RoundedCornerShape(12.dp),
-                    color = hex?.let { runCatching { Color(android.graphics.Color.parseColor(it)) }.getOrNull() }
-                        ?: MaterialTheme.colorScheme.onSurfaceVariant) {}
-            }
+        }
+        // Keep the options slot present when the active tool changes.
+        val hex = (state.activeTool ?: state.pdfOptionsTool)?.let { state.toolColors[it] }
+        val optionsLabel = stringResource(R.string.reader_tool_options)
+        IconButton(onClick = viewModel::togglePdfToolOptions, enabled = enabled && (state.activeTool ?: state.pdfOptionsTool) != null,
+            modifier = Modifier.size(48.dp).semantics { contentDescription = optionsLabel }) {
+            Surface(Modifier.size(24.dp), shape = RoundedCornerShape(12.dp),
+                color = hex?.let { runCatching { Color(android.graphics.Color.parseColor(it)) }.getOrNull() }
+                    ?: MaterialTheme.colorScheme.onSurfaceVariant) {}
         }
     }
 }
@@ -105,7 +102,7 @@ internal fun ReaderPdfToolOptions(viewModel: ReaderViewModel, state: ReaderViewS
     }
     val sizeLabel = stringResource(Strings.size)
     var draftSize by remember(tool, storedSize) { mutableFloatStateOf(storedSize ?: 2f) }
-    Column(modifier.padding(horizontal = 8.dp), verticalArrangement = Arrangement.Center) {
+    Column(modifier.padding(horizontal = 4.dp), verticalArrangement = Arrangement.Center) {
         if (!eraser) {
             val type = when (tool) {
                 ReaderAnnotationTool.ink -> AnnotationType.ink
@@ -115,12 +112,15 @@ internal fun ReaderPdfToolOptions(viewModel: ReaderViewModel, state: ReaderViewS
             }
             val colors = AnnotationsConfig.colors(type)
             val paletteScroll = rememberLazyListState()
-            LazyRow(Modifier.fillMaxWidth().height(44.dp), state = paletteScroll,
-                flingBehavior = rememberSnapFlingBehavior(paletteScroll)) {
-                items(colors.size) { i -> ReaderToolColor(colors[i], state.toolColors[tool], 40.dp, viewModel::setPdfToolColor) }
+            BoxWithConstraints(Modifier.fillMaxWidth().height(48.dp)) {
+                val slot = maxOf(40.dp, maxWidth / colors.size.coerceAtLeast(1))
+                LazyRow(Modifier.fillMaxSize(), state = paletteScroll, verticalAlignment = Alignment.CenterVertically,
+                    flingBehavior = rememberSnapFlingBehavior(paletteScroll)) {
+                    items(colors.size) { i -> ReaderToolColor(colors[i], state.toolColors[tool], slot, viewModel::setPdfToolColor) }
+                }
             }
         }
-        if (storedSize != null || eraser) Row(Modifier.fillMaxWidth().height(44.dp), verticalAlignment = Alignment.CenterVertically) {
+        if (storedSize != null || eraser) Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
             if (storedSize != null) {
                 val ink = tool == ReaderAnnotationTool.ink
                 Slider(value = if (ink) readerInkWidths.indexOf(snapInkWidth(draftSize)).toFloat() else draftSize,

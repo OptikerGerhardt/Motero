@@ -56,8 +56,9 @@ internal fun ReaderTopBar(
     readerSearchViewModel: ReaderSearchViewModel,
     readerSearchViewState: ReaderSearchViewState,
     floating: Boolean = false,
+    tabletLayout: Boolean? = null,
 ) {
-    val isTablet = CustomLayoutSize.calculateLayoutType().isTablet()
+    val isTablet = tabletLayout ?: CustomLayoutSize.calculateLayoutType().isTablet()
 
     val navigation: @Composable () -> Unit = {
             IconButton(onClick = onBack) {
@@ -182,7 +183,7 @@ internal fun ReaderTopBar(
                             unselectedDrawableRes = Drawables.search,
                             selectedDrawableRes = Drawables.search,
                             onToggle = onShowHidePdfSearch,
-                            isSelected = true,
+                            isSelected = showPdfSearch,
                         )
 
                     }

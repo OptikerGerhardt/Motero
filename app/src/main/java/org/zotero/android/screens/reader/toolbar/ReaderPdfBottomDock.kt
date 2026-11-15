@@ -33,7 +33,8 @@ internal fun ReaderPdfBottomDock(viewModel: ReaderViewModel, state: ReaderViewSt
         .padding(horizontal = 8.dp, vertical = 12.dp), contentAlignment = Alignment.BottomCenter) {
         val previewWidth = minOf(maxWidth * .8f, 560.dp,
             (previews.thumbnailCache.size.coerceAtLeast(1) * 38 + 10).dp).coerceAtLeast(48.dp)
-        val toolWidth = minOf(maxWidth, if (maxWidth >= 392.dp) 416.dp else 344.dp)
+        val toolLayout = readerToolDockLayout(maxWidth.value, epub = false)
+        val toolWidth = toolLayout.width.dp
         val targetWidth = if (tools) toolWidth.value else previewWidth.value
         val animatedWidth = remember { Animatable(targetWidth) }
         val animatedSlide = remember { Animatable(if (tools) 1f else 0f) }
@@ -51,6 +52,7 @@ internal fun ReaderPdfBottomDock(viewModel: ReaderViewModel, state: ReaderViewSt
             }
         }
         val width = animatedWidth.value.dp
+        val contentWidth = minOf(width, toolWidth)
         val slide = animatedSlide.value
         val optionTool = state.activeTool ?: state.pdfOptionsTool
         val optionSize = if (optionTool == org.zotero.android.screens.reader.data.ReaderAnnotationTool.ink ||
@@ -65,7 +67,7 @@ internal fun ReaderPdfBottomDock(viewModel: ReaderViewModel, state: ReaderViewSt
                 Column {
                     Box(Modifier.fillMaxWidth().height(optionsHeight).clipToBounds(), contentAlignment = Alignment.BottomCenter) {
                         if (tools && state.pdfToolOptionsVisible || optionsHeight > 0.dp) {
-                            ReaderPdfToolOptions(viewModel, state, Modifier.fillMaxWidth().height(optionSize))
+                            ReaderPdfToolOptions(viewModel, state, Modifier.width(contentWidth).height(optionSize))
                         }
                     }
                     Box(Modifier.fillMaxWidth().height(60.dp).clipToBounds()) {
@@ -76,8 +78,8 @@ internal fun ReaderPdfBottomDock(viewModel: ReaderViewModel, state: ReaderViewSt
                             modifier = Modifier.align(Alignment.Center).width(previewWidth)
                                 .graphicsLayer { translationY = -travelPx * slide })
                         if (slide > 0f || tools) ReaderPdfAnnotationToolbar(viewModel, state,
-                            modifier = Modifier.fillMaxWidth().height(60.dp)
-                                .graphicsLayer { translationY = travelPx * (1f - slide) }, enabled = tools)
+                            modifier = Modifier.width(contentWidth).height(60.dp).align(Alignment.Center)
+                                .graphicsLayer { translationY = travelPx * (1f - slide) }, enabled = tools, showRedo = toolLayout.redo && width >= toolWidth)
                     }
                 }
             }

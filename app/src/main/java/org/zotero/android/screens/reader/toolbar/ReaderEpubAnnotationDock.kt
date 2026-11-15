@@ -17,15 +17,18 @@ import org.zotero.android.screens.reader.ReaderViewState
 /** EPUB supports text highlights, underlines and anchored notes, without PDF thumbnails. */
 @Composable
 internal fun ReaderEpubAnnotationDock(viewModel: ReaderViewModel, state: ReaderViewState) {
-    val optionsHeight by animateDpAsState(if (state.pdfToolOptionsVisible) 60.dp else 0.dp, deviceTween(180), label = "epub tool options")
-    Surface(Modifier.windowInsetsPadding(WindowInsets.navigationBarsIgnoringVisibility)
-        .padding(horizontal = 8.dp, vertical = 12.dp).widthIn(max = 392.dp).rejectPenPalms(),
-        shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceContainer) {
-        Column {
-            Box(Modifier.fillMaxWidth().height(optionsHeight).clipToBounds()) {
-                if (optionsHeight > 0.dp) ReaderPdfToolOptions(viewModel, state, Modifier.fillMaxWidth().height(60.dp))
+    BoxWithConstraints(Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.navigationBarsIgnoringVisibility)
+        .padding(horizontal = 8.dp, vertical = 12.dp), contentAlignment = androidx.compose.ui.Alignment.BottomCenter) {
+        val layout = readerToolDockLayout(maxWidth.value, epub = true)
+        val optionsHeight by animateDpAsState(if (state.pdfToolOptionsVisible) 48.dp else 0.dp, deviceTween(180), label = "epub tool options")
+        Surface(Modifier.width(layout.width.dp).rejectPenPalms(),
+            shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceContainer) {
+            Column {
+                Box(Modifier.fillMaxWidth().height(optionsHeight).clipToBounds()) {
+                    if (optionsHeight > 0.dp) ReaderPdfToolOptions(viewModel, state, Modifier.fillMaxWidth().height(48.dp))
+                }
+                ReaderPdfAnnotationToolbar(viewModel, state, Modifier.fillMaxWidth().height(60.dp), showRedo = layout.redo)
             }
-            ReaderPdfAnnotationToolbar(viewModel, state, Modifier.fillMaxWidth().height(60.dp))
         }
     }
 }

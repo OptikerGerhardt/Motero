@@ -1,6 +1,16 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 15. November 2026. Motero 1.1.4 / Build 330 setzt die seit Build 329 gesammelten Reader-Korrekturen um. PDF.js 5.7.330 und Daten-/Syncformate bleiben unverändert.
+Stand: 15. November 2026. Motero 1.1.5 / Build 331 setzt die nach Build 330 gesammelten Toolbar-, Popup- und Sidebar-Korrekturen um. PDF.js 5.7.330 und Annotations-/Syncformate bleiben unverändert.
+
+## Adaptive Leisten und Tablet-Navigation: Build 331 / 1.1.5
+
+- Gemeinsame Toolbar-Geometrie: kompakte Hülle nach Werkzeuganzahl, mittige Symbole, passende Farb-/Reglerbreite und bedarfsabhängiges Scrollen; EPUB entsprechend schmaler.
+- Seitenwechselpfeil oben auf 72 dp vergrößern, mit 40 % Deckkraft über PDF-Highlights zeichnen und weiterhin ohne eigene Tippfläche belassen.
+- Fähnchen mit sicheren Statusleisten-/Bildschirmrändern, einschließlich passendem Tippbereich im Querformat. Stift-Highlighting auch bei offener Leiste im Zeiger-Modus.
+- Tablet-Popups mit sichtbaren Quick Tags vor dem Kommentar, angepasster Vorschau und farbigem Zitatstrich. Suche nur im aktiven Zustand blau.
+- Sidebar-Größe einmal ändern und Position animieren; PDF bleibt daneben sichtbar. Reader-Unterbaum über Größenklassenwechsel bei Rotation erhalten.
+- Annotationsauswahl und Jump über die Seitenanpassung führen; veraltete Navigation abbrechen und neue Pane-Geometrie vor Jump abwarten.
+- Physische Tablet-/BOOX-Animationen und Rotationstiming bleiben separat zu bestätigen. [Umfang](docs/READER_331.md).
 
 ## Rotation, EPUB und Stiftbedienung: Build 330 / 1.1.4
 

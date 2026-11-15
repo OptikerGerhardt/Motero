@@ -107,17 +107,16 @@ internal fun ReaderAnnotationHighlightRow(
     tags: List<Tag>,
     onTagsClicked: () -> Unit
 ) {
-    ReaderAnnotationCommentSection(
-        commentFocusText = commentFocusText,
-        onCommentTextChange = onCommentTextChange,
-    )
-    NewSettingsDivider()
     ReaderAnnotationColorPicker(
         colors = colors,
         onColorSelected = onColorSelected,
         selectedColor = selectedColor,
     )
     ReaderColoredTagShortcuts(coloredTags, tags, canEdit, onColoredTagClicked, colorCount = colors.size)
+    ReaderAnnotationCommentSection(
+        commentFocusText = commentFocusText,
+        onCommentTextChange = onCommentTextChange,
+    )
     NewSettingsDivider()
     ReaderAnnotationTagsSection(
         tags = tags,
@@ -167,18 +166,17 @@ internal fun ReaderAnnotationUnderlineRow(
     tags: List<Tag>,
     onTagsClicked: () -> Unit
 ) {
-    ReaderAnnotationCommentSection(
-        commentFocusText = commentFocusText,
-        onCommentTextChange = onCommentTextChange,
-    )
-
-    NewSettingsDivider()
     ReaderAnnotationColorPicker(
         colors = colors,
         onColorSelected = onColorSelected,
         selectedColor = selectedColor
     )
     ReaderColoredTagShortcuts(coloredTags, tags, canEdit, onColoredTagClicked, colorCount = colors.size)
+    ReaderAnnotationCommentSection(
+        commentFocusText = commentFocusText,
+        onCommentTextChange = onCommentTextChange,
+    )
+
     NewSettingsDivider()
     ReaderAnnotationTagsSection(
         tags = tags,

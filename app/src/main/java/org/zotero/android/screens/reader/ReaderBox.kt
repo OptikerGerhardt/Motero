@@ -101,6 +101,7 @@ internal fun ReaderBox(
                 .weight(1f)
                 .onSizeChanged { layoutSize ->
                     viewportHeight = layoutSize.height / density.density
+                    viewModel.onReaderViewportChanged()
                     val dragEndPoint = layoutSize.width - rightTargetAreaXOffset
                     anchoredDraggableState.updateAnchors(
                         DraggableAnchors {
@@ -123,6 +124,11 @@ internal fun ReaderBox(
                     WindowInsets.statusBarsIgnoringVisibility.only(WindowInsetsSides.Top).union(cutout)
                 } else WindowInsets(0, 0, 0, 0)
                 safeInsets
+            }
+            val safeTop = with(density) { WindowInsets.statusBarsIgnoringVisibility.union(WindowInsets.displayCutout).getTop(this) / this.density }
+            val safeRight = with(density) { WindowInsets.displayCutout.getRight(this, LocalLayoutDirection.current) / this.density }
+            androidx.compose.runtime.LaunchedEffect(safeTop, safeRight, viewState.isReaderLoading) {
+                viewModel.setReaderIndicatorInsets(safeTop, safeRight)
             }
             val cropInsets = WindowInsets.statusBarsIgnoringVisibility.union(WindowInsets.displayCutout)
                 .union(WindowInsets.navigationBarsIgnoringVisibility.only(WindowInsetsSides.Bottom))
