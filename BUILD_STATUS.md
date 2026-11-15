@@ -1,7 +1,11 @@
-# Build 332 / Motero 1.1.6 — Prüfung läuft
+# Build 332 / Motero 1.1.6 — veröffentlicht und unabhängig geprüft
 
-- Quick-Tag-Trennlinie und stabile Highlight-Quickbars wiederhergestellt; kurze Lesewort-Markierung ersetzt den Seitenwechselpfeil. [Umfang](docs/READER_332.md).
-- 449 Reader-Fälle in 53 Dateien, 168 native Tests in 42 Suiten und alle 23 lokalen Browser-Suiten bestanden. Endgültige Paletten-/Wortgeometrieänderungen zusätzlich gezielt geprüft; APK gebaut und eingebettete Quellen abgeglichen. Geschützte Release-Prüfungen folgen. PDF.js 5.7.330 unverändert; physische Geräte und Kontosync separat.
+- [APK und vollständige Quellen](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.6-332); [Build, Signatur und Updates](https://github.com/OptikerGerhardt/Motero/actions/runs/43772484302) erfolgreich. Anwendung `30b6d7b7`, Reader `ede989ad`; PDF.js 5.7.330 unverändert.
+- Quick-Tag-Trennlinie und stabile Highlight-Quickbars wiederhergestellt. Temporäres Oval am nächsten Lesewort ersetzt den Seitenwechselpfeil; alter Code bleibt im Build-331-Commit verfügbar. [Umfang und Grenzen](docs/READER_332.md).
+- 449 Reader-Fälle in 53 Dateien, 168 native Tests in 42 Suiten, 23 lokale und CI-Browser-Suiten, 43 Engine-Pixel- und 19 offizielle Viewer-Fälle bestanden. Die letzten Paletten-/Wortgeometrieänderungen wurden zusätzlich gezielt geprüft.
+- Öffentliche APK unabhängig heruntergeladen: SHA-256 `31a73cbf33635ec37beef2ee8e85e7b09aeb9fa0f17a51c0f30d7044953a29a3`. Privater Motero-Signierer, eingeschränkte Rotation, Receiver-Berechtigung, Android 9+, nicht debuggbar; 118 Hauptbundle- und 121 eindeutige Reader-/Worker-Quellen, 207 Engine-, 45 Runtime- und 9649 Quellarchiv-Dateien sowie Prüfsummen stimmen überein.
+- API 31/35: Updates von 303 und 331 erhalten Datenmarker/UID, starten die App und verweigern alte Schlüssel. Latest-Release zeigt Build 332 mit einer APK.
+- Physische BOOX-/Pixel-/Tablet-Darstellung und Kontosync bleiben separat zu prüfen. Keine privaten Dokumentinhalte veröffentlicht. [Nachweise](qa/build332/README.md).
 
 # Build 331 / Motero 1.1.5 — veröffentlicht und unabhängig geprüft
 
