@@ -1,5 +1,6 @@
 import { readerBookmarkCorner } from '../common/reader-bookmark.mjs';
 import { PDFViewportIndicators } from './viewport-indicators.js';
+import { PDFReadingPositionCue } from './reading-position-cue.mjs';
 import { showAnnotationPalette } from '../common/mobile-annotation-palette';
 import { PDF_NOTE_DIMENSIONS } from '../common/defines';
 import { getSortIndex } from './selection';
@@ -58,6 +59,7 @@ export class PDFBooxReader {
 		this.onPage = () => {
 			this.closePalette();
 			if (this.edge && this.edge.pageIndex !== this.viewer.currentPageNumber - 1) this.clearEdge();
+            this.readingCue?.schedule();
 		};
 		this.doc.addEventListener('pointerdown', this.onDown, true);
 		this.doc.addEventListener('pointerup', this.onUp, true);
@@ -82,6 +84,7 @@ export class PDFBooxReader {
 		};
 		this.win.addEventListener('resize', this.onResize);
         this.indicators = new PDFViewportIndicators(view);
+        this.readingCue = new PDFReadingPositionCue(view);
 	}
 
 	get viewer() { return this.win.PDFViewerApplication.pdfViewer; }
@@ -226,9 +229,15 @@ export class PDFBooxReader {
 		finally { if (this.entering === request) this.entering = null; }
 	}
 
-	showPalette(annotations) { return showAnnotationPalette.call(this, annotations); }
+	showPalette(annotations) {
+        showAnnotationPalette.call(this, annotations);
+        if (this.palette) {
+            const annotation = annotations.filter(a => !a.readOnly && !a.isExternal).at(-1);
+            this.paletteAnchor = {id:annotation.id,rect:this.view.getClientRectForPopup(annotation.position)};
+        }
+    }
 
-	closePalette() { const palette = this.palette; this.palette = null; palette?.remove(); }
+	closePalette() { const palette = this.palette; this.palette = null; this.paletteAnchor = null; palette?.remove(); }
 
 	captureEdge(next) {
 		let v = this.viewer, p = v.getPageView(v.currentPageNumber - 1), c = v.container;
@@ -236,7 +245,7 @@ export class PDFBooxReader {
 		let r = p.div.getBoundingClientRect(), b = c.getBoundingClientRect();
 		let y = (next ? b.top + c.clientTop + c.clientHeight : b.top + c.clientTop) - r.top - p.div.clientTop;
 		if (y < 0 || y > p.div.clientHeight) return null;
-		return { pageIndex: p.id - 1, scale: v.currentScale,
+		return { pageIndex: p.id - 1, scale: v.currentScale, next,
 			point: p.getPagePoint(0, y) };
 	}
 
@@ -255,13 +264,23 @@ export class PDFBooxReader {
 		p.div.append(line);
 		this.edge = edge;
 		this.edgeElement = line;
+        this.readingCue?.schedule(edge);
         this.edgeExpiry = this.win.setTimeout(() => {
             if (this.edgeElement === line) this.clearEdge();
         }, 5000);
 	}
 
 	onScroll() {
-		this.closePalette();
+		const anchor = this.paletteAnchor;
+        if (anchor) {
+            // Neighbor crop layout may adjust scroll offsets while preserving
+            // this annotation's screen position. Only actual movement closes it.
+            const annotation = this.view._annotations.find(a => a.id === anchor.id);
+            const rect = annotation && this.view.getClientRectForPopup(annotation.position);
+            if (!rect || rect.some((x,i) => Math.abs(x-anchor.rect[i])>1)) this.closePalette();
+            else return; // A stationary quickbar is not a reading-scroll gesture.
+        }
+        this.readingCue?.onScroll();
 		let gesture = this.gestureScroll, v = this.viewer;
 		if (!gesture || gesture.scale !== v.currentScale || Math.abs(v.container.scrollTop - gesture.top) < 3) return;
 		let edge = v.container.scrollTop > gesture.top ? gesture.forward : gesture.backward;
@@ -282,6 +301,7 @@ export class PDFBooxReader {
 	clearNavigation(cancelEntry = false) {
 		if (cancelEntry) this.entering = null;
 		this.closePalette(); this.clearEdge(); this.gestureScroll = null;
+        this.readingCue?.clear();
 		this.win.clearTimeout(this.scrollSettled);
 	}
 

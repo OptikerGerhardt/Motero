@@ -1,18 +1,7 @@
 import { isBlackReaderBookmark, bookmarkFlagRect, readerIndicatorPosition, BOOKMARK_FLAG_PATH } from '../common/reader-bookmark.mjs';
-import { getHardwareScrollLimits } from './hardware-navigation.mjs';
-import { readingUnit } from './reading-unit.mjs';
 
-export function nextScrollCrossesPage(view, viewer, limits) {
-    if (view._pageNavigation?.mode !== 'jumped' || !limits || limits.max-limits.min <= 1.5
-        || viewer.container.scrollTop < limits.max-1.5 || view._booxReader?.isOverview()
-        || view._pageFitting?.editor || view._pageFitting?.zooming) return false;
-    const column=view._pageFitting?.columnActive && view._pageFitting.column;
-    if (column && column.index < column.columns.length-1) return false;
-    const unit=readingUnit(viewer.currentPageNumber-1,viewer.pagesCount,viewer.spreadMode);
-    return unit.at(-1)+1 < viewer.pagesCount;
-}
-
-/** Two passive viewport hints; no new canvas, annotation data or input surface. */
+/** Passive bookmark hint; no new canvas, annotation data or input surface.
+ * The former next-page arrow is preserved in the v1.1.5-331 release history. */
 export class PDFViewportIndicators {
     constructor(view) {
         this.view=view; this.win=view._iframeWindow; this.doc=this.win.document;
@@ -20,10 +9,6 @@ export class PDFViewportIndicators {
         this.bus=this.win.PDFViewerApplication.eventBus;
         this.hiddenPageFlags=new Set();
         this.flag=this.create('motero-bookmark-indicator',`<svg viewBox="0 0 24 24"><path d="${BOOKMARK_FLAG_PATH}"/></svg>`);
-        this.arrow=this.create('motero-next-page-indicator','<svg viewBox="0 0 48 48"><path d="M8 24h30M26 12l12 12-12 12" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>');
-        // Keep the hint above page annotations without taking input or covering
-        // the magnifier, quick palette or manual-crop editor.
-        this.arrow.style.cssText+=';width:72px;height:72px;opacity:.4;z-index:9001;isolation:isolate;mix-blend-mode:normal';
         this.schedule=()=>{if (!this.frame) this.frame=this.win.requestAnimationFrame(()=>{this.frame=null;this.update();});};
         this.viewer.container.addEventListener('scroll',this.schedule,{passive:true});
         this.events=['pagechanging','scalechanging','rotationchanging','pagerendered','spreadmodechanged'];
@@ -62,11 +47,8 @@ export class PDFViewportIndicators {
         const top=safe.top;
         this.flag.style.display=this.bookmarked?.has(index) && !flagVisible ? 'block':'none';
         this.flag.style.left=safe.left+'px';this.flag.style.top=top+'px';
-        const limits=getHardwareScrollLimits(view,v,v.getPageView(v.currentPageNumber-1));
-        this.arrow.style.display=nextScrollCrossesPage(view,v,limits)?'block':'none';
-        this.arrow.style.left=(b.left+b.width/2-36)+'px';this.arrow.style.top=top+'px';
         const color=view._themeColorScheme==='dark'?'#ddd':'#000';
-        this.flag.style.color=this.arrow.style.color=color;
+        this.flag.style.color=color;
     }
     destroy() {
         for (const flag of this.hiddenPageFlags) flag.style.visibility='';
@@ -74,6 +56,6 @@ export class PDFViewportIndicators {
         if(this.frame)this.win.cancelAnimationFrame(this.frame);
         this.viewer.container.removeEventListener('scroll',this.schedule);
         for (const event of this.events)this.bus.off(event,this.schedule);
-        this.win.removeEventListener('resize',this.schedule);this.flag.remove();this.arrow.remove();
+        this.win.removeEventListener('resize',this.schedule);this.flag.remove();
     }
 }
