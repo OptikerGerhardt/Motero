@@ -1,7 +1,11 @@
-# Build 330 / Motero 1.1.4 — lokal geprüft, Release-Prüfung läuft
+# Build 330 / Motero 1.1.4 — veröffentlicht und unabhängig geprüft
 
-- Gesammelte Rotation-/Back-, EPUB-, Werkzeugleisten-, Stift- und PDF-Abgrenzungskorrekturen umgesetzt; passive Bookmark-/Seitenwechselindikatoren ergänzt. [Umfang](docs/READER_330.md).
-- 437 Reader-Fälle in 51 Dateien, 165 native Tests in 41 Suiten, alle 23 Browser-Suiten, TypeScript und 43 Engine-Pixeltests bestanden. APK und eingebettete Quellen geprüft; geschützte Release-Gates folgen. PDF.js 5.7.330 unverändert. Physische BOOX-/Galaxy-Tab-S4-/Pixel-Prüfung und Kontosync separat.
+- [APK und vollständige Quellen](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.4-330); [Build, Signatur und Updates](https://github.com/OptikerGerhardt/Motero/actions/runs/43724146838) erfolgreich. Anwendung `df4e68b8`, Reader `3fec4826`; PDF.js 5.7.330 unverändert.
+- Gesammelte Tablet-/Back-, EPUB-, Werkzeugleisten-, Stift- und Seitenrahmenkorrekturen umgesetzt; passive Bookmark-/Seitenwechselindikatoren ergänzt. [Umfang und Grenzen](docs/READER_330.md).
+- 437 Reader-Fälle in 51 Dateien, 165 native Tests in 41 Suiten, alle 23 lokalen und CI-Browser-Suiten, 43 Engine-Pixel- und 19 offizielle Viewer-Fälle bestanden. Echte Stift-Tipps auf PDF-/EPUB-Quickbars, EPUB-Ausrichtung/Gewicht/Rahmen und PDF-Indikatoren geprüft.
+- Öffentliche APK unabhängig heruntergeladen: SHA-256 `60292fbe2b0764d52a39f870252ff7aab4512df2dd44ab0511c62b231246c98c`. Privater Motero-Signierer, eingeschränkte Rotation, Receiver-Berechtigung, Android 9+, nicht debuggbar; 116 Hauptbundle- und 119 eindeutige Reader-/Worker-Quellen, 207 Engine-, 45 Runtime- und 9615 Quellarchiv-Dateien sowie Prüfsummen geprüft.
+- API 31/35: Updates von 303 und 329 erhalten Datenmarker/UID, starten die App und verweigern alte Schlüssel. Latest-Release zeigt Build 330 mit genau einer APK.
+- Physische Galaxy-Tab-S4-/BOOX-/Pixel-Reproduktion, proprietäre Firmware-Gesten und Kontosync bleiben offen; dafür wird keine Bestätigung behauptet. Keine privaten PDFs oder Buchauszüge veröffentlicht. [Nachweise](qa/build330/README.md).
 
 # Build 329 / Motero 1.1.3 — veröffentlicht und unabhängig geprüft
 
