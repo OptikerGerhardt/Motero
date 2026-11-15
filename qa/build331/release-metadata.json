@@ -1,0 +1,10 @@
+{
+  "version": "1.1.5-331",
+  "version_code": 331,
+  "tag": "v1.1.5-331",
+  "apk": "Motero_Build331.apk",
+  "source": "Motero_Build331_Source.zip",
+  "release_title": "Motero 1.1.5",
+  "unsigned": false,
+  "signing_certificate_sha256": "f6b9547e9644f44e23bcceac94ec32cfd6576b5f732af7e12094699307de778d"
+}

@@ -1,7 +1,11 @@
-# Build 331 / Motero 1.1.5 — Prüfung läuft
+# Build 331 / Motero 1.1.5 — veröffentlicht und unabhängig geprüft
 
-- Adaptive Toolbar-Hüllen, zentrierte Werkzeuge, sichere Bookmark-Abstände, Stift-Highlighting und Tablet-Popups korrigiert. Sidebar und Annotationssprünge stabilisiert; vermeidbare Reader-Neuerstellung bei Rotation verhindert. [Umfang](docs/READER_331.md).
-- 443 Reader-Fälle in 52 Dateien, 167 native Tests in 42 Suiten und alle 23 lokalen Browser-Suiten bestanden; abschließende Pfeil-/Inset-Prüfungen ebenfalls bestanden. Geschützte Release-Gates folgen. PDF.js 5.7.330 unverändert. Physische Geräte, Animationseindruck, Rotationstiming und Kontosync separat.
+- [APK und vollständige Quellen](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.5-331); [Build, Signatur und Updates](https://github.com/OptikerGerhardt/Motero/actions/runs/43760911330) erfolgreich. Anwendung `62a9763c`, Reader `7c3e4780`; PDF.js 5.7.330 unverändert.
+- Adaptive Werkzeugleisten, sichere Fähnchen-Abstände, Stift-Highlighting bei offener Leiste und Tablet-Popups korrigiert. Sidebar und Annotationssprünge stabilisiert; größerer Seitenwechselpfeil über Highlights. [Umfang und Grenzen](docs/READER_331.md).
+- 443 Reader-Fälle in 52 Dateien, 167 native Tests in 42 Suiten, alle 23 lokalen und CI-Browser-Suiten, 43 Engine-Pixel- und 19 offizielle Viewer-Fälle bestanden. Stift-Highlighting bei offener Leiste, zugeschnittene Jumped-Annotationsauswahl und Seitenwechselpfeil über Highlights geprüft.
+- Öffentliche APK unabhängig heruntergeladen: SHA-256 `f28d1ffe73a77b8b5261c26b706feda7ada2bc65da644d7074d991ef0eee5475`. Privater Motero-Signierer, eingeschränkte Rotation, Receiver-Berechtigung, Android 9+, nicht debuggbar; 117 Hauptbundle- und 120 eindeutige Reader-/Worker-Quellen, 207 Engine-, 45 Runtime- und 9633 Quellarchiv-Dateien sowie Prüfsummen geprüft.
+- API 31/35: Updates von 303 und 330 erhalten Datenmarker/UID, starten die App und verweigern alte Schlüssel. Latest-Release zeigt Build 331 mit genau einer APK.
+- Physische Tablet-/BOOX-/Pixel-UI, Sidebar-Animationseindruck, Rotationstiming und Kontosync bleiben separat zu prüfen. Keine privaten PDFs oder Buchauszüge veröffentlicht. [Nachweise](qa/build331/README.md).
 
 # Build 330 / Motero 1.1.4 — veröffentlicht und unabhängig geprüft
 
