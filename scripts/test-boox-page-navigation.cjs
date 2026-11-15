@@ -103,6 +103,14 @@ const root=process.env.BOOX_TEST_READER_BUILD||path.resolve(__dirname,'../build/
    await assertCentered();
   }
   console.log('PASS jumped page navigation without cropping and mouse-wheel input');
+
+  await page.evaluate(async()=>{const w=window._view._view,v=w._pageFitting.viewer;v.currentScale=2;await w._navigateToPage({pageIndex:5});});
+  await page.waitForTimeout(250);
+  await page.evaluate(()=>{const w=window._view._view,v=w._pageFitting.viewer,c=v.container,p=v.getPageView(5);w._pageNavigation.centerCurrentPage();c.scrollTop+=p.div.getBoundingClientRect().bottom-c.getBoundingClientRect().bottom;w._booxReader.indicators.update();});
+  await page.waitForFunction(()=>window._view._view._iframeWindow.document.querySelector('.motero-next-page-indicator').style.display==='block');
+  await page.evaluate(()=>{const w=window._view._view;w._pageNavigation.configure('continuous');w._booxReader.indicators.update();});
+  assert.equal(await page.evaluate(()=>window._view._view._iframeWindow.document.querySelector('.motero-next-page-indicator').style.display),'none');
+  console.log('PASS next-page viewport arrow appears at the final Jumped scroll stop and hides in Continuous');
   assert.deepEqual(errors,[]);
  }finally{if(browser)await browser.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);process.exitCode=1;});

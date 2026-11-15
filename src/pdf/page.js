@@ -23,7 +23,7 @@ import {
 } from '../common/defines';
 import { getRectRotationOnText } from './selection';
 
-import { isBlackReaderBookmark, BOOKMARK_FLAG_PATH } from '../common/reader-bookmark.mjs';
+import { isBlackReaderBookmark, bookmarkFlagRect, BOOKMARK_FLAG_PATH } from '../common/reader-bookmark.mjs';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -233,6 +233,9 @@ export default class Page {
 	_pushNote(items, annotation) {
 		let position = this._p2v(annotation.position);
 		let viewRect = position.rects[0];
+        if (isBlackReaderBookmark(annotation) && this._layer._options?.platform === 'android') {
+            viewRect = bookmarkFlagRect(this._originalPage.viewport);
+        }
 		items.push({
 			kind: 'noteIcon',
 			x: round(viewRect[0]),

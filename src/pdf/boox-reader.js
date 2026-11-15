@@ -1,3 +1,4 @@
+import { PDFViewportIndicators } from './viewport-indicators.js';
 import { showAnnotationPalette } from '../common/mobile-annotation-palette';
 import { PDF_NOTE_DIMENSIONS } from '../common/defines';
 import { getSortIndex } from './selection';
@@ -79,6 +80,7 @@ export class PDFBooxReader {
 			this.viewportWidth = width;
 		};
 		this.win.addEventListener('resize', this.onResize);
+        this.indicators = new PDFViewportIndicators(view);
 	}
 
 	get viewer() { return this.win.PDFViewerApplication.pdfViewer; }
@@ -283,7 +285,10 @@ export class PDFBooxReader {
 		this.win.clearTimeout(this.scrollSettled);
 	}
 
+	scheduleIndicators() { this.indicators?.schedule(); }
+
 	destroy() {
+        this.indicators?.destroy();
 		this.clearNavigation(); this.win.clearTimeout(this.gestureExpiry);
 		this.doc.removeEventListener('pointerdown', this.onDown, true);
 		this.doc.removeEventListener('pointerup', this.onUp, true);

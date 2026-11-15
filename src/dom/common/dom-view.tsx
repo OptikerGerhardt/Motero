@@ -1759,7 +1759,7 @@ abstract class DOMView<State extends DOMViewState, Data> {
 	}
 
 	protected _handlePointerDown(event: PointerEvent) {
-        if ((event.target as Element)?.closest?.('.motero-reading-progress')) return;
+        if ((event.target as Element)?.closest?.('.motero-reading-progress, .boox-highlight-palette')) return;
 		// Clean up in case this pointer was left behind in _handledPointerIDs,
 		// since we know this is a new interaction
 		this._handledPointerIDs.delete(event.pointerId);
@@ -1829,7 +1829,7 @@ abstract class DOMView<State extends DOMViewState, Data> {
 	}
 
 	protected _handlePointerUp(event: PointerEvent) {
-        if ((event.target as Element)?.closest?.('.motero-reading-progress')) return;
+        if ((event.target as Element)?.closest?.('.motero-reading-progress, .boox-highlight-palette')) return;
 		this._handledPointerIDs.delete(event.pointerId);
         if (this._directHighlight?.navigationUps.has(event)) return;
 
@@ -2428,6 +2428,10 @@ abstract class DOMView<State extends DOMViewState, Data> {
 		};
         this.appearance = appearance;
         const root = this._iframeDocument.documentElement;
+        if (['start','justify','center','end'].includes(appearance.textAlignment || '')) root.dataset.readerTextAlignment = appearance.textAlignment;
+        else delete root.dataset.readerTextAlignment;
+        const boldness = Number.isFinite(appearance.fontBoldness) ? Math.max(0, Math.min(1, appearance.fontBoldness!)) : 0;
+        root.style.setProperty('--reader-text-stroke', (boldness * .025) + 'em');
         root.style.setProperty('--reader-safe-inset', Math.max(0, this._options.viewportInset || 0) + 'px');
         if (Number.isFinite(appearance.verticalMargins)) {
             root.dataset.verticalMargins = 'custom';

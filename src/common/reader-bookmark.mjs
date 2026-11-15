@@ -4,3 +4,10 @@ export const isReaderBookmark = annotation => annotation?.type === 'note'
 export const isBlackReaderBookmark = annotation => isReaderBookmark(annotation)
     && /^#000000$/i.test(annotation.color || '');
 export const BOOKMARK_FLAG_PATH = 'M5 2h14v20l-7-4.5-7 4.5z';
+
+// Stable PDF-page corner in viewport coordinates, independent of saved note rects.
+export function bookmarkFlagRect(viewport) {
+    const scale=viewport.scale || 1, size=28*scale;
+    const right=viewport.width-8*scale,top=4*scale;
+    return [right-size,top,right,top+size];
+}

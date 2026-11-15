@@ -25,6 +25,7 @@ export class MobilePenInput {
     stop(e) { if (e.cancelable) e.preventDefault(); e.stopImmediatePropagation(); }
     pointer(e) {
         const down = e.type === 'pointerdown', up = e.type === 'pointerup' || e.type === 'pointercancel';
+        if (e.target?.closest?.('.boox-highlight-palette, .boox-manual-crop, .motero-reading-progress, button, input, select, [role=toolbar]')) return;
         if (e.pointerType === 'pen') {
             this.onSignal(e);
             if (down) {

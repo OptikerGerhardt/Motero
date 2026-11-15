@@ -87,3 +87,11 @@ test('focus loss and cancellation recover ownership and eraser; profile does not
     assert.equal(f.send('pointerdown','touch',4).stopped,false);
     f.input.applyProfile({eReader:false,penOnly:false});assert.equal(f.attrs.size,0);f.input.destroy();
 });
+
+test('a pen can operate a floating palette without taking over its annotation selection',()=>{
+ const f=fixture();const target={closest:()=>({})};
+ f.send('pointerdown','pen',7,{target});f.send('pointerup','pen',7,{target});
+ assert.equal(f.takeovers(),0);assert.equal(f.input.owner,null);
+ f.send('pointerdown','pen',8);assert.equal(f.takeovers(),1);
+ f.input.destroy();
+});

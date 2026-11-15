@@ -45,6 +45,7 @@ export class CroppedPageLayout {
 		this.visible = () => this.boxes ? this.getVisiblePages() : this.originalVisible.call(this.viewer);
 		this.viewer._getVisiblePages = this.visible;
 		this.saved = new Map();
+        this.frames = new Map();
 		this.originalScroll = this.viewer.scrollPageIntoView;
 		this.scroll = options => {
 			if (!this.boxes) return this.originalScroll.call(this.viewer, options);
@@ -107,6 +108,22 @@ export class CroppedPageLayout {
 		const result = layoutReadingPages(pages, { width: c.clientWidth, height: c.clientHeight, mode: v.scrollMode, spreadMode:v.spreadMode, pageGap:this.fitting.view?._pageNavigation?.mode==='continuous'?24:12, sidePadding:this.fitting.columnLayout ? c.clientWidth/2 : 0 });
 		setStyles(host, { position: 'relative', width: result.width + 'px', height: result.height + 'px', overflow: 'clip', padding: '0', margin: '0' });
         let changed = !this.boxes || result.width !== this.width || result.height !== this.height;
+        const ready = new Set(result.boxes.filter(box=>box.ready).map(box=>box.index));
+        for (const [index,frame] of this.frames) if (!ready.has(index)) { frame.remove(); this.frames.delete(index); }
+        if (host.ownerDocument) for (const box of result.boxes) {
+            if (!box.ready) continue;
+            let frame = this.frames.get(box.index);
+            if (!frame) {
+                frame = host.ownerDocument.createElement('div');
+                frame.className = 'motero-page-frame'; frame.dataset.pageIndex = String(box.index);
+                frame.setAttribute('aria-hidden','true');
+                frame.style.cssText = 'position:absolute;pointer-events:none;box-sizing:border-box;border:1px solid #8886;box-shadow:0 2px 7px #0005,0 0 1px #8888;background:transparent';
+                host.append(frame); this.frames.set(box.index,frame);
+            }
+            const jump = this.fitting.view?._pageNavigation?.single;
+            const unit = readingUnit(v.currentPageNumber-1,v._pages.length,v.spreadMode);
+            setStyles(frame,{left:box.x+'px',top:box.y+'px',width:box.width+'px',height:box.height+'px',visibility:box.ready && (!jump || unit.includes(box.index))?'':'hidden'});
+        }
 		for (const box of result.boxes) {
             const old=this.boxes?.[box.index];
             if (old && ['x','y','left','top','right','bottom','width','height','ready'].every(k=>old[k]===box[k])) continue;
@@ -156,6 +173,8 @@ export class CroppedPageLayout {
 	clear() {
         this.viewer.viewer.classList?.remove('motero-cropped-layout');
 		this.boxes = null;
+        for (const frame of this.frames.values()) frame.remove();
+        this.frames.clear();
 		for (const [element, before] of this.saved) Object.assign(element.style, before);
 		this.saved.clear();
 		if (this.hostBefore) Object.assign(this.viewer.viewer.style, this.hostBefore);

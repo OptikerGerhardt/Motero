@@ -48,6 +48,11 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   await page.waitForFunction(()=>window._view._view._annotations.length===1);
   const bookmark=await page.evaluate(()=>window._view._view._annotations[0]);
   assert.equal(bookmark.position.pageIndex,centered);assert.equal(bookmark.color,'#000000');
+  await page.waitForFunction(()=>{const v=window._view._view,e=v._iframeWindow.document.querySelector('.motero-bookmark-indicator');return e&&e.style.display==='block';});
+  const frameStyle=await page.evaluate(()=>{const v=window._view._view,d=v._iframeWindow.document,f=d.querySelector('.motero-page-frame');return{shadow:v._iframeWindow.getComputedStyle(f).boxShadow,flagPointer:v._iframeWindow.getComputedStyle(d.querySelector('.motero-bookmark-indicator')).pointerEvents};});
+  assert.notEqual(frameStyle.shadow,'none');assert.equal(frameStyle.flagPointer,'none');
+  console.log('PASS cropped PDF frame keeps its shadow; off-screen page bookmark has a passive viewport flag');
+
   await touch('touchStart',[{x:385,y:30}]);await touch('touchEnd',[]);
   await page.waitForFunction(()=>window._view._view._annotations.length===0);
   console.log('PASS a top fragment never receives the centered page bookmark; corner toggles black bookmarks');

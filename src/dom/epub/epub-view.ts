@@ -1,3 +1,4 @@
+import { pageLineBalance } from './page-frame.mjs';
 import injectCSS from './stylesheets/inject.scss';
 import Path from "epubjs/src/utils/path";
 import {
@@ -349,6 +350,7 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 			}
 		}
 
+		this._balancePageFrame();
 		this._lastIframeWindowWidth = this._iframeWindow.innerWidth;
 		this._lastIframeWindowHeight = this._iframeWindow.innerHeight;
 
@@ -948,6 +950,7 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 					&& this._iframeWindow.innerHeight === this._lastIframeWindowHeight)) {
 			return;
 		}
+		this._balancePageFrame();
 		this._lastIframeWindowWidth = this._iframeWindow.innerWidth;
 		this._lastIframeWindowHeight = this._iframeWindow.innerHeight;
 
@@ -1463,13 +1466,25 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 		this._handleViewUpdate();
 	}
 
+    private _balancePageFrame() {
+        const root = this._iframeDocument.documentElement;
+        root.style.setProperty('--reader-line-balance', '0px');
+        if (this._options.platform !== 'android' || this._isFixedLayout || !this._iframeWindow.getComputedStyle(this._iframeDocument.body).writingMode.startsWith('horizontal') || this.flowMode !== 'paginated') return;
+        const paragraph = this._iframeDocument.querySelector('replaced-body p');
+        if (!paragraph) return;
+        const margin = parseFloat(this._iframeWindow.getComputedStyle(this._iframeDocument.body).marginTop);
+        const lineHeight = parseFloat(this._iframeWindow.getComputedStyle(paragraph).lineHeight);
+        const balance = Math.max(0, pageLineBalance(this._iframeWindow.innerHeight, margin, lineHeight));
+        root.style.setProperty('--reader-line-balance', balance + 'px');
+    }
+
     override setAppearance(partialAppearance: Partial<ReflowableAppearance>) {
         if (Object.entries(partialAppearance).every(([key,value]) => value === (this.appearance as any)?.[key])) return;
         const fontChanged = Object.prototype.hasOwnProperty.call(partialAppearance,'fontFamily')
             && partialAppearance.fontFamily !== this.appearance?.fontFamily;
         const cfi = this.flow?.startCFI?.toString(), offset = this.flow?.startCFIOffset;
         const revision = ++this._appearanceRevision;
-        this._keepPosition(() => super.setAppearance(partialAppearance));
+        this._keepPosition(() => { super.setAppearance(partialAppearance); this._balancePageFrame(); });
         if (fontChanged && cfi && this._options.platform === 'android') {
             this._iframeWindow.requestAnimationFrame(() => {
                 this._iframeDocument.fonts.ready.then(() => {

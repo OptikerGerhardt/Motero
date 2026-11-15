@@ -8,6 +8,8 @@ export interface ReflowableAppearance {
     margins?: number;
     verticalMargins?: number;
     fontFamily?: string;
+    textAlignment?: string;
+    fontBoldness?: number;
 }
 
 export const enum PageWidth {

@@ -248,3 +248,12 @@ body.footnote-popup-content {
 .a11y-cursor-target {
 	outline: none;
 }
+
+// Add stroke weight without replacing embedded fonts or flattening bold/italic emphasis.
+:root replaced-body { -webkit-text-stroke-width: var(--reader-text-stroke, 0px); }
+@each $alignment in start, justify, center, end {
+    :root[data-reader-text-alignment="#{$alignment}"] replaced-body :is(p, li, blockquote) {
+        text-align: $alignment !important;
+        @if $alignment == justify { text-align-last: auto !important; }
+    }
+}

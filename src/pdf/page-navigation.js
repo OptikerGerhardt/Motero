@@ -24,6 +24,7 @@ export class PDFPageNavigation {
         this.viewer._getVisiblePages = this.visible;
         this.style = this.win.document.createElement('style');
         this.style.textContent = '.motero-jumped .page:not(.motero-current-page){visibility:hidden!important;pointer-events:none!important}'
+            + '.pdfViewer:not(.motero-cropped-layout) .page{box-shadow:0 2px 7px #0005,0 0 0 1px #8886}'
             + '.motero-page-spacing{padding-block:var(--motero-page-gap,0px)!important}'
             + '.motero-continuous-y #viewerContainer{touch-action:pan-y pinch-zoom!important}'
             + '.motero-continuous-x #viewerContainer{touch-action:pan-x pinch-zoom!important}'
@@ -157,6 +158,7 @@ export class PDFPageNavigation {
         const current = single ? this.viewer.getPageView(this.viewer.currentPageNumber - 1)?.div : null;
         const unitKey = indices.join(',');
         if (this.single === single && this.current === current && this.unitKey === unitKey) return;
+        for (const [index,frame] of fitting?.layout?.frames || []) frame.style.visibility = single && !indices.includes(index) ? 'hidden' : '';
         this.unitKey = unitKey;
         this.single = single;
         if (this.viewer.viewer.classList.contains('motero-jumped') !== single) this.viewer.viewer.classList.toggle('motero-jumped', single);

@@ -1,3 +1,4 @@
+import { isBlackReaderBookmark } from '../common/reader-bookmark.mjs';
 import { readerResourceBudget } from '../common/reader-resource-budget.mjs';
 import { beginPaletteEdit, finishPaletteEdit } from '../common/annotation-edit-palette';
 import { readingUnit } from './reading-unit.mjs';
@@ -1692,6 +1693,7 @@ class PDFView {
 		let affected = getAffectedAnnotations(this._annotations, annotations, true);
 		let { created, updated, deleted } = affected;
 		this._annotations = annotations;
+        this._booxReader?.scheduleIndicators();
 		if (this._options.platform === 'android' && deleted.some(a => this._selectedAnnotationIDs.includes(a.id)
 				|| this.action?.annotation?.id === a.id)) {
 			this.resetAndroidInput();
@@ -3482,6 +3484,9 @@ class PDFView {
 		let annotations = this._getPageAnnotations(position.pageIndex);
 		let selectableAnnotations = [];
 		for (let annotation of annotations) {
+            // Reader bookmark flags use the viewport shortcut; their legacy
+            // persisted note rect must not leave an invisible text hit target.
+            if (this._options.platform === 'android' && isBlackReaderBookmark(annotation)) continue;
 			if (annotation.type === 'text' && annotation.position.rotation) {
 				let tm = getRotationTransform(annotation.position.rects[0], annotation.position.rotation);
 				let rect = position.rects[0];
@@ -3754,19 +3759,13 @@ class PDFView {
     }
 
 	_handlePointerDown(event) {
+        if (event.target?.closest?.('.boox-highlight-palette')) return;
         if (this._isForeignPointer(event) && !(event.type === 'pointerdown' && ['pen','mouse'].includes(event.pointerType))) { event.stopImmediatePropagation?.(); return; }
         if (this._pageFitting?.editor) return;
         if (this._consumePaletteDismissal?.(event)) return;
         if (event.type==='pointerdown' && ['touch','pen'].includes(event.pointerType)) {
             this._readerPriorityDown=event.isPrimary ? {x:event.clientX,y:event.clientY,time:Date.now()} : null;
         }
-		// This listener runs on window during capture, before the palette stops
-		// propagation. Its pointerup never reaches us: don't start a page action
-		// for a palette button, or the next annotation tap only clears that action.
-		if (this._options.platform === 'android'
-				&& event.target?.closest?.('.boox-highlight-palette')) {
-			return;
-		}
 		// A pending content fit must not override the user's own zooming and scrolling
 		this._contentFitRequest = null;
 		// Android WebView dispatches a compatibility mousedown after touchend. Suppress
@@ -4565,6 +4564,7 @@ class PDFView {
     }
 
 	_handlePointerUp(event) {
+        if (event.target?.closest?.('.boox-highlight-palette')) return;
         if (this.action?.type === 'ink' && this.action.pointerID !== undefined && event.pointerId !== this.action.pointerID) { event.stopImmediatePropagation?.(); return; }
         if (this._pageFitting?.editor) return;
         if (this._readerPriorityHandled != null && this._readerPriorityHandled===event.pointerId) { this._readerPriorityHandled=null; return; }

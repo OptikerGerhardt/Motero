@@ -13,7 +13,7 @@ const root=path.resolve(__dirname,'../build/android'),fixture=path.resolve(__dir
   await page.waitForFunction(()=>window._view?._view?._resolveInitializedPromise===null);
   await page.evaluate(()=>{window._view._view._tool={type:'pointer'};window.setTool({type:'ink',color:'#000000',size:2});});
   const cdp=await page.context().newCDPSession(page);
-  const pen=(type,x,y,buttons=1)=>cdp.send('Input.dispatchMouseEvent',{type,x,y,button:type==='mouseMoved'?'none':'left',buttons,pointerType:'pen',force:buttons?.5:0});
+  const pen=(type,x,y,buttons=1)=>cdp.send('Input.dispatchMouseEvent',{type,x,y,button:type==='mouseMoved'?'none':'left',buttons,pointerType:'pen',clickCount:type==='mouseMoved'?0:1,force:buttons?.5:0});
   await pen('mousePressed',220,260);await pen('mouseMoved',245,285);
   const owned=await page.evaluate(()=>window._view._view._pointerDownTap?.pointerType);assert.equal(owned,'pen');
   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{id:4,x:580,y:30,radiusX:20,radiusY:20}]});
@@ -57,6 +57,13 @@ const root=path.resolve(__dirname,'../build/android'),fixture=path.resolve(__dir
   await pen('mouseReleased',350,360,0);
   assert.equal(await page.evaluate(()=>window._view._annotationManager._annotations.reduce((n,a)=>n+(a.position.paths?.length||0),0)),after);
   console.log('PASS losing focus during a stroke commits collected samples exactly once');
+  await page.evaluate(()=>{const v=window._view._view;window.setTool({type:'pointer'});v._booxReader.showPalette([v._annotations[0]]);});
+  const colorPoint=await page.evaluate(()=>{const v=window._view._view,b=v._booxReader.palette.querySelector('[data-color="#5fb236"]'),r=b.getBoundingClientRect(),f=v._iframe.getBoundingClientRect();return{x:f.left+r.left+r.width/2,y:f.top+r.top+r.height/2};});
+  await pen('mousePressed',colorPoint.x,colorPoint.y);
+  assert.equal(await page.evaluate(()=>!!window._view._view._booxReader.palette?.isConnected),true,'pen down on color keeps the quickbar alive');
+  await pen('mouseReleased',colorPoint.x,colorPoint.y,0);
+  await page.waitForFunction(()=>window._view._view._annotations[0].color==='#5fb236');
+  console.log('PASS real pen tap chooses a quickbar color without resetting selection');
   assert.deepEqual(errors,[]);
   console.log('PASS hardware eraser restores the base tool; native edits use undo/redo; disabling the profile removes its presentation');
  } finally {if(browser)await browser.close();await new Promise(r=>server.close(r));}

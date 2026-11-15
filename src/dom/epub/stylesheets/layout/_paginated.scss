@@ -177,5 +177,5 @@
 }
 
 :root[data-vertical-margins="custom"] &:not(.fixed-layout) {
-    --block-margin: max(0px, calc(var(--reader-safe-inset, 0px) + var(--reader-block-margin)));
+    --block-margin: calc(max(0px, var(--reader-safe-inset, 0px) + var(--reader-block-margin)) + var(--reader-line-balance, 0px));
 }

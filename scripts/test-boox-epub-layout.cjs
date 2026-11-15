@@ -61,9 +61,9 @@ const root=path.resolve(__dirname,'../build/android');
    for(const margins of [-20,-5,0,5,12]){
     await page.evaluate(m=>window._view.setAppearance({lineHeight:1.2,wordSpacing:0,letterSpacing:0,pageWidth:0,margins:8,verticalMargins:m,fontFamily:'serif'}),margins);
     await page.waitForTimeout(120);
-    const spacing=await page.evaluate(()=>{const v=window._view._view,b=v._iframeDocument.body,sections=b.querySelector('.sections');return{margin:parseFloat(v._iframeDocument.documentElement.style.getPropertyValue('--reader-block-margin')),top:parseFloat(getComputedStyle(b).marginTop),bottom:parseFloat(getComputedStyle(b).marginBottom),padding:parseFloat(getComputedStyle(sections).paddingTop),height:v._iframeWindow.innerHeight};});
+    const spacing=await page.evaluate(()=>{const v=window._view._view,b=v._iframeDocument.body,sections=b.querySelector('.sections');return{margin:parseFloat(v._iframeDocument.documentElement.style.getPropertyValue('--reader-block-margin')),top:parseFloat(getComputedStyle(b).marginTop),bottom:parseFloat(getComputedStyle(b).marginBottom),padding:parseFloat(getComputedStyle(sections).paddingTop),height:v._iframeWindow.innerHeight,balance:parseFloat(v._iframeDocument.documentElement.style.getPropertyValue('--reader-line-balance'))||0};});
     assert.equal(spacing.margin,margins);
-    if(flow==='paginated'){assert.ok(Math.abs(spacing.top-Math.max(0,64+spacing.height*margins/100))<2,JSON.stringify(spacing));assert.equal(spacing.top,spacing.bottom);}
+    if(flow==='paginated'){assert.ok(Math.abs(spacing.top-Math.max(0,64+spacing.height*margins/100)-spacing.balance)<2,JSON.stringify(spacing));assert.equal(spacing.top,spacing.bottom);}
     else assert.ok(Math.abs(spacing.padding-Math.max(0,64+spacing.height*margins/100))<2,JSON.stringify(spacing));
    }
    console.log('PASS '+flow+': independent top/bottom margin control is symmetric and applied to layout');
@@ -106,6 +106,20 @@ const root=path.resolve(__dirname,'../build/android');
   const overlap=await page.evaluate(()=>{const v=window._view._view,p=v._directHighlight.host.palette,b=p.querySelector('button'),r=b.getBoundingClientRect(),e=v._iframeDocument.elementFromPoint(r.left+r.width/2,r.top+r.height/2);return e===b||b.contains(e);});
   assert.equal(overlap,true,'quick annotation palette wins even over a full-screen maximum-z annotation layer');
   console.log('PASS progress overlay preserves pagination, consumes edge taps and stays below the annotation palette');
+  await page.evaluate(()=>window._view._view._iframeDocument.getElementById('test-overlapping-annotation').remove());
+  const penColor=await page.evaluate(()=>{const v=window._view._view,b=v._directHighlight.host.palette.querySelector('[data-color="#a28ae5"]'),r=b.getBoundingClientRect(),f=v._iframe.getBoundingClientRect();return{x:f.left+r.left+r.width/2,y:f.top+r.top+r.height/2};});
+  await cdp.send('Input.dispatchMouseEvent',{type:'mousePressed',...penColor,button:'left',buttons:1,pointerType:'pen',clickCount:1,force:.5});
+  assert.equal(await page.evaluate(()=>!!window._view._view._directHighlight.host.palette?.isConnected),true);
+  await cdp.send('Input.dispatchMouseEvent',{type:'mouseReleased',...penColor,button:'left',buttons:0,pointerType:'pen',clickCount:1});
+  await page.waitForFunction(()=>window._view._annotationManager._annotations.some(a=>a.color==='#a28ae5'));
+  console.log('PASS real EPUB pen tap operates the quick palette without losing its annotation');
+  await page.evaluate(()=>window.setAppearance({lineHeight:1.25,margins:8,verticalMargins:3,fontFamily:'serif',textAlignment:'start',fontBoldness:.6}));
+  const typography=await page.evaluate(()=>{const v=window._view._view,d=v._iframeDocument,p=d.querySelector('replaced-body p'),r=d.querySelector('.sections').getBoundingClientRect(),css=v._iframeWindow.getComputedStyle(p);return{alignment:css.textAlign,stroke:parseFloat(css.webkitTextStrokeWidth),top:r.top,bottom:v._iframeWindow.innerHeight-r.bottom,cfi:v.flow.startCFI.toString()};});
+  assert.equal(typography.alignment,'start');assert.ok(typography.stroke>0);
+  assert.ok(Math.abs(typography.top-typography.bottom)<1,'EPUB page frame stays vertically centered');
+  await page.evaluate(()=>window.setAppearance({lineHeight:1.25,margins:8,verticalMargins:3,fontFamily:'serif',textAlignment:'justify',fontBoldness:0}));
+  assert.equal(await page.evaluate(()=>{const v=window._view._view;return v._iframeWindow.getComputedStyle(v._iframeDocument.querySelector('replaced-body p')).textAlign;}),'justify');
+  console.log('PASS EPUB alignment and stroke weight apply without replacing the font; page frame is centered');
   assert.deepEqual(errors,[]);
  }finally{await browser?.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);process.exitCode=1;});
