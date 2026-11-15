@@ -1,6 +1,12 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 15. November 2026. Motero 1.1.5 / Build 331 setzt die nach Build 330 gesammelten Toolbar-, Popup- und Sidebar-Korrekturen um. PDF.js 5.7.330 und Annotations-/Syncformate bleiben unverändert.
+Stand: 15. November 2026. Motero 1.1.6 / Build 332 korrigiert Quickbars und ergänzt eine kurze Lesepositionsmarke. PDF.js 5.7.330 und Annotations-/Syncformate bleiben unverändert.
+
+## Quickbars und Leseposition: Build 332 / 1.1.6
+
+- Trennlinie nach Quick Tags wiederherstellen; Dokumentauswahl von Sidebar-Sprungzielen entkoppeln.
+- Quickbars bei unveränderter Bildschirmposition auch nach internen Crop-Layout-Scrollereignissen offen halten.
+- Temporäres Oval am nächsten Lesewort statt Seitenwechselpfeil; ohne Animation im E-Reader-Modus. Pfeilcode über den bisherigen Release-Commit aufbewahren. [Umfang](docs/READER_332.md).
 
 ## Adaptive Leisten und Tablet-Navigation: Build 331 / 1.1.5
 

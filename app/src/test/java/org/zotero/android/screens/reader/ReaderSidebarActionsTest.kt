@@ -74,4 +74,13 @@ class ReaderSidebarActionsTest {
             assertFalse(vm.viewState.showCreationToolbar)
         }
     }
+
+    @Test fun `document selection after a sidebar selection never recenters the quick palette`() {
+        val target = annotation(AnnotationType.highlight); put(target)
+        state(vm.viewState.copy(selectedAnnotationKey = "previous", focusDocumentLocationAnnotationKey = "previous", showSideBar = true))
+        vm.onCommentFocusFieldChange(target.key)
+        coVerify(exactly = 1) { bridge.selectInDocument(target.key, false) }
+        coVerify(exactly = 0) { bridge.selectInDocument(target.key, true) }
+        assertNull(vm.viewState.focusDocumentLocationAnnotationKey)
+    }
 }

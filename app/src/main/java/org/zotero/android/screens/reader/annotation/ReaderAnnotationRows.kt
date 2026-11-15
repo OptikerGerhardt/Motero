@@ -113,6 +113,7 @@ internal fun ReaderAnnotationHighlightRow(
         selectedColor = selectedColor,
     )
     ReaderColoredTagShortcuts(coloredTags, tags, canEdit, onColoredTagClicked, colorCount = colors.size)
+    NewSettingsDivider()
     ReaderAnnotationCommentSection(
         commentFocusText = commentFocusText,
         onCommentTextChange = onCommentTextChange,
@@ -172,6 +173,7 @@ internal fun ReaderAnnotationUnderlineRow(
         selectedColor = selectedColor
     )
     ReaderColoredTagShortcuts(coloredTags, tags, canEdit, onColoredTagClicked, colorCount = colors.size)
+    NewSettingsDivider()
     ReaderAnnotationCommentSection(
         commentFocusText = commentFocusText,
         onCommentTextChange = onCommentTextChange,

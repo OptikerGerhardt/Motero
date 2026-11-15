@@ -976,7 +976,7 @@ class ReaderViewModel @Inject constructor(
             selectAndFocusAnnotationInDocument(centerInDocument = true)
         } else {
             updateState {
-                copy(focusSidebarKey = key)
+                copy(focusSidebarKey = key, focusDocumentLocationAnnotationKey = null)
             }
             selectAndFocusAnnotationInDocument(centerInDocument = false)
         }
@@ -2353,7 +2353,7 @@ class ReaderViewModel @Inject constructor(
         val annotation = selectedKey?.let { annotation(it) }
         if (annotation != null) {
             val location = viewState.focusDocumentLocationAnnotationKey
-            if (location != null) {
+            if (location != null && centerInDocument) {
                 focus(selectedKey)
             } else if (annotation.type != AnnotationType.ink
                 || viewState.activeTool != ReaderAnnotationTool.ink

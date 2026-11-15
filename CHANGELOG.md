@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.1.6 — Build 332
+
+- Zotero-Trennlinie zwischen Quick Tags und Kommentar bei Highlights/Underlines wiederherstellen.
+- Dokumentauswahl nach einer Sidebar-Auswahl nicht erneut zentrieren; verbrauchtes Sprungziel entfernen. Quickbars bei verspäteten Layout-Scrollereignissen anhand ihrer sichtbaren Ankerposition erhalten. Echte Navigation und Bearbeitung behalten das bisherige Ausblendverhalten.
+- Seitenwechselpfeil durch ein kurzes Oval um das erste sichtbare Wort unter der Scroll-Hilfslinie bzw. auf der neuen Seite ersetzen. Keine neue Zeichenfläche oder gespeicherte Annotation; im E-Reader-Modus ohne Animation. Alter Pfeilcode bleibt in der Git-Historie von Build 331 erreichbar. [Details](docs/READER_332.md).
+
 ## 1.1.5 — Build 331
 
 - Toolbar-Hüllen gemeinsam aus sichtbaren Werkzeugen berechnen: PDF 344/392 dp, EPUB 248/296 dp, jeweils ohne/mit Redo und auf den verfügbaren Platz begrenzt. Werkzeuge vertikal zentrieren; Farben und Regler derselben Breite zuordnen. Redo erst zeigen, wenn die animierte Breite ausreicht.

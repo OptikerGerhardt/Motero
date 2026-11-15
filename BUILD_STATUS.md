@@ -1,3 +1,8 @@
+# Build 332 / Motero 1.1.6 — Prüfung läuft
+
+- Quick-Tag-Trennlinie und stabile Highlight-Quickbars wiederhergestellt; kurze Lesewort-Markierung ersetzt den Seitenwechselpfeil. [Umfang](docs/READER_332.md).
+- 449 Reader-Fälle in 53 Dateien, 168 native Tests in 42 Suiten und alle 23 lokalen Browser-Suiten bestanden. Endgültige Paletten-/Wortgeometrieänderungen zusätzlich gezielt geprüft; APK gebaut und eingebettete Quellen abgeglichen. Geschützte Release-Prüfungen folgen. PDF.js 5.7.330 unverändert; physische Geräte und Kontosync separat.
+
 # Build 331 / Motero 1.1.5 — veröffentlicht und unabhängig geprüft
 
 - [APK und vollständige Quellen](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.5-331); [Build, Signatur und Updates](https://github.com/OptikerGerhardt/Motero/actions/runs/43760911330) erfolgreich. Anwendung `62a9763c`, Reader `7c3e4780`; PDF.js 5.7.330 unverändert.
