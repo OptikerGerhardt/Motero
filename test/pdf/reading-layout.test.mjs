@@ -481,10 +481,14 @@ test('a detached numerical label beside a genuine footnote at the extreme bottom
     assert.ok(!exclusions.includes(note.rect));
 });
 
-test('Kant gutter folios beside a short heading use the page body column',()=>{
+test('Kant header folios beside a running title are distinct from body-margin references',()=>{
  for (const text of ['B XI','BXI','IV','I']) {
   const ref=line(text,[.01,.10,.07,.12]);
-  assert.ok(getReadingMarginalia([...body,line('Einleitung',[.45,.10,.65,.12]),ref],buildReadingModel([]),0).includes(ref.rect),text);
+  const lines=[...body,line('Einleitung',[.45,.10,.65,.12]),ref],model=buildReadingModel([]);
+  assert.ok(getReadingExclusions(lines,model,0,{includeMarginalia:true}).includes(ref.rect),text);
+  assert.ok(!getReadingMarginalia(lines,model,0).includes(ref.rect),text);
+  const margin=line(text,[.01,.4,.07,.42]);
+  assert.ok(getReadingMarginalia([...body,margin],model,0).includes(margin.rect),text);
  }
  const heading=line('IV',[.46,.1,.50,.12]);
  assert.ok(!getReadingMarginalia([...body,heading],buildReadingModel([]),0).includes(heading.rect));
@@ -586,7 +590,7 @@ test('merged OCR margin stars split without shrinking equal-font body text', () 
  const chars=[...('alpha')].map((u,i)=>({u,rect:[120+i*7,300,126+i*7,310],fontSize:10,baseline:300}));
  chars.push({u:'*',rect:[570,300,576,310],fontSize:10,baseline:300});
  const viewport={width:600,height:800,scale:1,transform:[1,0,0,-1,0,800]};
- const item={str:'alpha *',width:456,transform:[10,0,0,10,120,300],chars};
+ const item={str:'alpha*',width:456,transform:[10,0,0,10,120,300],chars};
  const lines=getReadingTextLines({items:[item]},viewport);
  assert.equal(lines.length,2);assert.equal(lines.find(l=>l.text==='*').sideCandidate,true);
  chars.at(-1).baseline=305;
@@ -596,4 +600,64 @@ test('a large title period is not misidentified as a tiny gutter dot', () => {
  const dot=line('.',[.94,.25,.96,.31]);
  const title=line('A large, complete and important chapter title',[.2,.25,.92,.31]);
  assert.ok(!getReadingExclusions([...body,title,dot],buildReadingModel([]),0).includes(dot.rect));
+});
+
+test('running heads above a rule survive unreadable font encoding and smaller bibliography type',()=>{
+ const head=line('M\ue5ec\ue691\ue5ff\ue6af\ue69b A\ue66b\ue609\ue691\ue613\ue5ec\ue69b B\ue674\ue691\ue66b',[.28,.096,.51,.115]);
+ const folio=line('\uf05f\uf094',[.184,.096,.207,.115]);
+ const title=line('Literatur',[.184,.137,.31,.159]);
+ const entries=Array.from({length:22},(_,i)=>line('A sufficiently long bibliography entry that must remain visible.',[.184,.17+i*.022,.91,.181+i*.022]));
+ const lines=[head,folio,title,...entries],raster=image([...lines.map(l=>l.rect),[.184,.123,.91,.124]]);
+ const bounds=getReadingBounds(raster,lines,buildReadingModel([]),0);
+ assert.ok(bounds[1]>.13 && bounds[1]<.14,JSON.stringify(bounds));
+ assert.ok(bounds[3]>.64,'the bibliography remains complete');
+});
+
+test('sparse index entries still provide evidence for a detached running-head rule',()=>{
+ const head=line('An index running title',[.28,.096,.51,.115]);
+ const lines=[head,line('248',[.184,.096,.22,.115]),...Array.from({length:8},(_,i)=>line('Index entry',[.184,.15+i*.03,.7,.163+i*.03]))];
+ const bounds=getReadingBounds(image([...lines.map(l=>l.rect),[.184,.123,.91,.124]]),lines,buildReadingModel([]),0);
+ assert.ok(bounds[1]>.14 && bounds[1]<.16,JSON.stringify(bounds));
+});
+
+test('unlabelled raster gutter dots follow Include while body ink and large figures remain intact',()=>{
+ const lines=Array.from({length:12},(_,i)=>line('A full prose line with ordinary words and no marginal marker.',[.2,.2+i*.04,.8,.22+i*.04]));
+ const dot=[.84,.4,.85,.41],figure=[.84,.5,.94,.6],raster=image([...lines.map(l=>l.rect),dot,figure]);
+ const masks=getReadingMarginalia(lines,buildReadingModel([]),0,raster);
+ assert.ok(masks.some(r=>r[0]>=.83 && r[0]<.86 && r[1]>.39 && r[3]<.42));
+ assert.ok(!masks.some(r=>r[1]>=.49 && r[3]<=.61),'large outer artwork is not punctuation');
+ const plain=image([...lines.map(l=>l.rect),dot]);
+ const a=getReadingBounds(plain,lines,buildReadingModel([]),0),b=getReadingBounds(plain,lines,buildReadingModel([]),0,{includeMarginalia:true});
+ assert.ok(a[2]<.82 && b[2]>.84,JSON.stringify({a,b}));
+});
+
+test('a star item just inside the old absolute gutter threshold is not merged with prose',()=>{
+ const viewport={width:500,height:700,scale:1,transform:[1,0,0,-1,0,700]};
+ const text=getReadingTextLines({items:[{str:'A long prose line beside a separate star',width:295,transform:[10,0,0,10,90,400]},
+  {str:'*',width:5,transform:[10,0,0,10,395,400]}]},viewport);
+ assert.equal(text.length,2);assert.equal(text.find(l=>l.text==='*').sideCandidate,true);
+});
+
+
+test('a ruled running head above an image retains the image and removes its encoded folio',()=>{
+ const head=line('C\ue657\ue5ec\ue6af\ue69b Z\ue63a\ue6a5\ue6a5\ue613\ue657',[.28,.096,.51,.115]);
+ const folio=line('\uf06a\uf075\uf06a',[.184,.096,.215,.115]);
+ const artwork=[.184,.145,.74,.70],rule=[.184,.123,.91,.124];
+ const raster=image([head.rect,folio.rect,rule,artwork]);
+ const bounds=getReadingBounds(raster,[head,folio],buildReadingModel([]),0);
+ assert.ok(bounds[1]>.14 && bounds[1]<.15,JSON.stringify(bounds));
+ assert.ok(bounds[3]>=.70 && bounds[2]>=.74,'all image content is retained');
+ // A lone heading over an illustration is insufficient running-header evidence.
+ const titleBounds=getReadingBounds(raster,[head],buildReadingModel([]),0);
+ assert.ok(titleBounds[1]<.10,'an unpaired image heading stays visible');
+});
+
+test('a detached small outer Roman front-matter folio does not become a chapter heading',()=>{
+ const folio=line('VII',[.79,.105,.825,.127]);
+ const title=line('Siglenverzeichnis',[.09,.155,.4,.181]);
+ const prose=body.map(l=>({...l,rect:[l.rect[0],l.rect[1]+.05,l.rect[2],l.rect[3]+.054]}));
+ const excluded=getReadingExclusions([folio,title,...prose],buildReadingModel([]),6);
+ assert.ok(excluded.includes(folio.rect));assert.ok(!excluded.includes(title.rect));
+ const chapter={...folio,rect:[.46,.105,.50,.127]};
+ assert.ok(!getReadingExclusions([chapter,title,...prose],buildReadingModel([]),6).includes(chapter.rect));
 });

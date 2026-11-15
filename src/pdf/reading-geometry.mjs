@@ -9,7 +9,7 @@ export function analyzeReadingGeometry(page,model) {
     if (blank) return {index:page.index,aspect:page.aspect,bounds:[0,0,1,1],withMarginalia:[0,0,1,1],blank:true,marginalia:[],columns:null};
     const boundsFor=options=>page.textOnly ? getReadingTextBounds(page.lines,model,page.index,options)
         : getReadingBounds(image,page.lines,model,page.index,options);
-    const marginalia=getReadingMarginalia(page.lines,model,page.index).map(r=>[
+    const marginalia=getReadingMarginalia(page.lines,model,page.index,image).map(r=>[
         Math.max(0,r[0]-2/page.width),Math.max(0,r[1]-2/page.height),
         Math.min(1,r[2]+2/page.width),Math.min(1,r[3]+2/page.height)]);
     const bounds=boundsFor({});
