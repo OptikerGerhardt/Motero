@@ -1,4 +1,4 @@
-import { isBlackReaderBookmark } from '../common/reader-bookmark.mjs';
+import { isBlackReaderBookmark, readerBookmarkCorner } from '../common/reader-bookmark.mjs';
 import { readerResourceBudget } from '../common/reader-resource-budget.mjs';
 import { beginPaletteEdit, finishPaletteEdit } from '../common/annotation-edit-palette';
 import { readingUnit } from './reading-unit.mjs';
@@ -4552,7 +4552,7 @@ class PDFView {
         const position=this.pointerEventToPosition(event);
         const overlay=position && this._getSelectableOverlay(position);
         const rect=this._iframeWindow.PDFViewerApplication.pdfViewer.container.getBoundingClientRect();
-        const bookmark=event.clientX-rect.left>=rect.width/2 && event.clientY-rect.top>=0 && event.clientY-rect.top<=rect.height/11;
+        const bookmark=readerBookmarkCorner(rect,this._options.indicatorInsets,event.clientX,event.clientY);
         const overview=this._booxReader?.isOverview();
         const direction=this._getEdgePageTurnDirection(event,down.x);
         if (!overview && !bookmark && (!direction || overlay)) return false;

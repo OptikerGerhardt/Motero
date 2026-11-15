@@ -108,9 +108,25 @@ const root=process.env.BOOX_TEST_READER_BUILD||path.resolve(__dirname,'../build/
   await page.waitForTimeout(250);
   await page.evaluate(()=>{const w=window._view._view,v=w._pageFitting.viewer,c=v.container,p=v.getPageView(5);w._pageNavigation.centerCurrentPage();c.scrollTop+=p.div.getBoundingClientRect().bottom-c.getBoundingClientRect().bottom;w._booxReader.indicators.update();});
   await page.waitForFunction(()=>window._view._view._iframeWindow.document.querySelector('.motero-next-page-indicator').style.display==='block');
+  const hint=await page.evaluate(()=>{
+   const w=window._view._view,d=w._iframeWindow.document,e=d.querySelector('.motero-next-page-indicator'),r=e.getBoundingClientRect();
+   const p=w._pageFitting.viewer.getPageView(5).div,b=p.getBoundingClientRect();
+   const overlay=d.createElement('div');overlay.className='annotationOverlay';
+   const highlight=d.createElement('div');highlight.className='overlayRect';
+   highlight.style.cssText=`left:${r.left-b.left}px;top:${r.top-b.top}px;width:${r.width}px;height:${r.height}px;background:#ff0;pointer-events:auto`;
+   overlay.append(highlight);p.append(overlay);
+   // Hit-test the real page/highlight stacking order; both hints stay passive in use.
+   const passive=w._iframeWindow.getComputedStyle(e).pointerEvents;e.style.pointerEvents='auto';
+   const layers=d.elementsFromPoint(r.left+r.width/2,r.top+r.height/2);
+   const above=layers.indexOf(e)>=0&&layers.indexOf(e)<layers.indexOf(highlight);
+   e.style.pointerEvents='none';overlay.remove();
+   return{width:r.width,height:r.height,opacity:Number(e.style.opacity),passive,above};
+  });
+  assert.equal(hint.width,72);assert.equal(hint.height,72);assert.ok(hint.opacity>=.35);
+  assert.equal(hint.passive,'none');assert.equal(hint.above,true,'next-page arrow paints above the PDF highlight');
   await page.evaluate(()=>{const w=window._view._view;w._pageNavigation.configure('continuous');w._booxReader.indicators.update();});
   assert.equal(await page.evaluate(()=>window._view._view._iframeWindow.document.querySelector('.motero-next-page-indicator').style.display),'none');
-  console.log('PASS next-page viewport arrow appears at the final Jumped scroll stop and hides in Continuous');
+  console.log('PASS larger passive next-page arrow paints above highlights at the final Jumped stop and hides in Continuous');
   assert.deepEqual(errors,[]);
  }finally{if(browser)await browser.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);process.exitCode=1;});

@@ -155,6 +155,7 @@ class View {
             directHighlight: this._options.directHighlight,
             mobileAnnotations: this._type === 'epub',
             viewportInset: this._options.viewportInset,
+            indicatorInsets: this._options.indicatorInsets,
 			onAddAnnotation,
 			onUpdateAnnotations,
 			onDeleteAnnotationsFromPalette: ids => this._annotationManager.deleteAnnotations(ids),

@@ -64,6 +64,15 @@ const root=path.resolve(__dirname,'../build/android'),fixture=path.resolve(__dir
   await pen('mouseReleased',colorPoint.x,colorPoint.y,0);
   await page.waitForFunction(()=>window._view._view._annotations[0].color==='#5fb236');
   console.log('PASS real pen tap chooses a quickbar color without resetting selection');
+  await page.evaluate(async()=>{window.clearTool();window.setReaderChromeVisible(true);await window._view._view._ensureBasicPageData(0);});
+  const word=await page.evaluate(()=>{const v=window._view._view,p=v._pageFitting.viewer.getPageView(0),r=p.div.getBoundingClientRect(),f=v._iframe.getBoundingClientRect();const chars=v._pdfPages[0].chars;const points=[70,84].map(i=>{const c=chars[i],xy=p.viewport.convertToViewportPoint((c.rect[0]+c.rect[2])/2,(c.rect[1]+c.rect[3])/2);return{x:r.left+f.left+xy[0],y:r.top+f.top+xy[1]};});return points;});
+  await pen('mousePressed',word[0].x,word[0].y);await page.waitForTimeout(260);
+  assert.equal(await page.evaluate(()=>window._view._view._directHighlight.gesture.active),true,'pen hold highlights while chrome is visible');
+  await pen('mouseMoved',word[1].x,word[1].y);await pen('mouseReleased',word[1].x,word[1].y,0);
+  await page.waitForFunction(()=>window._view._annotationManager._annotations.some(a=>a.type==='highlight'));
+  assert.equal(await page.evaluate(()=>window._view._view._readerChromeVisible),true);
+  console.log('PASS stylus drag highlighting remains available with open chrome and no selected drawing tool');
+
   assert.deepEqual(errors,[]);
   console.log('PASS hardware eraser restores the base tool; native edits use undo/redo; disabling the profile removes its presentation');
  } finally {if(browser)await browser.close();await new Promise(r=>server.close(r));}

@@ -198,7 +198,7 @@ test('Android save delivery selects only a newly created note outside inline tex
 	assert.deepEqual(view.selectedIDs, []);
 });
 
-test('Android PDF UI commands decode their inputs and delegate to the view', () => {
+test('Android PDF UI commands decode their inputs and delegate to the view', async () => {
 	let view = createView();
 	window.setContainerInsets({ top: 4, right: 3, bottom: 2, left: 1 });
 	assert.deepEqual(Object.fromEntries(styleProperties), {
@@ -217,7 +217,8 @@ test('Android PDF UI commands decode their inputs and delegate to the view', () 
 		modifications: encode([{ id: 'modified' }]),
 	});
 	window.search({ term: encode('žodis 🔎') });
-	window.select({ key: 'selected' });
+	view._activeView = { _annotations: [{id:'selected',position:{pageIndex:5}}], _navigateToPage: location => view._record('navigateToPage',location) };
+	await window.select({ key: 'selected' });
 	window.navigate({ location: encode({ pageIndex: 3 }) });
 	window.setPageLabels({ pageLabels: encode(['i', '1']) });
 	window.renderThumbnails([0, 2]);
@@ -233,7 +234,7 @@ test('Android PDF UI commands decode their inputs and delegate to the view', () 
 		['setAnnotations', [{ id: 'inserted' }, { id: 'modified' }]],
 		['find', { query: 'žodis 🔎', highlightAll: true, caseSensitive: false, entireWord: false }],
 		['selectAnnotations', ['selected']],
-		['navigate', { annotationID: 'selected' }],
+		['navigateToPage', { pageIndex: 5 }],
 		['navigate', { pageIndex: 3 }],
 		['setPageLabels', ['i', '1']],
 		['renderThumbnails', [0, 2], undefined],

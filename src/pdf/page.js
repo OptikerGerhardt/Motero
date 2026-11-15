@@ -768,6 +768,7 @@ export default class Page {
 			g.setAttribute('opacity', item.opacity);
 		}
         if (item.bookmark) {
+            if (this._layer._options?.platform === 'android') g.setAttribute('data-reader-bookmark', 'true');
             const path = doc.createElementNS(SVG_NS, 'path');
             path.setAttribute('d', BOOKMARK_FLAG_PATH);
             path.setAttribute('fill', '#000000');

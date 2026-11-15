@@ -51,6 +51,11 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   await page.waitForFunction(()=>{const v=window._view._view,e=v._iframeWindow.document.querySelector('.motero-bookmark-indicator');return e&&e.style.display==='block';});
   const frameStyle=await page.evaluate(()=>{const v=window._view._view,d=v._iframeWindow.document,f=d.querySelector('.motero-page-frame');return{shadow:v._iframeWindow.getComputedStyle(f).boxShadow,flagPointer:v._iframeWindow.getComputedStyle(d.querySelector('.motero-bookmark-indicator')).pointerEvents};});
   assert.notEqual(frameStyle.shadow,'none');assert.equal(frameStyle.flagPointer,'none');
+  await page.evaluate(()=>window.setReaderIndicatorInsets({top:32,right:12}));
+  await page.waitForTimeout(40);
+  const flagSafe=await page.evaluate(()=>{const e=window._view._view._iframeWindow.document.querySelector('.motero-bookmark-indicator');return e.getBoundingClientRect().toJSON();});
+  assert.ok(flagSafe.top>=48&&flagSafe.right<=393-32,'flag stays below status bar and inside rounded screen edges');
+
   console.log('PASS cropped PDF frame keeps its shadow; off-screen page bookmark has a passive viewport flag');
 
   await touch('touchStart',[{x:385,y:30}]);await touch('touchEnd',[]);
@@ -100,6 +105,21 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   assert.deepEqual(await page.evaluate(()=>window._view.getSelectedAnnotationIDs()),[]);
   assert.equal(await page.evaluate(()=>window._view._view._readerChromeVisible),false);
   console.log('PASS bookmark focus navigates without selection or reader chrome');
+  const selectedKey=await page.evaluate(()=>window._view._annotationManager.addAnnotation({type:'highlight',color:'#5fb236',comment:'',text:'Selected sidebar highlight',pageLabel:'7',sortIndex:'00006|000100|00000',position:{pageIndex:6,rects:[[100,300,150,320]]}}).id);
+  await page.evaluate(()=>window.setPageNavigation('jumped'));
+  await page.evaluate(id=>window.select({key:id}),selectedKey);
+  await page.waitForFunction(()=>{const v=window._view._view;return v._pageFitting.viewer.currentPageNumber===7&&!v._pendingPageTurn;});
+  assert.deepEqual(await page.evaluate(()=>window._view.getSelectedAnnotationIDs()),[selectedKey]);
+  assert.equal(await page.evaluate(()=>{const v=window._view._view,p=v._pageFitting.viewer.getPageView(6);return v._iframeWindow.getComputedStyle(p.div).visibility;}),'visible');
+  // Model the single pane resize caused by closing a tablet sidebar before Jump.
+  await page.setViewportSize({width:900,height:800});
+  await page.evaluate(id=>window.focusReaderAnnotation(id),selectedKey);
+  await page.waitForTimeout(150);
+  assert.equal(await page.evaluate(()=>window._view._view._pageFitting.viewer.currentPageNumber),7);
+  assert.deepEqual(await page.evaluate(()=>window._view.getSelectedAnnotationIDs()),[]);
+  console.log('PASS selected sidebar cards keep the cropped Jumped page visible and focus survives a pane resize');
+  await page.setViewportSize({width:600,height:800});
+
   for(const type of ['highlight','underline','note','text','image','ink']){
    const key=await page.evaluate(type=>{
     const m=window._view._annotationManager;

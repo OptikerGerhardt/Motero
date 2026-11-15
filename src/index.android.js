@@ -1,3 +1,4 @@
+import { navigateReaderAnnotation } from './common/reader-annotation-navigation.mjs';
 import View from './common/view';
 import { ReadingProgress } from './common/reading-progress.mjs';
 import { navigateWithHardwareButton } from './pdf/hardware-navigation.mjs';
@@ -173,11 +174,8 @@ window.focusReaderAnnotation = async id => {
     if (!annotation) return false;
     reader.selectAnnotations([]);
     view._options.onSetAnnotationPopup?.(null);
-    if (Number.isInteger(annotation.position?.pageIndex)) {
-        if (view._booxReader?.isOverview()) await view._booxReader.enterPage(annotation.position.pageIndex);
-        else await view.navigate({pageIndex: annotation.position.pageIndex});
-    }
-    else await view.navigate({position: annotation.position});
+    const completed = await navigateReaderAnnotation(view, annotation);
+    if (!completed || reader !== window._view) return false;
     reader.setReaderChromeVisible(false);
     return true;
 };
@@ -186,6 +184,12 @@ window.focusReaderBookmark = window.focusReaderAnnotation;
 window.cancelManualCrop = () => window._view?._activeView?._pageFitting?.editor?.close();
 window.setDirectHighlight = enabled => window._view.setDirectHighlight(enabled);
 window.setReaderChromeVisible = visible => window._view?.setReaderChromeVisible(visible);
+window.setReaderIndicatorInsets = value => {
+    if (!window._view) return;
+    window._view._options.indicatorInsets = value;
+    const view = window._view._view;
+    if (view) { view._options.indicatorInsets = value; view._booxReader?.scheduleIndicators(); }
+};
 window.setReaderViewportInset = value => window._view?._view?.setReaderViewportInset?.(value);
 window.setReaderProgress = value => {
     if (window._view) window._view._options.readingProgress = value;
@@ -269,11 +273,13 @@ window.search = (options) => {
 	window._view.find({ query: term, highlightAll: true, caseSensitive: false, entireWord: false });
 };
 
-window.select = (options) => {
+window.select = async (options) => {
 	log("Select: " + options.key);
 	window._view.selectAnnotations([options.key]);
 	if (options.centerInDocument !== false) {
-		window._view.navigate({ annotationID: options.key });
+        const view = window._view._activeView;
+        const annotation = view?._annotations?.find(a => a.id === options.key);
+        if (annotation) await navigateReaderAnnotation(view, annotation);
 	}
 };
 

@@ -1,3 +1,4 @@
+import { readerBookmarkCorner } from '../common/reader-bookmark.mjs';
 import { PDFViewportIndicators } from './viewport-indicators.js';
 import { showAnnotationPalette } from '../common/mobile-annotation-palette';
 import { PDF_NOTE_DIMENSIONS } from '../common/defines';
@@ -126,10 +127,9 @@ export class PDFBooxReader {
 		}
 		if (view._readOnly) return false;
 		let bounds = this.viewer.container.getBoundingClientRect();
-		let x = event.clientX - bounds.left, y = event.clientY - bounds.top;
-		// The upper-right half of the first 1/11 of the reading viewport is
-		// the bookmark target, including the outer page-turn strip.
-		if (x < bounds.width / 2 || x > bounds.width || y < 0 || y > bounds.height / 11) return false;
+        // Include the inset flag on short landscape viewports as well as
+        // the original upper-right shortcut region.
+		if (!readerBookmarkCorner(bounds, view._options.indicatorInsets, event.clientX, event.clientY)) return false;
 		this.addBookmark(view._pageFitting?.centeredPageIndex() ?? this.viewer.currentPageNumber-1).catch(console.error);
 		return true;
 	}
