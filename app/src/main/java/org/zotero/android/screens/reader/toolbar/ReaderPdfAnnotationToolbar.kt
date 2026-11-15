@@ -34,6 +34,7 @@ import androidx.compose.ui.semantics.contentDescription
 import org.zotero.android.R
 import org.zotero.android.screens.reader.ReaderViewModel
 import org.zotero.android.screens.reader.ReaderViewState
+import org.zotero.android.screens.reader.snapInkWidth
 import org.zotero.android.screens.reader.data.ReaderAnnotationTool
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
@@ -102,25 +103,19 @@ internal fun ReaderPdfToolOptions(viewModel: ReaderViewModel, state: ReaderViewS
                 ReaderAnnotationTool.image -> AnnotationType.image
                 else -> AnnotationType.note
             }
-            BoxWithConstraints(Modifier.fillMaxWidth().height(44.dp)) {
-                val colors = AnnotationsConfig.colors(type)
-                // Keep purple anchored; use the full row for all remaining colors.
-                val purple = colors.firstOrNull { it.equals("#a28ae5", true) } ?: colors.getOrNull(4)
-                val scrolling = colors.filter { it != purple }
-                val slot = 40.dp
-                val paletteScroll = rememberLazyListState()
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                    LazyRow(Modifier.weight(1f), state = paletteScroll,
-                        flingBehavior = rememberSnapFlingBehavior(paletteScroll)) {
-                        items(scrolling.size) { i -> ReaderToolColor(scrolling[i], state.toolColors[tool], slot, viewModel::setPdfToolColor) }
-                    }
-                    purple?.let { ReaderToolColor(it, state.toolColors[tool], slot, viewModel::setPdfToolColor) }
-                }
+            val colors = AnnotationsConfig.colors(type)
+            val paletteScroll = rememberLazyListState()
+            LazyRow(Modifier.fillMaxWidth().height(44.dp), state = paletteScroll,
+                flingBehavior = rememberSnapFlingBehavior(paletteScroll)) {
+                items(colors.size) { i -> ReaderToolColor(colors[i], state.toolColors[tool], 40.dp, viewModel::setPdfToolColor) }
             }
         }
         if (storedSize != null || eraser) Row(Modifier.fillMaxWidth().height(44.dp), verticalAlignment = Alignment.CenterVertically) {
             if (storedSize != null) {
-                Slider(value = draftSize, onValueChange = { draftSize = it },
+                Slider(value = draftSize, onValueChange = {
+                        draftSize = if (tool == ReaderAnnotationTool.ink) snapInkWidth(it) else it
+                    },
+                    steps = if (tool == ReaderAnnotationTool.ink) 48 else 0,
                     onValueChangeFinished = { viewModel.setPdfToolSize(draftSize) },
                     valueRange = if (tool == ReaderAnnotationTool.text) 6f..72f else .5f..25f,
                     modifier = Modifier.weight(1f)

@@ -1,3 +1,9 @@
+# Build 329 / Motero 1.1.3 — lokal geprüft, Release-Prüfung läuft
+
+- Zuschnitt für Kopfzeilen/Trennlinien, Randsterne und römische Folios verbessert; Lila in der gemeinsamen Palette, feste Stiftstärken in 0,5-Punkt-Schritten.
+- Born-Original geprüft; vollständige Leviathan-/Kant-Prüfung wegen 32-MiB-Übertragungsgrenze offen. [Umfang und Grenzen](docs/READER_329.md).
+- 431 Reader-Fälle, 160 native Tests in 40 Suiten, alle 23 Browser-Suiten, TypeScript und 43 Engine-Pixeltests bestanden. Release-APK gebaut; 117 Reader-/Worker-Quellen und alle Engine-/Runtime-Dateien stimmen überein. Signatur und API-31/35-Updates folgen. Physische Geräte und Kontosync separat.
+
 # Build 328 / Motero 1.1.2 — veröffentlicht und unabhängig geprüft
 
 - [APK und vollständige Quellen](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.2-328); [Build, Signatur und Updates](https://github.com/OptikerGerhardt/Motero/actions/runs/43474721332) erfolgreich. Anwendung `e56d3b18`, Reader `6114aeb2`; PDF.js 5.7.330 unverändert.

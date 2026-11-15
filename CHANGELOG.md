@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.1.3 — Build 329
+
+- Kopfzeilen auch über Bibliografien, Registern und Bildseiten an Schrift, Seitenzahl und dünner Trennlinie erkennen; römische Kopf-Folios von Randreferenzen unterscheiden.
+- Randsterne und Punkte auch bei verbundenen Textläufen und fehlender OCR erkennen. Include/Exclude steuert Randreferenzen; echte Fußnoten und große Randabbildungen bleiben erhalten. Abgeleiteten Geometriecache erneuern.
+- Lila zwischen Blau und Pink in die gemeinsame Farbleiste einordnen. Stiftstärke in festen 0,5-Punkt-Schritten von 0,5 bis 25 speichern.
+- Born-Original direkt geprüft; Leviathan-/Kant-Originale überschreiten die 32-MiB-Übertragungsgrenze. Dafür gezielte Strukturregressionen, keine Behauptung vollständiger Originalprüfung. [Details](docs/READER_329.md).
+
 ## 1.1.2 — Build 328
 
 - Filter-Downloadleiste an die Sammlungsleiste angleichen; Crop-Bedienung auch ohne Notch unter der Statusleiste halten.

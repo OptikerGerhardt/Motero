@@ -1,0 +1,11 @@
+# Motero 1.1.3 / Build 329
+
+- Cropping derives the prose size from an early matching group, avoiding footnote-heavy pages redefining the main type. A thin rule, separated running title and outer folio also support bibliography, index and image-body pages, including fonts with unreadable extracted characters. Genuine chapter headings, footnotes and illustrations remain protected by geometry and regression cases.
+- Roman/edition folios beside a detached top running title are headers. References within the body margin still follow Include/Exclude. Separate stars remain separate before prose merging; trailing OCR stars can split using real character geometry. Tiny unlabelled raster marks outside a well-supported prose column follow the same Include/Exclude choice; large artwork and ambiguous low-resolution images stay intact.
+- The derived numeric geometry cache has a new schema revision in the same storage slot. Stored annotations, manual frames and sync formats are unchanged.
+- Purple is back between blue and pink in the same scrollable palette. No color gets a separate pinned slot. Existing Zotero circles, selection ring, spacing and circular touch feedback are reused.
+- Pen widths have 50 repeatable positions from 0.5 to 25 in 0.5-point increments. The slider and persistence share the same snapping rule. Existing strokes are not rewritten; text and eraser sliders keep their own behavior.
+
+The supplied 260-page Born original was examined using its actual text geometry and original page rasters, with additional real-browser comparisons on reported failure structures. No personal PDF, original page images or extracted text is included in the repository or release. Leviathan and Kant could not be transferred because each exceeds the tool's 32-MiB limit; their margin-star/Roman-folio structures are covered by synthetic regressions, not claimed as complete original-file verification. Selected smaller excerpts are still needed for that final comparison. Automatic cropping remains a heuristic; no universal perfection claim is made.
+
+PDF.js 5.7.330 and pinned runtime assets are unchanged. Physical BOOX/Pixel UI and live-account sync remain separate. [Verification](../qa/build329/README.md).

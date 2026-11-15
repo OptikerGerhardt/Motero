@@ -1,6 +1,13 @@
 # Motero auf BOOX: Featureplan
 
-Stand: 13. November 2026. Motero 1.1.2 / Build 328 setzt die nach Build 327 gesammelten Bedienungs- und Spaltenkorrekturen um. PDF.js 5.7.330 und die Annotations-/Syncformate bleiben erhalten.
+Stand: 15. November 2026. Motero 1.1.3 / Build 329 verbessert den automatischen Zuschnitt und die Stiftpalette. PDF.js 5.7.330 und Annotations-/Syncformate bleiben erhalten.
+
+## Zuschnitt und Stiftpalette: Build 329 / 1.1.3
+
+- Kleine Kopfzeilen/Trennlinien auch bei Bibliografien, Registern und Bildseiten entfernen; römische Kopf-Folios erkennen. Echte Kapitelüberschriften und Fußnoten schützen.
+- Randsterne/-punkte anhand Textgeometrie und kleiner Rasterkomponenten erkennen; Include/Exclude gilt weiterhin für Randreferenzen.
+- Lila in dieselbe Farbreihe wie alle übrigen Farben einordnen. Feste Stiftstärken in 0,5-Punkt-Schritten.
+- Born direkt am Original prüfen; Leviathan/Kant bleiben wegen der 32-MiB-Übertragungsgrenze für eine vollständige Originalprüfung offen. [Umfang](docs/READER_329.md).
 
 ## Bildschirmabstände und Spalten: Build 328 / 1.1.2
 

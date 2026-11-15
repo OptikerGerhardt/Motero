@@ -2502,7 +2502,7 @@ class ReaderViewModel @Inject constructor(
         if (!size.isFinite()) return
         val bounded = size.coerceIn(if (tool == ReaderAnnotationTool.text) 6f else .5f,
             if (tool == ReaderAnnotationTool.text) 72f else 25f)
-        viewModelScope.launch { setToolOptions(viewState.toolColors[tool], bounded, tool) }
+        viewModelScope.launch { setToolOptions(viewState.toolColors[tool], if (tool == ReaderAnnotationTool.ink) snapInkWidth(bounded) else bounded, tool) }
     }
 
     fun setPdfEraserMode(mode: String) {
