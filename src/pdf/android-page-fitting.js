@@ -718,6 +718,7 @@ export class AndroidPageFitting {
 				|| prepared.inputEpoch !== this.inputEpoch || this.pointers.size
 				|| prepared.width !== c.clientWidth || prepared.height !== c.clientHeight) return false;
 		let { index, bounds, pdfPage, fit } = prepared;
+        const enteredPage = index !== this.applied?.pageIndex && !!navigate && !!this.applied;
         if (prepared.columns && direction < 0 && this.column?.pageIndex !== index) prepared.columnIndex = prepared.columns.length - 1;
 		let page = v.getPageView(index);
 		if (!page) return false;
@@ -769,6 +770,7 @@ export class AndroidPageFitting {
 			this.view._booxReader?.rememberReadingView();
 		}
 		finally { this.applying = false; }
+        if (enteredPage) this.view._booxReader?.readingCue?.schedule();
 		this.view._render();
 		this.view._pageNavigation?.sync();
         if (this.spreadNeedsRender) {

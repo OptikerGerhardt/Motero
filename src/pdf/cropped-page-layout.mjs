@@ -5,7 +5,7 @@ function setStyles(element, styles) {
 }
 // Keep the original full-size PDF coordinate plane. Only page positions and the
 // visible frame change; selection, annotation rectangles and PDF.js stay intact.
-export function layoutReadingPages(pages, { width, height, mode, gap = 12, spreadMode = 0, sidePadding = 0, pageGap = gap }) {
+export function layoutReadingPages(pages, { width, height, mode, gap = 8, spreadMode = 0, sidePadding = 0, pageGap = gap }) {
     const units = [];
     for (let i = 0; i < pages.length;) {
         const indices = readingUnit(i, pages.length, spreadMode), group = indices.map(i => pages[i]);
@@ -22,10 +22,12 @@ export function layoutReadingPages(pages, { width, height, mode, gap = 12, sprea
         row.pages.push(...unit.pages); row.width += unit.width; row.height = Math.max(row.height,unit.height);
     }
     if (row.pages.length) rows.push(row);
-    const totalWidth = Math.max(width, ...rows.map(r=>r.width + sidePadding * 2)), boxes = [];
+    const lead = mode === 1 ? Math.max(sidePadding,(width-(units[0]?.width || width))/2) : sidePadding;
+    const trail = mode === 1 ? Math.max(sidePadding,(width-(units.at(-1)?.width || width))/2) : sidePadding;
+    const totalWidth = Math.max(width, ...rows.map(r=>r.width + lead + trail)), boxes = [];
     let y = rows.length ? Math.max(0,(height-rows[0].height)/2) : 0;
     for (const row of rows) {
-        let x = mode === 1 ? sidePadding : (totalWidth-row.width)/2;
+        let x = mode === 1 ? lead : (totalWidth-row.width)/2;
         for (let i=0;i<row.pages.length;i++) {
             const page=row.pages[i];
             boxes.push({...page,x,y:y+(row.height-page.height)/2});
@@ -105,7 +107,7 @@ export class CroppedPageLayout {
 			const right = Math.min(w, bounds[2] * w + pad), bottom = Math.min(h, bounds[3] * h + pad);
 			return { index, width: right - left, height: bottom - top, left, top, right: w - right, bottom: h - bottom, ready: !!prepared };
 		});
-		const result = layoutReadingPages(pages, { width: c.clientWidth, height: c.clientHeight, mode: v.scrollMode, spreadMode:v.spreadMode, pageGap:this.fitting.view?._pageNavigation?.mode==='continuous'?24:12, sidePadding:this.fitting.columnLayout ? c.clientWidth/2 : 0 });
+        const result = layoutReadingPages(pages, { width: c.clientWidth, height: c.clientHeight, mode: v.scrollMode, spreadMode:v.spreadMode, pageGap:this.fitting.view?._pageNavigation?.mode==='continuous'?16:8, sidePadding:this.fitting.columnLayout ? c.clientWidth/2 : 0 });
 		setStyles(host, { position: 'relative', width: result.width + 'px', height: result.height + 'px', overflow: 'clip', padding: '0', margin: '0' });
         let changed = !this.boxes || result.width !== this.width || result.height !== this.height;
         const ready = new Set(result.boxes.filter(box=>box.ready).map(box=>box.index));

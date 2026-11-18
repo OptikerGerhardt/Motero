@@ -2322,3 +2322,33 @@ test('queued scroll and subpixel rounding preserve a stationary hold; actual scr
     hold.onScroll({scrollLeft:10,scrollTop:220});
     assert.equal(cancelled,true);
 });
+
+test('theme changes invalidate thumbnails before initialization and reset cached in-flight pages', async () => {
+    const order = [];
+    let finishInit;
+    const initializing = new Promise(resolve => { finishInit = resolve; });
+    const view = Object.assign(Object.create(PDFView.prototype), {
+        _forcedColorScheme: 'dark',
+        _iframeWindow: {
+            document: { documentElement: { dataset: {}, style: { setProperty() {} } } },
+            PDFViewerApplication: {
+                initializedPromise: initializing,
+                pdfViewer: {
+                    getCachedPageViews: () => new Set([
+                        { canvas: {}, reset() { order.push('cached-page'); } },
+                        { renderingState: 1, reset() { order.push('in-flight'); } },
+                        { renderingState: 0, reset() { assert.fail('unused page reset'); } },
+                    ]),
+                    update() { order.push('update'); },
+                },
+            },
+        },
+        _pdfThumbnails: { clear() { order.push('invalidate'); } },
+    });
+    const ready = view._updateColorScheme();
+    assert.deepEqual(order, ['cached-page','in-flight','invalidate']);
+    finishInit();
+    await ready;
+    view.setColorScheme('dark');
+    assert.deepEqual(order, ['cached-page','in-flight','invalidate','update']);
+});

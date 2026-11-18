@@ -835,6 +835,7 @@ abstract class DOMView<State extends DOMViewState, Data> {
 
 		let doRender = () => this._annotationRenderRoot.render(
 			<AnnotationOverlay
+                indicatorInsets={this._options.indicatorInsets}
 				iframe={this._iframe}
 				annotations={displayedAnnotations}
 				selectedAnnotationIDs={this._selectedAnnotationIDs}
@@ -2433,6 +2434,8 @@ abstract class DOMView<State extends DOMViewState, Data> {
         const boldness = Number.isFinite(appearance.fontBoldness) ? Math.max(0, Math.min(1, appearance.fontBoldness!)) : 0;
         root.style.setProperty('--reader-text-stroke', (boldness * .025) + 'em');
         root.style.setProperty('--reader-safe-inset', Math.max(0, this._options.viewportInset || 0) + 'px');
+        root.style.setProperty('--reader-safe-top', Math.max(0,this._options.viewportInsets?.top ?? this._options.viewportInset ?? 0)+'px');
+        root.style.setProperty('--reader-safe-bottom', Math.max(0,this._options.viewportInsets?.bottom ?? this._options.viewportInset ?? 0)+'px');
         if (Number.isFinite(appearance.verticalMargins)) {
             root.dataset.verticalMargins = 'custom';
             root.style.setProperty('--reader-block-margin', Math.max(-20, Math.min(15, appearance.verticalMargins!)) + 'vh');
@@ -2614,6 +2617,8 @@ export type DOMViewOptions<State extends DOMViewState, Data> = {
 	primary?: boolean;
 	mobile?: boolean;
     viewportInset?: number;
+    viewportInsets?: {top:number,bottom:number};
+    indicatorInsets?: {top?:number,right?:number};
 	preview?: boolean;
 	readOnly?: boolean;
 	container: Element;

@@ -7,7 +7,7 @@ export const BOOKMARK_FLAG_PATH = 'M5 2h14v20l-7-4.5-7 4.5z';
 
 // Stable PDF-page corner in viewport coordinates, independent of saved note rects.
 export function bookmarkFlagRect(viewport) {
-    const scale=viewport.scale || 1, size=28*scale;
+    const scale=viewport.scale || 1, size=30*scale;
     const right=viewport.width-16*scale,top=16*scale;
     return [right-size,top,right,top+size];
 }
@@ -15,10 +15,9 @@ export function bookmarkFlagRect(viewport) {
 // Reserved system-bar space remains safe even while chrome is hidden.
 export function readerIndicatorPosition(viewport, insets = {}, size = 34) {
     // Android may deliver hidden-bar insets after the first rendered frame.
-    const top=Math.max(24,Number(insets.top)||0)+16;
-    const right=Math.max(0,Number(insets.right)||0)+20;
-    return {top:viewport.top+Math.min(top,Math.max(0,viewport.height-size-12)),
-        left:viewport.left+Math.max(12,viewport.width-right-size)};
+    const gap=Math.max(24,Number(insets.top)||0,Number(insets.right)||0)+8;
+    return {top:viewport.top+Math.min(gap,Math.max(0,viewport.height-size-12)),
+        left:viewport.left+Math.max(12,viewport.width-gap-size)};
 }
 
 export function readerBookmarkCorner(viewport, insets, x, y) {

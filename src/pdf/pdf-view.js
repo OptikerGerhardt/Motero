@@ -145,6 +145,7 @@ class PDFView {
 		this._darkTheme = options.darkTheme;
 		this._preferedColorTheme = options.colorScheme;
         this._forcedColorScheme = options.colorScheme;
+        this._forcedColorScheme = options.colorScheme;
 		this._onRequestPassword = options.onRequestPassword;
 		this._onInitThumbnails = options.onInitThumbnails;
 		this._onSetThumbnails = options.onSetThumbnails;
@@ -711,6 +712,7 @@ class PDFView {
 	}
 
 	async _updateColorScheme() {
+        if (this._destroyed) return;
 		if (this._forcedColorScheme === 'light') {
 			this._colorScheme = 'light';
 		}
@@ -748,13 +750,14 @@ class PDFView {
 				this._themeColorScheme = 'light';
 			}
 
-			for (let page of this._pages) {
-				page.originalPage.reset();
-			}
+            const viewer=this._iframeWindow.PDFViewerApplication.pdfViewer;
+            const cached=viewer?.getCachedPageViews?.() || viewer?._pages || this._pages.map(p=>p.originalPage);
+            for (const page of cached) if (page.canvas || page.renderingState !== 0) page.reset();
+            // Cancel old-generation thumbnail work before yielding to initialization.
+            this._pdfThumbnails?.clear();
 			await this._iframeWindow.PDFViewerApplication.initializedPromise;
 			if (!this._destroyed) {
 				this._iframeWindow.PDFViewerApplication.pdfViewer.update();
-				this._pdfThumbnails?.clear();
 			}
 		}
 	}
@@ -1737,6 +1740,7 @@ class PDFView {
 	}
 
 	setColorScheme(colorScheme) {
+        if (this._forcedColorScheme === colorScheme) return;
 		this._forcedColorScheme = colorScheme;
 		this._updateColorScheme();
 	}

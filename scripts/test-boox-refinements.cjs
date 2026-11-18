@@ -54,7 +54,7 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   await page.evaluate(()=>window.setReaderIndicatorInsets({top:32,right:12}));
   await page.waitForTimeout(40);
   const flagSafe=await page.evaluate(()=>{const e=window._view._view._iframeWindow.document.querySelector('.motero-bookmark-indicator');return e.getBoundingClientRect().toJSON();});
-  assert.ok(flagSafe.top>=48&&flagSafe.right<=393-32,'flag stays below status bar and inside rounded screen edges');
+  assert.equal(flagSafe.top,40);assert.equal(393-flagSafe.right,40,'bookmark clearance is symmetric and below the status bar');
 
   console.log('PASS cropped PDF frame keeps its shadow; off-screen page bookmark has a passive viewport flag');
 

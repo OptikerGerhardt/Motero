@@ -155,6 +155,7 @@ class View {
             directHighlight: this._options.directHighlight,
             mobileAnnotations: this._type === 'epub',
             viewportInset: this._options.viewportInset,
+            viewportInsets: this._options.viewportInsets,
             indicatorInsets: this._options.indicatorInsets,
 			onAddAnnotation,
 			onUpdateAnnotations,
@@ -494,6 +495,7 @@ class View {
         for (const v of [this._view,this._sdtView]) {
             if (!v) continue;
             v._options.deviceProfile = profile;
+            if (profile.readingAssist === false) v._booxReader?.readingCue?.clear();
             v._directHighlight?.reset();
             v._penInput?.applyProfile(profile);
             if (profile.penOnly === false) v.setPenActive?.(false);

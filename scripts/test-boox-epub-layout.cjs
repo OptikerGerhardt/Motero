@@ -67,6 +67,14 @@ const root=path.resolve(__dirname,'../build/android');
     else assert.ok(Math.abs(spacing.padding-Math.max(0,64+spacing.height*margins/100))<2,JSON.stringify(spacing));
    }
    console.log('PASS '+flow+': independent top/bottom margin control is symmetric and applied to layout');
+   await page.evaluate(()=>{window.setReaderViewportInsets({top:24,bottom:80});window._view.setAppearance({verticalMargins:0});});
+   await page.waitForTimeout(150);
+   const insets=await page.evaluate(()=>{const v=window._view._view,b=v._iframeDocument.body,s=b.querySelector('.sections'),a=getComputedStyle(b),c=getComputedStyle(s);return{top:parseFloat(a.marginTop),bottom:parseFloat(a.marginBottom),start:parseFloat(c.paddingTop),end:parseFloat(c.paddingBottom)};});
+   if(flow==='paginated') {assert.ok(Math.abs(insets.bottom-insets.top-56)<1,JSON.stringify(insets));assert.ok(insets.top>=24&&insets.bottom>=80);}
+   else {assert.equal(insets.start,24);assert.equal(insets.end,80);}
+   await page.evaluate(()=>window.setReaderViewportInset(64));
+   console.log('PASS '+flow+': unequal status/navigation insets preserve the actual readable-area center');
+
   }
   await open('paginated');
   await page.evaluate(()=>window._view.setAppearance({lineHeight:1.2,wordSpacing:0,letterSpacing:0,pageWidth:0,margins:8,verticalMargins:12,fontFamily:'serif'}));
@@ -74,7 +82,7 @@ const root=path.resolve(__dirname,'../build/android');
   await page.waitForFunction(()=>window._view._annotationManager._annotations.some(a=>a.comment?.startsWith('Bookmark')));
   const flag=await page.evaluate(()=>{const v=window._view._view,a=v._annotations.find(a=>a.comment?.startsWith('Bookmark'));
    const el=v._annotationShadowRoot.querySelector(`svg[data-annotation-id="${a.id}"]`),r=el.getBoundingClientRect();return{top:r.top,left:r.left,right:r.right,width:r.width,height:v._iframeWindow.innerHeight};});
-  assert.ok(flag.width>=18&&flag.top>=0&&flag.top<32&&flag.right<=393,JSON.stringify(flag));
+  assert.ok(flag.width>=18&&flag.top>=0&&flag.top<64&&flag.right<=393-32+1,JSON.stringify(flag));
   await tap({x:385,y:22});
   assert.equal(await page.evaluate(()=>window._view._annotationManager._annotations.filter(a=>a.comment?.startsWith('Bookmark')).length),0);
   console.log('PASS viewport corner toggles a larger unclipped EPUB bookmark independently of content margins');

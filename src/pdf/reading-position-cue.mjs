@@ -8,7 +8,7 @@ export function firstReadingWord(chars, project, clip, afterY = clip.top) {
             const rect = [Math.min(...word.map(c => c.rect[0])), Math.min(...word.map(c => c.rect[1])),
                 Math.max(...word.map(c => c.rect[2])), Math.max(...word.map(c => c.rect[3]))];
             const [left, top, right, bottom] = project(rect);
-            if (left >= clip.left - 1 && right <= clip.right + 1 && top >= Math.max(clip.top, afterY) - 1
+            if (left >= clip.left - 1 && right <= clip.right + 1 && top >= clip.top - 1 && bottom > afterY + 1
                     && bottom <= clip.bottom + 1 && right > left && bottom > top
                     && (!best || top < best.top - Math.max(2,Math.min(bottom-top,best.bottom-best.top)*.6))) {
                 best = {left, top, right, bottom};
@@ -36,8 +36,13 @@ export class PDFReadingPositionCue {
     }
     schedule(edge = null) {
         this.clear();
+        if (!this.enabled) return;
         const request = this.pending = {edge, pageIndex: edge?.pageIndex ?? this.viewer.currentPageNumber - 1};
         this.timer = this.win.setTimeout(() => this.show(request).catch(() => this.clearIfCurrent(request)), 180);
+    }
+    get enabled() {
+        const f = this.view._pageFitting;
+        return this.view._options.deviceProfile?.readingAssist !== false && f?.active && f.options?.mode === 'width';
     }
     onScroll() {
         const pending = this.pending;
@@ -47,7 +52,7 @@ export class PDFReadingPositionCue {
     clearIfCurrent(request) { if (this.pending === request) this.clear(); }
     async show(request) {
         const view = this.view, v = this.viewer, c = v.container, index = request.pageIndex;
-        const valid = () => this.pending === request && !view._destroyed && !view._pageFitting?.editor
+        const valid = () => this.pending === request && this.enabled && !view._destroyed && !view._pageFitting?.editor
             && !view._pageFitting?.zooming && !view._booxReader?.isOverview() && v.currentPageNumber === index + 1;
         if (!valid()) { this.clearIfCurrent(request); return; }
         const page = v.getPageView(index);
@@ -61,6 +66,9 @@ export class PDFReadingPositionCue {
             right:b.left+c.clientLeft+c.clientWidth, bottom:b.top+c.clientTop+c.clientHeight};
         const sx = p.width/viewport.width, sy = p.height/viewport.height;
         const frame = view._pageFitting?.layout?.boxes?.[index];
+        const width = frame ? (viewport.width-frame.left-frame.right)*sx : p.width;
+        const height = frame ? (viewport.height-frame.top-frame.bottom)*sy : p.height;
+        if (width <= c.clientWidth+2 && height <= c.clientHeight+2) { this.clearIfCurrent(request); return; }
         if (frame) {
             clip.left = Math.max(clip.left,p.left+frame.left*sx);
             clip.top = Math.max(clip.top,p.top+frame.top*sy);
@@ -79,15 +87,21 @@ export class PDFReadingPositionCue {
         if (!word) return; // Scans without text remain unchanged.
         const oval = this.element = this.win.document.createElement('div');
         oval.className = 'motero-reading-position-cue'; oval.setAttribute('aria-hidden','true');
-        const left = Math.max(clip.left,word.left-5), top = Math.max(clip.top,word.top-4);
-        oval.style.cssText = `position:fixed;pointer-events:none;z-index:9001;isolation:isolate;mix-blend-mode:normal;box-sizing:border-box;border:2px solid ${view._themeColorScheme === 'dark' ? '#ddd' : '#333'};border-radius:50%;opacity:.85;left:${left}px;top:${top}px;width:${Math.min(clip.right,word.right+5)-left}px;height:${Math.min(clip.bottom,word.bottom+4)-top}px;`;
+        const left = Math.max(clip.left,word.left-9), top = Math.max(clip.top,word.top-6);
+        oval.style.cssText = `position:fixed;pointer-events:none;z-index:9001;isolation:isolate;mix-blend-mode:normal;opacity:.9;left:${left}px;top:${top}px;width:${Math.min(clip.right,word.right+9)-left}px;height:${Math.min(clip.bottom,word.bottom+6)-top}px;`;
+        const svg = this.win.document.createElementNS('http://www.w3.org/2000/svg','svg');
+        svg.setAttribute('width','100%'); svg.setAttribute('height','100%'); svg.style.overflow='visible';
+        const ring = this.win.document.createElementNS('http://www.w3.org/2000/svg','ellipse');
+        for (const [key,value] of Object.entries({cx:'50%',cy:'50%',rx:'47%',ry:'43%',fill:'none',stroke:'#000','stroke-width':'2.5',pathLength:'1'})) ring.setAttribute(key,value);
+        svg.append(ring); oval.append(svg);
         this.win.document.documentElement.append(oval);
         if (!view._options.deviceProfile?.eReader && !this.win.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            this.animation = oval.animate([{opacity:.85,transform:'scale(.85)'},
-                {offset:.25,opacity:.85,transform:'scale(1)'},{opacity:0,transform:'scale(1.12)'}],
-                {duration:1100,easing:'ease-out',fill:'forwards'});
+            ring.style.strokeDasharray='1';
+            this.animation = ring.animate([{strokeDashoffset:'1',opacity:1},
+                {offset:.3,strokeDashoffset:'0',opacity:1},{offset:.5,strokeDashoffset:'0',opacity:.85},
+                {strokeDashoffset:'0',opacity:0}], {duration:700,easing:'ease-out',fill:'forwards'});
         }
-        this.expiry = this.win.setTimeout(() => this.clear(), 1100);
+        this.expiry = this.win.setTimeout(() => this.clear(), 700);
     }
     clear() {
         this.pending = null;

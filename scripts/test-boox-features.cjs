@@ -116,10 +116,7 @@ const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/ja
   assert.equal(edge.pointerEvents, 'none');
   assert.equal(edge.opacity, '0.5');
   console.log('PASS reading edge', edge);
-  await page.waitForFunction(()=>!!window._view._view._iframeWindow.document.querySelector('.motero-reading-position-cue'));
-  const cueAfterEdge=await page.evaluate(()=>window._view._view._iframeWindow.document.querySelector('.motero-reading-position-cue').getBoundingClientRect().toJSON());
-  assert.ok(cueAfterEdge.top>=edge.actual-5,'reading oval identifies a word below the old reading edge');
-  console.log('PASS transient reading oval follows the old reading edge');
+  assert.equal(await page.evaluate(()=>!!window._view._view._iframeWindow.document.querySelector('.motero-reading-position-cue')),false,'manual zoom without Fit to Width has no reading oval');
   await page.setViewportSize({ width: 600, height: 856 });
   await page.waitForTimeout(200);
   assert.equal(await page.evaluate(() => !!window._view._view._booxReader.edgeElement?.isConnected), true);
@@ -137,8 +134,6 @@ const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/ja
   console.log('PASS reverse reading edge', reverseEdge);
   await page.evaluate(() => window.turnPageWithHardwareButton(true, 0));
   assert.equal(await page.evaluate(() => !!window._view._view._booxReader.edgeElement), false);
-  await page.waitForFunction(()=>!!window._view._view._iframeWindow.document.querySelector('.motero-reading-position-cue'));
-  console.log('PASS a new page identifies its first visible word without the old edge');
   await open();
   await page.evaluate(() => window._view._view._iframeWindow.PDFViewerApplication.pdfViewer.currentScale = 1.5);
   await touch('touchStart', [{ x: 300, y: 550 }]);

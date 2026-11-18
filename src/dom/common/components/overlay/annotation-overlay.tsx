@@ -1,4 +1,4 @@
-import { isBlackReaderBookmark, BOOKMARK_FLAG_PATH } from '../../../../common/reader-bookmark.mjs';
+import { isBlackReaderBookmark, readerIndicatorPosition, BOOKMARK_FLAG_PATH } from '../../../../common/reader-bookmark.mjs';
 import React, {
 	memo,
 	useCallback,
@@ -196,6 +196,7 @@ export const AnnotationOverlay: React.FC<AnnotationOverlayProps> = (props) => {
 			ref={widgetContainer}
 		>
 			<StaggeredNotes
+                indicatorInsets={props.indicatorInsets}
 				annotations={notes}
 				selectedAnnotationIDs={selectedAnnotationIDs}
 				onPointerDown={handlePointerDown}
@@ -209,6 +210,7 @@ export const AnnotationOverlay: React.FC<AnnotationOverlayProps> = (props) => {
 AnnotationOverlay.displayName = 'AnnotationOverlay';
 
 type AnnotationOverlayProps = {
+    indicatorInsets?: {top?:number,right?:number};
 	iframe: HTMLIFrameElement;
 	annotations: DisplayedAnnotation[];
 	selectedAnnotationIDs: string[];
@@ -505,10 +507,11 @@ const Note: React.FC<NoteProps> = (props) => {
 	let staggerOffset = (staggerIndex || 0) * 15;
     let bookmark = isBlackReaderBookmark(annotation);
     let x = rect.left + (rtl ? -25 : rect.width + 25) + (rtl ? -1 : 1) * staggerOffset;
-    if (bookmark && rect.right >= doc.defaultView.scrollX && rect.left < doc.defaultView.scrollX + doc.defaultView.innerWidth) x = doc.defaultView.scrollX + doc.defaultView.innerWidth - 36 - staggerOffset;
+    const safe = readerIndicatorPosition({top:0,left:0,width:doc.defaultView.innerWidth,height:doc.defaultView.innerHeight},props.indicatorInsets,34);
+    if (bookmark && rect.right >= doc.defaultView.scrollX && rect.left < doc.defaultView.scrollX + doc.defaultView.innerWidth) x = doc.defaultView.scrollX + safe.left + 17 - staggerOffset;
 	let y = rect.top + staggerOffset;
     if (bookmark && rect.bottom > doc.defaultView.scrollY && rect.top < doc.defaultView.scrollY + doc.defaultView.innerHeight) {
-        y = doc.defaultView.scrollY + 28 + staggerOffset;
+        y = doc.defaultView.scrollY + safe.top + 17 + staggerOffset;
     }
 	return (
 		<CommentIcon
@@ -530,6 +533,7 @@ const Note: React.FC<NoteProps> = (props) => {
 };
 Note.displayName = 'Note';
 type NoteProps = {
+    indicatorInsets?: {top?:number,right?:number};
 	annotation: DisplayedAnnotation,
 	staggerIndex?: number,
 	selected: boolean;
@@ -572,6 +576,7 @@ const StaggeredNotes: React.FC<StaggeredNotesProps> = (props) => {
 			if (annotation.id) {
 				return (
 					<Note
+                        indicatorInsets={props.indicatorInsets}
 						annotation={annotation}
 						staggerIndex={stagger}
 						key={annotation.key}
@@ -587,6 +592,7 @@ const StaggeredNotes: React.FC<StaggeredNotesProps> = (props) => {
 				return (
 					<div className="disable-pointer-events" key={annotation.key}>
 						<Note
+                        indicatorInsets={props.indicatorInsets}
 							annotation={annotation}
 							staggerIndex={stagger}
 							key={annotation.key}
@@ -600,6 +606,7 @@ const StaggeredNotes: React.FC<StaggeredNotesProps> = (props) => {
 };
 StaggeredNotes.displayName = 'StaggeredNotes';
 type StaggeredNotesProps = {
+    indicatorInsets?: {top?:number,right?:number};
 	annotations: DisplayedAnnotation[];
 	selectedAnnotationIDs: string[];
 	onPointerDown: (annotation: DisplayedAnnotation, event: React.PointerEvent) => void;
@@ -860,7 +867,7 @@ type ResizerProps = {
 };
 
 let CommentIcon = React.forwardRef<SVGSVGElement, CommentIconProps>((props, ref) => {
-	let size = props.large ? (isBlackReaderBookmark(props.annotation) ? 40 : 24) : 14;
+	let size = props.large ? (isBlackReaderBookmark(props.annotation) ? 34 : 24) : 14;
 	let x = props.x - size / 2;
 	let y = props.y - size / 2;
 	return <>
@@ -871,7 +878,8 @@ let CommentIcon = React.forwardRef<SVGSVGElement, CommentIconProps>((props, ref)
 			y={y}
 			width={size}
 			height={size}
-			viewBox="0 0 24 24"
+			viewBox={isBlackReaderBookmark(props.annotation) ? '5 2 14 20' : '0 0 24 24'}
+            preserveAspectRatio="xMaxYMin meet"
 			data-annotation-id={props.annotation?.id}
 			ref={ref}
 		>

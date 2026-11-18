@@ -24,19 +24,19 @@ test('whitespace, excluded flows and scans do not create a false word cue',()=>{
 });
 function fixture({ink=false}={}) {
  const timers=new Map();let id=0,animations=0;
- const node=()=>({style:{},setAttribute(){},remove(){this.removed=true;},animate(){animations++;return{cancel(){}};}});
+ const node=()=>({style:{},attributes:{},children:[],setAttribute(k,v){this.attributes[k]=v;},append(n){this.children.push(n);},remove(){this.removed=true;},animate(){animations++;return{cancel(){}};}});
  const c={scrollTop:0,scrollLeft:0,clientWidth:200,clientHeight:200,clientTop:0,clientLeft:0,getBoundingClientRect:()=>({left:0,top:0})};
- const page={pdfPage:{},div:{getBoundingClientRect:()=>({left:0,top:0,right:200,bottom:200,width:200,height:200})},
-  viewport:{width:200,height:200,convertToViewportRectangle:identity,convertToViewportPoint:(x,y)=>[x,y]}};
+ const page={pdfPage:{},div:{getBoundingClientRect:()=>({left:0,top:0,right:200,bottom:400,width:200,height:400})},
+  viewport:{width:200,height:400,convertToViewportRectangle:identity,convertToViewportPoint:(x,y)=>[x,y]}};
  const viewer={container:c,currentScale:1,currentPageNumber:1,getPageView:()=>page};
- const win={PDFViewerApplication:{pdfViewer:viewer},document:{createElement:node,documentElement:{append(){}}},matchMedia:()=>({matches:false}),setTimeout(fn){timers.set(++id,fn);return id;},clearTimeout(i){timers.delete(i);}};
- const view={_iframeWindow:win,_options:{deviceProfile:{eReader:ink}},_pdfPages:{0:{chars:[char('A',10,10,{wordBreakAfter:true}),char('B',10,50,{wordBreakAfter:true})]}},_ensureBasicPageData:async()=>{},_booxReader:{isOverview:()=>false}};
+ const win={PDFViewerApplication:{pdfViewer:viewer},document:{createElement:node,createElementNS:node,documentElement:{append(){}}},matchMedia:()=>({matches:false}),setTimeout(fn){timers.set(++id,fn);return id;},clearTimeout(i){timers.delete(i);}};
+ const view={_iframeWindow:win,_options:{deviceProfile:{eReader:ink}},_pageFitting:{active:true,options:{mode:'width'}},_pdfPages:{0:{chars:[char('A',10,10,{wordBreakAfter:true}),char('B',10,50,{wordBreakAfter:true})]}},_ensureBasicPageData:async()=>{},_booxReader:{isOverview:()=>false}};
  const cue=new PDFReadingPositionCue(view);
  return{cue,view,c,timers,animations:()=>animations};
 }
 test('oval uses the first word below the guide, animates, expires and remains passive',async()=>{
  const {cue,animations,timers}=fixture();cue.schedule({pageIndex:0,point:[0,35],next:true});await cue.show(cue.pending);
- assert.match(cue.element.style.cssText,/pointer-events:none/);assert.match(cue.element.style.cssText,/top:46px/);
+ assert.match(cue.element.style.cssText,/pointer-events:none/);assert.match(cue.element.style.cssText,/top:44px/);
  assert.equal(animations(),1);const element=cue.element;timers.get(cue.expiry)();assert.equal(element.removed,true);assert.equal(cue.element,null);
 });
 test('e-reader profile shows a static temporary oval with no animation loop',async()=>{
@@ -50,4 +50,19 @@ test('new scrolls supersede pending requests and clear visible ovals',async()=>{
  const {cue}=fixture();cue.schedule();const old=cue.pending;cue.onScroll();assert.notEqual(cue.pending,old);
  await cue.show(old);assert.equal(cue.element,null);
  await cue.show(cue.pending);assert.ok(cue.element);cue.onScroll();assert.equal(cue.element,null);
+});
+
+test('an edge through the lower half of a line still marks that same line',()=>{
+ const chars=[char('A',10,10,{wordBreakAfter:true}),char('B',10,40,{wordBreakAfter:true})];
+ assert.equal(firstReadingWord(chars,identity,clip,18).top,10);
+});
+test('Reading Assist is limited to partial Fit to Width pages and honors the global switch',async()=>{
+ const {cue,view}=fixture();view._pageFitting.options.mode='height';cue.schedule();assert.equal(cue.pending,null);
+ view._pageFitting.options.mode='width';view._options.deviceProfile.readingAssist=false;cue.schedule();assert.equal(cue.pending,null);
+ view._options.deviceProfile.readingAssist=true;cue.viewer.container.clientHeight=500;cue.schedule();await cue.show(cue.pending);assert.equal(cue.element,null);
+});
+test('the larger oval draws a black contour instead of scaling the word marker',async()=>{
+ const {cue}=fixture();cue.schedule();await cue.show(cue.pending);
+ const ring=cue.element.children[0].children[0];assert.equal(ring.attributes.stroke,'#000');assert.equal(ring.attributes.pathLength,'1');
+ assert.match(cue.element.style.cssText,/width:26px/);cue.clear();
 });

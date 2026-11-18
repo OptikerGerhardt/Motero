@@ -34,7 +34,7 @@ test('prepared buffered pages have compact, centered crops without blocking the 
     fitting.layout.apply(fitting.geometry);
     for (const page of pages) assert.match(page.div.style.clipPath,/^inset\(/);
     const boxes = fitting.layout.boxes;
-    for (let i=1;i<boxes.length;i++) assert.equal(boxes[i].y-boxes[i-1].y-boxes[i-1].height,12);
+    for (let i=1;i<boxes.length;i++) assert.equal(boxes[i].y-boxes[i-1].y-boxes[i-1].height,8);
     assert.ok(boxes.every(b=>Math.abs(b.x+b.width/2-300)<0.001));
 	fitting.configure({mode:'none'});
 	for(let p of pages) {assert.equal(p.div.style.clipPath,'');assert.equal(p.div.style.translate,'');}

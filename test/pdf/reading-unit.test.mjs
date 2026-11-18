@@ -19,7 +19,7 @@ test('vertical, horizontal and wrapped layouts never split a spread, including m
   const pages=Array.from({length:7},(_,index)=>({index,width:170,height:index%2?250:300}));
   const {boxes}=layoutReadingPages(pages,{width:400,height:600,mode,spreadMode});
   for(let i=0;i<pages.length;){const unit=readingUnit(i,pages.length,spreadMode);
-   if(unit.length===2){const [a,b]=unit.map(i=>boxes[i]);assert.equal(a.x+a.width+12,b.x);assert.equal(a.y+a.height/2,b.y+b.height/2);}
+   if(unit.length===2){const [a,b]=unit.map(i=>boxes[i]);assert.equal(a.x+a.width+8,b.x);assert.equal(a.y+a.height/2,b.y+b.height/2);}
    i=unit.at(-1)+1;
   }
  }

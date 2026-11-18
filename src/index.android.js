@@ -188,9 +188,10 @@ window.setReaderIndicatorInsets = value => {
     if (!window._view) return;
     window._view._options.indicatorInsets = value;
     const view = window._view._view;
-    if (view) { view._options.indicatorInsets = value; view._booxReader?.scheduleIndicators(); }
+    if (view) { view._options.indicatorInsets = value; view._booxReader?.scheduleIndicators(); view._renderAnnotations?.(); }
 };
 window.setReaderViewportInset = value => window._view?._view?.setReaderViewportInset?.(value);
+window.setReaderViewportInsets = value => window._view?._view?.setReaderViewportInsets?.(value);
 window.setReaderProgress = value => {
     if (window._view) window._view._options.readingProgress = value;
     window._readingProgress?.update(value);

@@ -12,3 +12,10 @@ test('full bleed and degenerate EPUB frames remain unchanged',()=>{
  assert.equal(pageLineBalance(900,0,24),0);assert.equal(pageLineBalance(20,10,24),0);
  assert.equal(pageLineBalance(900,20,NaN),0);
 });
+
+test('unequal system insets balance text within the actual readable region',()=>{
+ const top=24,bottom=88,h=900,line=27,b=pageLineBalance(h,top,line,bottom);
+ const usable=h-top-bottom-2*b;
+ assert.ok(Math.abs(usable/line-Math.round(usable/line))<.001);
+ assert.equal(((top+b)+(h-bottom-b))/2,(h+top-bottom)/2);
+});

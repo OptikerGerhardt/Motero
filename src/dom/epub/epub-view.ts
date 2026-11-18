@@ -1,4 +1,5 @@
 import { pageLineBalance } from './page-frame.mjs';
+import { readerBookmarkCorner } from '../../common/reader-bookmark.mjs';
 import injectCSS from './stylesheets/inject.scss';
 import Path from "epubjs/src/utils/path";
 import {
@@ -86,26 +87,32 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
     private _onFocusReturn = () => this._handleVisibilityChange();
 
     setReaderViewportInset(value: number) {
-        const inset = Number.isFinite(value) ? Math.max(0, value) : 0;
-        if (this._options.viewportInset === inset) return;
-        this._options.viewportInset = inset;
-        if (!this.initialized) {
-            this.initializedPromise.then(() => {
-                if (!this._disposed) this._iframeDocument.documentElement.style.setProperty("--reader-safe-inset", (this._options.viewportInset || 0) + "px");
-            });
-            return;
-        }
-        this._keepPosition(() => {
-            this._iframeDocument.documentElement.style.setProperty("--reader-safe-inset", inset + "px");
+        this.setReaderViewportInsets({top:value,bottom:value});
+    }
+
+    setReaderViewportInsets(value: {top?:number,bottom?:number}) {
+        const finite = (n: number | undefined) => Number.isFinite(n) ? Math.max(0,n!) : 0;
+        const insets = {top:finite(value?.top),bottom:finite(value?.bottom)};
+        const previous = this._options.viewportInsets;
+        if (previous?.top === insets.top && previous?.bottom === insets.bottom) return;
+        this._options.viewportInsets = insets;
+        const apply = () => {
+            const current = this._options.viewportInsets!;
+            const root = this._iframeDocument.documentElement;
+            root.style.setProperty('--reader-safe-top', current.top + 'px');
+            root.style.setProperty('--reader-safe-bottom', current.bottom + 'px');
+            this._balancePageFrame();
             this._handleViewUpdate();
-        });
+        };
+        if (!this.initialized) {
+            this.initializedPromise.then(() => { if (!this._disposed) this._keepPosition(apply); });
+        } else this._keepPosition(apply);
     }
 
     private _bookmarkPointer: { x: number, y: number, time: number } | null = null;
 
     isBookmarkCorner(x: number, y: number): boolean {
-        return x >= this._iframeWindow.innerWidth / 2 && x <= this._iframeWindow.innerWidth
-            && y >= 0 && y <= Math.max(64, this._iframeWindow.innerHeight / 11);
+        return readerBookmarkCorner({top:0,left:0,width:this._iframeWindow.innerWidth,height:this._iframeWindow.innerHeight},this._options.indicatorInsets,x,y);
     }
 
     // The shortcut belongs to the viewport corner, independent of text margins.
@@ -1472,9 +1479,10 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
         if (this._options.platform !== 'android' || this._isFixedLayout || !this._iframeWindow.getComputedStyle(this._iframeDocument.body).writingMode.startsWith('horizontal') || this.flowMode !== 'paginated') return;
         const paragraph = this._iframeDocument.querySelector('replaced-body p');
         if (!paragraph) return;
-        const margin = parseFloat(this._iframeWindow.getComputedStyle(this._iframeDocument.body).marginTop);
+        const style = this._iframeWindow.getComputedStyle(this._iframeDocument.body);
+        const margin = parseFloat(style.marginTop), bottom = parseFloat(style.marginBottom);
         const lineHeight = parseFloat(this._iframeWindow.getComputedStyle(paragraph).lineHeight);
-        const balance = Math.max(0, pageLineBalance(this._iframeWindow.innerHeight, margin, lineHeight));
+        const balance = Math.max(0, pageLineBalance(this._iframeWindow.innerHeight, margin, lineHeight, bottom));
         root.style.setProperty('--reader-line-balance', balance + 'px');
     }
 
