@@ -1,5 +1,7 @@
 # Reader optimization review — November 8, 2026
 
+Historical review; candidate status checked November 18. Use the [current open feature plan](../FEATUREPLAN.md) for priorities and the [Build 319 integration notes](E_READER_AND_STYLUS.md) for delivered input controls.
+
 ## Implemented in Build 311
 
 - Resolve explicit Reader Light/Dark before loading HTML; Automatic follows Android. Avoid identical theme resets, synchronize system-bar contrast and restore the previous window appearance on exit.
@@ -14,12 +16,12 @@ Browser timings are fixture measurements, not BOOX pen-to-pixel latency or guara
 
 | Priority | Proposal | Evidence and limits |
 | --- | --- | --- |
-| High | Pen/finger input profiles, hardware eraser buttons and device event diagnostics | [Zotero Android #106](https://github.com/zotero/zotero-android/issues/106), [#321](https://github.com/zotero/zotero-android/issues/321). Establish actual InkSense/EMR events before mapping buttons. SDK-specific Nutrient advice does not apply to Motero's PDF.js reader. |
+| Verification | Pen/finger profiles, hardware eraser buttons and diagnostics were delivered in Build 319; physical InkSense/EMR checks remain | [Zotero Android #106](https://github.com/zotero/zotero-android/issues/106), [#321](https://github.com/zotero/zotero-android/issues/321). SDK-specific Nutrient advice does not apply to Motero's PDF.js reader. |
 | High | Optional low-latency native BOOX preview with portable Android fallback | [Official Onyx pen SDK](https://github.com/onyx-intl/OnyxAndroidDemo/blob/master/doc/Onyx-Pen-SDK.md) includes a WebView example. [Saber's adapter](https://github.com/saber-notes/saber/tree/main/packages/onyxsdk_pen) is an implementation reference. InkSense compatibility, redistribution terms, native ABI/page-size support and latency require validation before shipping a dependency. |
-| Medium | Monochrome color labels and reduced motion | [#232](https://github.com/zotero/zotero-android/issues/232), [#230](https://github.com/zotero/zotero-android/issues/230). Prefer explicit options and respect Android animation settings. |
+| Medium | Optional monochrome color labels; E-Reader contrast/reduced motion already delivered in Build 319 | [#232](https://github.com/zotero/zotero-android/issues/232), [#230](https://github.com/zotero/zotero-android/issues/230). Respect Android animation settings. |
 | Medium | Sync retries with Retry-After/backoff and clearer diagnostics | [#308](https://github.com/zotero/zotero-android/issues/308). Test server failures and account state independently of reader rendering. |
 | Later | Citation generation, images in notes and explicit ink grouping | [#94](https://github.com/zotero/zotero-android/issues/94), [#213](https://github.com/zotero/zotero-android/issues/213), [#190](https://github.com/zotero/zotero-android/issues/190). |
-| Experimental | Variable-pressure ink | [Reader PR #264](https://github.com/zotero/reader/pull/264) remains a draft and splits strokes into multiple annotations. Defer until grouping, undo and cross-client behavior are verified. |
+| Experimental | Variable-pressure ink | [Reader PR #264](https://github.com/zotero/reader/pull/264) was a draft at the original review and splits strokes into multiple annotations. Defer until grouping, undo and cross-client behavior are verified. |
 
 Hardware page turning, manual cropping, overview navigation and font-size controls already exist in Motero.
 
