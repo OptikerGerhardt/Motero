@@ -1,0 +1,21 @@
+{
+  "passed": true,
+  "android_api": 31,
+  "emulator_only": true,
+  "version_code": 333,
+  "candidate_sha256": "c8b3fb672c08c50472d119d20fac2856bb86f64f4e57a38d86b7e2910b9dec33",
+  "legacy_duplicate_permission_failure_reproduced": true,
+  "private_data_marker_preserved": true,
+  "application_uid_preserved": true,
+  "updated_app_started": true,
+  "old_key_update_rejected": true,
+  "old_key_client_permission_denied": true,
+  "receiver_permission": "org.zotero.android.debug.MOTERO_DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION",
+  "current_release_update": {
+    "baseline_sha256": "31a73cbf33635ec37beef2ee8e85e7b09aeb9fa0f17a51c0f30d7044953a29a3",
+    "private_data_marker_preserved": true,
+    "application_uid_preserved": true,
+    "updated_app_started": true,
+    "old_key_update_rejected": true
+  }
+}

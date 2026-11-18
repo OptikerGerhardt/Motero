@@ -1,7 +1,9 @@
-# Build 333 / Motero 1.1.7
+# Build 333 / Motero 1.1.7 — veröffentlicht und unabhängig geprüft
 
-- [Änderungen](docs/READER_333.md) · [Testnachweise](qa/build333/README.md).
-- Releaseprüfung vergleicht Updates von Builds 303 und 332 auf Android API 31/35.
+- Anwendung `7ad6d3fe`, Reader `dd353a3e`. Die 17 Reader-, Bibliotheks- und Stabilitätsarbeiten sind ausgeliefert. [APK und Quellen](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.7-333) · [Änderungen](docs/READER_333.md)
+- 455 Reader-Fälle, 177 Android-Tests, 24 Browser-Suiten, 43 PDF.js-Pixeltests und 19 offizielle Viewer-Testfälle bestanden. [Release-Workflow](https://github.com/OptikerGerhardt/Motero/actions/runs/44331959479)
+- Updates von 303 und 332 auf API 31/35 erhalten Datenmarker und UID, starten die App und weisen den alten Signaturschlüssel ab.
+- Die veröffentlichte APK mit SHA-256 `c8b3fb672c08c50472d119d20fac2856bb86f64f4e57a38d86b7e2910b9dec33`, Signatur, eingebettete Quellen und vollständiges Quellarchiv wurden unabhängig geprüft. [Nachweise](qa/build333/README.md)
 
 # Build 332 / Motero 1.1.6 — veröffentlicht und unabhängig geprüft
 
