@@ -18,7 +18,7 @@ data class CreateReaderViewOptions(
 
     var deviceProfile: org.zotero.android.ereader.DeviceProfile = org.zotero.android.ereader.DeviceProfileStore.state.value,
     var colorScheme: String = "light",
-    var viewportInset: Double = 0.0,
+    var viewportInsets: Map<String, Float> = emptyMap(),
     var indicatorInsets: Map<String, Float> = emptyMap(),
     var pageBackground: String = "default",
     var readingProgress: Map<String, Any>? = null,

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reader333_reading_assist">Reading Assist</string>
+    <string name="reader333_reading_assist_description">Briefly circle the next reading word in Fit to Width when only part of the page is visible.</string>
+</resources>

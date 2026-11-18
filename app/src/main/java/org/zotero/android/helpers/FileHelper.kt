@@ -1,9 +1,11 @@
 package org.zotero.android.helpers
 
-import okhttp3.internal.closeQuietly
 import timber.log.Timber
 import java.io.File
 import java.io.InputStream
+import java.nio.file.Files
+import java.nio.file.attribute.BasicFileAttributes
+import java.nio.file.attribute.FileTime
 import java.security.DigestInputStream
 import java.security.MessageDigest
 import kotlin.io.encoding.Base64
@@ -75,43 +77,46 @@ object FileHelper {
         return Base64.decode(bytes)
     }
 
-    private val cachedMD5AndModificationDateByURL = mutableMapOf<String, Triple<String, Long, Long>>()
+    private data class FileStamp(val modified: FileTime, val size: Long, val key: Any?)
+    private data class CachedDigest(val stamp: FileStamp, val digest: String)
+    private val digests = LinkedHashMap<String, CachedDigest>(64, .75f, true)
+    private const val MAX_DIGESTS = 512
+
+    private fun stamp(file: File): FileStamp? {
+        val attrs = Files.readAttributes(file.toPath(), BasicFileAttributes::class.java)
+        return if (attrs.isRegularFile) FileStamp(attrs.lastModifiedTime(), attrs.size(), attrs.fileKey()) else null
+    }
 
     fun cachedMD5(file: File): String? {
-        var newModificationDate: Long = Long.MIN_VALUE
-        var newSize: Long = 0L
-        val modificationDate = file.lastModified()
-        if (modificationDate != 0L) {
-            newModificationDate = modificationDate
+        val key = file.absolutePath
+        return try {
+            // A concurrent atomic replacement must not cache the old digest for the new file.
+            repeat(2) {
+                val before = stamp(file) ?: return null
+                synchronized(digests) { digests[key]?.takeIf { it.stamp == before }?.let { return it.digest } }
+                val digest = md5(file)
+                if (stamp(file) == before) {
+                    synchronized(digests) {
+                        digests[key] = CachedDigest(before, digest)
+                        if (digests.size > MAX_DIGESTS) digests.remove(digests.entries.first().key)
+                    }
+                    return digest
+                }
+            }
+            synchronized(digests) { digests.remove(key) }
+            null
+        } catch (e: java.io.IOException) {
+            synchronized(digests) { digests.remove(key) }
+            Timber.d(e, "Unable to verify attachment checksum")
+            null
+        } catch (e: SecurityException) {
+            synchronized(digests) { digests.remove(key) }
+            Timber.d(e, "Unable to read attachment checksum")
+            null
         }
-        val size = file.length()
-        if (size != 0L) {
-            newSize = size
-        }
-        val kkk = cachedMD5AndModificationDateByURL[file.absolutePath]
-        if (kkk != null && newModificationDate == kkk.second && newSize == kkk.third) {
-            return kkk.first
-        }
-
-
-        val result = runCatching { md5(file) }
-        result.onSuccess { md5 ->
-            cachedMD5AndModificationDateByURL[file.absolutePath] =
-                Triple(md5, newModificationDate, newSize)
-        }
-        result.onFailure { e ->
-            cachedMD5AndModificationDateByURL.remove(file.absolutePath)
-            Timber.e(e)
-        }
-        return result.getOrNull()
     }
 
-    fun md5(file: File): String {
-        val inputStream = file.inputStream()
-        val md5 = md5(inputStream)
-        inputStream.closeQuietly()
-        return md5
-    }
+    fun md5(file: File): String = file.inputStream().use(::md5)
 
 
 }

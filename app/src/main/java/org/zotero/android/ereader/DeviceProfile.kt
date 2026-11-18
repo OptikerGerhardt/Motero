@@ -17,6 +17,7 @@ data class DeviceProfile(
     val buttonMask: Int = 2,
     val eraserSize: Float = 12f,
     val eraserMode: String = "stroke",
+    val readingAssist: Boolean = true,
 )
 
 object DeviceProfileStore {
@@ -29,6 +30,7 @@ object DeviceProfileStore {
         preferences = prefs
         mutable.value = DeviceProfile(
             eReader = prefs.getBoolean("eReader", false),
+            readingAssist = prefs.getBoolean("readingAssist", true),
             protectReaderEdges = prefs.getBoolean("protectReaderEdges", false),
             penOnly = prefs.getBoolean("penOnly", true),
             eraserButtonMode = if (prefs.getString("eraserButtonMode", "hold") == "toggle") "toggle" else "hold",
@@ -38,7 +40,7 @@ object DeviceProfileStore {
     fun update(value: DeviceProfile) {
         mutable.value = value
         preferences?.edit()?.putBoolean("protectReaderEdges", value.protectReaderEdges)?.putBoolean("eReader", value.eReader)?.putBoolean("penOnly", value.penOnly)
-            ?.putString("eraserButtonMode", value.eraserButtonMode)?.putInt("buttonMask", value.buttonMask)?.apply()
+            ?.putBoolean("readingAssist", value.readingAssist)?.putString("eraserButtonMode", value.eraserButtonMode)?.putInt("buttonMask", value.buttonMask)?.apply()
     }
     fun assignedKey(descriptor: String): Int? = preferences?.getInt("penKey:$descriptor", -1)?.takeIf { it >= 0 }
     fun assignKey(descriptor: String, keyCode: Int) { preferences?.edit()?.putInt("penKey:$descriptor", keyCode)?.apply() }

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reader333_reading_assist">Reading Assist</string>
+    <string name="reader333_reading_assist_description">In „Fit to Width“ kurz das nächste Lesewort einkreisen, wenn nur ein Teil der Seite sichtbar ist.</string>
+</resources>

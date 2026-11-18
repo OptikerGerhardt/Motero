@@ -132,14 +132,10 @@ internal fun ReaderBox(
             }
             val cropInsets = WindowInsets.statusBarsIgnoringVisibility.union(WindowInsets.displayCutout)
                 .union(WindowInsets.navigationBarsIgnoringVisibility.only(WindowInsetsSides.Bottom))
-            // EPUB keeps one stable, centered reading frame. Reserve the same
-            // space above and below, including the progress strip and cutout.
-            val epubEdge = with(density) {
-                maxOf(WindowInsets.statusBarsIgnoringVisibility.union(WindowInsets.displayCutout).getTop(this),
-                    WindowInsets.navigationBarsIgnoringVisibility.getBottom(this) + 40.dp.roundToPx()).toDp()
-            }
-            androidx.compose.runtime.LaunchedEffect(epubEdge, viewportHeight, viewState.fileType) {
-                viewModel.setReaderViewportInset(if (viewState.fileType == ReaderFileType.EPUB) epubEdge.value else 0f, viewportHeight)
+            val epubTop = with(density) { WindowInsets.statusBarsIgnoringVisibility.union(WindowInsets.displayCutout).getTop(this).toDp().value }
+            val epubBottom = with(density) { maxOf(WindowInsets.navigationBarsIgnoringVisibility.getBottom(this), WindowInsets.displayCutout.getBottom(this)).toDp().value + 40f }
+            androidx.compose.runtime.LaunchedEffect(epubTop, epubBottom, viewportHeight, viewState.fileType) {
+                if (viewState.fileType == ReaderFileType.EPUB) viewModel.setReaderViewportInsets(epubTop, epubBottom, viewportHeight)
             }
             val readingModifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)
                 .then(if (viewState.fileType == ReaderFileType.EPUB) Modifier

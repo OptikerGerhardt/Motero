@@ -1,8 +1,6 @@
 package org.zotero.android.screens.reader
 
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.material3.BottomAppBarDefaults
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.foundation.layout.*
@@ -24,21 +22,9 @@ internal fun ReaderSideBySideMode(
     annotationsLazyListState: LazyListState,
     annotationMaxSideSize: Int,
 ) {
-    val isPdfOrHtml = viewState.isPdfOrHtml()
-
-    var rowModifier = Modifier
-        .fillMaxSize()
-
-    if (!isPdfOrHtml) {
-        rowModifier = rowModifier
-            .windowInsetsPadding(BottomAppBarDefaults.windowInsets)
-            .windowInsetsPadding(TopAppBarDefaults.windowInsets)
-            .padding(
-                top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-            )
-    }
-
-    BoxWithConstraints(rowModifier.clipToBounds()) {
+    // The Reader owns its safe area once. Outer EPUB padding used to add a
+    // second, asymmetric status-bar offset on tablets and on bar toggles.
+    BoxWithConstraints(Modifier.fillMaxSize().clipToBounds()) {
         val sidebarWidth = minOf(330.dp, maxWidth * .45f)
         val target = if (viewState.showSideBar) sidebarWidth else 0.dp
         val visibleWidth by animateDpAsState(target, org.zotero.android.ereader.deviceTween(220), label = "reader sidebar placement")

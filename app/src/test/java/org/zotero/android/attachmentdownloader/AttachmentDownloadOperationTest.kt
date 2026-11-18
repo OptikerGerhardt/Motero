@@ -149,6 +149,20 @@ class AttachmentDownloadOperationTest {
         results.single() shouldBeInstanceOf CustomResult.GeneralError.CodeError::class
     }
 
+    @Test
+    fun `download reports only changed whole percentages`() {
+        coEvery { zoteroApi.downloadFile(any()) } returns Response.success(ByteArray(300_000).toResponseBody())
+        val progress = mutableListOf<Int>()
+        val operation = operation().apply {
+            onDownloadProgressUpdated = object : OnDownloadProgressUpdated {
+                override fun onProgressUpdated(progressInHundreds: Int) { progress.add(progressInHundreds) }
+            }
+        }
+        runBlocking { operation.start(this) }
+        progress shouldBeEqualTo (1..100).toList()
+        results.single() shouldBeInstanceOf CustomResult.GeneralSuccess::class
+    }
+
     private fun runOperation() {
         val operation = operation()
         runBlocking { operation.start(this) }

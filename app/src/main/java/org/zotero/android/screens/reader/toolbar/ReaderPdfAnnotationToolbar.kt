@@ -102,44 +102,45 @@ internal fun ReaderPdfToolOptions(viewModel: ReaderViewModel, state: ReaderViewS
     }
     val sizeLabel = stringResource(Strings.size)
     var draftSize by remember(tool, storedSize) { mutableFloatStateOf(storedSize ?: 2f) }
-    Column(modifier.padding(horizontal = 4.dp), verticalArrangement = Arrangement.Center) {
-        if (!eraser) {
-            val type = when (tool) {
-                ReaderAnnotationTool.ink -> AnnotationType.ink
-                ReaderAnnotationTool.text -> AnnotationType.text
-                ReaderAnnotationTool.image -> AnnotationType.image
-                else -> AnnotationType.note
-            }
-            val colors = AnnotationsConfig.colors(type)
-            val paletteScroll = rememberLazyListState()
-            BoxWithConstraints(Modifier.fillMaxWidth().height(48.dp)) {
-                val slot = maxOf(40.dp, maxWidth / colors.size.coerceAtLeast(1))
-                LazyRow(Modifier.fillMaxSize(), state = paletteScroll, verticalAlignment = Alignment.CenterVertically,
+    val type = when (tool) {
+        ReaderAnnotationTool.ink -> AnnotationType.ink
+        ReaderAnnotationTool.text -> AnnotationType.text
+        ReaderAnnotationTool.image -> AnnotationType.image
+        else -> AnnotationType.note
+    }
+    val colors = AnnotationsConfig.colors(type)
+    BoxWithConstraints(modifier.padding(horizontal = 4.dp)) {
+        val slot = maxOf(40.dp, maxWidth / colors.size.coerceAtLeast(1))
+        val paletteInset = if (eraser) 0.dp else (slot - 26.dp) / 2
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Center) {
+            if (!eraser) {
+                val paletteScroll = rememberLazyListState()
+                LazyRow(Modifier.fillMaxWidth().height(48.dp), state = paletteScroll, verticalAlignment = Alignment.CenterVertically,
                     flingBehavior = rememberSnapFlingBehavior(paletteScroll)) {
                     items(colors.size) { i -> ReaderToolColor(colors[i], state.toolColors[tool], slot, viewModel::setPdfToolColor) }
                 }
             }
-        }
-        if (storedSize != null || eraser) Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (storedSize != null) {
-                val ink = tool == ReaderAnnotationTool.ink
-                Slider(value = if (ink) readerInkWidths.indexOf(snapInkWidth(draftSize)).toFloat() else draftSize,
-                    onValueChange = { draftSize = if (ink) readerInkWidths[it.roundToInt().coerceIn(readerInkWidths.indices)] else it },
-                    steps = if (ink) readerInkWidths.size - 2 else 0,
-                    onValueChangeFinished = { viewModel.setPdfToolSize(draftSize) },
-                    valueRange = if (ink) 0f..readerInkWidths.lastIndex.toFloat() else if (tool == ReaderAnnotationTool.text) 6f..72f else .5f..25f,
-                    modifier = Modifier.weight(1f)
-                        .semantics { contentDescription = sizeLabel })
-                Text(java.text.NumberFormat.getNumberInstance().apply { maximumFractionDigits = 2 }.format(draftSize),
-                    style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(40.dp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            if (eraser) {
-                SingleChoiceSegmentedButtonRow {
-                    listOf("area" to R.string.reader_area_eraser, "stroke" to R.string.reader_stroke_eraser).forEachIndexed { i, (mode, label) ->
-                        SegmentedButton(selected = state.eraserMode == mode, onClick = { viewModel.setPdfEraserMode(mode) },
-                            shape = SegmentedButtonDefaults.itemShape(i, 2), icon = {}) {
-                            Text(stringResource(label), style = MaterialTheme.typography.labelSmall)
+            if (storedSize != null || eraser) Row(Modifier.fillMaxWidth().height(48.dp).padding(start = paletteInset), verticalAlignment = Alignment.CenterVertically) {
+                if (storedSize != null) {
+                    val ink = tool == ReaderAnnotationTool.ink
+                    Slider(value = if (ink) readerInkWidths.indexOf(snapInkWidth(draftSize)).toFloat() else draftSize,
+                        onValueChange = { draftSize = if (ink) readerInkWidths[it.roundToInt().coerceIn(readerInkWidths.indices)] else it },
+                        steps = if (ink) readerInkWidths.size - 2 else 0,
+                        onValueChangeFinished = { viewModel.setPdfToolSize(draftSize) },
+                        valueRange = if (ink) 0f..readerInkWidths.lastIndex.toFloat() else if (tool == ReaderAnnotationTool.text) 6f..72f else .5f..25f,
+                        modifier = Modifier.weight(1f)
+                            .semantics { contentDescription = sizeLabel })
+                    Text(java.text.NumberFormat.getNumberInstance().apply { maximumFractionDigits = 2 }.format(draftSize),
+                        style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(40.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                if (eraser) {
+                    SingleChoiceSegmentedButtonRow {
+                        listOf("area" to R.string.reader_area_eraser, "stroke" to R.string.reader_stroke_eraser).forEachIndexed { i, (mode, label) ->
+                            SegmentedButton(selected = state.eraserMode == mode, onClick = { viewModel.setPdfEraserMode(mode) },
+                                shape = SegmentedButtonDefaults.itemShape(i, 2), icon = {}) {
+                                Text(stringResource(label), style = MaterialTheme.typography.labelSmall)
+                            }
                         }
                     }
                 }

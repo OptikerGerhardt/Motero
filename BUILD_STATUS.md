@@ -1,3 +1,8 @@
+# Build 333 / Motero 1.1.7
+
+- [Änderungen](docs/READER_333.md) · [Testnachweise](qa/build333/README.md).
+- Releaseprüfung vergleicht Updates von Builds 303 und 332 auf Android API 31/35.
+
 # Build 332 / Motero 1.1.6 — veröffentlicht und unabhängig geprüft
 
 - [APK und vollständige Quellen](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.6-332); [Build, Signatur und Updates](https://github.com/OptikerGerhardt/Motero/actions/runs/43772484302) erfolgreich. Anwendung `30b6d7b7`, Reader `ede989ad`; PDF.js 5.7.330 unverändert.

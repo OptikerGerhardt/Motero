@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 root = Path(__file__).resolve().parents[1]
-checks = {'gestures': 'test-boox-browser.cjs', 'features': 'test-boox-features.cjs',
+checks = {'reader-comfort': 'test-reader-comfort.cjs', 'gestures': 'test-boox-browser.cjs', 'features': 'test-boox-features.cjs',
     'fitting': 'test-boox-fitting.cjs', 'stability': 'test-boox-stability.cjs',
     'controls': 'test-boox-reader-controls.cjs', 'annotation-tools': 'test-boox-annotation-tools.cjs',
     'fit-recovery': 'test-boox-fit-recovery.cjs', 'reader-update': 'test-boox-reader-update.cjs',

@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.1.7 — Build 333
+
+- Schwarzes Reading-Assist-Oval mit Zeicheneffekt, besserer Zeilenwahl und globalem Schalter. Die Markierung erscheint bei teilweise sichtbaren Fit-to-Width-Seiten.
+- PDF- und EPUB-Zentrierung, kleinere PDF-Seitenabstände, achsentreues Finger-Scrollen, stabile Spread-Fähnchen und ausgerichteter Stiftbreitenregler.
+- Seitenvorschau mit begrenzter Navigation, zuverlässiger Abschluss von WebView-Aufrufen bei Renderer-Verlust und sofortige Vorschau-Aktualisierung beim Themewechsel.
+- Falsches Aufklappen von Tablet-Kollektionen behoben. Download-Fortschrittsmeldungen und Prüfsummenberechnung reduziert.
+
+[Details und Prüfgrenzen](docs/READER_333.md)
+
 ## 1.1.6 — Build 332
 
 - Zotero-Trennlinie zwischen Quick Tags und Kommentar bei Highlights/Underlines wiederherstellen.

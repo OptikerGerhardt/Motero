@@ -65,6 +65,8 @@ fun EReaderSettingsScreen(stylusOnly: Boolean = false, nativeSelection: Boolean 
                     NewSettingsDivider()
                     NewSettingsSectionTitle(Strings.settings_page_turning_title)
                     org.zotero.android.screens.settings.pageturning.ReaderPageTurningControls()
+                    ReaderControlSwitch(R.string.reader333_reading_assist, profile.readingAssist) { DeviceProfileStore.update(profile.copy(readingAssist = it)) }
+                    ControlDescription(R.string.reader333_reading_assist_description)
                     NewSettingsDivider()
                     NewSettingsSectionTitle(R.string.reader326_selection_title)
                     var androidSelection by remember(nativeSelection) { mutableStateOf(nativeSelection) }

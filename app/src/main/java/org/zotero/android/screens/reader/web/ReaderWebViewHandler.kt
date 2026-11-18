@@ -31,6 +31,7 @@ class ReaderWebViewHandler @Inject constructor(
 ) {
     private val uiMainCoroutineScope = CoroutineScope(dispatchers.main)
 
+    private val javascriptResults = JavascriptResultRegistry()
     private var webViewAlive = false
     private lateinit var webView: WebView
     private lateinit var webViewPort: WebMessagePort
@@ -44,9 +45,12 @@ class ReaderWebViewHandler @Inject constructor(
         onRendererGone: () -> Unit = {},
     ) {
         this.webView = webView
-        this.webViewAlive = true
+        this.webViewAlive = false
         if (::webViewPort.isInitialized) webViewPort.close()
         uiMainCoroutineScope.launch {
+            if (this@ReaderWebViewHandler.webView !== webView) return@launch
+            javascriptResults.failAll()
+            webViewAlive = true
             webView.settings.javaScriptEnabled = true
             webView.settings.domStorageEnabled = true
             if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
@@ -80,7 +84,9 @@ class ReaderWebViewHandler @Inject constructor(
                 .build()
             webView.webViewClient = object : WebViewClient() {
                 override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
+                    if (view !== this@ReaderWebViewHandler.webView) { view.destroy(); return true }
                     webViewAlive = false
+                    javascriptResults.failAll()
                     Timber.e("Reader renderer exited; crash=%s", detail.didCrash())
                     if (::webViewPort.isInitialized) webViewPort.close()
                     view.destroy()
@@ -103,6 +109,7 @@ class ReaderWebViewHandler @Inject constructor(
                 }
 
                 override fun onPageFinished(view: WebView, url: String) {
+                    if (!webViewAlive || view !== this@ReaderWebViewHandler.webView) return
                     if (view !== this@ReaderWebViewHandler.webView || !webViewAlive) return
                     webView.requestFocus()
                     val channel = webView.createWebMessageChannel()
@@ -129,12 +136,13 @@ class ReaderWebViewHandler @Inject constructor(
     }
 
     fun evaluateJavascript(javascript: String, result: (String) -> Unit) {
+        if (!::webView.isInitialized) { result("null"); return }
         val target = webView
         uiMainCoroutineScope.launch {
             if (!webViewAlive || target !== webView) { result("null"); return@launch }
-            target.evaluateJavascript(javascript) { result ->
-                result(result)
-            }
+            val complete = javascriptResults.register(result)
+            try { target.evaluateJavascript(javascript) { value -> complete(value) } }
+            catch (_: IllegalStateException) { complete("null") }
         }
     }
 

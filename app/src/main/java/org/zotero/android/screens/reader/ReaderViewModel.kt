@@ -283,13 +283,17 @@ class ReaderViewModel @Inject constructor(
         }
     }
 
+    private var postScrubTrimJob: kotlinx.coroutines.Job? = null
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(result: ReaderHistoryTrackingEvent) {
         viewModelScope.launch {
+            postScrubTrimJob?.cancel()
             if (result.suspend) {
                 readerWebCallChainExecutor.beginNavigation()
             } else {
                 readerWebCallChainExecutor.endNavigation()
+                postScrubTrimJob = viewModelScope.launch { kotlinx.coroutines.delay(1500); trimReaderMemory() }
             }
         }
     }
@@ -431,6 +435,7 @@ class ReaderViewModel @Inject constructor(
 
     private var automaticRecoveryUsed = false
     fun onReaderRendererGone() {
+        postScrubTrimJob?.cancel()
         updateState { copy(manualCropOpen = false, isReaderLoading = true, selectedAnnotationKey = null,
             readerAnnotationArgs = null, readerAnnotationMoreArgs = null, showCreationToolbar = false, selectedText = null, rendererFailed = automaticRecoveryUsed,
             canUndoAnnotation = false, canRedoAnnotation = false, rendererGeneration = if (automaticRecoveryUsed) rendererGeneration else rendererGeneration + 1) }
@@ -2620,7 +2625,7 @@ class ReaderViewModel @Inject constructor(
 
     fun trimReaderMemory() {
         ReaderMemoryPressure.notifyPressure()
-        readerWebView?.evaluateJavascript("window.trimReaderMemory?.();", null)
+        readerWebCallChainExecutor.trimReaderMemory()
     }
 
     fun setHardwareEraser(active: Boolean) {
@@ -2996,9 +3001,9 @@ class ReaderViewModel @Inject constructor(
         readerWebCallChainExecutor.setReaderIndicatorInsets(top, right)
     }
 
-    fun setReaderViewportInset(value: Float, viewportHeight: Float) {
-        minimumVerticalMargin = ReaderSettings.minimumVerticalMargin(value, viewportHeight)
-        readerWebCallChainExecutor.setReaderViewportInset(value)
+    fun setReaderViewportInsets(top: Float, bottom: Float, viewportHeight: Float) {
+        minimumVerticalMargin = ReaderSettings.minimumVerticalMargin(maxOf(top, bottom), viewportHeight)
+        readerWebCallChainExecutor.setReaderViewportInsets(top, bottom)
     }
 
     private fun updateAppearanceAccordingToSettings(isSettingsUpdate: Boolean, applyFit: Boolean = false): kotlinx.coroutines.Job {

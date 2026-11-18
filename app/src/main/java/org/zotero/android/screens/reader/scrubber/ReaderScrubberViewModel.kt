@@ -25,6 +25,10 @@ internal class ReaderScrubberViewModel @Inject constructor(
 ) : BaseViewModel2<ReaderScrubberViewState, ReaderScrubberViewEffect>(ReaderScrubberViewState()) {
 
     private var lastRequestedLandmarks: List<Int> = emptyList()
+    private val navigation = ReaderScrubNavigation(viewModelScope, { page ->
+        EventBus.getDefault().post(ReaderScrollReaderIfNeededEvent(mapOf("pageNumber" to (page + 1).toString())))
+    })
+
 
     fun initOnce() = initOnce {
         setupThumbnailCacheUpdateStream()
@@ -53,6 +57,7 @@ internal class ReaderScrubberViewModel @Inject constructor(
     }
 
     fun onScrubStart() {
+        navigation.reset()
         updateState { copy(isScrubbing = true) }
         EventBus.getDefault().post(ReaderHistoryTrackingEvent(suspend = true))
     }
@@ -61,19 +66,20 @@ internal class ReaderScrubberViewModel @Inject constructor(
         ignoreChangeByReaderUntil = System.currentTimeMillis() + 1000
         if (viewState.selectedPage != page) {
             updateState { copy(selectedPage = page) }
-            val location = mapOf("pageNumber" to (page + 1).toString())
-            EventBus.getDefault().post(ReaderScrollReaderIfNeededEvent(location))
+            navigation.request(page)
         }
         thumbnailPreviewManager.requestThumbnail(page)
     }
 
     fun onScrubEnd() {
+        navigation.flush()
         updateState { copy(isScrubbing = false) }
         EventBus.getDefault().post(ReaderHistoryTrackingEvent(suspend = false))
     }
 
     fun onTapAt(page: Int) {
         onScrubTo(page)
+        navigation.flush()
     }
 
     fun onPageChangedByReader(page: Int) {

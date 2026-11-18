@@ -51,19 +51,25 @@ class ReaderWebCallChainExecutor @Inject constructor(
         readerIndicatorInsets = mapOf("top" to top, "right" to right)
         readerWebViewHandler.evaluateJavascript("window.setReaderIndicatorInsets?.(${gson.toJson(readerIndicatorInsets)});") {}
     }
-    private var viewportInset = 0f
-    fun setReaderViewportInset(value: Float) {
-        if (viewportInset == value) return
-        viewportInset = value
-        readerWebViewHandler.evaluateJavascript("window.setReaderViewportInset?.($value);") {}
-    }
+    private var lastInterface: Pair<String, String>? = null
 
+    fun trimReaderMemory() {
+        readerWebViewHandler.evaluateJavascript("window.trimReaderMemory?.();") {}
+    }
+    private var viewportInsets: Map<String, Float> = emptyMap()
+    fun setReaderViewportInsets(top: Float, bottom: Float) {
+        val value = mapOf("top" to top, "bottom" to bottom)
+        if (viewportInsets == value) return
+        viewportInsets = value
+        readerWebViewHandler.evaluateJavascript("window.setReaderViewportInsets?.(${gson.toJson(value)});") {}
+    }
     var documentCrops: org.zotero.android.screens.reader.data.ReaderManualCrops? = null
     private val limitedParallelismDispatcher =
         dispatchers.io.limitedParallelism(1)
     private var webViewExecutorScope = CoroutineScope(limitedParallelismDispatcher)
 
     fun start(webView: WebView, file: File, isDark: Boolean) {
+        lastInterface = null
         webViewExecutorScope.cancel()
         webViewExecutorScope = CoroutineScope(limitedParallelismDispatcher)
         try {
@@ -554,7 +560,7 @@ class ReaderWebCallChainExecutor @Inject constructor(
             } else null,
             directHighlight = !defaults.getReaderSettings().nativeTextSelection,
             readerChromeVisible = chromeVisible,
-            viewportInset = viewportInset.toDouble(),
+            viewportInsets = viewportInsets,
             indicatorInsets = readerIndicatorInsets,
             readingProgress = readingProgress,
             pageBackground = defaults.getReaderSettings().effectivePageBackground(isDark),
@@ -677,6 +683,9 @@ class ReaderWebCallChainExecutor @Inject constructor(
     suspend fun updateInterface(isDark: Boolean) {
         val appearanceString = if (isDark) "dark" else "light"
         val background = gson.toJson(defaults.getReaderSettings().effectivePageBackground(isDark))
+        val identity = appearanceString to background
+        if (lastInterface == identity) return
+        lastInterface = identity
         return suspendCancellableCoroutine { cont ->
             readerWebViewHandler.evaluateJavascript("window._view.setColorScheme('$appearanceString');window._view.setPageBackground($background);") {
                 cont.resume(Unit)

@@ -36,3 +36,10 @@ The already included Android download/session fixes are retained. The official B
 ## Build 323: performance and spread references
 
 Reviewed November 11, 2026. Native preview batching and the narrower WebView update path are informed by Zotero Android `f62ff0d2`. Spread parity follows PDF.js; Foliate's paginator informed the review of EPUB layout/section lifetime. These are focused Motero adaptations, not wholesale upstream merges or an engine replacement. No Foliate code/dependency is bundled. [Exact revisions, differences and validation](docs/READER_323.md).
+
+
+## Build 333 · Reader and library stability
+
+- Scrubber throttling and completion of pending WebView callbacks on renderer loss. [Zotero Android c27fe0ad](https://github.com/zotero/zotero-android/commit/c27fe0ad5eebb2fa7d0513b628df297b99a8aae8)
+- Theme-change repaint and preview invalidation adapted to Motero’s existing cache generation. [Zotero Android fd3c884e](https://github.com/zotero/zotero-android/commit/fd3c884e7b413ba890982f5783eb2deb9d69f148) · [Zotero Reader 5581a8da](https://github.com/zotero/reader/commit/5581a8daa72013ae7424d41688dfbab5100b47ec)
+- Parent-path fix for tablet collections and selective download efficiency improvements. [Zotero Android PR #322](https://github.com/zotero/zotero-android/pull/322) · [PR #355](https://github.com/zotero/zotero-android/pull/355)

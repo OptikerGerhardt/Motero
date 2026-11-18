@@ -8,6 +8,8 @@ This fork is maintained independently and is not affiliated with or endorsed by 
 
 ## Motero 1.1
 
+[1.1.7 / Build 333](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.7-333) improves Reading Assist, PDF and EPUB centering, scrolling, bookmark placement, and preview stability. [Changes and verification limits](docs/READER_333.md).
+
 [1.1.6 / Build 332](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.6-332) restores the Quick Tags/comment divider and keeps highlight quickbars open through stationary selection/layout updates. A brief oval marks the next reading word instead of the next-page arrow. [Scope and verification limits](docs/READER_332.md).
 
 [1.1.5 / Build 331](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.5-331) sizes PDF/EPUB docks to their tools, centers controls, insets bookmark flags safely, restores pen highlighting with open chrome and improves tablet annotation popups, sidebar transitions and annotation navigation. [Scope and verification limits](docs/READER_331.md).

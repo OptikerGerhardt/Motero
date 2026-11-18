@@ -10,6 +10,7 @@ import org.zotero.android.database.objects.LinkType
 import org.zotero.android.database.objects.ObjectSyncState
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.files.FileStore
+import org.zotero.android.helpers.FileHelper
 import timber.log.Timber
 import java.io.File
 import java.util.Date
@@ -241,7 +242,6 @@ class AttachmentCreator {
             val location = location(
                 item = item,
                 file = file,
-                fileStorage = fileStorage,
                 isForceRemote = isForceRemote,
                 defaults = defaults
             )
@@ -308,7 +308,6 @@ class AttachmentCreator {
         private fun location(
             item: RItem,
             file: File,
-            fileStorage: FileStore,
             isForceRemote: Boolean,
             defaults: Defaults,
         ): Attachment.FileLocation {
@@ -317,8 +316,8 @@ class AttachmentCreator {
             }
             val webDavEnabled = defaults.isWebDavEnabled()
             return if (file.exists()|| (webDavEnabled && file.copyWithExt("zip").exists())) {
-                val md5 = fileStorage.md5(file)
-                if (!item.backendMd5.isEmpty() && md5 != item.backendMd5) {
+                val md5 = if (item.backendMd5.isNotEmpty() && file.isFile) FileHelper.cachedMD5(file) else null
+                if (md5 != null && md5 != item.backendMd5) {
                     Attachment.FileLocation.localAndChangedRemotely
                 } else {
                     Attachment.FileLocation.local
@@ -362,7 +361,6 @@ class AttachmentCreator {
             val location = location(
                 item = item,
                 file = file,
-                fileStorage = fileStorage,
                 isForceRemote = isForceRemote,
                 defaults = defaults
             )
