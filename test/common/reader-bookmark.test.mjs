@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { isReaderBookmark, hasBookmarkTag, isLegacyReaderBookmark, isBlackReaderBookmark,
-    removeLegacyBookmarkPrefix, bookmarkColor, BOOKMARK_TAG } from '../../src/common/reader-bookmark.mjs';
+    removeLegacyBookmarkPrefix, isGeneratedBookmarkComment, bookmarkColor, BOOKMARK_TAG } from '../../src/common/reader-bookmark.mjs';
 
 test('Bookmark tag is canonical irrespective of note color or comment', () => {
     assert.equal(BOOKMARK_TAG, 'Bookmark');
@@ -29,4 +29,32 @@ test('Bookmark indicator color falls back safely for invalid annotation colors',
     assert.equal(bookmarkColor({ color: '#ff6666' }), '#ff6666');
     assert.equal(bookmarkColor({ color: 'red' }), '#000000');
     assert.equal(bookmarkColor({ color: 'javascript:evil' }), '#000000');
+});
+
+test('only an untouched generated bookmark timestamp can be safely deleted', () => {
+    const dateCreated = '2026-11-20T16:30:11.000Z';
+    const formatted = new Intl.DateTimeFormat('de-DE', {
+        dateStyle: 'short', timeStyle: 'short'
+    }).format(new Date(dateCreated));
+    const basic = {
+        type: 'note', dateCreated, tags: [{ name: 'Bookmark' }],
+        comment: 'Bookmark · ' + formatted
+    };
+    assert.equal(isGeneratedBookmarkComment(basic, 'de-DE'), true);
+    assert.equal(isGeneratedBookmarkComment({
+        ...basic, comment: basic.comment + '\\nSeminar annotation'
+    }, 'de-DE'), false);
+    assert.equal(isGeneratedBookmarkComment({
+        ...basic, comment: 'Bookmark · My own comment'
+    }, 'de-DE'), false);
+    assert.equal(isGeneratedBookmarkComment({
+        ...basic, dateCreated: null
+    }, 'de-DE'), false);
+    assert.equal(isGeneratedBookmarkComment({
+        ...basic, comment: 'A long note'
+    }, 'de-DE'), false);
+    assert.equal(isGeneratedBookmarkComment({
+        ...basic, comment: 'Lesezeichen · ' + formatted,
+        tags: []
+    }, 'de-DE'), true);
 });
