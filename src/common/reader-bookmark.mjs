@@ -14,6 +14,28 @@ export const removeLegacyBookmarkPrefix = comment =>
     String(comment || '').replace(/^(?:Lesezeichen|Bookmark)\s*·\s*/i, '');
 export const bookmarkColor = annotation =>
     /^#[0-9a-f]{6}$/i.test(annotation?.color || '') ? annotation.color : '#000000';
+// A generated marker may be deleted on a second corner tap. Match the
+// timestamp against the annotation creation date, not a loose date regex:
+// comments containing user text must always be preserved.
+export function isGeneratedBookmarkComment(annotation, locale) {
+    if (!isReaderBookmark(annotation)) return false;
+    const comment = String(annotation.comment || '').trim().replace(/\s+/g, ' ');
+    if (!/^(?:Lesezeichen|Bookmark)\s*·\s*/i.test(comment)) return false;
+    const date = new Date(annotation.dateCreated);
+    if (!Number.isFinite(date.getTime())) return false;
+    const languages = [...new Set([locale, 'de-DE', 'en-US', 'en-GB'].filter(Boolean))];
+    // Creation and comment formatting can straddle a minute boundary.
+    for (const language of languages) {
+        for (const delta of [-60000, 0, 60000]) {
+            const formatted = new Intl.DateTimeFormat(language,
+                { dateStyle: 'short', timeStyle: 'short' }).format(new Date(date.getTime() + delta));
+            if (comment === (String(annotation.comment || '').match(/^\s*(Lesezeichen|Bookmark)/i)?.[1] + ' · ' + formatted)
+                    .replace(/\s+/g, ' ')) return true;
+        }
+    }
+    return false;
+}
+
 export const BOOKMARK_FLAG_PATH = 'M5 2h14v20l-7-4.5-7 4.5z';
 
 // Stable PDF-page corner in viewport coordinates, independent of saved note rects.
