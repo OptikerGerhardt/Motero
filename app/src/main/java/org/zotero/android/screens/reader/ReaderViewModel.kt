@@ -735,7 +735,8 @@ class ReaderViewModel @Inject constructor(
             val tags = rawTags.mapNotNull { dataAsJson ->
                 val data = dataAsJson.asJsonObject
                 val name = data["name"]?.asString ?: return@mapNotNull null
-                val color = data["color"]?.asString ?: return@mapNotNull null
+                // The reader may submit newly selected tags with a name only.
+                val color = data["color"]?.asString ?: ""
                 Tag(name = name, color = color)
             }
             NewReaderAnnotation(
@@ -1068,18 +1069,26 @@ class ReaderViewModel @Inject constructor(
                 fieldValues = fieldValues,
             )
         )
+        // Keep tag edits in the same Realm transaction as the annotation
+        // update. An absent field must not clear existing tag assignments.
+        if (annotation.hasTagsInPayload) {
+            requests.add(EditTagsForItemDbRequest(key, libraryId, annotation.tags))
+        }
 
         ignoreDbCallbackOnReaderModificationItemKeys.add(key)
         dbWrapperMain.realmDbStorage.perform(requests)
     }
 
     private fun updateHtmlEpubDatabaseAnnotation(annotation: NewReaderAnnotation) {
-        val request = EditHtmlEpubAnnotationDbRequest(
-            libraryId = this.library.identifier,
-            annotation = annotation,
+        val requests = listOf(
+            EditHtmlEpubAnnotationDbRequest(
+                libraryId = this.library.identifier,
+                annotation = annotation,
+            ),
+            EditTagsForItemDbRequest(annotation.key, this.library.identifier, annotation.tags),
         )
         ignoreDbCallbackOnReaderModificationItemKeys.add(annotation.key)
-        dbWrapperMain.realmDbStorage.perform(request)
+        dbWrapperMain.realmDbStorage.perform(requests)
     }
 
     private fun setTags(tags: List<Tag>, key: String) {
