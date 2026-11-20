@@ -488,7 +488,10 @@ class PDFView {
         this._iframeWindow.addEventListener('pointercancel', this._handlePenPointerRelease.bind(this), true);
         // Touch events are passive by default
 		this._iframeWindow.addEventListener('touchmove', this._handleTouchMove.bind(this), { passive: false });
-		this._iframeWindow.addEventListener('touchstart', event => this._directHighlight?.touchStart(event), { passive: true });
+		this._iframeWindow.addEventListener('touchstart', event => {
+            if (!event.target?.closest?.('.motero-bookmark-gesture-layer'))
+                this._directHighlight?.touchStart(event);
+        }, { passive: true });
 		this._iframeWindow.addEventListener('touchcancel', () => this._directHighlight?.reset());
 		this._iframeWindow.document.addEventListener('visibilitychange', () => {
             if (this._iframeWindow.document.hidden) this._booxReader?.bookmarkGesture.close(true);
@@ -505,7 +508,6 @@ class PDFView {
 		// PDF.js consumes pointer endings during pinch gestures. Observe them before
 		// its container listeners so no finger remains registered in our gesture.
 		this._iframeWindow.addEventListener('pointerup', event => {
-            if (event.target?.closest?.('.motero-bookmark-gesture-layer')) return;
             if (this._booxReader?.bookmarkGesture.finish(event)) {
                 this._readerPriorityDown = null;
                 this._pageFitting?.onUp(event);
@@ -517,6 +519,7 @@ class PDFView {
                 event.stopImmediatePropagation();
                 return;
             }
+            if (event.target?.closest?.('.motero-bookmark-gesture-layer')) return;
             if (this._consumePaletteDismissal?.(event)) return;
             if (this._isForeignPointer(event)) { event.stopImmediatePropagation(); return; }
             this._pageFitting?.onUp(event);
@@ -3779,6 +3782,10 @@ class PDFView {
     }
 
 	_handlePointerDown(event) {
+        if (event.type === 'pointerdown' && !event.isPrimary
+            && this._booxReader?.bookmarkGesture.ribbon) {
+            this._booxReader.bookmarkGesture.close(true);
+        }
         if (event.target?.closest?.('.boox-highlight-palette, .motero-bookmark-gesture-layer')) return;
         if (event.type === 'pointerdown' && !event.isPrimary
             && this._booxReader?.bookmarkGesture.press) {
@@ -4073,6 +4080,7 @@ class PDFView {
 	}
 
     _handleTouchStart(event) {
+        if (event.target?.closest?.('.motero-bookmark-gesture-layer')) return;
         if (this._pointerDownTap?.pointerType === 'pen') event.stopPropagation();
     }
     _handlePenPointerRelease(event) {
@@ -4083,6 +4091,7 @@ class PDFView {
         }, 0);
     }
 	_handleTouchMove(event) {
+        if (event.target?.closest?.('.motero-bookmark-gesture-layer')) return;
 		if (this._pageFitting?.editor) return;
 		if (this._directHighlight?.touchMove(event)) {
 			return;
@@ -4104,6 +4113,7 @@ class PDFView {
 	}
 
 	_handleTouchEnd(event) {
+        if (event.target?.closest?.('.motero-bookmark-gesture-layer')) return;
 		// Native touch clicks must reach the crop editor's buttons and select.
 		if (this._pageFitting?.editor || event.target?.closest?.('.boox-manual-crop')) return;
 		this._nativeTextSelection?.handlePointerUp();
@@ -4853,6 +4863,7 @@ class PDFView {
     }
 
 	_handlePointerCancel(event) {
+        if (event?.target?.closest?.('.motero-bookmark-gesture-layer')) return;
         if (event && this._isForeignPointer(event)) return;
         if (event && this.action?.type === 'ink') {
             if (this.action.pointerID !== undefined && this.action.pointerID !== event.pointerId) return;
