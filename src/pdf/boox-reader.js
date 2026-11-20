@@ -5,6 +5,7 @@ import { showAnnotationPalette } from '../common/mobile-annotation-palette';
 import { PDF_NOTE_DIMENSIONS } from '../common/defines';
 import { getSortIndex } from './selection';
 import { readingUnit, unitFrame } from './reading-unit.mjs';
+import { BookmarkGesture } from './bookmark-gesture.mjs';
 
 // Small Android-only controls use existing annotation persistence and PDF.js
 // geometry. They do not add a new data format, PDF mutation, or drawing loop.
@@ -12,6 +13,7 @@ export class PDFBooxReader {
 	constructor(view) {
 		this.view = view;
 		this.bookmarkRequests = new Map();
+        this.bookmarkGesture = new BookmarkGesture(this);
 		this.win = view._iframeWindow;
 		this.doc = this.win.document;
 		this.de = (this.doc.documentElement.lang || navigator.language || '').startsWith('de');
@@ -34,8 +36,9 @@ export class PDFBooxReader {
 			this.win.clearTimeout(this.gestureExpiry);
 			this.gestureExpiry = this.win.setTimeout(() => this.gestureScroll = null, 1000);
 		};
-		this.onKey = event => { if (event.key === 'Escape') this.closePalette(); };
+		this.onKey = event => { if (event.key === 'Escape') { this.bookmarkGesture.close(true); this.closePalette(); } };
 		this.onScale = () => {
+            this.bookmarkGesture.close(true);
 			this.clearNavigation();
 			let scale = this.viewer.currentScale;
 			let fitting = this.view._pageFitting;
@@ -57,6 +60,7 @@ export class PDFBooxReader {
 			else { this.readingScale = scale; this.readingMode = this.readingModeForScale(scale); this.readingFit = this.view._pageFitting?.snapshot(); }
 		};
 		this.onPage = () => {
+            this.bookmarkGesture.close(true);
 			this.closePalette();
 			if (this.edge && this.edge.pageIndex !== this.viewer.currentPageNumber - 1) this.clearEdge();
             this.readingCue?.schedule();
@@ -71,6 +75,7 @@ export class PDFBooxReader {
 		this.bus.on('rotationchanging', this.onScale);
 		this.viewportWidth = this.viewer.container.clientWidth;
 		this.onResize = () => {
+            this.bookmarkGesture.close(true);
 			let width = this.viewer.container.clientWidth;
 			if (width !== this.viewportWidth) this.clearNavigation(true);
 			else {
@@ -146,13 +151,12 @@ export class PDFBooxReader {
 		});
 	}
 
-	async placeBookmark(pageIndex) {
+	async placeBookmark(pageIndex, overrideColor = null, createOnly = false) {
 		let view = this.view, page = this.viewer.getPageView(pageIndex);
         if (!page || view._destroyed || view._readOnly) return;
-        const existing = view._annotations.find(a => isReaderBookmark(a)
-            && a.position.pageIndex === pageIndex);
+        const existing = this.bookmarkGesture.bookmark(pageIndex);
         if (existing) {
-            if (existing.readOnly) return;
+            if (createOnly || existing.readOnly) return;
             const action = bookmarkToggleOff(existing, this.de ? 'de-DE' : navigator.language);
             if (action.delete) view._onDeleteAnnotationsFromPalette([existing.id]);
             else view._onUpdateAnnotations([{ id: existing.id, ...action.changes }]);
@@ -177,7 +181,7 @@ export class PDFBooxReader {
 		let p1 = viewport.convertToPdfPoint(right, top + size);
 		let position = { pageIndex, rects: [[Math.min(p0[0], p1[0]), Math.min(p0[1], p1[1]),
 			Math.max(p0[0], p1[0]), Math.max(p0[1], p1[1])]] };
-        const requestedColor = view._options.bookmarkColor;
+        const requestedColor = overrideColor || view._options.bookmarkColor;
         const color = /^#[0-9a-f]{6}$/i.test(requestedColor || '') ? requestedColor : '#000000';
         view._onAddAnnotation({ type: 'note', color, position,
             pageLabel: view._getPageLabel(pageIndex, true), sortIndex: getSortIndex(view._pdfPages, position),
@@ -278,6 +282,7 @@ export class PDFBooxReader {
 	}
 
 	onScroll() {
+        if (this.bookmarkGesture.ribbon) this.bookmarkGesture.close(true);
 		const anchor = this.paletteAnchor;
         if (anchor) {
             // Neighbor crop layout may adjust scroll offsets while preserving
@@ -306,6 +311,7 @@ export class PDFBooxReader {
     }
 
 	clearNavigation(cancelEntry = false) {
+        this.bookmarkGesture.close(true);
 		if (cancelEntry) this.entering = null;
 		this.closePalette(); this.clearEdge(); this.gestureScroll = null;
         this.readingCue?.clear();
@@ -315,6 +321,7 @@ export class PDFBooxReader {
 	scheduleIndicators() { this.indicators?.schedule(); }
 
 	destroy() {
+        this.bookmarkGesture.close(true);
         this.indicators?.destroy();
 		this.clearNavigation(); this.win.clearTimeout(this.gestureExpiry);
 		this.doc.removeEventListener('pointerdown', this.onDown, true);
