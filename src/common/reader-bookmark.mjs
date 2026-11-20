@@ -1,8 +1,19 @@
-// Shared semantic recognition; ordinary black notes are not bookmarks.
-export const isReaderBookmark = annotation => annotation?.type === 'note'
+// The Bookmark tag is the canonical marker. Older notes using a localized
+// comment prefix remain discoverable without rewriting their user data.
+export const BOOKMARK_TAG = 'Bookmark';
+export const isLegacyReaderBookmark = annotation => annotation?.type === 'note'
     && /^(?:Lesezeichen|Bookmark)\s*·\s*/i.test(annotation.comment || '');
-export const isBlackReaderBookmark = annotation => isReaderBookmark(annotation)
+export const hasBookmarkTag = annotation => annotation?.type === 'note'
+    && Array.isArray(annotation.tags)
+    && annotation.tags.some(tag => String(tag?.name ?? tag ?? '').trim().toLowerCase() === 'bookmark');
+export const isReaderBookmark = annotation => annotation?.type === 'note'
+    && (hasBookmarkTag(annotation) || isLegacyReaderBookmark(annotation));
+export const isBlackReaderBookmark = annotation => isLegacyReaderBookmark(annotation)
     && /^#000000$/i.test(annotation.color || '');
+export const removeLegacyBookmarkPrefix = comment =>
+    String(comment || '').replace(/^(?:Lesezeichen|Bookmark)\s*·\s*/i, '');
+export const bookmarkColor = annotation =>
+    /^#[0-9a-f]{6}$/i.test(annotation?.color || '') ? annotation.color : '#000000';
 export const BOOKMARK_FLAG_PATH = 'M5 2h14v20l-7-4.5-7 4.5z';
 
 // Stable PDF-page corner in viewport coordinates, independent of saved note rects.
