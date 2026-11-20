@@ -1,5 +1,13 @@
 # Änderungen
 
+## 1.1.8 — Build 334
+
+- Automatischer PDF-Zuschnitt mit getrennten Breitenprofilen für Fließtext, Kapitelanfänge, Listen, Scans und Spalten. Unsichere Seitenränder bleiben geschützt; bereits sichtbare Rahmen bleiben beim Nachlernen stabil.
+- Lokale Papierhelligkeit bei Textscans berücksichtigen. Ein dunkler, vom Inhalt getrennter Buchfalz wird entfernt. Kurze Trennlinien und schwache Randzeichen werden bei Bedarf in einem kleinen Streifen genauer geprüft.
+- In der manuellen Crop-Vorschau lassen sich der erkannte Inhalt, Kopf- und Fußzeilen, Randverweise und der automatische Rahmen einblenden. Manuelle Zuschnitte und automatische Geometrie werden weiterhin separat gespeichert.
+- Laufende Seitenzahlen auch an der Textkante erkennen. PDF.js-Speicherbereinigung und Analyse-Rendering zeitlich trennen.
+- Beim Vergrößern oder Verkleinern einer PDF-Markierung oder Unterstreichung den Zitattext zusammen mit dem markierten Bereich speichern.
+
 ## 1.1.7 — Build 333
 
 - Schwarzes Reading-Assist-Oval mit Zeicheneffekt, besserer Zeilenwahl und globalem Schalter. Die Markierung erscheint bei teilweise sichtbaren Fit-to-Width-Seiten.

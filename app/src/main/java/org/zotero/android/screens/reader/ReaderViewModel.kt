@@ -1053,7 +1053,8 @@ class ReaderViewModel @Inject constructor(
                     EditAnnotationRectsDbRequestV2(
                         key = key,
                         libraryId = libraryId,
-                        rects = annotation.rects
+                        rects = annotation.rects,
+                        annotationText = annotation.text,
                     )
                 )
             }
