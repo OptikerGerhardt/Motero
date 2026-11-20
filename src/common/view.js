@@ -157,6 +157,7 @@ class View {
             viewportInset: this._options.viewportInset,
             viewportInsets: this._options.viewportInsets,
             indicatorInsets: this._options.indicatorInsets,
+            bookmarkColor: this._options.bookmarkColor,
 			onAddAnnotation,
 			onUpdateAnnotations,
 			onDeleteAnnotationsFromPalette: ids => this._annotationManager.deleteAnnotations(ids),
