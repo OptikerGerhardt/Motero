@@ -46,7 +46,9 @@ export class BookmarkGesture {
 
     move(event) {
         if (this.press?.id === event.pointerId && bookmarkPressMoved(this.press, event)) {
+            const wasOpen = this.press.fired;
             this.cancel();
+            if (wasOpen) this.close(true);
             this.boox.view._readerPriorityDown = null;
         }
     }
@@ -65,12 +67,15 @@ export class BookmarkGesture {
 
     cancel(event) {
         if (event && this.press?.id !== event.pointerId) return;
+        const wasOpen = this.press?.fired;
         this.boox.win.clearTimeout(this.press?.timer);
         this.press = null;
+        if (event && wasOpen) this.close(true);
     }
 
     open(pageIndex) {
         const { boox } = this, view = boox.view;
+        boox.closePalette();
         if (view._destroyed || view._readOnly || view._tool.type !== 'pointer'
             || boox.isOverview()) return;
         const annotation = this.bookmark(pageIndex);
