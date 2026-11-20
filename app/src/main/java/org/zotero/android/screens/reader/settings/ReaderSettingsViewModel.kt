@@ -112,6 +112,7 @@ internal class ReaderSettingsViewModel @Inject constructor(
                 readingModeEnabled = loadedArgs.readingModeEnabled,
                 cropMode = loadedArgs.cropMode,
                 progressMode = readerSettings.effectiveProgressMode(),
+                bookmarkColor = readerSettings.effectiveBookmarkColor(),
             )
         }
     }
@@ -291,6 +292,12 @@ internal class ReaderSettingsViewModel @Inject constructor(
         updateState { copy(cropMode = "automatic") }
         scheduleDebouncedApply()
     }
+    fun onBookmarkColorChanged(color: String) {
+        if (color !in org.zotero.android.database.objects.AnnotationsConfig.allColors) return
+        readerSettings.bookmarkColor = color
+        updateState { copy(bookmarkColor = color) }
+        scheduleDebouncedApply()
+    }
     fun setProgressMode(mode: String) {
         readerSettings.epubProgressMode = mode
         updateState { copy(progressMode = mode) }
@@ -460,6 +467,7 @@ internal data class ReaderSettingsViewState(
     val cropMode: String = "automatic",
     val pageNavigation: String = "continuous",
     val progressMode: String = "both",
+    val bookmarkColor: String = "#000000",
     val wordSpacing: Float = 0f,
     val letterSpacing: Float = 0f,
     val pageWidth: Float = 8f,

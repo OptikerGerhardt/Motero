@@ -127,6 +127,15 @@ class CreatePDFAnnotationsDbRequestV2 @AssistedInject constructor(
         }
     }
 
+    override fun addTags(annotation: PDFDocumentAnnotation, item: RItem, database: Realm) {
+        // Bookmark notes are created with a tag before the first save. Reuse
+        // the normal tag request so missing library tags are created and
+        // assignments are marked for Zotero sync in this Realm transaction.
+        if (annotation.tags.isNotEmpty()) {
+            EditTagsForItemDbRequest(annotation.key, libraryId, annotation.tags).process(database)
+        }
+    }
+
     override fun addAdditionalProperties(
         annotation: PDFDocumentAnnotation,
         fromRestore: Boolean,

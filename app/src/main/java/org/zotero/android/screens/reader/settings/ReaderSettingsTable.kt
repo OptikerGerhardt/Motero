@@ -13,6 +13,8 @@ import org.zotero.android.R
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import org.zotero.android.screens.reader.data.ReaderFileType
+import org.zotero.android.screens.reader.ReaderFilterColorButton
+import org.zotero.android.database.objects.AnnotationsConfig
 import org.zotero.android.screens.reader.settings.data.ReaderSettingsOptions
 import org.zotero.android.uicomponents.Strings
 import java.util.Locale
@@ -103,6 +105,23 @@ internal fun ReaderSettingsTable(
                 selectedOption = viewState.selectedSpreadsOption,
                 optionSelected = viewModel::onOptionSelected
             )
+        }
+        if (viewState.fileType == ReaderFileType.PDF && !viewState.readingModeEnabled) {
+            item {
+                Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                    Text(stringResource(R.string.reader_bookmark_default_color),
+                        style = MaterialTheme.typography.titleSmall)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        for (color in AnnotationsConfig.allColors) {
+                            ReaderFilterColorButton(
+                                hex = color,
+                                isSelected = viewState.bookmarkColor.equals(color, ignoreCase = true),
+                                onClick = { viewModel.onBookmarkColorChanged(color) },
+                            )
+                        }
+                    }
+                }
+            }
         }
         if (viewState.fileType == ReaderFileType.EPUB) {
             readerSettingsSettingRow(

@@ -8,4 +8,5 @@
     <string name="reader_manual_crop">Manueller Zuschnitt…</string>
     <string name="reader_bookmarks_filter">Nur Lesezeichen anzeigen</string>
     <string name="reader_text_size">Schriftgröße</string>
+    <string name="reader_bookmark_default_color">Standardfarbe für Lesezeichen</string>
 </resources>

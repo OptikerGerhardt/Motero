@@ -6,15 +6,17 @@ import org.junit.Assert.*
 import org.junit.Test
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.screens.reader.data.NewReaderAnnotation
+import org.zotero.android.screens.reader.data.BOOKMARK_TAG
+import org.zotero.android.sync.Tag
 import org.zotero.android.screens.reader.data.bookmarkDetails
 import org.zotero.android.screens.reader.data.isReaderBookmark
 import org.zotero.android.screens.reader.settings.data.ReaderSettings
 import java.util.Date
 
 class ReaderBookmarkAndTextSizeTest {
-    private fun annotation(comment: String, color: String = "#aaaaaa", type: AnnotationType = AnnotationType.note) =
+    private fun annotation(comment: String, color: String = "#aaaaaa", type: AnnotationType = AnnotationType.note, tags: List<Tag> = emptyList()) =
         NewReaderAnnotation("ABC123", type, "XXIV", JsonObject(), "Author", true, color, comment,
-            null, "00023|00001", Date(0), Date(0), emptyList())
+            null, "00023|00001", Date(0), Date(0), tags)
 
     @Test fun `bookmark filtering recognizes saved languages and edited colors`() {
         for (label in listOf("Bookmark", "Lesezeichen")) for (color in listOf("#aaaaaa", "#2ea8e5", "#ff6666")) {
@@ -31,11 +33,36 @@ class ReaderBookmarkAndTextSizeTest {
         assertFalse(annotation("Bookmark · 07.11.26", type = AnnotationType.highlight).isReaderBookmark())
     }
 
+
+    @Test fun `tagged notes are bookmarks regardless of comment or color`() {
+        assertTrue(annotation("Important research detail", "#ff6666",
+            tags = listOf(Tag(BOOKMARK_TAG, ""))).isReaderBookmark())
+        assertTrue(annotation("", "#2ea8e5",
+            tags = listOf(Tag("bookmark", ""))).isReaderBookmark())
+        assertFalse(annotation("No tags", "#000000").isReaderBookmark())
+        assertFalse(annotation("Own highlight", "#2ea8e5",
+            type = AnnotationType.highlight, tags = listOf(Tag(BOOKMARK_TAG, ""))).isReaderBookmark())
+        assertEquals("Own text", annotation("Own text", tags = listOf(Tag(BOOKMARK_TAG, ""))).bookmarkDetails())
+    }
+
+    @Test fun `bookmark color remains global with backwards compatible default`() {
+        val settings = ReaderSettings.default()
+        assertEquals("#000000", settings.effectiveBookmarkColor())
+        settings.bookmarkColor = "#2ea8e5"
+        val restored = Gson().fromJson(Gson().toJson(settings), ReaderSettings::class.java)
+        assertEquals("#2ea8e5", restored.effectiveBookmarkColor())
+        settings.bookmarkColor = "red"
+        assertEquals("#000000", settings.effectiveBookmarkColor())
+        settings.bookmarkColor = "javascript:invalid"
+        assertEquals("#000000", settings.effectiveBookmarkColor())
+    }
+
     @Test fun `old saved typography migrates to one hundred percent without changing other settings`() {
         val old = Gson().fromJson("""{"lineHeight":1.5,"fitToContent":true}""", ReaderSettings::class.java)
         assertEquals(1f, old.effectiveTextScale(), 0f)
         assertEquals(1.5f, old.lineHeight, 0f)
         assertEquals("content", old.pageFitMode())
+        assertEquals("#000000", old.effectiveBookmarkColor())
     }
 
     @Test fun `font sizes round trip and invalid persisted values recover safely`() {
