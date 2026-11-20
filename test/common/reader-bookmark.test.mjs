@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { isReaderBookmark, hasBookmarkTag, isLegacyReaderBookmark, isBlackReaderBookmark,
-    removeLegacyBookmarkPrefix, isGeneratedBookmarkComment, bookmarkColor, BOOKMARK_TAG } from '../../src/common/reader-bookmark.mjs';
+    removeLegacyBookmarkPrefix, isGeneratedBookmarkComment, bookmarkToggleOff, bookmarkColor, BOOKMARK_TAG } from '../../src/common/reader-bookmark.mjs';
 
 test('Bookmark tag is canonical irrespective of note color or comment', () => {
     assert.equal(BOOKMARK_TAG, 'Bookmark');
@@ -57,4 +57,29 @@ test('only an untouched generated bookmark timestamp can be safely deleted', () 
         ...basic, comment: 'Lesezeichen · ' + formatted,
         tags: []
     }, 'de-DE'), true);
+});
+
+test('corner shortcut deletes untouched markers but keeps user content or other tags', () => {
+    const dateCreated = '2026-11-20T16:30:11.000Z';
+    const timestamp = new Intl.DateTimeFormat('de-DE', {
+        dateStyle: 'short', timeStyle: 'short'
+    }).format(new Date(dateCreated));
+    const marker = { type: 'note', dateCreated, color: '#ff6666', tags: [{name:'Bookmark'}],
+        comment: 'Bookmark · ' + timestamp };
+    assert.deepEqual(bookmarkToggleOff(marker, 'de-DE'), {delete: true});
+    assert.deepEqual(bookmarkToggleOff({
+        ...marker, comment: marker.comment + '\\nOriginal research'
+    }, 'de-DE'), {
+        delete: false, changes: {tags: [], comment: timestamp + '\\nOriginal research'}
+    });
+    assert.deepEqual(bookmarkToggleOff({
+        ...marker, tags: [{name: 'Bookmark'}, {name:'Important'}]
+    }, 'de-DE'), {
+        delete: false, changes: {tags:[{name:'Important'}], comment:timestamp}
+    });
+    assert.deepEqual(bookmarkToggleOff({
+        ...marker, comment:'Custom comment', tags:[{name:'Bookmark'}]
+    }, 'de-DE'), {
+        delete: false, changes: {tags:[], comment:'Custom comment'}
+    });
 });
