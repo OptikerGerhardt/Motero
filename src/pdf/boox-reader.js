@@ -1,4 +1,4 @@
-import { BOOKMARK_TAG, hasBookmarkTag, isReaderBookmark, readerBookmarkCorner, removeLegacyBookmarkPrefix } from '../common/reader-bookmark.mjs';
+import { BOOKMARK_TAG, hasBookmarkTag, isReaderBookmark, isLegacyReaderBookmark, isGeneratedBookmarkComment, readerBookmarkCorner, removeLegacyBookmarkPrefix } from '../common/reader-bookmark.mjs';
 import { PDFViewportIndicators } from './viewport-indicators.js';
 import { PDFReadingPositionCue } from './reading-position-cue.mjs';
 import { showAnnotationPalette } from '../common/mobile-annotation-palette';
@@ -153,11 +153,18 @@ export class PDFBooxReader {
             && a.position.pageIndex === pageIndex);
         if (existing) {
             if (existing.readOnly) return;
-            // Removing a page bookmark must not destroy the user's sticky note.
-            const changes = hasBookmarkTag(existing)
-                ? { tags: existing.tags.filter(t => String(t?.name ?? t).trim().toLowerCase() !== 'bookmark') }
-                : { comment: removeLegacyBookmarkPrefix(existing.comment) };
-            view._onUpdateAnnotations([{ ...existing, ...changes }]);
+            // Delete only a generated marker with no extra user notes or tags.
+            // Custom notes remain intact; unbookmarking must also strip a
+            // legacy prefix so it does not remain classified as a bookmark.
+            const otherTags = (existing.tags || []).filter(
+                t => String(t?.name ?? t).trim().toLowerCase() !== 'bookmark');
+            if (otherTags.length === 0 && isGeneratedBookmarkComment(existing, this.de ? 'de-DE' : undefined)) {
+                view._onDeleteAnnotationsFromPalette([existing.id]);
+                return;
+            }
+            const comment = isLegacyReaderBookmark(existing)
+                ? removeLegacyBookmarkPrefix(existing.comment) : existing.comment;
+            view._onUpdateAnnotations([{ ...existing, tags: otherTags, comment }]);
             return;
         }
         if (!page.pdfPage) {
@@ -184,8 +191,9 @@ export class PDFBooxReader {
         view._onAddAnnotation({ type: 'note', color, position,
             pageLabel: view._getPageLabel(pageIndex, true), sortIndex: getSortIndex(view._pdfPages, position),
             tags: [{ name: BOOKMARK_TAG }],
-            // The date is ordinary editable note text, not a bookmark identity marker.
-            comment: new Intl.DateTimeFormat(this.de ? 'de-DE' : undefined,
+            // The default marker is recognizable, but tag membership
+            // (rather than this comment) determines bookmark identity.
+            comment: 'Bookmark · ' + new Intl.DateTimeFormat(this.de ? 'de-DE' : undefined,
                 { dateStyle: 'short', timeStyle: 'short' }).format(new Date()),
         });
 	}
