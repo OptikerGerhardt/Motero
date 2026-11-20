@@ -223,7 +223,7 @@ export class AndroidPageFitting {
 	estimatedBounds(index) {
 		const manual = cropForPage(this.options.cropMode === 'manual' ? this.options.manualCrop : {}, index);
 		if (manual) return rotateReadingBounds(manual, this.viewer.pagesRotation);
-        const profile = this.layoutProfiles?.profiles[index % 2];
+        const profile = (this.layoutProfiles || this.profiles)?.profiles[index % 2];
 		if (this.options.reference === 'page' && this.options.mode !== 'content') return [0,0,1,1];
         return getReadingFrame(profile ? rotateReadingBounds(profile, this.viewer.pagesRotation) : [0,0,1,1], this.options);
 	}

@@ -688,7 +688,7 @@ export function buildReadingProfiles(pages) {
 		}
 	}
 	const ordinary = pages.filter(page => !page.kind || page.kind === 'prose');
-	return { ...parityProfile(ordinary), groups };
+	return { ...parityProfile(ordinary.length ? ordinary : pages), groups };
 }
 
 export function resolveReadingBounds(actual, index, profiles, kind) {

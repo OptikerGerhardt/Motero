@@ -24,7 +24,9 @@ export function layoutReadingPages(pages, { width, height, mode, gap = 8, spread
     if (row.pages.length) rows.push(row);
     const lead = mode === 1 ? Math.max(sidePadding,(width-(units[0]?.width || width))/2) : sidePadding;
     const trail = mode === 1 ? Math.max(sidePadding,(width-(units.at(-1)?.width || width))/2) : sidePadding;
-    const totalWidth = Math.max(width, ...rows.map(r=>r.width + lead + trail)), boxes = [];
+    // Wrapped rows can contain several pages. Leave room to center their outer pages.
+    const wrappedPadding = mode === 2 && rows.some(row => row.pages.length > 1) ? width : 0;
+    const totalWidth = Math.max(width, ...rows.map(r=>r.width + lead + trail + wrappedPadding)), boxes = [];
     let y = rows.length ? Math.max(0,(height-rows[0].height)/2) : 0;
     for (const row of rows) {
         let x = mode === 1 ? lead : (totalWidth-row.width)/2;
