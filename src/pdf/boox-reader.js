@@ -1,4 +1,4 @@
-import { readerBookmarkCorner } from '../common/reader-bookmark.mjs';
+import { BOOKMARK_TAG, hasBookmarkTag, isReaderBookmark, readerBookmarkCorner, removeLegacyBookmarkPrefix } from '../common/reader-bookmark.mjs';
 import { PDFViewportIndicators } from './viewport-indicators.js';
 import { PDFReadingPositionCue } from './reading-position-cue.mjs';
 import { showAnnotationPalette } from '../common/mobile-annotation-palette';
@@ -149,12 +149,17 @@ export class PDFBooxReader {
 	async placeBookmark(pageIndex) {
 		let view = this.view, page = this.viewer.getPageView(pageIndex);
         if (!page || view._destroyed || view._readOnly) return;
-		let existing = view._annotations.find(a => a.type === 'note'
-			&& /^(Lesezeichen|Bookmark) · /.test(a.comment || '') && a.position.pageIndex === pageIndex);
-		if (existing) {
-			if (!existing.readOnly) view._onDeleteAnnotationsFromPalette([existing.id]);
-			return;
-		}
+        const existing = view._annotations.find(a => isReaderBookmark(a)
+            && a.position.pageIndex === pageIndex);
+        if (existing) {
+            if (existing.readOnly) return;
+            // Removing a page bookmark must not destroy the user's sticky note.
+            const changes = hasBookmarkTag(existing)
+                ? { tags: existing.tags.filter(t => String(t?.name ?? t).trim().toLowerCase() !== 'bookmark') }
+                : { comment: removeLegacyBookmarkPrefix(existing.comment) };
+            view._onUpdateAnnotations([{ ...existing, ...changes }]);
+            return;
+        }
         if (!page.pdfPage) {
             const pdfPage = await this.viewer.pdfDocument.getPage(pageIndex+1);
             if (view._destroyed) return;
@@ -174,12 +179,15 @@ export class PDFBooxReader {
 		let p1 = viewport.convertToPdfPoint(right, top + size);
 		let position = { pageIndex, rects: [[Math.min(p0[0], p1[0]), Math.min(p0[1], p1[1]),
 			Math.max(p0[0], p1[0]), Math.max(p0[1], p1[1])]] };
-		view._onAddAnnotation({ type: 'note', color: '#000000', position,
-			pageLabel: view._getPageLabel(pageIndex, true), sortIndex: getSortIndex(view._pdfPages, position),
-			comment: (this.de ? 'Lesezeichen' : 'Bookmark') + ' · '
-				+ new Intl.DateTimeFormat(this.de ? 'de-DE' : undefined,
-					{ dateStyle: 'short', timeStyle: 'short' }).format(new Date()),
-		});
+        const requestedColor = view._options.bookmarkColor;
+        const color = /^#[0-9a-f]{6}$/i.test(requestedColor || '') ? requestedColor : '#000000';
+        view._onAddAnnotation({ type: 'note', color, position,
+            pageLabel: view._getPageLabel(pageIndex, true), sortIndex: getSortIndex(view._pdfPages, position),
+            tags: [{ name: BOOKMARK_TAG }],
+            // The date is ordinary editable note text, not a bookmark identity marker.
+            comment: new Intl.DateTimeFormat(this.de ? 'de-DE' : undefined,
+                { dateStyle: 'short', timeStyle: 'short' }).format(new Date()),
+        });
 	}
 
 	async enterPage(pageIndex) {
