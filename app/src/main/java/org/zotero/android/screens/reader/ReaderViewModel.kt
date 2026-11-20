@@ -3021,6 +3021,7 @@ class ReaderViewModel @Inject constructor(
             val readerSettings = defaults.getReaderSettings()
             if (isSettingsUpdate) {
                 readerWebCallChainExecutor.updateInterface(pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
+                readerWebCallChainExecutor.setReaderBookmarkColor(readerSettings.effectiveBookmarkColor())
                 if (viewState.fileType == ReaderFileType.PDF || viewState.fileType == ReaderFileType.EPUB) {
                     readerWebCallChainExecutor.setSpreadMode(readerSettings.spreadsMode)
                 }
