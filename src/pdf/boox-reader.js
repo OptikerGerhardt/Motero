@@ -1,4 +1,4 @@
-import { BOOKMARK_TAG, hasBookmarkTag, isReaderBookmark, isLegacyReaderBookmark, isGeneratedBookmarkComment, readerBookmarkCorner, removeLegacyBookmarkPrefix } from '../common/reader-bookmark.mjs';
+import { BOOKMARK_TAG, isReaderBookmark, bookmarkToggleOff, readerBookmarkCorner } from '../common/reader-bookmark.mjs';
 import { PDFViewportIndicators } from './viewport-indicators.js';
 import { PDFReadingPositionCue } from './reading-position-cue.mjs';
 import { showAnnotationPalette } from '../common/mobile-annotation-palette';
@@ -153,18 +153,9 @@ export class PDFBooxReader {
             && a.position.pageIndex === pageIndex);
         if (existing) {
             if (existing.readOnly) return;
-            // Delete only a generated marker with no extra user notes or tags.
-            // Custom notes remain intact; unbookmarking must also strip a
-            // legacy prefix so it does not remain classified as a bookmark.
-            const otherTags = (existing.tags || []).filter(
-                t => String(t?.name ?? t).trim().toLowerCase() !== 'bookmark');
-            if (otherTags.length === 0 && isGeneratedBookmarkComment(existing, this.de ? 'de-DE' : undefined)) {
-                view._onDeleteAnnotationsFromPalette([existing.id]);
-                return;
-            }
-            const comment = isLegacyReaderBookmark(existing)
-                ? removeLegacyBookmarkPrefix(existing.comment) : existing.comment;
-            view._onUpdateAnnotations([{ ...existing, tags: otherTags, comment }]);
+            const action = bookmarkToggleOff(existing, this.de ? 'de-DE' : navigator.language);
+            if (action.delete) view._onDeleteAnnotationsFromPalette([existing.id]);
+            else view._onUpdateAnnotations([{ id: existing.id, ...action.changes }]);
             return;
         }
         if (!page.pdfPage) {
