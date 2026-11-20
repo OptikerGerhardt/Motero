@@ -496,6 +496,7 @@ class PDFView {
 		this._iframeWindow.addEventListener('touchend', this._handleTouchEnd.bind(this), { passive: false });
         // Record the entire gesture path before PDF.js can consume movement.
         this._iframeWindow.addEventListener('pointermove', event => {
+            this._booxReader?.bookmarkGesture.move(event);
             const down = this._readerPriorityDown;
             if (down && Math.hypot(event.clientX-down.x,event.clientY-down.y)>8) this._readerPriorityDown=null;
         }, {capture:true,passive:true});
@@ -503,6 +504,18 @@ class PDFView {
 		// PDF.js consumes pointer endings during pinch gestures. Observe them before
 		// its container listeners so no finger remains registered in our gesture.
 		this._iframeWindow.addEventListener('pointerup', event => {
+            if (event.target?.closest?.('.motero-bookmark-gesture-layer')) return;
+            if (this._booxReader?.bookmarkGesture.finish(event)) {
+                this._readerPriorityDown = null;
+                this._pageFitting?.onUp(event);
+                this._clearPendingBackdropTap();
+                this._chromeTapGuard?.reset();
+                this._directHighlight?.reset();
+                this._clearPointerAction();
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                return;
+            }
             if (this._consumePaletteDismissal?.(event)) return;
             if (this._isForeignPointer(event)) { event.stopImmediatePropagation(); return; }
             this._pageFitting?.onUp(event);
@@ -510,6 +523,7 @@ class PDFView {
             if (!this._chromeTapGuard?.up(event)) this._directHighlight?.up(event);
 		}, true);
 		this._iframeWindow.addEventListener('pointercancel', event => {
+            this._booxReader?.bookmarkGesture.cancel(event);
             if (this._consumePaletteDismissal?.(event)) return;
             this._readerPriorityDown=null;
 			this._chromeTapGuard?.reset();
@@ -3763,7 +3777,14 @@ class PDFView {
     }
 
 	_handlePointerDown(event) {
-        if (event.target?.closest?.('.boox-highlight-palette')) return;
+        if (event.target?.closest?.('.boox-highlight-palette, .motero-bookmark-gesture-layer')) return;
+        if (event.type === 'pointerdown' && this._options.platform === 'android'
+            && this._booxReader?.bookmarkGesture.arm(event)) {
+            this._readerPriorityDown = {x:event.clientX,y:event.clientY,time:Date.now()};
+            // Do not start annotation selection, drawing or page-turn actions.
+            event.stopImmediatePropagation();
+            return;
+        }
         if (this._isForeignPointer(event) && !(event.type === 'pointerdown' && ['pen','mouse'].includes(event.pointerType))) { event.stopImmediatePropagation?.(); return; }
         if (this._pageFitting?.editor) return;
         if (this._consumePaletteDismissal?.(event)) return;
@@ -4568,7 +4589,7 @@ class PDFView {
     }
 
 	_handlePointerUp(event) {
-        if (event.target?.closest?.('.boox-highlight-palette')) return;
+        if (event.target?.closest?.('.boox-highlight-palette, .motero-bookmark-gesture-layer')) return;
         if (this.action?.type === 'ink' && this.action.pointerID !== undefined && event.pointerId !== this.action.pointerID) { event.stopImmediatePropagation?.(); return; }
         if (this._pageFitting?.editor) return;
         if (this._readerPriorityHandled != null && this._readerPriorityHandled===event.pointerId) { this._readerPriorityHandled=null; return; }
