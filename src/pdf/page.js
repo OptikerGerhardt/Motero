@@ -23,7 +23,7 @@ import {
 } from '../common/defines';
 import { getRectRotationOnText } from './selection';
 
-import { isReaderBookmark, isLegacyReaderBookmark, bookmarkFlagRect, BOOKMARK_FLAG_PATH } from '../common/reader-bookmark.mjs';
+import { isReaderBookmark, isGeneratedBookmarkComment, bookmarkFlagRect, BOOKMARK_FLAG_PATH } from '../common/reader-bookmark.mjs';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -233,7 +233,7 @@ export default class Page {
 	_pushNote(items, annotation) {
 		let position = this._p2v(annotation.position);
 		let viewRect = position.rects[0];
-        if (isLegacyReaderBookmark(annotation) && this._layer._options?.platform === 'android') {
+        if (isGeneratedBookmarkComment(annotation) && this._layer._options?.platform === 'android') {
             viewRect = bookmarkFlagRect(this._originalPage.viewport);
         }
 		items.push({
@@ -244,7 +244,7 @@ export default class Page {
 			scale: round((viewRect[2] - viewRect[0]) / NOTE_ICON_SIZE),
 			color: annotation.color,
             bookmark: isReaderBookmark(annotation),
-            legacyBookmark: isLegacyReaderBookmark(annotation),
+            legacyBookmark: isGeneratedBookmarkComment(annotation),
             opacity: 1
 		});
 	}
