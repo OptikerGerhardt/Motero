@@ -105,8 +105,8 @@ export function getReadingTextLines(content, viewport) {
     // short, horizontally adjacent gutter spans before ordinary row merging.
     const consumed = new Set();
     for (const a of spans) {
-        if (!/^[AB]$/i.test(a.text) || !(a.rect[2] < .2 || a.rect[0] > .8)) continue;
-        const b = spans.find(b => b !== a && !consumed.has(b) && romanReference(b.text)
+        if (!/^(?:[AB]|AA|Ak\.?)$/i.test(a.text) || !(a.rect[2] < .22 || a.rect[0] > .78)) continue;
+        const b = spans.find(b => b !== a && !consumed.has(b) && editionReference(a.text + ' ' + b.text)
             && b.rect[0] >= a.rect[2] - .002 && b.rect[0] - a.rect[2] < .025
             && Math.abs((a.rect[1]+a.rect[3]-b.rect[1]-b.rect[3])/2) < Math.max(a.rect[3]-a.rect[1],b.rect[3]-b.rect[1]) * .45);
         if (!b) continue;
