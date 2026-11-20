@@ -491,6 +491,7 @@ class PDFView {
 		this._iframeWindow.addEventListener('touchstart', event => this._directHighlight?.touchStart(event), { passive: true });
 		this._iframeWindow.addEventListener('touchcancel', () => this._directHighlight?.reset());
 		this._iframeWindow.document.addEventListener('visibilitychange', () => {
+            if (this._iframeWindow.document.hidden) this._booxReader?.bookmarkGesture.close(true);
 			if (this._iframeWindow.document.hidden) this._directHighlight?.reset();
 		});
 		this._iframeWindow.addEventListener('touchend', this._handleTouchEnd.bind(this), { passive: false });
@@ -532,6 +533,7 @@ class PDFView {
 		this._iframeWindow.addEventListener('pointerup', this._handlePointerUp.bind(this));
 		this._iframeWindow.addEventListener('pointercancel', this._handlePointerCancel.bind(this));
 		this._iframeWindow.addEventListener('lostpointercapture', event => {
+            this._booxReader?.bookmarkGesture.cancel(event);
             if (this.action?.type === 'ink') this._handlePointerCancel(event);
             else this._handleTouchTransformInterrupted(event);
         });
@@ -3778,6 +3780,11 @@ class PDFView {
 
 	_handlePointerDown(event) {
         if (event.target?.closest?.('.boox-highlight-palette, .motero-bookmark-gesture-layer')) return;
+        if (event.type === 'pointerdown' && !event.isPrimary
+            && this._booxReader?.bookmarkGesture.press) {
+            this._booxReader.bookmarkGesture.cancel();
+            this._readerPriorityDown = null;
+        }
         if (event.type === 'pointerdown' && this._options.platform === 'android'
             && this._booxReader?.bookmarkGesture.arm(event)) {
             this._readerPriorityDown = {x:event.clientX,y:event.clientY,time:Date.now()};
