@@ -65,6 +65,8 @@ data class ReaderSettings(
     var appearanceChoice: String? = null,
     var lastLightAppearance: String? = null,
     var lastDarkAppearance: String? = null,
+    // Global default for new bookmark notes. Missing older settings keep black.
+    var bookmarkColor: String? = null,
 ) {
     // Older versions saved the paper and interface separately. Migrate an
     // explicit paper first; subsequent choices have one source of truth.
@@ -103,6 +105,9 @@ data class ReaderSettings(
     fun effectiveFontFamily(): String = epubFontFamily?.takeIf { it in setOf("original", "serif", "sans-serif") } ?: "serif"
     fun effectivePageNavigation(): String = if (pageNavigation == "jumped") "jumped" else "continuous"
     fun effectiveTextScale(): Float = textScale.takeIf { it.isFinite() && it in 0.6f..1.8f } ?: 1f
+    fun effectiveBookmarkColor(): String = bookmarkColor?.takeIf {
+        it.matches(Regex("^#[0-9a-fA-F]{6}$"))
+    } ?: "#000000"
     fun effectiveProgressMode(): String = epubProgressMode?.takeIf { it in listOf("both", "hidden", "position", "percent") } ?: "both"
     fun fitReference(): String = when {
         pageFitMode() == "none" -> "page"
