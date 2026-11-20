@@ -1,4 +1,4 @@
-import { isLegacyReaderBookmark, bookmarkColor, readerIndicatorPosition, BOOKMARK_FLAG_PATH } from '../common/reader-bookmark.mjs';
+import { isGeneratedBookmarkComment, bookmarkColor, readerIndicatorPosition, BOOKMARK_FLAG_PATH } from '../common/reader-bookmark.mjs';
 import { readingUnit } from './reading-unit.mjs';
 
 /** Reading uses stable viewport hints, one per spread leaf. Only an explicit
@@ -32,7 +32,7 @@ export class PDFViewportIndicators {
             this.bookmarked=new Map();
             for (const annotation of view._annotations || []) {
                 const index=annotation.position?.pageIndex;
-                if (isLegacyReaderBookmark(annotation) && Number.isInteger(index) && !this.bookmarked.has(index)) {
+                if (isGeneratedBookmarkComment(annotation) && Number.isInteger(index) && !this.bookmarked.has(index)) {
                     this.bookmarked.set(index,annotation);
                 }
             }
