@@ -36,6 +36,25 @@ export function isGeneratedBookmarkComment(annotation, locale) {
     return false;
 }
 
+// Decide whether the corner shortcut may delete its marker. Untouched
+// bookmark-only notes are disposable; edited notes and other tags are not.
+export function bookmarkToggleOff(annotation, locale) {
+    const tags = (annotation?.tags || []).filter(
+        tag => String(tag?.name ?? tag).trim().toLowerCase() !== 'bookmark');
+    if (tags.length === 0 && isGeneratedBookmarkComment(annotation, locale)) {
+        return { delete: true };
+    }
+    return {
+        delete: false,
+        changes: {
+            tags,
+            comment: isLegacyReaderBookmark(annotation)
+                ? removeLegacyBookmarkPrefix(annotation.comment)
+                : annotation.comment
+        }
+    };
+}
+
 export const BOOKMARK_FLAG_PATH = 'M5 2h14v20l-7-4.5-7 4.5z';
 
 // Stable PDF-page corner in viewport coordinates, independent of saved note rects.
