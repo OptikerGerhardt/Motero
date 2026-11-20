@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { analyzeReadingGeometry } from '../../src/pdf/reading-geometry.mjs';
+import { inspectCropStrip } from '../../src/pdf/reading-raster-refinement.mjs';
 import { getReadingSamples, buildReadingModel, getReadingExclusions, getReadingBounds,
 	buildReadingProfiles, resolveReadingBounds, getReadingFit, getReadingTextLines, rotateReadingBounds, getReadingMarginalia, getReadingTextBounds, localReadingPages } from '../../src/pdf/reading-layout.mjs';
 
@@ -224,8 +226,8 @@ test('isolated stars and dots on either margin follow Include/Exclude while body
     const included = getReadingExclusions(lines,model,0,{includeMarginalia:true});
     for (const mark of marks) assert.ok(!included.includes(mark.rect));
 });
-function image(rectangles) {
-	let width = 500, height = 700, data = new Uint8ClampedArray(width * height * 4).fill(255);
+function image(rectangles, width = 500, height = 700) {
+	let data = new Uint8ClampedArray(width * height * 4).fill(255);
 	for (let [x0, y0, x1, y1] of rectangles) {
 		for (let y = Math.round(y0 * height); y < Math.round(y1 * height); y++) {
 			for (let x = Math.round(x0 * width); x < Math.round(x1 * width); x++) {
@@ -303,6 +305,13 @@ test('a rule underneath an excluded header is excluded without trimming footnote
 	let bounds = getReadingBounds(image([...lines.map(l=>l.rect), [.2,.075,.8,.078], [.2,.88,.4,.883]]),lines,model);
 	assert.ok(bounds[1] >= .19 && bounds[3] >= .91, bounds);
 });
+test('a detached running folio aligns with the local prose edge inside a wide book margin', () => {
+    const lines = [line('Running meditation title',[.41,.0745,.58,.0813]),line('188',[.195,.0697,.226,.0851]),
+        ...Array.from({length:8},(_,i)=>line('Sustained prose that establishes both local reading edges.',[.195,.1133+i*.025,.831,.1212+i*.025]))];
+    const excluded = getReadingExclusions(lines,{...buildReadingModel([]),bodyHeight:.0079},199);
+    assert.ok(excluded.includes(lines[0].rect) && excluded.includes(lines[1].rect));
+    assert.ok(lines.slice(2).every(line=>!excluded.includes(line.rect)));
+});
 test('natural reading bounds transform exactly with display rotation', () => {
 	let b = [.2,.1,.8,.9];
 	for(let angle of [0,90,180,270]) {
@@ -333,6 +342,66 @@ test('a wider table and deeper footnote expand the sampled frame', () => {
 	let model = buildReadingProfiles([{ index: 0, bounds: [.2, .15, .8, .85] }]);
 	let actual = [.08, .1, .92, .97];
 	assert.deepEqual(resolveReadingBounds(actual, 2, model), actual);
+});
+test('chapter openings, short lines and columns cannot set normal prose widths', () => {
+    const prose = {index:0,kind:'prose',bounds:[.2,.1,.8,.9]};
+    const columns = {index:2,kind:'columns',bounds:[.05,.1,.95,.9]};
+    const model = buildReadingProfiles([prose,{...prose,index:1},columns,{...columns,index:3},
+        {index:4,kind:'opening',bounds:[.01,.1,.99,.9]}, {index:5,kind:'short-lines',bounds:[.1,.1,.9,.9]}]);
+    assert.ok(resolveReadingBounds(prose.bounds,8,model,'prose').every((n,i)=>Math.abs(n-prose.bounds[i])<1e-9));
+    assert.ok(resolveReadingBounds(columns.bounds,10,model,'columns').every((n,i)=>Math.abs(n-columns.bounds[i])<1e-9));
+    assert.deepEqual(resolveReadingBounds([.3,.1,.7,.9],12,model,'opening'),[.3,.1,.7,.9]);
+});
+
+test('uncertain side content stays while the independent, confirmed top edge is cropped', () => {
+    const head = line('An ordinary running title', [.22,.04,.74,.058]);
+    const note = line('Unclassified side content', [.89,.4,.94,.45]);
+    const lines = [head,...body,note];
+    const model = buildReadingModel(Array.from({length:6},(_,index)=>({index,lines})));
+    const bounds = getReadingBounds(image(lines.map(l=>l.rect)),lines,model,0);
+    assert.ok(bounds[1]>.19 && bounds[2]>=.94,JSON.stringify(bounds));
+});
+
+test('a fine strip confirms a short running rule and ambiguous adjacent ink is kept', () => {
+    const head = line('An ordinary running title', [.22,.04,.74,.058]);
+    const lines = [head,...body];
+    const model = buildReadingModel(Array.from({length:6},(_,index)=>({index,lines})));
+    const bitmap = image([...lines.map(l=>l.rect),[.25,.078,.68,.080]]);
+    const page = {index:0,aspect:bitmap.width/bitmap.height,lines,image:bitmap,width:bitmap.width,height:bitmap.height,diagnostics:true};
+    const coarse = analyzeReadingGeometry(page,model);
+    assert.ok(coarse.bounds[1]<.1);
+    const strip = coarse.strips.find(s=>s.kind==='rule');
+    assert.ok(strip);
+    const [x0,y0,x1,y1] = strip.rect;
+    const ruled = image([[(.25-x0)/(x1-x0),(.078-y0)/(y1-y0),(.68-x0)/(x1-x0),(.080-y0)/(y1-y0)]],400,20);
+    assert.equal(inspectCropStrip(strip,image([[0,0,1,1]],400,20)),null);
+    const rule = inspectCropStrip(strip,ruled);
+    assert.ok(rule);
+    const refined = analyzeReadingGeometry({...page,inspected:true,rasterRules:[rule]},model);
+    assert.ok(refined.bounds[1]>.19,JSON.stringify({coarse,refined}));
+    assert.deepEqual(refined.diagnostics.running,[head.rect,rule]);
+});
+
+test('a confirmed faint raster mark affects only the Include frame', () => {
+    const prose = Array.from({length:10},(_,i)=>line('A sustained line of the body provides a known column.',[.2,.2+i*.05,.8,.215+i*.05]));
+    const mark = [.925,.441,.935,.449];
+    const bitmap = image([...prose.map(l=>l.rect),mark]);
+    for (let y=Math.round(mark[1]*bitmap.height);y<Math.round(mark[3]*bitmap.height);y++) {
+        for (let x=Math.round(mark[0]*bitmap.width);x<Math.round(mark[2]*bitmap.width);x++) {
+            const offset=(y*bitmap.width+x)*4;
+            bitmap.data.fill(221,offset,offset+3);
+        }
+    }
+    const page = {index:0,aspect:bitmap.width/bitmap.height,lines:prose,image:bitmap,width:bitmap.width,height:bitmap.height};
+    const coarse = analyzeReadingGeometry(page,buildReadingModel([]));
+    const strip = coarse.strips.find(s=>s.kind==='mark');
+    assert.ok(strip);
+    const [x0,y0,x1,y1] = strip.rect;
+    const fine = image([[(mark[0]-x0)/(x1-x0),(mark[1]-y0)/(y1-y0),(mark[2]-x0)/(x1-x0),(mark[3]-y0)/(y1-y0)]],48,48);
+    const confirmed = inspectCropStrip(strip,fine);
+    assert.ok(confirmed);
+    const result = analyzeReadingGeometry({...page,inspected:true,rasterMarks:[confirmed]},buildReadingModel([]));
+    assert.ok(result.bounds[2]<.82 && result.withMarginalia[2]>.93,JSON.stringify(result));
 });
 test('blank pages have no invented text bounds', () => {
 	assert.equal(getReadingBounds(image([]), [], buildReadingModel([])), null);
@@ -371,6 +440,39 @@ test('image-only gray paper crops text bands and retains the footnote', () => {
  let scan=image(rects);for(let i=0;i<scan.data.length;i+=4)if(scan.data[i]===255)scan.data[i]=scan.data[i+1]=scan.data[i+2]=215;
  let b=getReadingBounds(scan,[],buildReadingModel([]));
  assert.ok(b[0]>.18&&b[2]<.82&&b[1]>.13&&b[3]>.92&&b[3]<.94,JSON.stringify(b));
+});
+test('a warm shaded scan drops its detached deep gutter and retains its footnote', () => {
+    const rows = Array.from({length:20},(_,i)=>[.2,.15+i*.03,.8,.16+i*.03]);
+    const scan = image([...rows,[.2,.91,.55,.925],[0,0,.033,1]]);
+    for (let y=0;y<scan.height;y++) for (let x=0;x<scan.width;x++) {
+        const i=(y*scan.width+x)*4;
+        const tone=198+Math.floor(x/scan.width*45);
+        if (scan.data[i]===255) { scan.data[i]=tone+10; scan.data[i+1]=tone+5; scan.data[i+2]=tone; }
+    }
+    const bounds = getReadingBounds(scan,[],buildReadingModel([]));
+    assert.ok(bounds[0]>.18 && bounds[1]>.13 && bounds[3]>.92,JSON.stringify(bounds));
+});
+test('scan paper normalization does not restore a ruled running head over an image-only body', () => {
+    const header = [line('Author and running title',[.25,.068,.65,.083]),line('240',[.1,.07,.13,.083])];
+    const rows = Array.from({length:20},(_,i)=>[.2,.14+i*.035,.8,.15+i*.035]);
+    const scan = image([...header.map(l=>l.rect),[.1,.092,.9,.094],...rows]);
+    const result = getReadingBounds(scan,header,buildReadingModel([]));
+    assert.ok(result[1]>.135 && result[1]<.15,JSON.stringify(result));
+});
+test('a book scan whose text layer contains only a download stamp still finds running heads and marginal stars', () => {
+    const stamp = line('Generated for a library', [.2,.96,.8,.97]);
+    const prose = Array.from({length:24},(_,i)=>[.2,.145+i*.029,.8,.157+i*.029]);
+    const title = [.38,.09,.62,.1], folio = [.2,.09,.22,.1], star = [.9,.449,.911,.458];
+    const measure = (head) => {
+        const bitmap = image([...head,...prose,star,stamp.rect]);
+        return analyzeReadingGeometry({index:0,aspect:bitmap.width/bitmap.height,lines:[stamp],
+            image:bitmap,width:bitmap.width,height:bitmap.height,diagnostics:true},buildReadingModel([]));
+    };
+    const result = measure([title,folio]);
+    assert.ok(result.bounds[1]>.14 && result.bounds[2]<.82,JSON.stringify(result));
+    assert.ok(result.withMarginalia[1]>.14 && result.withMarginalia[2]>.9,JSON.stringify(result));
+    assert.equal(result.kind,'scan');
+    assert.ok(measure([title]).bounds[1]<.1,'a standalone centered heading stays visible');
 });
 test('gray photograph with no separate text bands keeps its outer frame', () => {
  let scan=image([[.25,.2,.75,.8]]);for(let i=0;i<scan.data.length;i+=4)if(scan.data[i]===255)scan.data[i]=scan.data[i+1]=scan.data[i+2]=215;

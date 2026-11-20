@@ -64,6 +64,12 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
    assert.ok(box.x>=0 && box.y>=0 && box.x+box.width<=360 && box.y+box.height<=740,JSON.stringify({action,box}));
   }
   if(process.env.BOOX_CROP_SCREENSHOT) await page.screenshot({path:process.env.BOOX_CROP_SCREENSHOT});
+  await action('analysis');
+  await editorFrame.locator('.crop-analysis .automatic').waitFor({state:'visible'});
+  await editorFrame.locator('.crop-analysis .measured').waitFor({state:'visible'});
+  assert.equal(await editorFrame.locator('[data-action=analysis]').getAttribute('aria-pressed'),'true');
+  await action('analysis');
+  assert.equal(await editorFrame.locator('.crop-analysis').isVisible(),false);
   assert.equal(await page.evaluate(()=>window.turnPageWithHardwareButton(true,0)),'ignored');
   assert.equal((await read()).page,before.page);
   await setRect([.12,.14,.82,.84]);

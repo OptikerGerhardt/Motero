@@ -32,10 +32,21 @@ export class ReadingAnalysisWorker {
                     const job = this.pending.get(data.id);
                     if (!job) return;
                     if (data.error) { this.fail(data.error); return; }
-                    this.pending.delete(data.id);
                     this.active = null;
-                    this.releaseImage(job);
-                    job.resolve(data.result);
+                    if (data.result.strips?.length && job.inspect && !job.inspected) {
+                        job.inspecting = true;
+                        job.inspect(data.result.strips).then(patch => {
+                            if (!this.pending.has(data.id)) return;
+                            if (patch) {
+                                job.page = { ...job.page, ...patch, inspected: true };
+                                job.inspected = true;
+                                job.inspecting = false;
+                                this.drain();
+                            }
+                            else this.finish(data.id, data.result);
+                        }, error => this.finish(data.id, null, error));
+                    }
+                    else this.finish(data.id, data.result);
                     this.drain();
                 };
             } catch (_) { fail(); }
@@ -57,14 +68,18 @@ export class ReadingAnalysisWorker {
         this.images = new WeakMap();
     }
 
-    async analyze(page, model) {
+    async analyze(page, model, inspect) {
         const worker = await this.init();
         if (this.closed) {
             const error = new Error('Crop analysis closed');
             error.name = 'AbortError';
             throw error;
         }
-        if (!worker || this.failed) return analyzeReadingGeometry(page, model);
+        if (!worker || this.failed) {
+            const coarse = analyzeReadingGeometry(page, model);
+            const patch = coarse.strips?.length && await inspect?.(coarse.strips);
+            return patch ? analyzeReadingGeometry({...page, ...patch, inspected:true}, model) : coarse;
+        }
         let image;
         if (page.image) {
             image = this.images.get(page.image);
@@ -81,9 +96,18 @@ export class ReadingAnalysisWorker {
         }
         const id = ++this.serial;
         return new Promise((resolve, reject) => {
-            this.pending.set(id, { resolve, reject, page, model, image });
+            this.pending.set(id, { resolve, reject, page, model, image, inspect });
             this.drain();
         });
+    }
+
+    finish(id, result, error) {
+        const job = this.pending.get(id);
+        if (!job) return;
+        this.pending.delete(id);
+        this.releaseImage(job);
+        if (error) job.reject(error);
+        else job.resolve(result);
     }
 
     releaseImage(job) {
@@ -95,7 +119,8 @@ export class ReadingAnalysisWorker {
 
     drain() {
         if (!this.worker || this.active != null || this.failed || this.closed) return;
-        const next = [...this.pending].sort((a,b) => (a[1].page.priority || 0) - (b[1].page.priority || 0))[0];
+        const next = [...this.pending].filter(([,job]) => !job.inspecting)
+            .sort((a,b) => (a[1].page.priority || 0) - (b[1].page.priority || 0))[0];
         if (!next) return;
         const [id, job] = next;
         this.active = id;

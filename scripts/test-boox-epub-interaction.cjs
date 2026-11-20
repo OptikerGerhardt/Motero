@@ -33,13 +33,16 @@ const root=path.resolve(__dirname,'../build/android');
    const created=await page.evaluate(()=>{const v=window._view._view,a=window._view._annotationManager._annotations;return{count:a.length,text:a[0].text,palette:!!v._iframeDocument.querySelector('.boox-highlight-palette'),preview:!!v._previewAnnotation,selection:v._iframeWindow.getSelection().toString()};});
    assert.equal(created.count,1);assert.ok(created.text.includes('Chapter'));assert.equal(created.palette,true);assert.equal(created.preview,false);assert.equal(created.selection,'');
    console.log('PASS '+flow+': real touch hold/drag creates a CFI highlight with the shared PDF palette, without Android selection');
-   const original=await page.evaluate(()=>{const v=window._view._view,a=window._view._annotationManager._annotations[0];v._directHighlight.closePalette();return{id:a.id,position:JSON.stringify(a.position)};});
+   const original=await page.evaluate(()=>{const v=window._view._view,a=window._view._annotationManager._annotations[0];v._directHighlight.closePalette();return{id:a.id,position:JSON.stringify(a.position),text:a.text};});
    await hold(p);
    const endHandle=await page.evaluate(()=>{const v=window._view._view;const h=v._annotationShadowRoot.querySelectorAll('.resizer');if(h.length!==2)throw Error('Missing EPUB selection handles');const r=h[1].getBoundingClientRect(),f=v._iframe.getBoundingClientRect();if(parseFloat(getComputedStyle(h[1]).strokeWidth)<44)throw Error('Touch endpoint target is too narrow');return{x:f.left+r.left+r.width/2+18,y:f.top+r.top+r.height/2+14};});
    await touch('touchStart',[endHandle]);assert.equal(await page.evaluate(()=>!!window._view._view._directHighlight.host.palette),false,'EPUB palette hides during resize');for(let i=1;i<=5;i++){await touch('touchMove',[{x:endHandle.x+50*i/5,y:endHandle.y}]);await page.waitForTimeout(25);}await touch('touchEnd',[]);await page.waitForTimeout(100);
    assert.equal(await page.evaluate(()=>!!window._view._view._directHighlight.host.palette),true,'EPUB palette returns after resize');
    const resized=await page.evaluate(id=>window._view._annotationManager._annotations.find(a=>a.id===id),original.id);
    assert.ok(resized);assert.notEqual(JSON.stringify(resized.position),original.position,flow+': real EPUB handle drag must change the CFI range');
+   assert.notEqual(resized.text,original.text,flow+': the quotation follows the new EPUB range');
+   await page.waitForFunction(a=>window.messages.some(m=>m.message?.event==='onSaveAnnotations'
+    && m.message.params.annotations.some(saved=>saved.id===a.id && saved.text===a.text)),resized);
    await page.evaluate(()=>window._view.undo());assert.equal(await page.evaluate(id=>JSON.stringify(window._view._annotationManager._annotations.find(a=>a.id===id).position),original.id),original.position);
    await page.evaluate(()=>{const v=window._view._view;v._directHighlight.host.showPalette([window._view._annotationManager._annotations[0]]);});
    console.log('PASS '+flow+': long-press exposes EPUB endpoints; touch resize preserves ID and Undo restores its CFI');

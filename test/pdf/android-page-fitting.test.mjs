@@ -162,6 +162,49 @@ test('late learning never refits or invalidates a visible reading frame',async()
     assert.equal(refits,0,'letters cannot move under the reader after background learning');
 });
 
+test('background preparation cannot replace the centered frame after its prefetch cache entry is evicted',async()=>{
+    const {fitting}=fixture();
+    await fitting.configure({mode:'width',reference:'cropped-content'});
+    const index=fitting.applied.pageIndex;
+    const original=fitting.geometry.get(index);
+    const prepared=fitting.preparedPages.get(index);
+    fitting.preparedPages.delete(index);
+    const later={...prepared,fit:{...prepared.fit,bounds:[.15,.22,.81,.6]}};
+    assert.equal(fitting.rememberPrepared(later,{background:true}),false);
+    assert.equal(fitting.geometry.get(index),original);
+    assert.ok(fitting.rememberPrepared(later));
+    assert.deepEqual(fitting.geometry.get(index).fit.bounds,later.fit.bounds);
+});
+
+test('stored manual frames cannot suppress automatic marginalia after switching modes',async()=>{
+    const {fitting}=fixture();
+    const marginalia=[[.84,.24,.87,.26]];
+    fitting.cache.set(1,Promise.resolve({marginalia}));
+    const options={mode:'width',reference:'cropped-content',margin:0,manualCrop:{all:[.1,.1,.9,.9]}};
+    assert.deepEqual((await fitting.preparePage(1,{...options,cropMode:'manual'})).marginalia,[]);
+    assert.deepEqual((await fitting.preparePage(1,{...options,cropMode:'automatic'})).marginalia,marginalia);
+});
+
+test('PDF cleanup and the independent crop raster never overlap',async()=>{
+    const {fitting,viewer}=fixture();
+    let resolveCleanup,resolveRaster,cleanups=0,renders=0,queueCalls=0;
+    const cleanup=viewer.pdfDocument.cleanup=()=>{cleanups++;return new Promise(resolve=>{resolveCleanup=resolve;});};
+    viewer.renderingQueue={renderHighestPriority(){queueCalls++;}};
+    fitting.guardPdfCleanup();
+    const cleaning=viewer.pdfDocument.cleanup();
+    const page={render(){renders++;return {promise:new Promise(resolve=>{resolveRaster=resolve;})};}};
+    const raster=fitting.renderCropRaster(page,{});
+    assert.equal(renders,0);
+    resolveCleanup();await cleaning;await new Promise(setImmediate);
+    assert.equal(renders,1);
+    await viewer.pdfDocument.cleanup();
+    assert.equal(cleanups,1);
+    resolveRaster();await raster;
+    assert.equal(queueCalls,1);
+    fitting.restorePdfCleanup();
+    assert.equal(viewer.pdfDocument.cleanup,cleanup);
+});
+
 
 test('background crop refinement waits until the pen stroke has finished',async()=>{
     const {fitting,flush}=fixture();fitting.active=true;

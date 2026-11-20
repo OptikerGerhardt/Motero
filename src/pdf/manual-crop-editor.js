@@ -27,13 +27,17 @@ export class ManualCropEditor {
 			previous: 'Vorherige Vorschauseite', next: 'Nächste Vorschauseite', cancel: 'Abbrechen', save: 'Übernehmen',
 			help: 'Ecken ziehen oder den Rahmen verschieben. Gerade/ungerade zählt ab PDF-Seite 1.',
 			reset: 'Automatischen Zuschnitt verwenden', loading: 'Vorschau wird geladen…',
-			status: 'Gilt nur für die Ansicht dieses Dokuments.', error: 'Vorschau konnte nicht geladen werden. Bitte erneut versuchen.', page: 'PDF-Seite'
+			status: 'Gilt nur für die Ansicht dieses Dokuments.', error: 'Vorschau konnte nicht geladen werden. Bitte erneut versuchen.', page: 'PDF-Seite',
+            analysis: 'Automatik anzeigen', measured: 'Erkannter Inhalt', running: 'Kopf- und Fußzeilen', marginalia: 'Randverweise',
+            automatic: 'Automatischer Rahmen', empty: 'Kein Inhalt erkannt.'
 		} : {
 			title: 'Manual crop', scope: 'Page range', all: 'All pages', odd: 'Odd pages', even: 'Even pages',
 			previous: 'Previous preview page', next: 'Next preview page', cancel: 'Cancel', save: 'Apply',
 			help: 'Drag a corner or move the frame. Odd/even counts from PDF page 1.',
 			reset: 'Use automatic crop', loading: 'Loading preview…', status: 'Changes only the view of this document.',
-			error: 'Could not load the preview. Please try again.', page: 'PDF page'
+			error: 'Could not load the preview. Please try again.', page: 'PDF page',
+            analysis: 'Show automatic crop', measured: 'Detected content', running: 'Headers and footers', marginalia: 'Margin references',
+            automatic: 'Automatic frame', empty: 'No content detected.'
 		};
 		this.labels = t;
 		this.root.setAttribute('aria-label', t.title);
@@ -54,12 +58,25 @@ export class ManualCropEditor {
 .boox-manual-crop .crop-handle{position:absolute;width:44px;height:44px;background:transparent;border:0;touch-action:none}
 .boox-manual-crop .crop-handle:after{content:"";position:absolute;inset:11px;background:#fff;border:2px solid var(--accent-blue,#3468d3);border-radius:50%}.boox-manual-crop [data-handle=nw]{left:-22px;top:-22px;cursor:nw-resize}.boox-manual-crop [data-handle=ne]{right:-22px;top:-22px;cursor:ne-resize}.boox-manual-crop [data-handle=sw]{left:-22px;bottom:-22px;cursor:sw-resize}.boox-manual-crop [data-handle=se]{right:-22px;bottom:-22px;cursor:se-resize}
 .boox-manual-crop .crop-footer{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0px)}
+.boox-manual-crop .crop-analysis{position:absolute;inset:0;pointer-events:none}
+.boox-manual-crop .crop-analysis i{position:absolute;border:1px solid var(--crop-mark);box-shadow:0 0 0 1px #fff8}
+.boox-manual-crop .crop-analysis .measured{border-style:dotted}
+.boox-manual-crop .crop-analysis .automatic{border-style:dashed;border-width:2px}
+.boox-manual-crop .running{--crop-mark:#bd401a}.boox-manual-crop .marginalia{--crop-mark:#8752af}
+.boox-manual-crop .measured{--crop-mark:#27856a}.boox-manual-crop .automatic{--crop-mark:var(--accent-blue,#3468d3)}
+.boox-manual-crop .crop-analysis-controls{flex:none;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:0 8px}
+.boox-manual-crop .crop-analysis-controls button[aria-pressed=true]{background:var(--fill-quinary,#eee);font-weight:600}
+.boox-manual-crop .crop-legend{font-size:12px;display:flex;flex-wrap:wrap;justify-content:center;gap:4px 10px}
+.boox-manual-crop .crop-legend span{display:inline-flex;align-items:center;gap:4px}
+.boox-manual-crop .crop-legend span:before{content:'';width:8px;height:8px;border-radius:50%;background:var(--crop-mark)}
+.boox-manual-crop [hidden]{display:none!important}
 @media(max-height:450px){.boox-manual-crop{gap:4px;padding:6px 12px}.boox-manual-crop .crop-help,.boox-manual-crop .crop-status{display:none}.boox-manual-crop .crop-footer{position:absolute;bottom:8px;right:12px}.boox-manual-crop .crop-footer button{background:var(--color-background,#fff)}}
 </style>
 <div class="crop-toolbar"><button data-action="cancel">${t.cancel}</button><h1 class="crop-heading">${t.title}</h1><button data-action="save">${t.save}</button></div>
 <div class="crop-range"><select aria-label="${t.scope}"><option value="all">${t.all}</option><option value="odd">${t.odd}</option><option value="even">${t.even}</option></select><div class="crop-pages"><button data-action="previous" aria-label="${t.previous}">‹</button><span class="crop-page"></span><button data-action="next" aria-label="${t.next}">›</button></div></div>
 <div class="crop-help">${t.help}</div>
-<div class="crop-preview"><div class="crop-sheet"><canvas></canvas><div class="crop-shade"></div><div class="crop-selection" data-handle="move"><i class="crop-handle" data-handle="nw"></i><i class="crop-handle" data-handle="ne"></i><i class="crop-handle" data-handle="sw"></i><i class="crop-handle" data-handle="se"></i></div></div></div>
+<div class="crop-preview"><div class="crop-sheet"><canvas></canvas><div class="crop-shade"></div><div class="crop-analysis" aria-hidden="true" hidden></div><div class="crop-selection" data-handle="move"><i class="crop-handle" data-handle="nw"></i><i class="crop-handle" data-handle="ne"></i><i class="crop-handle" data-handle="sw"></i><i class="crop-handle" data-handle="se"></i></div></div></div>
+<div class="crop-analysis-controls"><button type="button" data-action="analysis" aria-pressed="false">${t.analysis}</button><div class="crop-legend" hidden><span class="measured">${t.measured}</span><span class="running">${t.running}</span><span class="marginalia">${t.marginalia}</span><span class="automatic">${t.automatic}</span></div><div class="crop-analysis-status" role="status" hidden></div></div>
 <div class="crop-footer"><div class="crop-status" role="status"></div></div>`;
         if (nativeControls) {
             for (const element of this.root.querySelectorAll('.crop-toolbar,.crop-range,.crop-help,.crop-footer')) element.style.display = 'none';
@@ -72,6 +89,16 @@ export class ManualCropEditor {
 		this.sheet = this.root.querySelector('.crop-sheet');
 		this.canvas = this.root.querySelector('canvas');
 		this.selection = this.root.querySelector('.crop-selection');
+        this.analysis = this.root.querySelector('.crop-analysis');
+        this.analysisStatus = this.root.querySelector('.crop-analysis-status');
+        this.analysisButton = this.root.querySelector('[data-action=analysis]');
+        this.analysisButton.onclick = () => {
+            const show = this.analysis.hidden;
+            this.analysis.hidden = this.root.querySelector('.crop-legend').hidden = !show;
+            this.analysisButton.setAttribute('aria-pressed',String(show));
+            if (show) this.loadAnalysis();
+            else this.analysisStatus.hidden = true;
+        };
 		this.select = this.root.querySelector('select');
 		this.select.onchange = () => {
 			this.scope = this.select.value;
@@ -129,6 +156,8 @@ export class ManualCropEditor {
 		let token = ++this.token;
 		this.drag = null;
 		this.setBusy(true);
+        this.analysis.replaceChildren();
+        this.analysisStatus.hidden = true;
 		this.renderTask?.cancel();
 		let step = this.scope === 'all' ? 1 : 2;
 		this.root.querySelector('[data-action=previous]').disabled = this.index - step < 0;
@@ -153,12 +182,15 @@ export class ManualCropEditor {
 				: this.crops[this.scope] || cropForPage(this.crops, this.index));
 			if (!bounds) {
 				// Start with the existing automatic reading bounds when no manual crop exists.
-				bounds = rotateReadingBounds(await this.fitting.boundsFor(this.index), -this.viewer.pagesRotation);
+				bounds = rotateReadingBounds(await this.fitting.boundsFor(this.index, {
+                    includeMarginalia: this.fitting.options.includeMarginalia, manualCrop: {}
+                }), -this.viewer.pagesRotation);
 			}
 			if (token !== this.token || this.closed) return;
 			this.rect = rotateReadingBounds(bounds, this.rotation);
 			this.sizePreview(); this.draw(); this.setBusy(false);
 			this.root.querySelector('.crop-status').textContent = this.labels.status;
+            if (!this.analysis.hidden) this.loadAnalysis();
 		}
 		catch (error) {
 			if (token !== this.token || this.closed || error.name === 'RenderingCancelledException') return;
@@ -166,6 +198,39 @@ export class ManualCropEditor {
 			console.error(error);
 		}
 	}
+    async loadAnalysis() {
+        if (this.closed || this.busy || this.analysis.hidden) return;
+        const token = this.token;
+        if (this.analysisToken === token && this.analysis.childElementCount) return;
+        if (this.analysisRequest === token) return;
+        this.analysisRequest = token;
+        this.analysisStatus.hidden = false;
+        this.analysisStatus.textContent = this.labels.loading;
+        try {
+            const result = await this.fitting.cropDiagnostics(this.index);
+            if (this.closed || token !== this.token || this.analysis.hidden) return;
+            const doc = this.root.ownerDocument;
+            const boxes = [];
+            for (const [kind, rects] of Object.entries({ measured:[result.detected], running:result.running,
+                marginalia:result.marginalia, automatic:[result.frame] })) {
+                for (const rect of rects.filter(Boolean)) {
+                    const [x0,y0,x1,y1] = rotateReadingBounds(rect,this.rotation);
+                    const box = doc.createElement('i');
+                    box.className = kind;
+                    Object.assign(box.style,{left:x0*100+'%',top:y0*100+'%',width:(x1-x0)*100+'%',height:(y1-y0)*100+'%'});
+                    boxes.push(box);
+                }
+            }
+            this.analysis.replaceChildren(...boxes);
+            this.analysisToken = token;
+            this.analysisStatus.hidden = !!result.detected;
+            this.analysisStatus.textContent = this.labels.empty;
+        }
+        catch (_) {
+            if (!this.closed && token === this.token && !this.analysis.hidden) this.analysisStatus.textContent = this.labels.error;
+        }
+        finally { if (this.analysisRequest === token) this.analysisRequest = null; }
+    }
 	sizePreview() {
 		if (!this.aspect || this.closed) return;
 		let box = this.root.querySelector('.crop-preview');

@@ -19,6 +19,8 @@ const root=path.resolve(__dirname,'../build/android'),fixture=require('./make-he
    assert.equal(settled.scale,result.scale,'learning must not change the visible font size');assert.ok(Math.abs(settled.left-result.left)<2&&Math.abs(settled.top-result.top)<2,'learning must not shift visible text: '+JSON.stringify({index,result,settled}));
    console.log('PASS header case '+index+': Text + crop removes running head/rule/folio/license, preserves the footnote and holds visible geometry');
   }
+  assert.ok(await page.evaluate(()=>window._view._view._pageFitting.metrics.snapshot().cropStrip?.count),
+   'the short running rule is confirmed in a high-resolution strip');
   assert.deepEqual(errors,[]);
  } finally {await browser?.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);process.exitCode=1;});

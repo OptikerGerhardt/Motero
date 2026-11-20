@@ -1,6 +1,7 @@
 // View geometry only. No PDF text, images, annotation data or credentials.
 const KEY = 'motero.reading-geometry.v7';
-const VERSION = 8;
+const VERSION = 9;
+const pageKinds = ['prose','columns','opening','short-lines','sparse','scan'];
 const validBounds = b => Array.isArray(b) && b.length === 4 && b.every(n => Number.isFinite(n) && n >= 0 && n <= 1)
     && b[0] < b[2] && b[1] < b[3];
 export function validGeometry(page) {
@@ -12,9 +13,19 @@ export function validGeometry(page) {
 }
 function numericLearning(value) {
     if (!value || !Number.isFinite(value.aspect) || value.aspect <= 0) return null;
-    const profiles = p => p && Array.isArray(p.profiles) && p.profiles.length === 2
+    const parityProfile = p => p && Array.isArray(p.profiles) && p.profiles.length === 2
         && p.profiles.every(b => b === null || validBounds(b)) && Number.isFinite(p.width) && p.width >= 0 && p.width <= 1
         ? { profiles: p.profiles, width: p.width } : null;
+    const profiles = p => {
+        const base = parityProfile(p);
+        if (!base || !p.groups) return base;
+        const groups = {};
+        for (const kind of pageKinds) {
+            const group = parityProfile(p.groups[kind]);
+            if (group) groups[kind] = group;
+        }
+        return { ...base, groups };
+    };
     const normal = profiles(value.profiles), margins = profiles(value.withMarginalia);
     if (!normal || !margins) return null;
     const bands = name => (Array.isArray(value.model?.[name]) ? value.model[name] : []).slice(0, 128)
@@ -48,7 +59,8 @@ export class ReadingGeometryCache {
         if (!validGeometry(page) || page.index >= this.count) return;
         this.pages.delete(page.index);
         this.pages.set(page.index, { index: page.index, aspect: page.aspect, bounds: page.bounds,
-            withMarginalia: page.withMarginalia, marginalia: page.marginalia, columns: page.columns || null, blank:page.blank === true });
+            withMarginalia: page.withMarginalia, marginalia: page.marginalia, columns: page.columns || null, blank:page.blank === true,
+            ...(pageKinds.includes(page.kind) && {kind:page.kind}) });
         while (this.pages.size > 128) this.pages.delete(this.pages.keys().next().value);
     }
     flush() {

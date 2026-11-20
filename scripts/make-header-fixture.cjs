@@ -5,7 +5,7 @@ const text=(x,y,s,size=12)=>`BT /F1 ${size} Tf ${x} ${y} Td (${s.replace(/[\\()]
 for(let index=0;index<3;index++){
  let stream='';
  if(index===0)stream+=text(50,762,'Marcus Andreas Born',10)+'30 750 m 570 750 l S\n';
- if(index===1)stream+=text(60,762,'Burow, Daniels, Kaiser, Klinkhamer, Kulbatzki, Schuette, Henkel',8);
+ if(index===1)stream+=text(60,762,'Burow, Daniels, Kaiser, Klinkhamer, Kulbatzki, Schuette, Henkel',8)+'0.5 w 155 749 m 430 749 l S\n';
  if(index===2)stream+=text(30,762,'320             Vom christlichen Gemeinwesen - XXXIII',10);
  if(index!==2)stream+=text(30,762,String(index+10),10);
  for(let row=0;row<30;row++)stream+=text(60,720-row*18,'Complete body text: all words must remain available here.');

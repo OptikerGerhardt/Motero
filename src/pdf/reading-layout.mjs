@@ -1,5 +1,7 @@
 import { compactReadingImage } from './reading-image.mjs';
 import { getInkBounds } from './content-fit.mjs';
+import { analyzeTextScan } from './reading-scan-paper.mjs';
+import { headerStrip } from './reading-raster-refinement.mjs';
 
 // PDF page indexes, not printed folios. Always sample adjacent odd/even pairs.
 export function getReadingSamples(count) {
@@ -190,22 +192,31 @@ function sameHeaderBand(a, b) {
 	return Math.abs(a.y0 - b.y0) < 0.012 && Math.abs(a.y1 - b.y1) < 0.012;
 }
 
+function readingTextEdges(lines) {
+    const prose = lines.filter(line => !line.sideCandidate && !line.vertical && line.text.length > 30
+        && line.rect[2] - line.rect[0] > .28 && line.rect[1] > .12 && line.rect[3] < .85);
+    if (prose.length < 3) return null;
+    const quarter = values => values.sort((a,b) => a-b)[Math.floor(values.length*.25)];
+    return [quarter(prose.map(line => line.rect[0])), -quarter(prose.map(line => -line.rect[2]))];
+}
+
 // An isolated small running head with a separate outer folio is strong local
-// evidence, even when the chapter changes between the sampled pages.
-function hasRunningFolio(line, lines, bodyHeight) {
+// evidence, even when paired-page book margins place it far from the paper edge.
+function runningFolio(line, lines, bodyHeight, edges) {
     if (!bodyHeight || line.vertical || line.text.length < 4 || line.text.length > 140
             || line.rect[3] >= .2 || line.rect[3]-line.rect[1] > bodyHeight*1.25
             || /^(?:\d+\s+)?(?:chapter|kapitel|section|teil)\b|^\d+[.)]\s/i.test(line.text.trim())) return false;
     const folio = lines.find(other => other !== line && (pageNumber(other.text) || editionReference(other.text))
-        && (other.rect[2] < .18 || other.rect[0] > .82)
-        && (other.rect[2] < line.rect[0] || other.rect[0] > line.rect[2])
+        && other.rect[2]-other.rect[0] < .10
+        && ((other.rect[2] < .18 || edges && other.rect[0] < edges[0]+.025) && line.rect[0]-other.rect[2] > .04
+            || (other.rect[0] > .82 || edges && other.rect[2] > edges[1]-.025) && other.rect[0]-line.rect[2] > .04)
         && Math.abs(other.rect[1]+other.rect[3]-line.rect[1]-line.rect[3]) < bodyHeight);
     const next = lines.filter(l => l !== line && l !== folio && l.text.length > 15 && l.rect[1] > line.rect[3])
         .sort((a,b)=>a.rect[1]-b.rect[1])[0];
     const merged = line.rect[2]-line.rect[0]>.5 && (line.rect[0]<.13 || line.rect[2]>.87)
         && line.rect[3]-line.rect[1]<=bodyHeight*1.05
         && /^(?:\d{1,5}\s+.{8,}|.{8,}\s+\d{1,5})$/.test(line.text.trim());
-    return (!!folio || merged) && !!next && next.rect[1]-line.rect[3] > bodyHeight*.7;
+    return (!!folio || merged) && !!next && next.rect[1]-line.rect[3] > bodyHeight*.7 ? {folio} : null;
 }
 
 function footerCandidatesFor(lines, fallbackHeight = 0) {
@@ -282,14 +293,20 @@ export function buildReadingModel(pages) {
     return { repeated, headerBands, footerBands, folioBands, bodyHeight };
 }
 
-export function getReadingExclusions(lines, model = { repeated: new Set() }, pageIndex = null, { includeMarginalia = false, headerRule = null } = {}) {
+export function getReadingExclusions(lines, model = { repeated: new Set() }, pageIndex = null,
+    { includeMarginalia = false, headerRule = null, running = null } = {}) {
 	let excluded = new Set();
 	// A Roman/A-B label beside a detached running title is a page header,
     // not a body-margin reference controlled by Include/Exclude.
     const localHeight=bodyLineHeight(lines);
-    const runningHeads = lines.filter(line => hasRunningFolio(line, lines, localHeight));
+    const edges = readingTextEdges(lines);
+    const runningHeads = new Map();
+    for (const line of lines) {
+        const candidate = runningFolio(line,lines,localHeight,edges);
+        if (candidate) runningHeads.set(line,candidate);
+    }
 	for (const line of lines) if ((romanReference(line.text) || editionReference(line.text))
-        && line.rect[3]<.20 && runningHeads.some(head=>head!==line
+        && line.rect[3]<.20 && [...runningHeads.keys()].some(head=>head!==line
             && (line.rect[2]<head.rect[0] || line.rect[0]>head.rect[2])
             && Math.abs(line.rect[1]+line.rect[3]-head.rect[1]-head.rect[3]) < (model.bodyHeight || localHeight))) excluded.add(line);
 	for (let line of lines) {
@@ -340,7 +357,7 @@ export function getReadingExclusions(lines, model = { repeated: new Set() }, pag
         // of a newly encountered chapter. Preserve ordinary small headings.
         if (y1 < .15 && isolated && h<bodyHeight*.92 && line.text.split(',').length>=3
             && line.text.length<180 && !/[.!?]$/.test(line.text.trim())) return true;
-		if (hasRunningFolio(line, lines, bodyHeight)) return true;
+		if (runningHeads.has(line)) return true;
 		if (line.sideCandidate && marginalReference(line.text)) return false;
 		if (line.vertical || y1 >= 0.23 || bodyHeight && y1 - y0 > bodyHeight * 1.1) return false;
 		let knownBand = model.headerBands?.some(band => (band.parity === undefined
@@ -355,21 +372,22 @@ export function getReadingExclusions(lines, model = { repeated: new Set() }, pag
 		else block.push(line);
 	}
 	for (let block of blocks) {
-		let end = Math.max(...block.map(l => l.rect[3]));
-		let height = Math.max(...block.map(l => l.rect[3] - l.rect[1]));
+        const members = new Set(block);
+        for (const head of block) {
+            const folio = runningHeads.get(head)?.folio;
+            if (folio) members.add(folio);
+        }
+		let end = Math.max(...[...members].map(l => l.rect[3]));
+		let height = Math.max(...[...members].map(l => l.rect[3] - l.rect[1]));
 		// Tall glyph boxes can overlap the next body line. That is continuous
 		// text, not a whitespace gap after a running header.
-		if (lines.some(l => !headers.includes(l) && !excluded.has(l) && l.rect[1] < end
+		if (lines.some(l => !members.has(l) && !headers.includes(l) && !excluded.has(l) && l.rect[1] < end
 			&& l.rect[3] > end && l.rect[0] < 0.85 && l.rect[2] > 0.15)) continue;
-		let next = lines.filter(l => !headers.includes(l) && !excluded.has(l) && l.rect[1] > end
+		let next = lines.filter(l => !members.has(l) && !headers.includes(l) && !excluded.has(l) && l.rect[1] > end
 			&& l.rect[0] < 0.85 && l.rect[2] > 0.15).sort((a, b) => a.rect[1] - b.rect[1])[0];
 		if (next && next.rect[1] - end > height * 0.65
             || headerRule && end <= headerRule[0]+.003 && !next) {
-            block.forEach(l => excluded.add(l));
-            for (const head of block.filter(l=>hasRunningFolio(l,lines,bodyHeight))) {
-                for (const folio of lines) if (pageNumber(folio.text) && (folio.rect[2]<.18 || folio.rect[0]>.82)
-                    && Math.abs(folio.rect[1]+folio.rect[3]-head.rect[1]-head.rect[3])<bodyHeight) excluded.add(folio);
-            }
+			for (const member of members) excluded.add(member);
         }
 	}
 
@@ -380,6 +398,7 @@ export function getReadingExclusions(lines, model = { repeated: new Set() }, pag
 		if (!/^(?:https?:\/\/|doi\s*:?\s*https?:\/\/|terms\s*(?:and|&)\s*conditions)/i.test(line.text.trim())) continue;
 		if (stamps.some(stamp => Math.max(line.rect[1] - stamp.rect[3], stamp.rect[1] - line.rect[3]) < 0.04)) excluded.add(line);
 	}
+	if (running) for (const line of excluded) running.push(line.rect);
 	if (includeMarginalia) return [...excluded].map(line => line.rect);
 	let numbers = lines.filter(line => /^\d{1,3}$/.test(line.text) && line.rect[2] - line.rect[0] < 0.045);
 	for (let line of numbers) {
@@ -466,54 +485,88 @@ function findRunningHeadRule(image, lines) {
 // Unlabelled raster stars/dots survive OCR surprisingly often. Only consider
 // tiny disconnected marks beyond a well-supported prose column, never images
 // or text-free scans. A four-pixel guard protects italic overhang and body ink.
-export function getRasterMarginalia(image, lines) {
+export function getRasterMarginalia(image, lines, strips, scan = null) {
     if (!image) return [];
     image=compactReadingImage(image);
-    const {width,height,data}=image, h=bodyLineHeight(lines);
+    const {width,height}=image, data = scan?.data || image.data;
+    const h=scan?.body?.lineHeight || bodyLineHeight(lines);
     if (width<200 || height<200) return [];
     const prose=lines.filter(l=>!l.vertical && !l.sideCandidate && l.text.length>30
         && l.rect[2]-l.rect[0]>.35 && l.rect[1]>.12 && l.rect[3]<.9
         && l.rect[3]-l.rect[1]>h*.8 && l.rect[3]-l.rect[1]<h*1.2);
-    if (prose.length<6 || !h) return [];
+    if ((!scan?.body && prose.length<6) || !h) return [];
     const quantile=a=>a.sort((a,b)=>a-b)[Math.floor(a.length*.25)];
-    const left=quantile(prose.map(l=>l.rect[0])), right=-quantile(prose.map(l=>-l.rect[2]));
-    const top=Math.floor(Math.min(...prose.map(l=>l.rect[1]))*height);
-    const bottom=Math.ceil(Math.max(...prose.map(l=>l.rect[3]))*height);
+    const left=scan?.body?.left ?? quantile(prose.map(l=>l.rect[0])), right=scan?.body?.right ?? -quantile(prose.map(l=>-l.rect[2]));
+    const top=Math.floor((scan?.body?.top ?? Math.min(...prose.map(l=>l.rect[1])))*height);
+    const bottom=Math.ceil((scan?.body?.bottom ?? Math.max(...prose.map(l=>l.rect[3])))*height);
     const seen=new Uint8Array(width*height), marks=[];
     for (const [start,end] of [[0,Math.floor(left*width)-4],[Math.ceil(right*width)+4,width]]) {
         for(let y=top;y<bottom;y++) for(let x=start;x<end;x++) {
             const first=y*width+x;
-            if(seen[first] || data[first]>=210) continue;
+            if(seen[first] || data[first]>=225) continue;
             const queue=[first];seen[first]=1;
+            let strong = 0;
             let x0=x,x1=x,y0=y,y1=y;
             for(let at=0;at<queue.length;at++) {
                 const p=queue[at], px=p%width, py=Math.floor(p/width);
                 x0=Math.min(x0,px);x1=Math.max(x1,px);y0=Math.min(y0,py);y1=Math.max(y1,py);
+                if (data[p] < 210) strong++;
                 for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++) {
                     const nx=px+dx,ny=py+dy,n=ny*width+nx;
-                    if(nx<start || nx>=end || ny<top || ny>=bottom || seen[n] || data[n]>=210) continue;
+                    if(nx<start || nx>=end || ny<top || ny>=bottom || seen[n] || data[n]>=225) continue;
                     seen[n]=1;queue.push(n);
                 }
             }
-            if(queue.length<2 || x1-x0+1>width*.035 || y1-y0+1>Math.max(3,h*height*1.1)) continue;
+            if(x1-x0+1>width*.035 || y1-y0+1>Math.max(3,h*height*1.1)) continue;
+            if (scan?.body) {
+                const w=x1-x0+1, markHeight=y1-y0+1, size=Math.round(h*height*.73);
+                if (x0===start && start>0 || x1===end-1 && end<width || Math.max(w,markHeight)>size
+                    || Math.max(w,markHeight)>Math.min(w,markHeight)*2.5 || queue.length<3) continue;
+                // Without OCR, keep groups of glyphs such as I., II. and III.
+                // that are printed as part of an indented paragraph or list.
+                const gap=Math.max(2,Math.round(h*height*.26));
+                let neighbor=false;
+                for(let yy=Math.max(0,y0-gap);yy<=Math.min(height-1,y1+gap) && !neighbor;yy++) {
+                    for(let xx=Math.max(0,x0-gap);xx<=Math.min(width-1,x1+gap);xx++) {
+                        if (xx>=x0 && xx<=x1 && yy>=y0 && yy<=y1) continue;
+                        if (data[yy*width+xx]<210) { neighbor=true; break; }
+                    }
+                }
+                if (neighbor) continue;
+            }
             const rect=[x0/width,y0/height,(x1+1)/width,(y1+1)/height];
             // Known text, including footnote labels and references, follows the
             // semantic rules instead of being erased as an unknown raster mark.
             if(lines.some(l=>l.rect[0]<rect[2] && l.rect[2]>rect[0]
                 && l.rect[1]<rect[3] && l.rect[3]>rect[1])) continue;
-            marks.push(rect);
+            if (strong >= 2) marks.push(rect);
+            else if (strips && !strips.some(strip => strip.kind === 'mark') && (queue.length > 1 || strong)) {
+                const patch = [Math.max(0, x0-3)/width, Math.max(0, y0-3)/height,
+                    Math.min(width, x1+4)/width, Math.min(height, y1+4)/height];
+                if (patch[2] <= left || patch[0] >= right) strips.push({ kind: 'mark', rect: patch });
+            }
         }
     }
     return marks;
 }
 
+export function classifyReadingElements(lines, model, pageIndex, image) {
+    const headerRule = image && findRunningHeadRule(image,lines);
+    const running = [];
+    const excluded = getReadingExclusions(lines,model,pageIndex,{headerRule,running});
+    const fixed = new Set(running);
+    return {headerRule, running, excluded, marginalia:excluded.filter(rect => !fixed.has(rect))};
+}
+
 export function getReadingBounds(image, lines, model, pageIndex = null, options = {}) {
 	image = compactReadingImage(image);
-    const headerRule=findRunningHeadRule(image,lines);
-	let ignored = getReadingExclusions(lines, model, pageIndex, {...options,headerRule});
-    if (!options.includeMarginalia) ignored.push(...getRasterMarginalia(image,lines));
+    const {headerRule, running, excluded} = options.classification || classifyReadingElements(lines,model,pageIndex,image);
+    const scan = options.scan === undefined && lines.length-running.length < 3 ? analyzeTextScan(image) : options.scan;
+	let ignored = [...(options.includeMarginalia ? running : excluded)];
+    if (scan?.running) ignored.push(scan.running);
+    if (!options.includeMarginalia) ignored.push(...(options.rasterMarks ?? getRasterMarginalia(image,lines,null,scan)));
 	let { width, height } = image;
-	let data = new Uint8ClampedArray(image.data);
+	let data = new Uint8ClampedArray(scan?.data || image.data);
     const red = image.red && new Uint8ClampedArray(image.red);
     const whiten=(start,end)=>{data.fill(255,start,end);red?.fill(255,start,end);};
     if (headerRule && ignored.some(r=>r[3]<=headerRule[0]+.003)
@@ -521,32 +574,19 @@ export function getReadingBounds(image, lines, model, pageIndex = null, options 
         whiten(Math.max(0,Math.floor(headerRule[0]*height)-1)*width,
             Math.min(height,Math.ceil(headerRule[1]*height)+1)*width);
     }
-	// Neutral gray scan paper is not ink. Only normalize it when many distinct
-	// text-like horizontal bands support that interpretation; keep photos intact.
-	if (lines.length < 3) {
-		let histogram = image.histogram, samples = image.samples;
-		let paper = 160;
-		for (let value = 161; value <= 246; value++) if (histogram[value] > histogram[paper]) paper = value;
-		let near = histogram.slice(Math.max(0, paper - 3), paper + 4).reduce((sum, n) => sum + n, 0);
-		if (near > samples * 0.5) {
-			let threshold = Math.max(145, paper - 12), bands = 0, inBand = false;
-			for (let y = 0; y < height; y++) {
-				let ink = 0;
-				for (let x = 0; x < width; x++) {
-					let i = (y * width + x);
-					if (data[i] < threshold) ink++;
-				}
-				let textRow = ink > width * 0.015 && ink < width * 0.85;
-				if (textRow && !inBand) bands++;
-				inBand = textRow;
-			}
-			if (bands >= 8) {
-				for (let i = 0; i < data.length; i++) {
-					if (data[i] >= threshold) {data[i]=255;if(red)red[i]=255;}
-				}
-			}
-		}
-	}
+    if (options.evidence) {
+        options.evidence.running = [...running, ...(options.rasterRules || [])];
+        if (scan?.running) options.evidence.running.push(scan.running);
+        if (headerRule && running.some(rect => rect[3] <= headerRule[0]+.003)) {
+            options.evidence.running.push([0, headerRule[0], 1, headerRule[1]]);
+        }
+    }
+    for (const rect of options.rasterRules || []) {
+        // Confirmed resolution of a short or faint rule in documented white space.
+        const x0 = Math.floor(rect[0] * width), x1 = Math.ceil(rect[2] * width);
+        const y0 = Math.floor(rect[1] * height), y1 = Math.ceil(rect[3] * height);
+        for (let y = y0; y < y1; y++) whiten(y * width + x0, y * width + x1);
+    }
 	for (let rect of ignored) {
 		let x0 = Math.max(0, Math.floor(rect[0] * width) - 2), y0 = Math.max(0, Math.floor(rect[1] * height) - 2);
 		let x1 = Math.min(width, Math.ceil(rect[2] * width) + 2), y1 = Math.min(height, Math.ceil(rect[3] * height) + 2);
@@ -562,18 +602,24 @@ export function getReadingBounds(image, lines, model, pageIndex = null, options 
 		let y1 = Math.min(height, Math.ceil(rect[3] * height) + 2);
 		whiten(y0 * width,y1 * width);
 	}
-	// Remove a thin rule belonging to an excluded running header, while keeping
-	// the rules above footnotes and tables intact.
-	for (let rect of ignored.filter(rect => rect[3] < 0.23)) {
-		let next = lines.filter(l => !ignored.includes(l.rect) && l.rect[1] > rect[3] && l.text.length > 15)
-			.sort((a, b) => a.rect[1] - b.rect[1])[0];
-		if (!next) continue;
-		for (let y = Math.ceil(rect[3] * height); y < Math.floor(next.rect[1] * height) - 2; y++) {
-			let ink = 0;
-			for (let x = 0; x < width; x++) if ((red || data)[y * width + x] < 235) ink++;
-			if (ink > width * 0.5) whiten(y * width,(y+1)*width);
-		}
-	}
+    // Inspect a possible separator only in an empty gap below a confirmed head.
+    // A different ambiguous edge remains outside the crop independently.
+    if (!headerRule && running.some(rect => rect[3] < .23)) {
+        const head = Math.max(...running.filter(rect => rect[3] < .23).map(rect => rect[3]));
+        const next = Math.min(1, ...lines.filter(line => !running.includes(line.rect) && !line.sideCandidate
+            && line.rect[3] > head).map(line => line.rect[1]));
+        if (next > head && next < 1) {
+            const strip = headerStrip(red || data, width, height, head, Math.min(next,head+.055));
+            if (strip?.strong) {
+                const [x0,y0,x1,y1] = strip.ink;
+                for (let y = y0; y < y1; y++) whiten(y * width + x0, y * width + x1);
+                options.evidence?.running.push([x0/width,y0/height,x1/width,y1/height]);
+            }
+            else if (strip && !options.inspected && options.evidence) {
+                options.evidence.strips.push({kind:strip.kind,rect:strip.rect});
+            }
+        }
+    }
 	// No vertical band trimming: even a one-line footnote is part of the page.
 	// A footer may also have a vector rule above it. Search only the small empty
 	// strip below ALL retained text, so a real footnote and its separator survive.
@@ -589,22 +635,33 @@ export function getReadingBounds(image, lines, model, pageIndex = null, options 
 			if (y < end) for (let x = 0; x < width; x++) if ((red || data)[y * width + x] < 235) ink++;
 			if (ink > width * 0.5) { if (run === null) run = y; }
 			else if (run !== null) {
-				if (y - run <= Math.max(2, height * 0.004)) whiten(run*width,y*width);
+				if (y - run <= Math.max(2, height * 0.004)) {
+                    whiten(run*width,y*width);
+                    options.evidence?.running.push([0,run/height,1,y/height]);
+                }
 				run = null;
 			}
 		}
 	}
-	let bounds = getInkBounds({ data, width, height, channels:1 }, { trimVertical: false, trimHorizontal: !options.includeMarginalia });
+    const retained = lines.filter(line => !ignored.includes(line.rect));
+    const canTrimHorizontal = ({ start, end }, counts) => {
+        if (retained.some(line => line.rect[0] * width < end && line.rect[2] * width > start)) return false;
+        let ink = 0;
+        for (let x = start; x < end; x++) ink += counts[x];
+        // A narrow detached band may still be a real line or illustration.
+        return ink < Math.max(5,width * height * .0015);
+    };
+	let bounds = getInkBounds({ data, width, height, channels:1 },
+        { trimVertical:false, trimHorizontal:!options.includeMarginalia, canTrimHorizontal });
 	return bounds && bounds[2] - bounds[0] > 0.015 && bounds[3] - bounds[1] > 0.015 ? bounds : null;
 }
 
 export function getReadingMarginalia(lines, model, pageIndex, image = null) {
-	let always = new Set(getReadingExclusions(lines, model, pageIndex, { includeMarginalia: true }));
-	return [...getReadingExclusions(lines, model, pageIndex).filter(rect => !always.has(rect)),
-        ...getRasterMarginalia(image,lines)];
+    const classification = classifyReadingElements(lines,model,pageIndex,image && compactReadingImage(image));
+    return [...classification.marginalia, ...getRasterMarginalia(image,lines)];
 }
 
-export function buildReadingProfiles(pages) {
+function parityProfile(pages) {
 	let profiles = [null, null];
 	for (let parity = 0; parity < 2; parity++) {
 		let bounds = pages.filter(page => page.index % 2 === parity && page.bounds).map(page => page.bounds);
@@ -619,7 +676,26 @@ export function buildReadingProfiles(pages) {
 	return { profiles, width: Math.max(0, ...widths) };
 }
 
-export function resolveReadingBounds(actual, index, profiles) {
+export function buildReadingProfiles(pages) {
+	const groups = {};
+	for (const kind of new Set(pages.map(page => page.kind).filter(Boolean))) {
+		const members = pages.filter(page => page.kind === kind && page.bounds);
+		// A lone wide table or title is evidence for its own page only.
+		if (members.length >= 2) {
+			const widths = members.map(page => page.bounds[2]-page.bounds[0]).sort((a,b) => a-b);
+			const profile = parityProfile(members);
+			groups[kind] = {...profile, width:widths[Math.floor((widths.length-1)*.5)]};
+		}
+	}
+	const ordinary = pages.filter(page => !page.kind || page.kind === 'prose');
+	return { ...parityProfile(ordinary), groups };
+}
+
+export function resolveReadingBounds(actual, index, profiles, kind) {
+	if (kind && profiles.groups) {
+		profiles = profiles.groups[kind];
+		if (!profiles) return actual;
+	}
 	let profile = profiles.profiles[index % 2] || actual;
 	if (!actual || !profile) return actual || profile || [0, 0, 1, 1];
 	// Keep a stable reading width, but measure each newly visited page once so
@@ -692,7 +768,9 @@ export function localReadingPages(pages, index) {
 // Only used after the operator list proves that the page paints text alone.
 // Scans, diagrams, rules and complex graphics retain the raster fallback.
 export function getReadingTextBounds(lines, model, index, options = {}) {
-    const ignored=new Set(getReadingExclusions(lines,model,index,options));
+    const {running, excluded} = options.classification || classifyReadingElements(lines,model,index);
+    const ignored=new Set(options.includeMarginalia ? running : excluded);
+    if (options.evidence) options.evidence.running = running;
     const kept=lines.filter(l=>!ignored.has(l.rect));
     if (!kept.length) return null;
     // Advance widths can understate italic overhang; retain a small font-sized
