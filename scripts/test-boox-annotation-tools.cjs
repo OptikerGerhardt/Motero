@@ -46,13 +46,21 @@ const root=path.resolve(__dirname,'../build/android'),fixture=path.resolve(__dir
   assert.equal(await palette.locator('[data-color][aria-pressed="true"]').evaluate(e=>e.style.background),'transparent');
   await palette.locator('[data-color="#2ea8e5"]').click();await page.waitForTimeout(120);assert.equal((await state()).annotations[0].color,'#2ea8e5');assert.equal((await state()).annotations[0].id,original.id);
   console.log('PASS long press reopens the same annotation quick palette and color updates preserve identity');
-  await touch('touchStart',[points.dot]);await touch('touchMove',[points.middle]);await touch('touchEnd',[]);
+  await touch('touchStart',[points.dot]);await touch('touchMove',[points.middle]);
+  await page.waitForFunction(()=>!!window._view._view._iframeWindow.document.querySelector('.boox-selection-magnifier'));
+  await touch('touchEnd',[]);
+  assert.equal((await state()).loupe,false);
   await page.waitForFunction(original=>window.messages.some(m=>m.message?.event==='onSaveAnnotations'
    && m.message.params.annotations.some(a=>a.id===original.id && a.text!==original.text
      && JSON.stringify(a.position)!==JSON.stringify(original.position))),original);
   await page.evaluate(()=>window._view.undo());
   await page.waitForFunction(original=>window.messages.some(m=>m.message?.event==='onSaveAnnotations'
    && m.message.params.history && m.message.params.annotations.some(a=>a.id===original.id && a.text===original.text)),original);
+  await page.evaluate(()=>{window._view._view._booxReader.closePalette();window.messages=[];});
+  await touch('touchStart',[points.middle]);await page.waitForTimeout(540);await touch('touchEnd',[]);
+  await touch('touchStart',[points.middle]);await touch('touchEnd',[]);
+  await page.waitForFunction(id=>window.messages.some(m=>m.message?.event==='onSetAnnotationPopup'
+    && m.message.params?.annotation?.id===id),original.id);
   console.log('PASS PDF handle resize sends quotation and bounds together; Undo restores the original quotation');
   await page.evaluate(()=>{window.setDirectHighlight(false);window.setReaderChromeVisible(true);});
   await touch('touchStart',[points.middle]);await page.waitForTimeout(540);assert.equal((await state()).palette,true);await touch('touchEnd',[]);

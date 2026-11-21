@@ -36,23 +36,33 @@ export class PDFPageNavigation {
             if (event.touches.length > 1) {
                 this.gesture = null; this.multitouch = true; this.sync(); return;
             }
-            if (!this.enabled || !this.isPageTarget(event.target) || this.view.getSelectedAnnotations().length) return;
+            if (!this.canNavigate || !this.isPageTarget(event.target) || this.view.getSelectedAnnotations().length) return;
+            const horizontal = this.viewer.scrollMode === 1;
+            const crossPan = !this.view._pageFitting?.columnActive && this.crossPanRange(horizontal);
+            if (this.mode === 'continuous' && !crossPan) return;
             const p = event.touches[0];
             this.gesture = { x: p.clientX, y: p.clientY, time: Date.now(), dx: 0, dy: 0,
                 column:!!this.view._pageFitting?.columnActive,
                 originX:this.viewer.container.scrollLeft, originY:this.viewer.container.scrollTop,
-                pan:this.panRange() };
+                pan:this.mode === 'jumped' ? this.panRange() : null, crossPan, horizontal };
         };
         this.onMove = event => {
-            if (!this.gesture || event.touches.length !== 1 || !this.enabled) return;
+            if (!this.gesture || event.touches.length !== 1 || !this.canNavigate) return;
             if (this.view._directHighlight?.gesture.active || this.view._nativeTextSelection?.shouldDeferEvent(event)) { this.gesture.selection = true; return; }
             const p = event.touches[0], g = this.gesture;
             g.dx = p.clientX - g.x; g.dy = p.clientY - g.y;
-            if (g.pan && !g.selection) {
-                const c=this.viewer.container, axis=g.pan.axis;
+            if (!g.axis && Math.hypot(g.dx,g.dy)>8) {
+                g.axis = Math.abs(g.dx)>Math.abs(g.dy) ? 'scrollLeft' : 'scrollTop';
+            }
+            const cross = g.horizontal ? 'scrollTop' : 'scrollLeft';
+            if (this.mode === 'continuous' && g.axis !== cross) return;
+            const limits = g.axis === cross && !g.column ? g.crossPan : g.pan;
+            if (limits && g.axis === limits.axis && !g.selection) {
+                const c=this.viewer.container, axis=limits.axis;
+                if (g.axis === cross) g.panned=true;
                 const origin=axis==='scrollTop'?g.originY:g.originX;
                 const delta=axis==='scrollTop'?g.dy:g.dx;
-                const target=Math.max(g.pan.min,Math.min(g.pan.max,origin-delta));
+                const target=Math.max(limits.min,Math.min(limits.max,origin-delta));
                 if (Math.abs(target-origin)>1) {
                     if (!g.panned) {this.view._onManualNavigation();this.view._cancelPendingPageTurn?.();}
                     g.panned=true;c[axis]=target;
@@ -110,8 +120,9 @@ export class PDFPageNavigation {
         for (const name of ['pagechanging','pagesinit','scalechanging','updateviewarea']) this.bus.on(name, this.onChange);
         this.configure(view._options.pageNavigation);
     }
-    get enabled() {
-        return this.mode === 'jumped' && !this.multitouch && !this.view._destroyed
+    get enabled() { return this.mode === 'jumped' && this.canNavigate; }
+    get canNavigate() {
+        return !this.multitouch && !this.view._destroyed
             && !this.view._pageFitting?.zooming && !this.view._pageFitting?.editor
             && !this.view._booxReader?.isOverview() && !this.view._penInput?.busy
             && (this.view._tool.type === 'pointer' || this.view._isPenInUse?.());
@@ -136,6 +147,28 @@ export class PDFPageNavigation {
         }
         return frame.right-frame.left>c.clientWidth+1.5
             ? {axis:'scrollLeft',min:Math.max(0,frame.left),max:Math.max(0,frame.right-c.clientWidth)} : null;
+    }
+    crossPanRange(horizontal) {
+        const v=this.viewer,c=v.container;
+        if (!v.pagesCount || !c?.clientWidth || !c.clientHeight) return null;
+        const indices=readingUnit(v.currentPageNumber-1,v.pagesCount,v.spreadMode);
+        const boxes=this.view._pageFitting?.layout?.boxes;
+        let frame=boxes && unitFrame(boxes,indices);
+        if (!frame) {
+            const origin=c.getBoundingClientRect();
+            const rects=indices.map(i=>v.getPageView(i)?.div.getBoundingClientRect()).filter(Boolean);
+            frame=unitFrame(rects.map(r=>({
+                left:r.left-origin.left+c.scrollLeft-c.clientLeft, right:r.right-origin.left+c.scrollLeft-c.clientLeft,
+                top:r.top-origin.top+c.scrollTop-c.clientTop, bottom:r.bottom-origin.top+c.scrollTop-c.clientTop
+            })),rects.map((_,i)=>i));
+        }
+        if (!frame) return null;
+        const axis=horizontal?'scrollTop':'scrollLeft';
+        const start=horizontal?frame.top:frame.left, end=horizontal?frame.bottom:frame.right;
+        const size=horizontal?c.clientHeight:c.clientWidth;
+        const extent=horizontal?c.scrollHeight:c.scrollWidth;
+        const min=Math.max(0,start), max=Math.min(extent-size,end-size);
+        return max-min>1.5 ? {axis,min,max} : null;
     }
     configure(mode) {
         const previous = this.mode;

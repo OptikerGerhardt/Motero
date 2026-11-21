@@ -50,7 +50,14 @@ export class DOMDirectHighlight {
         this.listen('pointerdown', event => {
             this.bookmarkDown = null;
             if (this.inControls(event) || view._penInput?.rejects?.(event)) return;
-            if (this.host.palette) { this.closePalette(); this.dismissPointer = event.pointerId; return; }
+            if (this.host.palette) {
+                const annotation = this.annotationAt(event);
+                this.dismissTap = event.isPrimary && event.button===0 && annotation
+                    && view._selectedAnnotationIDs.includes(annotation.id)
+                    ? {id:annotation.id,x:event.clientX,y:event.clientY} : null;
+                this.closePalette(); this.dismissPointer = event.pointerId;
+                return;
+            }
             if (event.isPrimary && event.button === 0 && view._tool.type === 'pointer' && !view._options.readOnly
                 && view.isBookmarkCorner?.(event.clientX, event.clientY)
                 && this.win.getSelection()?.isCollapsed && !view._selectedAnnotationIDs.filter(Boolean).length) {
@@ -86,11 +93,22 @@ export class DOMDirectHighlight {
                 this.navigationUps.add(event);
                 return;
             }
-            if (this.dismissPointer === event.pointerId || this.gesture.up(event)) {
-				this.dismissPointer = null; event.preventDefault(); view._preventNextClickEvent();
-			}
+            if (this.dismissPointer === event.pointerId) {
+                const tap = this.dismissTap;
+                this.dismissPointer = this.dismissTap = null;
+                const annotation = tap && this.annotationAt(event);
+                if (annotation?.id === tap?.id && annotation && Math.hypot(event.clientX-tap.x,event.clientY-tap.y)<=8) {
+                    view._openAnnotationPopup(annotation);
+                }
+                event.preventDefault(); view._preventNextClickEvent();
+                return;
+            }
+            if (this.gesture.up(event)) { event.preventDefault(); view._preventNextClickEvent(); }
 		});
-		this.listen('pointercancel', event => this.gesture.interrupted(event));
+		this.listen('pointercancel', event => {
+            if (this.dismissPointer === event.pointerId) this.dismissPointer = this.dismissTap = null;
+            this.gesture.interrupted(event);
+        });
 		this.listen('contextmenu', event => {
 			if (this.gesture.state || Date.now() < (this.suppressUntil || 0)) event.preventDefault();
 		});

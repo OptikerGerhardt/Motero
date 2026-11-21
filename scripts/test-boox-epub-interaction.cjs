@@ -36,7 +36,10 @@ const root=path.resolve(__dirname,'../build/android');
    const original=await page.evaluate(()=>{const v=window._view._view,a=window._view._annotationManager._annotations[0];v._directHighlight.closePalette();return{id:a.id,position:JSON.stringify(a.position),text:a.text};});
    await hold(p);
    const endHandle=await page.evaluate(()=>{const v=window._view._view;const h=v._annotationShadowRoot.querySelectorAll('.resizer');if(h.length!==2)throw Error('Missing EPUB selection handles');const r=h[1].getBoundingClientRect(),f=v._iframe.getBoundingClientRect();if(parseFloat(getComputedStyle(h[1]).strokeWidth)<44)throw Error('Touch endpoint target is too narrow');return{x:f.left+r.left+r.width/2+18,y:f.top+r.top+r.height/2+14};});
-   await touch('touchStart',[endHandle]);assert.equal(await page.evaluate(()=>!!window._view._view._directHighlight.host.palette),false,'EPUB palette hides during resize');for(let i=1;i<=5;i++){await touch('touchMove',[{x:endHandle.x+50*i/5,y:endHandle.y}]);await page.waitForTimeout(25);}await touch('touchEnd',[]);await page.waitForTimeout(100);
+   await touch('touchStart',[endHandle]);assert.equal(await page.evaluate(()=>!!window._view._view._directHighlight.host.palette),false,'EPUB palette hides during resize');for(let i=1;i<=5;i++){await touch('touchMove',[{x:endHandle.x+50*i/5,y:endHandle.y}]);await page.waitForTimeout(25);}
+   await page.waitForFunction(()=>!!window._view._view._iframeDocument.querySelector('.boox-selection-magnifier'));
+   await touch('touchEnd',[]);await page.waitForTimeout(100);
+   assert.equal(await page.evaluate(()=>!!window._view._view._iframeDocument.querySelector('.boox-selection-magnifier')),false);
    assert.equal(await page.evaluate(()=>!!window._view._view._directHighlight.host.palette),true,'EPUB palette returns after resize');
    const resized=await page.evaluate(id=>window._view._annotationManager._annotations.find(a=>a.id===id),original.id);
    assert.ok(resized);assert.notEqual(JSON.stringify(resized.position),original.position,flow+': real EPUB handle drag must change the CFI range');
@@ -44,6 +47,18 @@ const root=path.resolve(__dirname,'../build/android');
    await page.waitForFunction(a=>window.messages.some(m=>m.message?.event==='onSaveAnnotations'
     && m.message.params.annotations.some(saved=>saved.id===a.id && saved.text===a.text)),resized);
    await page.evaluate(()=>window._view.undo());assert.equal(await page.evaluate(id=>JSON.stringify(window._view._annotationManager._annotations.find(a=>a.id===id).position),original.id),original.position);
+   const selectedPoint=await page.evaluate(()=>{
+    const v=window._view._view,a=window._view._annotationManager._annotations[0];
+    const rect=[...v.toDisplayedRange(a.position).getClientRects()].filter(r=>r.left>=0 && r.left<v._iframe.clientWidth && r.bottom>0 && r.top<v._iframe.clientHeight).sort((a,b)=>b.width-a.width)[0];
+    const frame=v._iframe.getBoundingClientRect();
+    v._directHighlight.closePalette(); window._view.selectAnnotations([]); window.messages=[];
+    return {x:frame.left+(rect.left+rect.right)/2,y:frame.top+(rect.top+rect.bottom)/2};
+   });
+   await hold(selectedPoint);
+   assert.equal(await page.evaluate(()=>!!window._view._view._directHighlight.host.palette),true);
+   await tap(selectedPoint);
+   await page.waitForFunction(id=>window.messages.some(m=>m.message?.event==='onSetAnnotationPopup'
+    &&m.message.params?.annotation?.id===id),original.id);
    await page.evaluate(()=>{const v=window._view._view;v._directHighlight.host.showPalette([window._view._annotationManager._annotations[0]]);});
    console.log('PASS '+flow+': long-press exposes EPUB endpoints; touch resize preserves ID and Undo restores its CFI');
 

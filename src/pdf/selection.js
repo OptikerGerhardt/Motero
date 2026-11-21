@@ -423,7 +423,7 @@ export function getSortIndex(pdfPages, position) {
 	].join('|');
 }
 
-export function getModifiedSelectionRanges(pdfPages, selectionRanges, modifier) {
+export function getModifiedSelectionRanges(pdfPages, selectionRanges, modifier, { snapToWord = false } = {}) {
 	if (!selectionRanges.length) {
 		return [];
 	}
@@ -512,6 +512,25 @@ export function getModifiedSelectionRanges(pdfPages, selectionRanges, modifier) 
 	else if (typeof modifier === 'object') {
 		let position = modifier;
 		head = position;
+        const chars = snapToWord && pdfPages[position.pageIndex]?.chars;
+        if (chars?.length && position.rects?.length) {
+            let offset = getClosestOffset(chars, position.rects[0]);
+            const isWord = i => /[\p{L}\p{N}\p{M}_]/u.test(chars[i]?.u || chars[i]?.c || '');
+            if (isWord(offset)) {
+                const backwards = position.pageIndex < anchor.pageIndex
+                    || position.pageIndex === anchor.pageIndex && offset < anchor.offset;
+                if (backwards) {
+                    while (offset>0 && isWord(offset-1) && !chars[offset-1].wordBreakAfter
+                        && !chars[offset-1].spaceAfter && !chars[offset-1].lineBreakAfter) offset--;
+                }
+                else {
+                    while (isWord(offset+1) && !chars[offset].wordBreakAfter
+                        && !chars[offset].spaceAfter && !chars[offset].lineBreakAfter) offset++;
+                    offset++;
+                }
+                head = {pageIndex:position.pageIndex,offset};
+            }
+        }
 	}
 	return getSelectionRanges(pdfPages, anchor, head);
 }

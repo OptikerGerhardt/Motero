@@ -2064,6 +2064,7 @@ class PDFView {
 	}
 
 	_clearPointerAction() {
+        if (this.action?.type === 'updateAnnotationRange') this._directHighlight?.magnifier.hide();
 		this._releaseTouchTransform();
 		this.action = null;
 		this.pointerDownPosition = null;
@@ -3748,6 +3749,9 @@ class PDFView {
                 return false;
             }
             this._paletteDismissPointer = event.pointerId;
+            this._paletteAnnotationTap = event.isPrimary && event.button===0 && position && selected.length===1
+                && this.getSelectableAnnotations(position)?.some(a=>a.id===selected[0].id)
+                ? {id:selected[0].id,x:event.clientX,y:event.clientY} : null;
             this._booxReader.closePalette();
             this._readerPriorityDown = null;
             this._chromeTapGuard?.reset(); this._directHighlight?.reset();
@@ -3757,7 +3761,13 @@ class PDFView {
         if (!(this._paletteDismissPointer != null && this._paletteDismissPointer === event.pointerId)
                 && !(event.type === 'mousedown' && event.sourceCapabilities?.firesTouchEvents
                     && Date.now() <= this._paletteDismissUntil)) return false;
-        if (event.type === 'pointerup' || event.type === 'pointercancel') this._paletteDismissPointer = null;
+        if (event.type === 'pointerup' || event.type === 'pointercancel') {
+            const tap = this._paletteAnnotationTap;
+            this._paletteAnnotationTap = null;
+            this._paletteDismissPointer = null;
+            if (event.type === 'pointerup' && tap && Math.hypot(event.clientX-tap.x,event.clientY-tap.y)<=8
+                && this.getSelectedAnnotations()[0]?.id===tap.id) this._openAnnotationPopup();
+        }
         event.preventDefault(); event.stopImmediatePropagation();
         return true;
     }
@@ -4211,8 +4221,17 @@ class PDFView {
 		}
 		let page = position && this.getPageByIndex(position.pageIndex);
 		if (action.type === 'updateAnnotationRange') {
-			action.selectionRanges = getModifiedSelectionRanges(this._pdfPages, action.selectionRanges, position);
-			let { sortIndex, position: _position, text } = this._getAnnotationFromSelectionRanges(action.selectionRanges);
+			if (!position) return;
+			const ranges = getModifiedSelectionRanges(this._pdfPages, action.selectionRanges, position, {
+                snapToWord: this._options.platform === 'android' && ['touch','pen'].includes(event.pointerType)
+            });
+			const updated = ranges.length && this._getAnnotationFromSelectionRanges(ranges);
+			if (!updated) return;
+			action.selectionRanges = ranges;
+			const { sortIndex, position: _position, text } = updated;
+            if (this._options.platform === 'android' && ['touch','pen'].includes(event.pointerType)) {
+                this._directHighlight?.magnifier.show(event,position,ranges,action.annotation.color);
+            }
 			action.annotation = { ...action.annotation, sortIndex, position: _position, text };
 			// Use text cursor once action is triggered
 			this.updateCursor(action);
@@ -4568,6 +4587,7 @@ class PDFView {
     }
 
 	_handlePointerUp(event) {
+        if (this.action?.type === 'updateAnnotationRange') this._directHighlight?.magnifier.hide();
         if (event.target?.closest?.('.boox-highlight-palette')) return;
         if (this.action?.type === 'ink' && this.action.pointerID !== undefined && event.pointerId !== this.action.pointerID) { event.stopImmediatePropagation?.(); return; }
         if (this._pageFitting?.editor) return;
@@ -4847,11 +4867,7 @@ class PDFView {
 		if (this._pointerDownTap?.doubleTap) {
 			this._clearPendingBackdropTap();
 		}
-		this._releaseTouchTransform();
-		this.action = null;
-		this.pointerDownPosition = null;
-		this._pointerDownTriggered = false;
-		this._pointerDownTap = null;
+		this._clearPointerAction();
 		this._render();
 	}
 

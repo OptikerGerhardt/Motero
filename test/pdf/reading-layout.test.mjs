@@ -472,6 +472,7 @@ test('a book scan whose text layer contains only a download stamp still finds ru
     assert.ok(result.bounds[1]>.14 && result.bounds[2]<.82,JSON.stringify(result));
     assert.ok(result.withMarginalia[1]>.14 && result.withMarginalia[2]>.9,JSON.stringify(result));
     assert.equal(result.kind,'scan');
+    assert.ok(measure([[.31,.09,.43,.10],[.52,.09,.62,.10],folio]).bounds[1]>.14);
     assert.ok(measure([title]).bounds[1]<.1,'a standalone centered heading stays visible');
 });
 test('gray photograph with no separate text bands keeps its outer frame', () => {
@@ -762,4 +763,13 @@ test('a detached small outer Roman front-matter folio does not become a chapter 
  assert.ok(excluded.includes(folio.rect));assert.ok(!excluded.includes(title.rect));
  const chapter={...folio,rect:[.46,.105,.50,.127]};
  assert.ok(!getReadingExclusions([chapter,title,...prose],buildReadingModel([]),6).includes(chapter.rect));
+});
+
+test('OCR Roman folios in the gutter split from text; inline Roman text stays joined', () => {
+    const viewport={width:600,height:800,scale:1,transform:[1,0,0,-1,0,800]};
+    const body=[...'alpha'].map((u,i)=>({u,rect:[310+i*7,300,316+i*7,310],fontSize:10,baseline:300}));
+    const input=(left)=>({items:[{str:'alpha XII',width:left+12-310,transform:[10,0,0,10,310,300],
+        chars:[...body,...[...'XII'].map((u,i)=>({u,rect:[left+i*4,300,left+i*4+3,310],fontSize:10,baseline:300}))]}]});
+    assert.deepEqual(getReadingTextLines(input(477),viewport).map(l=>l.text),['alpha','XII']);
+    assert.deepEqual(getReadingTextLines(input(347),viewport).map(l=>l.text),['alpha XII']);
 });

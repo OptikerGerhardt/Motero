@@ -98,7 +98,35 @@ const blankFixture=require('./make-blank-fixture.cjs');
    await touch('touchEnd');await page.waitForTimeout(400);
    const afterCross=await page.evaluate(mode=>{const c=window._view._view._pageFitting.viewer.container;return mode===1?c.scrollTop:c.scrollLeft;},mode);
    assert.ok(Math.abs(cross.offset-afterCross)<2,JSON.stringify({mode,cross,afterCross}));
-   console.log('PASS continuous '+mode+': diagonal touch keeps the orthogonal offset even on an oversized page');
+   for (const navigation of ['continuous','jumped']) {
+   if (navigation==='jumped') {
+    await page.evaluate(()=>window._view.setPageNavigation('jumped'));
+    await page.waitForFunction(()=>window._view._view._pageFitting.applied && window._view._view._pageNavigation.single);
+   }
+   const insetPan=await page.evaluate(mode=>{
+    const nav=window._view._view._pageNavigation,c=nav.viewer.container;
+    const range=nav.crossPanRange(mode===1);
+    return range&&{range,start:c[range.axis],page:nav.viewer.currentPageNumber};
+   },mode);
+   assert.ok(insetPan && insetPan.range.max-insetPan.range.min>20,JSON.stringify({mode,insetPan}));
+   const direction=insetPan.start-insetPan.range.min>insetPan.range.max-insetPan.start?1:-1;
+   await touch('touchStart',[start]);
+   for(let i=1;i<=5;i++){
+    const delta=direction*i*22;
+    await touch('touchMove',[{x:start.x+(mode===1?0:delta),y:start.y+(mode===1?delta:0)}]);
+    await page.waitForTimeout(25);
+   }
+   await touch('touchEnd');
+   const moved=await page.evaluate(axis=>{
+    const {viewer}=window._view._view._pageNavigation;
+    return {offset:viewer.container[axis],page:viewer.currentPageNumber};
+   },insetPan.range.axis);
+   assert.ok(Math.abs(moved.offset-insetPan.start)>10&&moved.offset>=insetPan.range.min-1
+    &&moved.offset<=insetPan.range.max+1,JSON.stringify({mode,insetPan,moved}));
+   assert.equal(moved.page,insetPan.page);
+   console.log('PASS '+navigation+' '+mode+': can pan across an oversized page within its bounds');
+   }
+   await page.evaluate(()=>window._view.setPageNavigation('continuous'));
   }
   for(const [theme,expected] of [['snow',[236,239,244]],['sepia',[244,236,216]],['dark',[46,52,64]],['black',[0,0,0]]]){
    await page.evaluate(theme=>window._view.setPageBackground(theme),theme);

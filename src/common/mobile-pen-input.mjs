@@ -25,15 +25,30 @@ export class MobilePenInput {
     stop(e) { if (e.cancelable) e.preventDefault(); e.stopImmediatePropagation(); }
     pointer(e) {
         const down = e.type === 'pointerdown', up = e.type === 'pointerup' || e.type === 'pointercancel';
-        if (e.target?.closest?.('.boox-highlight-palette, .boox-manual-crop, .motero-reading-progress, button, input, select, [role=toolbar]')) return;
+        const control = e.target?.closest?.('.boox-highlight-palette, .boox-manual-crop, .motero-reading-progress, button, input, select, [role=toolbar]');
+        if (control && (e.pointerType !== 'pen' || down || this.owner === null)) return;
         if (e.pointerType === 'pen') {
             this.onSignal(e);
+            const epoch = this.penEpoch = (this.penEpoch || 0) + 1;
             if (down) {
                 // A new real pen contact recovers a lost release and takes over a palm.
                 this.onTakeover(); this.owner = e.pointerId;
                 for (const id of this.contacts) this.blocked.add(id);
             }
             if (this.owner !== null && this.owner !== e.pointerId) { this.stop(e); return; }
+            if (up) {
+                this.owner = null; this.until = Date.now() + 300;
+                const cancelled = e.type === 'pointercancel';
+                const buttonStillHeld = !cancelled && !!(e.buttons & (this.profile.buttonMask === 4 ? 4 : 2));
+                this.button = buttonStillHeld;
+                this.physical = false;
+                if (cancelled) this.toggle = false;
+                this.win.setTimeout(() => {
+                    if (this.owner !== null || epoch !== this.penEpoch) return;
+                    this.setEraser(!!this.toggle || (this.profile.eraserButtonMode !== 'toggle' && this.button));
+                }, 0);
+                return;
+            }
             const physical = e.button === 5 || !!(e.buttons & 32);
             const button = !!(e.buttons & (this.profile.buttonMask === 4 ? 4 : 2));
             if (this.profile.eraserButtonMode === 'toggle') {
@@ -42,13 +57,6 @@ export class MobilePenInput {
             else this.toggle = false;
             this.button = button; this.physical = physical;
             this.setEraser(physical || !!this.toggle || (this.profile.eraserButtonMode !== 'toggle' && button));
-            if (up) {
-                this.owner = null; this.until = Date.now() + 300;
-                // Restore after the final point is consumed, never before the eraser commit.
-                this.win.setTimeout(() => {
-                    if (this.owner === null && this.profile.eraserButtonMode !== 'toggle') { this.button = false; this.setEraser(false); }
-                }, 0);
-            }
             return;
         }
         if (e.pointerType === 'mouse' && down && this.owner !== null) { this.onTakeover(); this.reset(); }
@@ -82,6 +90,7 @@ export class MobilePenInput {
         root.toggleAttribute('data-pen-exclusive', !!this.profile.penOnly);
     }
     reset() {
+        this.penEpoch = (this.penEpoch || 0) + 1;
         this.owner = null; this.contacts.clear(); this.blocked.clear(); this.until = 0;
         this.button = false; this.toggle = false; this.physical = false; this.setEraser(false);
     }

@@ -1,3 +1,4 @@
+import { wordRange } from '../../mobile-word-range.mjs';
 import { isBlackReaderBookmark, readerIndicatorPosition, BOOKMARK_FLAG_PATH } from '../../../../common/reader-bookmark.mjs';
 import React, {
 	memo,
@@ -652,6 +653,37 @@ type SplitSelectionBorderProps = {
 	range: Range;
 };
 
+// Paint nearby glyphs from their real EPUB positions without copying the book
+// into another DOM tree or changing the active selection.
+function paintResizeLoupe(canvas: HTMLCanvasElement, node: Text, offset: number, x: number, y: number) {
+    const doc = node.ownerDocument, win = doc.defaultView!;
+    const width = Math.min(144, win.innerWidth - 16), height = 72, zoom = 1.4;
+    if (width <= 0 || !node.parentElement) return;
+    const style = win.getComputedStyle(node.parentElement);
+    const ratio = Math.min(win.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(width*ratio); canvas.height = Math.round(height*ratio);
+    const top = y-height-42 >= 8 ? y-height-42 : y+42;
+    canvas.style.cssText = `position:fixed;pointer-events:none;z-index:9999;border-radius:9px;border:1px solid #8888;box-shadow:0 2px 8px #0003;width:${width}px;height:${height}px;left:${Math.max(8,Math.min(x-width/2,win.innerWidth-width-8))}px;top:${Math.max(8,Math.min(top,win.innerHeight-height-8))}px`;
+    const ctx = canvas.getContext('2d')!;
+    ctx.scale(ratio,ratio);
+    const body = win.getComputedStyle(doc.body).backgroundColor;
+    ctx.fillStyle = body === 'rgba(0, 0, 0, 0)' ? win.getComputedStyle(doc.documentElement).backgroundColor : body;
+    if (ctx.fillStyle === 'rgba(0, 0, 0, 0)') ctx.fillStyle = style.color === 'rgb(0, 0, 0)' ? '#fff' : '#222';
+    ctx.fillRect(0,0,width,height);
+    ctx.fillStyle = style.color;
+    ctx.font = `${style.fontStyle} ${style.fontWeight} ${parseFloat(style.fontSize)*zoom}px ${style.fontFamily}`;
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    const unit = doc.createRange();
+    for (let i=Math.max(0,offset-48);i<Math.min(node.length,offset+48);i++) {
+        unit.setStart(node,i); unit.setEnd(node,i+1);
+        const rect = unit.getBoundingClientRect();
+        if (rect.width && rect.height) ctx.fillText(node.data[i],width/2+(rect.left-x)*zoom,height/2+((rect.top+rect.bottom)/2-y)*zoom);
+    }
+    ctx.strokeStyle = '#888';
+    ctx.beginPath(); ctx.moveTo(width/2,height/2-5); ctx.lineTo(width/2,height/2+5); ctx.stroke();
+}
+
 const Resizer: React.FC<ResizerProps> = (props) => {
 	let { annotation, highlightRects, onResize, onResizeEnd, onResizeStart } = props;
 
@@ -663,10 +695,20 @@ const Resizer: React.FC<ResizerProps> = (props) => {
 	let size = isCoarsePointer ? 3 : 2;
 
 	const pressedSide = useRef<'start' | 'end' | null>(null);
+    const resizeCancelled = useRef(false);
+    const loupe = useRef<HTMLCanvasElement | null>(null);
+    const loupeFrame = useRef<number | null>(null);
+    const hideLoupe = useCallback(() => {
+        if (loupeFrame.current !== null) loupe.current?.ownerDocument.defaultView?.cancelAnimationFrame(loupeFrame.current);
+        loupeFrame.current = null;
+        loupe.current?.remove(); loupe.current = null;
+    }, []);
+    useEffect(() => hideLoupe, [hideLoupe]);
 	let handlePointerDown = useCallback((event: React.PointerEvent) => {
 		if (event.button !== 0) {
 			return;
 		}
+        resizeCancelled.current = false;
         const first = highlightRects[0], last = highlightRects.at(-1);
         if (first && last) {
             const vert = isVertical(annotation.range.commonAncestorContainer), rtl = isRTL(annotation.range.commonAncestorContainer);
@@ -699,23 +741,30 @@ const Resizer: React.FC<ResizerProps> = (props) => {
 	}, [annotation, onResizeStart]);
 
 	let handleLostPointerCapture = useCallback(() => {
+        hideLoupe();
 		setResizingSide(false);
 		if (pointerCapture) {
 			setPointerCapture(null);
 			setLastPointerMove(null);
-			onResizeEnd(annotation, false);
+			onResizeEnd(annotation, resizeCancelled.current);
 		}
-	}, [annotation, onResizeEnd, pointerCapture]);
+	}, [annotation, onResizeEnd, pointerCapture, hideLoupe]);
 
 	let handleKeyDown = useCallback((event: KeyboardEvent) => {
 		if (event.key !== 'Escape' || !resizingSide || !pointerCapture) {
 			return;
 		}
+        resizeCancelled.current = true;
+        hideLoupe();
 		pointerCapture.elem.releasePointerCapture(pointerCapture.pointerId);
-		setResizingSide(false);
-		setPointerCapture(null);
-		onResizeEnd(annotation, true);
-	}, [pointerCapture, onResizeEnd, annotation, resizingSide]);
+	}, [pointerCapture, resizingSide, hideLoupe]);
+
+    const handlePointerCancel = useCallback((event: React.PointerEvent) => {
+        resizeCancelled.current = true;
+        hideLoupe();
+        const target = event.target as Element;
+        if (target.hasPointerCapture(event.pointerId)) target.releasePointerCapture(event.pointerId);
+    }, [hideLoupe]);
 
 	const doc = annotation.range.commonAncestorContainer.ownerDocument;
 	const win = doc?.defaultView;
@@ -738,27 +787,51 @@ const Resizer: React.FC<ResizerProps> = (props) => {
 				return;
 			}
 
-			let relativePosition = annotation.range.comparePoint(pos.offsetNode, pos.offset);
+            let node = pos.offsetNode, offset = pos.offset;
+            if (win && node.nodeType===3 && ['touch','pen'].includes(event.pointerType)) {
+                if (!loupe.current) {
+                    loupe.current = win.document.createElement('canvas');
+                    loupe.current.className = 'boox-selection-magnifier';
+                    loupe.current.setAttribute('aria-hidden','true');
+                    win.document.body.append(loupe.current);
+                }
+                const hit = node as Text, hitOffset = offset;
+                if (loupeFrame.current !== null) win.cancelAnimationFrame(loupeFrame.current);
+                loupeFrame.current = win.requestAnimationFrame(() => {
+                    loupeFrame.current = null;
+                    if (loupe.current) paintResizeLoupe(loupe.current,hit,hitOffset,clientX,clientY);
+                });
+                const caret = win.document.createRange();
+                caret.setStart(node,offset); caret.collapse(true);
+                const snapped = wordRange(caret,{interiorOnly:true,trailingPunctuation:false});
+                if (snapped) {
+                    const relative = annotation.range.comparePoint(node,offset);
+                    const start = isStart ? relative<=0 : relative<0;
+                    node = start ? snapped.startContainer : snapped.endContainer;
+                    offset = start ? snapped.startOffset : snapped.endOffset;
+                }
+            }
+			let relativePosition = annotation.range.comparePoint(node, offset);
 			let newRange = annotation.range.cloneRange();
 			if (isStart) {
 				if (relativePosition <= 0) {
-					newRange.setStart(pos.offsetNode, pos.offset);
+					newRange.setStart(node, offset);
 				}
 				else {
 					// Resizing the start past the end - swap the two
 					newRange.setStart(newRange.endContainer, newRange.endOffset);
-					newRange.setEnd(pos.offsetNode, pos.offset);
+					newRange.setEnd(node, offset);
 				}
 			}
 			else {
 				// eslint-disable-next-line no-lonely-if
 				if (relativePosition >= 0) {
-					newRange.setEnd(pos.offsetNode, pos.offset);
+					newRange.setEnd(node, offset);
 				}
 				else {
 					// Resizing the end past the start - swap the two
 					newRange.setEnd(newRange.startContainer, newRange.startOffset);
-					newRange.setStart(pos.offsetNode, pos.offset);
+					newRange.setStart(node, offset);
 				}
 			}
 
@@ -830,7 +903,7 @@ const Resizer: React.FC<ResizerProps> = (props) => {
 			className={cx('resizer inherit-pointer-events', { 'resizer-vertical': vert })}
 			onPointerDown={handlePointerDown}
 			onPointerUp={handlePointerUp}
-			onPointerCancel={handlePointerUp}
+			onPointerCancel={handlePointerCancel}
 			onPointerMove={resizingSide ? (event => handlePointerMove(event)) : undefined}
 			onGotPointerCapture={event => handleGotPointerCapture(event, 'start')}
 			onLostPointerCapture={handleLostPointerCapture}
@@ -848,7 +921,7 @@ const Resizer: React.FC<ResizerProps> = (props) => {
 			className={cx("resizer inherit-pointer-events", { 'resizer-vertical': vert })}
 			onPointerDown={handlePointerDown}
 			onPointerUp={handlePointerUp}
-			onPointerCancel={handlePointerUp}
+			onPointerCancel={handlePointerCancel}
 			onPointerMove={resizingSide ? (event => handlePointerMove(event)) : undefined}
 			onGotPointerCapture={event => handleGotPointerCapture(event, 'end')}
 			onLostPointerCapture={handleLostPointerCapture}

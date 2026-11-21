@@ -81,7 +81,9 @@ export function analyzeTextScan({ data, width, height }) {
     const body = {left:left/width,right:(right+1)/width,top:central[0].start/height,bottom:central.at(-1).end/height,
         lineHeight:pitch*.68/height};
     const [head,next] = substantial;
-    const running = head.end < height*.19 && next.start-head.end >= pitch*.95 && head.end-head.start < pitch*.73
+    const typicalHeight = heights[Math.floor(heights.length*.75)];
+    const running = head.end < height*.19 && next.start-head.end >= pitch*.95
+        && head.end-head.start <= Math.max(pitch*.73,typicalHeight)
         ? detectScannedHead(normalized,width,height,head,body) : null;
     if (running) body.top=next.start/height;
     return {data:normalized,body,running};
@@ -98,12 +100,15 @@ function detectScannedHead(data,width,height,band,body) {
         if (previous && x-previous[1]<minGap) previous[1]=x+1;
         else spans.push([x,x+1]);
     }
-    if (spans.length!==2) return null;
-    const title=spans.find(([left,right])=>(right-left)/width>.105 && (left+right)/(2*width)>.30 && (left+right)/(2*width)<.70);
-    if (!title) return null;
-    const folio=spans.find(span=>span!==title);
-    if ((folio[1]-folio[0])/width>.085) return null;
-    if (folio[1]<title[0] ? folio[0]/width>body.left+.045 : folio[1]/width<body.right-.045) return null;
+    if (spans.length<2 || spans.length>4) return null;
+    const first=spans[0], last=spans.at(-1);
+    const leftFolio=(first[1]-first[0])/width<=.085 && first[0]/width<=body.left+.045;
+    const rightFolio=(last[1]-last[0])/width<=.085 && last[1]/width>=body.right-.045;
+    if (leftFolio===rightFolio) return null;
+    const titleStart=leftFolio?spans[1][0]:first[0], titleEnd=rightFolio?spans.at(-2)[1]:last[1];
+    const titleCenter=(titleStart+titleEnd)/(2*width);
+    if (titleStart<width*.21 || titleEnd>width*.79 || titleCenter<=.30 || titleCenter>=.70
+        || (titleEnd-titleStart)/width<=.105) return null;
     // Include the light anti-aliased edges of both printed members.
     return [Math.max(0,spans[0][0]-2)/width,Math.max(0,band.start-2)/height,
         Math.min(width,spans[1][1]+2)/width,Math.min(height,band.end+2)/height];

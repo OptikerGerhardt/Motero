@@ -21,3 +21,10 @@ test('CJK selection uses language-aware segmentation instead of an entire paragr
     const [start,end] = wordOffsets(text,2);
     assert.equal(text.slice(start,end),'世界');
 });
+
+test('resize snaps the interior of a word without swallowing a following punctuation mark', () => {
+    const options = { interiorOnly: true, trailingPunctuation: false };
+    assert.deepEqual(wordOffsets('Autonomie,', 4, options), [0, 9]);
+    assert.equal(wordOffsets('Autonomie,', 9, options), null);
+    assert.equal(wordOffsets('Autonomie,', 10, options), null);
+});

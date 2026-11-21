@@ -41,12 +41,13 @@ const marginalReference = text => editionReference(text) || romanReference(text)
 
 function splitOuterReference(item, viewport) {
 	if (!item.chars?.length) return null;
-	let text = item.str.trim(), pattern = '(?:' + abReference + '|\\d{1,3}|\\[\\d{1,4}\\]|[*∗⋆✱✳✻✽•·∙⋅.†‡]+)';
+	let text = item.str.trim(), pattern = '(?:' + abReference + '|' + romanFolio + '|\\d{1,3}|\\[\\d{1,4}\\]|[*∗⋆✱✳✻✽•·∙⋅.†‡]+)';
 	let tail = text.match(new RegExp('^(.*\\S)\\s+(' + pattern + ')$', 'i'))
         || text.match(/^(.*[^\s*∗⋆✱✳✻✽•·∙⋅.†‡])([*∗⋆✱✳✻✽•·∙⋅†‡]+)$/u);
 	let head = !tail && text.match(new RegExp('^(' + pattern + ')\\s+(\\S.*)$', 'i'));
 	if (!tail && !head) return null;
 	let refText = tail ? tail[2] : head[1], bodyText = tail ? tail[1] : head[2];
+	if (/^[ivxlcdm]+$/i.test(refText) && !romanReference(refText)) return null;
 	let count = [...refText.replace(/\s/g, '')].length;
 	let chars = item.chars.filter(c => (c.u || c.c)?.trim() && c.rect?.length === 4);
 	if (chars.length <= count) return null;
@@ -64,10 +65,10 @@ function splitOuterReference(item, viewport) {
 	let baseline = body.at(tail ? -1 : 0).baseline;
 	// Same baseline and a separate outer position distinguish line references
 	// from superscript footnote markers, even in a single merged OCR item.
-	if (!(r[2] < 0.14 || r[0] > 0.86) || r[2] - r[0] > 0.1
+	if (!(r[2] < 0.22 || r[0] > 0.78) || r[2] - r[0] > 0.1
 		|| !Number.isFinite(baseline) || !ref.every(c => Math.abs(c.baseline - baseline) < height * 0.2)
 		|| !editionReference(refText) && !romanReference(refText) && !marginalSymbol(refText) && !ref.every(c => c.fontSize < height * 0.9)
-		|| Math.max(r[0] - b[2], b[0] - r[2]) < 0.005) return null;
+		|| Math.max(r[0] - b[2], b[0] - r[2]) < (romanReference(refText) ? .012 : .005)) return null;
 	return [{ text: bodyText, rect: b, vertical: false, sideCandidate: false },
 		{ text: refText, rect: r, vertical: false, sideCandidate: true }];
 }
@@ -433,7 +434,7 @@ export function getReadingExclusions(lines, model = { repeated: new Set() }, pag
                 && Math.abs((other.rect[1]+other.rect[3]-y0-y1)/2) < bodyHeight
                 && other.rect[0] > x1 && other.rect[0]-x1 < .065)) continue;
             const right = -quantile(body.map(l=>-l.rect[2]));
-            if (x1 < left-.004 && x1 < .22 || x0 > right+.004 && x0 > .78
+            if (x1 < left-.003 && x1 < .24 || x0 > right+.003 && x0 > .76
                 || marginalSymbol(line.text) && (x0 >= right-.002 && x0>.82 || x1 <= left+.002 && x1<.18)) excluded.add(line);
         }
         else {
@@ -500,7 +501,8 @@ export function getRasterMarginalia(image, lines, strips, scan = null) {
     const top=Math.floor((scan?.body?.top ?? Math.min(...prose.map(l=>l.rect[1])))*height);
     const bottom=Math.ceil((scan?.body?.bottom ?? Math.max(...prose.map(l=>l.rect[3])))*height);
     const seen=new Uint8Array(width*height), marks=[];
-    for (const [start,end] of [[0,Math.floor(left*width)-4],[Math.ceil(right*width)+4,width]]) {
+    const sideGap = scan?.body ? 2 : 4;
+    for (const [start,end] of [[0,Math.floor(left*width)-sideGap],[Math.ceil(right*width)+sideGap,width]]) {
         for(let y=top;y<bottom;y++) for(let x=start;x<end;x++) {
             const first=y*width+x;
             if(seen[first] || data[first]>=225) continue;

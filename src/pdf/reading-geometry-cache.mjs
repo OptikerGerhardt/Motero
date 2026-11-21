@@ -1,6 +1,6 @@
 // View geometry only. No PDF text, images, annotation data or credentials.
 const KEY = 'motero.reading-geometry.v7';
-const VERSION = 9;
+const VERSION = 10;
 const pageKinds = ['prose','columns','opening','short-lines','sparse','scan'];
 const validBounds = b => Array.isArray(b) && b.length === 4 && b.every(n => Number.isFinite(n) && n >= 0 && n <= 1)
     && b[0] < b[2] && b[1] < b[3];

@@ -2,8 +2,8 @@
 // It does not render the PDF again and never intercepts touch or pen events.
 export class PDFSelectionMagnifier {
     constructor(view) { this.view = view; this.win = view._iframeWindow; }
-    show(event, position) {
-        this.point = { x: event.clientX, y: event.clientY, position };
+    show(event, position, ranges, color) {
+        this.point = { x: event.clientX, y: event.clientY, position, ranges, color };
         if (!this.frame) this.frame = this.win.requestAnimationFrame(() => {
             this.frame = null; this.paint();
         });
@@ -41,9 +41,10 @@ export class PDFSelectionMagnifier {
         try {
             ctx.drawImage(source,(x-rect.left)*source.width/rect.width,(y-rect.top)*source.height/rect.height,
                 cropWidth*source.width/rect.width,cropHeight*source.height/rect.height,0,0,width,height);
-            ctx.fillStyle = /^#[\da-f]{6}$/i.test(this.view._tool.color || '') ? this.view._tool.color : '#ffd400';
+            const color = point.color || this.view._tool.color;
+            ctx.fillStyle = /^#[\da-f]{6}$/i.test(color || '') ? color : '#ffd400';
             ctx.globalAlpha = .3;
-            for (const range of this.view._selectionRanges) {
+            for (const range of point.ranges || this.view._selectionRanges) {
                 if (range.position?.pageIndex !== point.position.pageIndex) continue;
                 for (const r of range.position?.rects || []) {
                     const q = page.viewport.convertToViewportRectangle(r);

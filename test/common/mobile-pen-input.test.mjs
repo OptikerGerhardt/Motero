@@ -95,3 +95,14 @@ test('a pen can operate a floating palette without taking over its annotation se
  f.send('pointerdown','pen',8);assert.equal(f.takeovers(),1);
  f.input.destroy();
 });
+
+test('a pen ending over a control clears the physical eraser after dispatch, even in toggle mode', async () => {
+    const f=fixture({eraserButtonMode:'toggle'});
+    f.send('pointerdown','pen',2,{button:5,buttons:32});
+    f.send('pointerup','pen',2,{target:{closest:()=>({})}});
+    assert.equal(f.input.owner,null);
+    assert.equal(f.input.eraser,true);
+    await new Promise(resolve=>setTimeout(resolve,0));
+    assert.equal(f.input.eraser,false);
+    f.input.destroy();
+});
