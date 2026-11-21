@@ -43,10 +43,9 @@ export class MobilePenInput {
                 this.button = buttonStillHeld;
                 this.physical = false;
                 if (cancelled) this.toggle = false;
-                this.win.setTimeout(() => {
-                    if (this.owner !== null || epoch !== this.penEpoch) return;
-                    this.setEraser(!!this.toggle || (this.profile.eraserButtonMode !== 'toggle' && this.button));
-                }, 0);
+                this.pendingRelease = { event: e, epoch };
+                // Keep a fallback for a release that never reaches the view.
+                this.win.setTimeout(() => this.finishRelease(e), 0);
                 return;
             }
             const physical = e.button === 5 || !!(e.buttons & 32);
@@ -71,6 +70,13 @@ export class MobilePenInput {
         const ids = [...(e.touches || []), ...(e.changedTouches || [])].map(x => x.identifier);
         if (this.busy || this.blocked.size || ids.some(id => this.blocked.has(id))) this.stop(e);
     }
+    finishRelease(event) {
+        const release = this.pendingRelease;
+        if (release?.event !== event) return;
+        this.pendingRelease = null;
+        if (this.owner !== null || release.epoch !== this.penEpoch) return;
+        this.setEraser(!!this.toggle || (this.profile.eraserButtonMode !== 'toggle' && this.button));
+    }
     setEraser(active) { if (this.eraser !== active) { this.eraser = active; this.onEraser(active); } }
     applyProfile(profile) {
         this.profile = profile || {};
@@ -91,6 +97,7 @@ export class MobilePenInput {
     }
     reset() {
         this.penEpoch = (this.penEpoch || 0) + 1;
+        this.pendingRelease = null;
         this.owner = null; this.contacts.clear(); this.blocked.clear(); this.until = 0;
         this.button = false; this.toggle = false; this.physical = false; this.setEraser(false);
     }

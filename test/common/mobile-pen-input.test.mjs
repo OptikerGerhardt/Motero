@@ -106,3 +106,13 @@ test('a pen ending over a control clears the physical eraser after dispatch, eve
     assert.equal(f.input.eraser,false);
     f.input.destroy();
 });
+
+test('the PDF view can restore the base tool immediately after completing an eraser stroke', () => {
+    const f=fixture({eraserButtonMode:'hold'});
+    f.send('pointerdown','pen',1,{buttons:3});
+    const up=f.send('pointerup','pen',1);
+    assert.equal(f.input.eraser,true);
+    f.input.finishRelease(up);
+    assert.deepEqual(f.erasers,[true,false]);
+    f.input.destroy();
+});

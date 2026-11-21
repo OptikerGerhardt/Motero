@@ -515,8 +515,14 @@ class PDFView {
 			this._chromeTapGuard?.reset();
 			this._directHighlight?.gesture.interrupted(event);
 		}, true);
-		this._iframeWindow.addEventListener('pointerup', this._handlePointerUp.bind(this));
-		this._iframeWindow.addEventListener('pointercancel', this._handlePointerCancel.bind(this));
+        this._iframeWindow.addEventListener('pointerup', event => {
+            try { this._handlePointerUp(event); }
+            finally { this._penInput?.finishRelease(event); }
+        });
+        this._iframeWindow.addEventListener('pointercancel', event => {
+            try { this._handlePointerCancel(event); }
+            finally { this._penInput?.finishRelease(event); }
+        });
 		this._iframeWindow.addEventListener('lostpointercapture', event => {
             if (this.action?.type === 'ink') this._handlePointerCancel(event);
             else this._handleTouchTransformInterrupted(event);
