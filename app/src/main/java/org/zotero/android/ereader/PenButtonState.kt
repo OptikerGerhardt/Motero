@@ -7,7 +7,7 @@ class PenButtonState {
     fun event(device: String, code: Int, down: Boolean, repeat: Int, toggle: Boolean): Boolean {
         val key = device to code
         if (down) {
-            if (repeat > 0 || owner == key) return active
+            if (repeat > 0 || owner != null) return active
             owner = key
             active = if (toggle) !active else true
         } else if (owner == key) {

@@ -104,7 +104,12 @@ class AnnotationConverterV2 {
                 sortIndex = sortIndex,
                 author = author,
                 isAuthor = isAuthor,
-                isZoteroAnnotation = true
+                isZoteroAnnotation = true,
+                tags = data["tags"]?.takeIf { it.isJsonArray }?.asJsonArray?.mapNotNull { entry ->
+                    val tag = entry.takeIf { it.isJsonObject }?.asJsonObject ?: return@mapNotNull null
+                    val name = tag["name"]?.takeUnless { it.isJsonNull }?.asString ?: return@mapNotNull null
+                    Tag(name = name, color = tag["color"]?.takeUnless { it.isJsonNull }?.asString.orEmpty())
+                }.orEmpty()
             )
         }
 

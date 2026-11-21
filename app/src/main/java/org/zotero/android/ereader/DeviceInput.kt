@@ -44,7 +44,7 @@ object DeviceInput {
     }
 
     fun key(event: KeyEvent, editing: Boolean): Boolean {
-        if (editing || onEraser == null && !learnKey) return false
+        if ((editing && event.action != KeyEvent.ACTION_UP) || onEraser == null && !learnKey) return false
         if (event.keyCode in setOf(KeyEvent.KEYCODE_VOLUME_UP, KeyEvent.KEYCODE_VOLUME_DOWN,
                 KeyEvent.KEYCODE_PAGE_UP, KeyEvent.KEYCODE_PAGE_DOWN, KeyEvent.KEYCODE_BACK,
                 KeyEvent.KEYCODE_HOME, KeyEvent.KEYCODE_POWER, KeyEvent.KEYCODE_ENTER)) return false
@@ -59,6 +59,9 @@ object DeviceInput {
         if (event.keyCode != assigned || event.action !in setOf(KeyEvent.ACTION_DOWN, KeyEvent.ACTION_UP)) return false
         val active = penButton.event(descriptor, event.keyCode, event.action == KeyEvent.ACTION_DOWN,
             event.repeatCount, DeviceProfileStore.state.value.eraserButtonMode == "toggle")
+        if (event.repeatCount == 0) {
+            mutableDiagnostics.value = "Stylus key: ${KeyEvent.keyCodeToString(event.keyCode)} ${if (event.action == KeyEvent.ACTION_DOWN) "down" else "up"}; eraser: $active."
+        }
         onEraser?.invoke(active)
         return true
     }

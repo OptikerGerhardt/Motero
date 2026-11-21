@@ -1,5 +1,13 @@
 # Änderungen
 
+## 1.1.9 — Build 335
+
+- PDF- und EPUB-Annotationen speichern Quick Tags und gewöhnliche Tags bei Bearbeitungen in derselben Datenbanktransaktion.
+- PDF-Einzelseiten und Spreads lassen bei echtem Überstand eine begrenzte Bewegung quer zur Leserichtung zu.
+- Ein erneuter Tipp auf eine ausgewählte Annotation öffnet das Popup. Beim Ziehen der Griffe helfen Lupe und Wortgrenzen; Satz- und Sonderzeichen bleiben einzeln wählbar.
+- Die Stiftradierer-Logik verarbeitet Loslassen und Abbruch auch über Bedienelementen. Geräteprüfung auf BOOX steht aus.
+- Der automatische Zuschnitt erkennt getrennte Teile gescannter Kopfzeilen, nahe Randsterne sowie mit dem Text verschmolzene römische Randzahlen besser.
+
 ## 1.1.8 — Build 334
 
 - Automatischer PDF-Zuschnitt mit getrennten Breitenprofilen für Fließtext, Kapitelanfänge, Listen, Scans und Spalten. Unsichere Seitenränder bleiben geschützt; bereits sichtbare Rahmen bleiben beim Nachlernen stabil.
