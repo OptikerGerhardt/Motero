@@ -1,0 +1,5 @@
+# Review ownership for changes proposed to main or by third parties.
+# This only requests a review; enforcement requires an active GitHub ruleset.
+* @OptikerGerhardt
+.github/workflows/ @OptikerGerhardt
+.github/CODEOWNERS @OptikerGerhardt
