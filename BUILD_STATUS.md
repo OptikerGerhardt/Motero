@@ -1,3 +1,9 @@
+# Build 335 / Motero 1.1.9 — veröffentlicht und geprüft
+
+- Anwendung `2e15955a`, Reader `1fb69309`. [Release](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.9-335) · [Änderungen](CHANGELOG.md)
+- Reader-, Android- und Browser-Tests bestanden. Die Update-Prüfungen auf API 31 und 35 bestätigen Datenerhalt und weisen den alten Signaturschlüssel ab. [Release-Workflow](https://github.com/OptikerGerhardt/Motero/actions/runs/44958475632)
+- Veröffentlichte APK, Produktionssignatur, SHA-256 `309202b4783a2a536cda1ef47aeefe7b989f489bfa8bb6adfb84da5bea64f902` und Hash des eingebetteten Readers unabhängig abgeglichen. Tests auf dem BOOX und mit einem echten Zotero-Konto stehen aus.
+
 # Build 333 / Motero 1.1.7 — veröffentlicht und unabhängig geprüft
 
 - Anwendung `7ad6d3fe`, Reader `dd353a3e`. Die 17 Reader-, Bibliotheks- und Stabilitätsarbeiten sind ausgeliefert. [APK und Quellen](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.7-333) · [Änderungen](docs/READER_333.md)

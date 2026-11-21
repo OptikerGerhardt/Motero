@@ -8,6 +8,10 @@ This fork is maintained independently and is not affiliated with or endorsed by 
 
 ## Motero 1.1
 
+[1.1.9 / Build 335](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.9-335) saves annotation tags, allows bounded sideways panning on oversized PDF pages, and adds word snapping and a magnifier to annotation handles. It also improves automatic cropping and stylus eraser release handling. [Build verification](BUILD_STATUS.md).
+
+[1.1.8 / Build 334](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.8-334) updates the saved quotation when a PDF highlight is resized and adds an automatic crop preview.
+
 [1.1.7 / Build 333](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.7-333) improves Reading Assist, PDF and EPUB centering, scrolling, bookmark placement, and preview stability. [Changes and verification limits](docs/READER_333.md).
 
 [1.1.6 / Build 332](https://github.com/OptikerGerhardt/Motero/releases/tag/v1.1.6-332) restores the Quick Tags/comment divider and keeps highlight quickbars open through stationary selection/layout updates. A brief oval marks the next reading word instead of the next-page arrow. [Scope and verification limits](docs/READER_332.md).
