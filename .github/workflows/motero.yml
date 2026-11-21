@@ -2,9 +2,9 @@ name: Motero build, test and release
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
   workflow_dispatch:
     inputs:
       reuse_build_run_id:
