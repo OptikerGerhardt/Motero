@@ -44,13 +44,17 @@ class AnnotationConverterV2 {
             // An absent tags field is not the same as an explicit empty list:
             // older/partial reader updates must not delete stored tags.
             val rawTags = data["tags"]?.takeIf { it.isJsonArray }?.asJsonArray
-            val tags = rawTags?.mapNotNull { value ->
-                if (!value.isJsonObject) return@mapNotNull null
+            // Reject malformed arrays as tag edits rather than interpreting an
+            // invalid payload as an explicit request to clear all assignments.
+            val parsedTags = rawTags?.map { value ->
+                if (!value.isJsonObject) return@map null
                 val tag = value.asJsonObject
                 val name = tag["name"]?.takeIf { it.isJsonPrimitive }?.asString
-                    ?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+                    ?.takeIf { it.isNotBlank() } ?: return@map null
                 Tag(name, tag["color"]?.takeIf { it.isJsonPrimitive }?.asString ?: "")
-            } ?: emptyList()
+            }
+            val validTags = parsedTags != null && parsedTags.none { it == null }
+            val tags = if (validTags) parsedTags!!.filterNotNull() else emptyList()
             val page = position["pageIndex"]?.asInt ?: 0
 
             val rects: List<RectF>
@@ -116,7 +120,7 @@ class AnnotationConverterV2 {
                 isAuthor = isAuthor,
                 isZoteroAnnotation = true,
                 tags = tags,
-                hasTagsInPayload = rawTags != null,
+                hasTagsInPayload = validTags,
             )
         }
 
