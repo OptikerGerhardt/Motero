@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -40,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
@@ -60,7 +60,6 @@ private val ScrubberThumbnailHeight = 44.dp
 private val ScrubberPreviewWidth = 40.dp
 private val ScrubberSelectedBorderWidth = 2.5.dp
 
-private const val AssumedPageAspectRatio = 0.72f
 
 @Composable
 internal fun ReaderPageIndicatorLabel(
@@ -143,12 +142,13 @@ internal fun ReaderPageScrubber(
         val maxAllowedWidth = maxWidth
         val horizontalPillPadding = 8.dp
 
-        val landmarkPageIndices = remember(maxAllowedWidth, pageCount) {
-            val rowBudgetPx = with(density) { (maxAllowedWidth - horizontalPillPadding * 2).toPx() }
-                .coerceAtLeast(0f)
-                .roundToInt()
-            val landmarkCount = computeLandmarkCount(rowBudgetPx, pageCount, density.density)
-            computeLandmarkIndices(pageCount, landmarkCount)
+        val rowBudgetPx = with(density) { (maxAllowedWidth - horizontalPillPadding * 2).roundToPx() }
+            .coerceAtLeast(0)
+        val slotWidthsPx = remember(rowBudgetPx, pageCount, density.density) {
+            computeScrubberSlotWidths(rowBudgetPx, pageCount, density.density)
+        }
+        val landmarkPageIndices = remember(pageCount, slotWidthsPx) {
+            computeLandmarkIndices(pageCount, slotWidthsPx.size)
         }
 
         LaunchedEffect(landmarkPageIndices) {
@@ -218,10 +218,11 @@ internal fun ReaderPageScrubber(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        landmarkPageIndices.forEach { index ->
+                        landmarkPageIndices.forEachIndexed { position, index ->
                             ScrubberThumbnail(
                                 bitmap = viewState.thumbnailCache.getOrNull(index),
                                 height = ScrubberThumbnailHeight,
+                                width = with(density) { slotWidthsPx[position].toDp() },
                             )
                         }
                     }
@@ -290,20 +291,21 @@ private fun rememberFastLongPressViewConfiguration(): ViewConfiguration {
 private fun ScrubberThumbnail(
     bitmap: Bitmap?,
     height: Dp,
+    width: Dp,
 ) {
     val modifier = Modifier
         .clip(shape = RoundedCornerShape(6.dp))
         .background(MaterialTheme.colorScheme.surface)
 
     Box(
-        modifier = modifier.width(32.dp).height(height),
+        modifier = modifier.width(width).height(height),
         contentAlignment = Alignment.Center,
     ) {
         if (bitmap == null) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .width(32.dp)
+                    .width(width)
                     .height(height),
             ) {
                 CircularProgressIndicator(
@@ -313,29 +315,32 @@ private fun ScrubberThumbnail(
                 )
             }
         } else {
-            val aspectRatio = bitmap.width.toFloat() / bitmap.height.toFloat()
             Image(
-                modifier = Modifier
-                    .height(height)
-                    .aspectRatio(aspectRatio),
+                modifier = Modifier.fillMaxSize(),
                 bitmap = bitmap.asImageBitmap(),
+                contentScale = ContentScale.Fit,
                 contentDescription = null,
             )
         }
     }
 }
 
-private fun computeLandmarkCount(contentWidthPx: Int, pageCount: Int, densityValue: Float): Int {
-    if (pageCount <= 0 || contentWidthPx <= 0) {
-        return 0
-    }
-    if (pageCount == 1) {
-        return 1
-    }
-    val assumedSlotWidthPx = ScrubberThumbnailHeight.value * AssumedPageAspectRatio * densityValue
-    val spacingPx = 6.dp.value * densityValue
-    val count = ((contentWidthPx + spacingPx) / (assumedSlotWidthPx + spacingPx)).toInt()
-    return count.coerceIn(2, pageCount)
+/**
+ * Partition the measured row width into thumbnail hitboxes. The remainder is assigned
+ * one pixel at a time, so no trailing unused strip remains at fractional densities.
+ */
+internal fun computeScrubberSlotWidths(contentWidthPx: Int, pageCount: Int, densityValue: Float): List<Int> {
+    if (pageCount <= 0 || contentWidthPx <= 0 || densityValue <= 0f) return emptyList()
+    val spacingPx = (6f * densityValue).roundToInt()
+    val targetWidthPx = (32f * densityValue).roundToInt().coerceAtLeast(1)
+    val count = if (pageCount == 1) 1 else
+        ((contentWidthPx + spacingPx) / (targetWidthPx + spacingPx))
+            .coerceIn(2, pageCount)
+    val gapPx = spacingPx * (count - 1)
+    val usablePx = (contentWidthPx - gapPx).coerceAtLeast(0)
+    val base = usablePx / count
+    val remainder = usablePx % count
+    return List(count) { index -> base + if (index < remainder) 1 else 0 }
 }
 
 private fun computeLandmarkIndices(pageCount: Int, desiredCount: Int): List<Int> {
