@@ -30,4 +30,16 @@ class ReaderScrubberGeometryTest {
         assertEquals(listOf(300), computeScrubberSlotWidths(300, 1, 1f))
         assertEquals(2, computeScrubberSlotWidths(300, 2, 1f).size)
     }
+    @Test fun `tiny viewport never allocates gaps beyond its measured width`() {
+        for (density in listOf(1f, 1.25f, 2.625f, 3f)) {
+            val gap = kotlin.math.round(6f * density).toInt()
+            for (width in 1..(gap * 3 + 2)) {
+                val slots = computeScrubberSlotWidths(width, 100, density)
+                assertTrue(slots.isNotEmpty())
+                assertTrue(slots.all { it >= 1 })
+                assertEquals(width, slots.sum() + (slots.size - 1) * gap)
+            }
+        }
+    }
+
 }
