@@ -12,17 +12,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.test.fetchSemanticsNode
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.click
-import androidx.compose.ui.test.down
-import androidx.compose.ui.test.moveTo
-import androidx.compose.ui.test.up
-import androidx.compose.ui.test.advanceEventTime
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.toDp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.collections.immutable.toPersistentList
 import org.junit.Assert.assertEquals
