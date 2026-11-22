@@ -902,15 +902,19 @@ class ReaderViewModel @Inject constructor(
         }
         val isHistoryChange = params["history"]?.takeIf { !it.isJsonNull }?.asBoolean ?: false
         for (editedAnnotation in editedAnnotations) {
-            this.annotations[editedAnnotation.key] = editedAnnotation
+            val effectiveAnnotation = if (editedAnnotation is PDFDocumentAnnotation) {
+                editedAnnotation.preservingTagsFrom(this.annotations[editedAnnotation.key] as? PDFDocumentAnnotation)
+            } else {
+                editedAnnotation
+            }
+            this.annotations[effectiveAnnotation.key] = effectiveAnnotation
             if (isHistoryChange) {
-                showCommentChangedByHistory(editedAnnotation)
+                showCommentChangedByHistory(effectiveAnnotation)
             }
             if (viewState.fileType == ReaderFileType.PDF) {
-                editedAnnotation as PDFDocumentAnnotation
-                updatePdfDatabaseAnnotation(editedAnnotation)
+                updatePdfDatabaseAnnotation(effectiveAnnotation as PDFDocumentAnnotation)
             } else {
-                updateHtmlEpubDatabaseAnnotation(editedAnnotation as NewReaderAnnotation)
+                updateHtmlEpubDatabaseAnnotation(effectiveAnnotation as NewReaderAnnotation)
             }
         }
     }
