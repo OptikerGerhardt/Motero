@@ -2,13 +2,24 @@ name: Motero Android emulator instrumentation
 
 # Deliberately separate from release/signing; no privileged pull_request_target code.
 on:
+  # This branch can validate the new workflow before it exists on main.
+  # Once accepted, pushes to develop also exercise the harness.
+  push:
+    branches: [develop, 'ci/android-instrumented-regressions']
+    paths:
+      - '.github/workflows/android-emulator-instrumentation.yml'
+      - 'app/src/androidTest/**'
+      - 'app/build.gradle.kts'
+      - 'buildSrc/src/main/kotlin/Libs.kt'
   pull_request:
     branches: [develop]
     paths:
       - '.github/workflows/android-emulator-instrumentation.yml'
       - 'app/src/androidTest/**'
       - 'app/build.gradle.kts'
-      - 'buildSrc/src/main/kotlin/dependencyplugins/TestsPlugin.kt'
+      - 'buildSrc/src/main/kotlin/Libs.kt'
+      - 'app/src/main/java/org/zotero/android/screens/reader/**'
+      - 'app/src/main/java/org/zotero/android/database/**'
   workflow_dispatch:
 
 permissions:
