@@ -23,6 +23,8 @@ object Libs {
         const val ui = "androidx.compose.ui:ui:$version"
         const val uiTooling = "androidx.compose.ui:ui-tooling:$version"
         const val uiUtil = "androidx.compose.ui:ui-util:$version"
+        const val uiTestJunit4 = "androidx.compose.ui:ui-test-junit4:$version"
+        const val uiTestManifest = "androidx.compose.ui:ui-test-manifest:$version"
         const val viewBinding = "androidx.compose.ui:ui-viewbinding:$version"
         const val activity = "androidx.activity:activity-compose:1.13.0"
         const val constraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.1.1"
@@ -128,7 +130,7 @@ object Libs {
         const val preferencesKtx = "androidx.preference:preference-ktx:1.2.1"
 
         object Test {
-            const val junit = "androidx.test.ext:junit:1.3.0"
+            const val junit = "androidx.test.ext:junit:1.2.1"
             const val runner = "androidx.test:runner:1.7.0"
             const val testRules = "androidx.test:rules:1.7.0"
             const val testCore = "androidx.test:core:1.7.0"
