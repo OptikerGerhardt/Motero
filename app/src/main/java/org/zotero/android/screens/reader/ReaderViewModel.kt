@@ -731,14 +731,17 @@ class ReaderViewModel @Inject constructor(
             val text = data["text"]?.asString ?: return@mapNotNull null
             val type = (data["type"]?.asString)?.let { AnnotationType.valueOf(it) }
                 ?: return@mapNotNull null
-            val rawTags = data["tags"]?.asJsonArray ?: return@mapNotNull null
-            val tags = rawTags.mapNotNull { dataAsJson ->
-                val data = dataAsJson.asJsonObject
-                val name = data["name"]?.asString ?: return@mapNotNull null
-                // The reader may submit newly selected tags with a name only.
-                val color = data["color"]?.asString ?: ""
-                Tag(name = name, color = color)
-            }
+            // Partial EPUB/HTML saves may omit tags. Keep the existing assignments
+            // rather than dropping the annotation or clearing its persisted tags.
+            val rawTags = data["tags"]?.takeIf { it.isJsonArray }?.asJsonArray
+            val tags = rawTags?.mapNotNull { tagValue ->
+                if (!tagValue.isJsonObject) return@mapNotNull null
+                val tagData = tagValue.asJsonObject
+                val name = tagData["name"]?.takeIf { it.isJsonPrimitive }?.asString
+                    ?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+                val tagColor = tagData["color"]?.takeIf { it.isJsonPrimitive }?.asString ?: ""
+                Tag(name = name, color = tagColor)
+            } ?: this.annotations[id]?.tags.orEmpty()
             NewReaderAnnotation(
                 key = id,
                 type = type,
