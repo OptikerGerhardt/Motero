@@ -45,6 +45,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
@@ -132,6 +133,34 @@ internal fun ReaderPageScrubber(
     enabled: Boolean = true,
 ) {
     val viewState by viewModel.viewStates.observeAsState(ReaderScrubberViewState())
+    ReaderPageScrubberContent(
+        viewState = viewState,
+        modifier = modifier,
+        enabled = enabled,
+        onLandmarksComputed = viewModel::onLandmarksComputed,
+        onScrubStart = viewModel::onScrubStart,
+        onScrubTo = viewModel::onScrubTo,
+        onScrubEnd = viewModel::onScrubEnd,
+        onTapAt = viewModel::onTapAt,
+    )
+}
+
+/**
+ * The same composable used in production, with its state/callbacks supplied by the caller.
+ * Keeps the Hilt ViewModel out of layout instrumentation, without replacing the UI
+ * with a synthetic row. Test tags mark the actual row, touch track and hitboxes.
+ */
+@Composable
+internal fun ReaderPageScrubberContent(
+    viewState: ReaderScrubberViewState,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    onLandmarksComputed: (List<Int>) -> Unit,
+    onScrubStart: () -> Unit,
+    onScrubTo: (Int) -> Unit,
+    onScrubEnd: () -> Unit,
+    onTapAt: (Int) -> Unit,
+) {
     val pageCount = viewState.thumbnailCache.size
     val density = LocalDensity.current
 
@@ -153,7 +182,7 @@ internal fun ReaderPageScrubber(
 
         LaunchedEffect(landmarkPageIndices) {
             if (landmarkPageIndices.isNotEmpty()) {
-                viewModel.onLandmarksComputed(landmarkPageIndices)
+                onLandmarksComputed(landmarkPageIndices)
             }
         }
 
@@ -166,14 +195,15 @@ internal fun ReaderPageScrubber(
                 Box(
                     modifier = Modifier
                         .padding(horizontal = horizontalPillPadding, vertical = 8.dp)
+                        .testTag("reader-scrubber-track")
                         .onSizeChanged { contentWidthPx = it.width }
                         .pointerInput(pageCount, enabled) {
                             if (enabled && pageCount > 0) {
                                 detectDragGesturesAfterLongPress(
                                     onDragStart = { offset ->
                                         dragXPx = offset.x.coerceIn(0f, size.width.toFloat())
-                                        viewModel.onScrubStart()
-                                        viewModel.onScrubTo(
+                                        onScrubStart()
+                                        onScrubTo(
                                             pageFromX(
                                                 offset.x,
                                                 size.width,
@@ -185,7 +215,7 @@ internal fun ReaderPageScrubber(
                                         change.consume()
                                         dragXPx =
                                             change.position.x.coerceIn(0f, size.width.toFloat())
-                                        viewModel.onScrubTo(
+                                        onScrubTo(
                                             pageFromX(
                                                 change.position.x,
                                                 size.width,
@@ -193,8 +223,8 @@ internal fun ReaderPageScrubber(
                                             )
                                         )
                                     },
-                                    onDragEnd = { viewModel.onScrubEnd() },
-                                    onDragCancel = { viewModel.onScrubEnd() },
+                                    onDragEnd = { onScrubEnd() },
+                                    onDragCancel = { onScrubEnd() },
                                 )
                             }
                         }
@@ -202,7 +232,7 @@ internal fun ReaderPageScrubber(
                             if (enabled && pageCount > 0) {
                                 detectTapGestures(
                                     onTap = { offset ->
-                                        viewModel.onTapAt(
+                                        onTapAt(
                                             pageFromX(
                                                 offset.x,
                                                 size.width,
@@ -215,6 +245,7 @@ internal fun ReaderPageScrubber(
                         },
                 ) {
                     Row(
+                        modifier = Modifier.testTag("reader-scrubber-row"),
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -223,6 +254,7 @@ internal fun ReaderPageScrubber(
                                 bitmap = viewState.thumbnailCache.getOrNull(index),
                                 height = ScrubberThumbnailHeight,
                                 width = with(density) { slotWidthsPx[position].toDp() },
+                                testId = position,
                             )
                         }
                     }
@@ -292,10 +324,12 @@ private fun ScrubberThumbnail(
     bitmap: Bitmap?,
     height: Dp,
     width: Dp,
+    testId: Int,
 ) {
     val modifier = Modifier
         .clip(shape = RoundedCornerShape(6.dp))
         .background(MaterialTheme.colorScheme.surface)
+        .testTag("reader-scrubber-cell-$testId")
 
     Box(
         modifier = modifier.width(width).height(height),
