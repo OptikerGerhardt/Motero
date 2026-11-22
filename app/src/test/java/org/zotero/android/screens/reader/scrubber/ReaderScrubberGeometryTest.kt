@@ -5,6 +5,22 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ReaderScrubberGeometryTest {
+    @Test fun `synthetic 100 page viewport reproduces old right tail and new flush edge`() {
+        // Reproduce the old 0.72 * 44dp assumed thumbnail aspect while actual
+        // cells rendered at 32dp with 6dp spacing. No private PDF data is used.
+        val pages = 100
+        val density = 1f
+        for (width in listOf(319, 320, 321, 501, 502)) {
+            val oldCount = ((width + 6f) / (44f * 0.72f + 6f)).toInt()
+                .coerceIn(2, pages)
+            val oldRenderedWidth = oldCount * 32 + (oldCount - 1) * 6
+            val newSlots = computeScrubberSlotWidths(width, pages, density)
+            val newRenderedWidth = newSlots.sum() + (newSlots.size - 1) * 6
+            assertTrue("Expected an old trailing gap at width $width", oldRenderedWidth < width)
+            assertEquals("New right edge at width $width", width, newRenderedWidth)
+        }
+    }
+
     @Test fun `non divisible widths distribute every remaining pixel`() {
         for (width in listOf(319, 320, 321, 501, 502)) {
             val slots = computeScrubberSlotWidths(width, 100, 1f)
