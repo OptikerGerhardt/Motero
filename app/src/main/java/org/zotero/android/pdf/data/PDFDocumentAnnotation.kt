@@ -31,6 +31,10 @@ data class PDFDocumentAnnotation(
     override val tags: List<Tag> = emptyList(),
     val hasTagsInPayload: Boolean = false,
 ): ReaderAnnotation {
+    /** Reader partial saves omit tags; only an explicit tags array replaces them. */
+    fun preservingTagsFrom(previous: PDFDocumentAnnotation?): PDFDocumentAnnotation =
+        if (hasTagsInPayload || previous == null) this else copy(tags = previous.tags)
+
     override fun isAuthor(currentUserId: Long): Boolean {
         return this.isAuthor
     }
