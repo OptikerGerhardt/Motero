@@ -58,4 +58,34 @@ class ReaderScrubberGeometryTest {
         }
     }
 
+    @Test fun `portrait landscape and fractional density recompute full row without stale widths`() {
+        val pages = listOf(1, 2, 100)
+        val densities = listOf(1f, 1.25f, 2.625f)
+        val widths = listOf(319, 501, 319)
+        for (pageCount in pages) {
+            for (density in densities) {
+                val gap = kotlin.math.round(6f * density).toInt()
+                val snapshots = widths.map { width ->
+                    computeScrubberSlotWidths(width, pageCount, density).also { slots ->
+                        assertEquals("pageCount=$pageCount density=$density width=$width",
+                            width, slots.sum() + (slots.size - 1) * gap)
+                        assertTrue(slots.size <= pageCount)
+                        assertTrue(slots.all { it > 0 })
+                    }
+                }
+                assertEquals("Returning to portrait must restore the exact geometry",
+                    snapshots.first(), snapshots.last())
+            }
+        }
+    }
+
+    @Test fun `invalid dimensions and density produce no slots`() {
+        for (density in listOf(-1f, 0f, 1f)) {
+            assertTrue(computeScrubberSlotWidths(-1, 100, density).isEmpty())
+            assertTrue(computeScrubberSlotWidths(0, 100, density).isEmpty())
+        }
+        assertTrue(computeScrubberSlotWidths(100, 100, -1f).isEmpty())
+        assertTrue(computeScrubberSlotWidths(100, 100, 0f).isEmpty())
+    }
+
 }
