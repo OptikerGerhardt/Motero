@@ -130,7 +130,7 @@ object Libs {
         const val preferencesKtx = "androidx.preference:preference-ktx:1.2.1"
 
         object Test {
-            const val junit = "androidx.test.ext:junit:1.3.0"
+            const val junit = "androidx.test.ext:junit:1.2.1"
             const val runner = "androidx.test:runner:1.7.0"
             const val testRules = "androidx.test:rules:1.7.0"
             const val testCore = "androidx.test:core:1.7.0"
