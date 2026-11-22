@@ -2,10 +2,10 @@ name: Motero Android emulator instrumentation
 
 # Deliberately separate from release/signing; no privileged pull_request_target code.
 on:
-  # This branch can validate the new workflow before it exists on main.
-  # Once accepted, pushes to develop also exercise the harness.
+  # PR events validate proposed changes; develop pushes recheck the merged harness.
+  # Avoid duplicate emulator runs for each feature-branch commit.
   push:
-    branches: [develop, 'ci/android-instrumented-regressions']
+    branches: [develop]
     paths:
       - '.github/workflows/android-emulator-instrumentation.yml'
       - 'app/src/androidTest/**'
