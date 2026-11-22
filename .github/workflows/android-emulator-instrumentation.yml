@@ -1,0 +1,104 @@
+name: Motero Android emulator instrumentation
+
+# Deliberately separate from release/signing; no privileged pull_request_target code.
+on:
+  pull_request:
+    branches: [develop]
+    paths:
+      - '.github/workflows/android-emulator-instrumentation.yml'
+      - 'app/src/androidTest/**'
+      - 'app/build.gradle.kts'
+      - 'buildSrc/src/main/kotlin/dependencyplugins/TestsPlugin.kt'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: motero-emulator-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  instrumentation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: reader/package-lock.json
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+
+      - name: Prepare pinned Reader assets for Android
+        run: |
+          python3 scripts/prepare_reader_assets.py
+          cd reader
+          npm ci --no-audit --no-fund
+          npx webpack --config-name android
+          cd ..
+          python3 scripts/package_reader_assets.py
+
+      - name: Install matching Android compile SDK
+        run: |
+          python3 - <<'PY'
+          import os, shutil, subprocess, sys
+          from pathlib import Path
+          sdk = shutil.which("sdkmanager")
+          if not sdk:
+              home = Path(os.environ.get("ANDROID_HOME", "/usr/local/lib/android/sdk"))
+              candidates = list(home.glob("cmdline-tools/*/bin/sdkmanager"))
+              sdk = str(next((p for p in candidates if "/latest/" in str(p)), candidates[0] if candidates else ""))
+          if not sdk:
+              sys.exit("sdkmanager missing")
+          commands = [
+              ([sdk, "--licenses"], "y\n" * 200),
+              ([sdk, "platforms;android-37.0", "build-tools;36.0.0"], None),
+          ]
+          for command, stdin in commands:
+              result = subprocess.run(command, input=stdin, text=True)
+              if result.returncode:
+                  sys.exit(result.returncode)
+          PY
+
+      - name: Enable emulator hardware acceleration
+        run: |
+          if [ ! -e /dev/kvm ]; then
+            echo '::error::KVM is unavailable on the runner; use a runner with hardware virtualization'
+            exit 1
+          fi
+          sudo chmod 666 /dev/kvm
+
+      - name: Test on disposable Android 15 emulator
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_3a
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: |
+            ./gradlew :app:connectedDevDebugAndroidTest --no-daemon --max-workers=2 --stacktrace
+
+      - name: Archive real instrumentation results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: motero-emulator-instrumentation
+          path: |
+            app/build/outputs/androidTest-results/connected/
+            app/build/reports/androidTests/connected/
+          if-no-files-found: warn
+          retention-days: 14
