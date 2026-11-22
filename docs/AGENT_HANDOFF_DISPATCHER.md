@@ -32,7 +32,7 @@ The event-driven workflow will only act when:
 
 ## Workflow activation and limits
 
-`.github/workflows/agent-handoff.yml` is currently staged on `develop`. `pull_request_target` events against `develop` can use this file as base-workflow, **without checking out untrusted PR code**. However, GitHub only enables `issue_comment` workflow triggers when the workflow also exists on the repository's **default branch** (`main`). Thus **automatic comment-to-label transitions require a human-approved promotion of this workflow file into main**. Until that happens, every agent must apply the status labels itself, and Agent 1 must reconcile missed handoffs.
+`.github/workflows/agent-handoff.yml` is staged on `develop` **but is not yet active**. GitHub sources both `pull_request_target` and `issue_comment` workflows from the repository's **default branch** (`main`), including for PRs targeting develop. Therefore **all automatic event-driven handoffs require human-approved promotion of this workflow file into main**. The dispatcher never checks out or executes untrusted PR code. Until promotion, every agent must apply its status labels itself, and Agent 1 must reconcile missed handoffs.
 
 Deploy the dispatcher into main **only as a separately reviewed workflow-only PR**, not by merging the entire develop branch. This technical activation does not authorize agents to merge PRs, push code to main, change permissions or release APKs. Review the action's explicit minimal `issues: write` permission and pin before promotion.
 
