@@ -81,10 +81,17 @@ class PdfEngineIndependenceTest {
                         json.deepCopy().apply { remove("tags") }, "Author", true))
                     assertFalse(omitted.hasTagsInPayload)
                     assertTrue(omitted.tags.isEmpty())
+                    val merged = omitted.preservingTagsFrom(result)
+                    assertEquals(result.tags, merged.tags)
+                    assertEquals(result.comment, merged.comment)
+                    assertFalse(merged.hasTagsInPayload)
+                    assertEquals(result.tags, result.preservingTagsFrom(omitted).tags)
                     val removed = requireNotNull(AnnotationConverterV2.annotation(
                         json.deepCopy().apply { add("tags", JsonParser.parseString("[]")) }, "Author", true))
                     assertTrue(removed.hasTagsInPayload)
                     assertTrue(removed.tags.isEmpty())
+                    assertTrue(removed.preservingTagsFrom(result).tags.isEmpty())
+                    assertTrue(omitted.preservingTagsFrom(null).tags.isEmpty())
                 }
             }
         }
