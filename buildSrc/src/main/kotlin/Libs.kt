@@ -23,6 +23,8 @@ object Libs {
         const val ui = "androidx.compose.ui:ui:$version"
         const val uiTooling = "androidx.compose.ui:ui-tooling:$version"
         const val uiUtil = "androidx.compose.ui:ui-util:$version"
+        const val uiTestJunit4 = "androidx.compose.ui:ui-test-junit4:$version"
+        const val uiTestManifest = "androidx.compose.ui:ui-test-manifest:$version"
         const val viewBinding = "androidx.compose.ui:ui-viewbinding:$version"
         const val activity = "androidx.activity:activity-compose:1.13.0"
         const val constraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.1.1"
