@@ -107,4 +107,31 @@ class PdfTagPayloadRealmInstrumentedTest {
         assertTrue(runCatching { AnnotationConverterV2.annotation(invalid, "Author", true) }.getOrNull() == null)
         assertEquals(listOf("keep" to ""), reload())
     }
+    @Test fun repeatedIdenticalPayloadDoesNotCreateAdditionalSyncChanges() {
+        val payload = parse("""[{"name":"stable","color":"#224466"}]""")
+        edit(payload.tags)
+        val before = Realm.getInstance(configuration).use { realm ->
+            val item = requireNotNull(realm.where<RItem>().key(key, libraryId).findFirst())
+            assertEquals(UpdatableChangeType.user.name, item.changeType)
+            item.changes.size
+        }
+        edit(payload.tags)
+        Realm.getInstance(configuration).use { realm ->
+            val item = requireNotNull(realm.where<RItem>().key(key, libraryId).findFirst())
+            assertEquals(before, item.changes.size)
+            assertEquals(1, item.tags.size)
+        }
+        assertEquals(listOf("stable" to "#224466"), reload())
+    }
+
+    @Test fun malformedTagArrayCannotSilentlyErasePersistedTags() {
+        val original = parse("""[{"name":"keep","color":"#112233"}]""")
+        edit(original.tags)
+        val malformed = parse("""[{"color":"#ffffff"},null,42]""")
+        // An explicit but entirely invalid tag array must not be treated as
+        // an intentional [] clear operation by the save path.
+        assertFalse(malformed.hasTagsInPayload && malformed.tags.isEmpty())
+        assertEquals(listOf("keep" to "#112233"), reload())
+    }
+
 }
