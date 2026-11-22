@@ -333,9 +333,13 @@ internal fun computeScrubberSlotWidths(contentWidthPx: Int, pageCount: Int, dens
     if (pageCount <= 0 || contentWidthPx <= 0 || densityValue <= 0f) return emptyList()
     val spacingPx = (6f * densityValue).roundToInt()
     val targetWidthPx = (32f * densityValue).roundToInt().coerceAtLeast(1)
-    val count = if (pageCount == 1) 1 else
-        ((contentWidthPx + spacingPx) / (targetWidthPx + spacingPx))
-            .coerceIn(2, pageCount)
+    // Keep at least one physical pixel per hitbox, even in a tiny constrained viewport.
+    // A forced two-cell minimum would otherwise overflow when the gap alone exceeds the budget.
+    val maxFittingCount = ((contentWidthPx.toLong() + spacingPx) / (spacingPx + 1L))
+        .coerceAtLeast(1L).coerceAtMost(pageCount.toLong()).toInt()
+    val preferredCount = ((contentWidthPx.toLong() + spacingPx) / (targetWidthPx + spacingPx))
+        .coerceAtLeast(2L).coerceAtMost(pageCount.toLong()).toInt()
+    val count = if (pageCount == 1) 1 else preferredCount.coerceAtMost(maxFittingCount)
     val gapPx = spacingPx * (count - 1)
     val usablePx = (contentWidthPx - gapPx).coerceAtLeast(0)
     val base = usablePx / count
