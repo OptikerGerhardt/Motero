@@ -59,3 +59,28 @@ test('valid first handoff from unlabeled PR',()=>{
 test('no effect on unrelated events',()=>{
   assert.equal(decideWith({eventName:'push',commentBody:marker('needs-fix')}),null);
 });
+
+test('dedicated collaborator may hand off a SHA-bound finding',()=>{
+  assert.equal(decideWith({actor:'OptikerLeergespart',commentAuthor:'OptikerLeergespart',
+    commentBody:marker('needs-fix')}),'agent:needs-fix');
+});
+test('dedicated collaborator can request independent re-review, not approve from fix',()=>{
+  assert.equal(decideWith({actor:'OptikerLeergespart',commentAuthor:'OptikerLeergespart',
+    labels:['agent:needs-fix'],commentBody:marker('needs-review')}),'agent:needs-review');
+  assert.equal(decideWith({actor:'OptikerLeergespart',commentAuthor:'OptikerLeergespart',
+    labels:['agent:needs-fix'],commentBody:marker('review-passed')}),null);
+});
+test('reject spoofed author or other collaborator even if marker and SHA match',()=>{
+  assert.equal(decideWith({actor:'OptikerLeergespart',commentAuthor:'OptikerGerhardt',
+    commentBody:marker('needs-fix')}),null);
+  assert.equal(decideWith({actor:'OptikerGerhardt',commentAuthor:'OptikerLeergespart',
+    commentBody:marker('needs-fix')}),null);
+  assert.equal(decideWith({actor:'untrustedCollaborator',commentAuthor:'untrustedCollaborator',
+    commentBody:marker('needs-fix')}),null);
+});
+test('dedicated collaborator cannot touch main or use stale SHA',()=>{
+  assert.equal(decideWith({actor:'OptikerLeergespart',commentAuthor:'OptikerLeergespart',
+    baseRef:'main',commentBody:marker('needs-fix')}),null);
+  assert.equal(decideWith({actor:'OptikerLeergespart',commentAuthor:'OptikerLeergespart',
+    commentBody:'<!-- agent-handoff:v1 state=needs-fix sha='+ 'f'.repeat(40) +' -->'}),null);
+});

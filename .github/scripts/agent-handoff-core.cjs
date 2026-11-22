@@ -21,7 +21,10 @@ function decide({eventName, action, owner, actor, commentAuthor, commentBody,
   if (!(baseRef === 'develop' || baseRef.startsWith('feature/'))) return null;
   const active = labels.filter(label => AGENT_LABELS.includes(label));
   if (eventName === 'issue_comment') {
-    if (actor !== owner || commentAuthor !== owner || typeof commentBody !== 'string') return null;
+    // Authenticated sender must be the repository owner or the dedicated agent account.
+    // Never trust the comment body as proof of identity.
+    if (commentAuthor !== actor || (actor !== owner && actor !== 'OptikerLeergespart') ||
+        typeof commentBody !== 'string') return null;
     const marker = commentBody.match(/<!--\s*agent-handoff:v1\s+state=(in-progress|needs-review|needs-fix|review-passed|ready-for-human-review|blocked)\s+sha=([0-9a-f]{40})\s*-->/);
     if (!marker || marker[2] !== headSha) return null;
     const desired = 'agent:' + marker[1];
