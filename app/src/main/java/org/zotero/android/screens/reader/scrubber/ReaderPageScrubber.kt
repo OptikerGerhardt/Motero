@@ -173,7 +173,9 @@ internal fun ReaderPageScrubberContent(
         val maxAllowedWidth = maxWidth
         val horizontalPillPadding = 8.dp
 
-        val rowBudgetPx = with(density) { (maxAllowedWidth - horizontalPillPadding * 2).roundToPx() }
+        // BoxWithConstraints already exposes physical pixel constraints. Converting its
+        // maxWidth back to pixels can double-scale when density is overridden.
+        val rowBudgetPx = (constraints.maxWidth - with(density) { (horizontalPillPadding * 2).roundToPx() })
             .coerceAtLeast(0)
         val slotWidthsPx = remember(rowBudgetPx, pageCount, density.density) {
             computeScrubberSlotWidths(rowBudgetPx, pageCount, density.density)
