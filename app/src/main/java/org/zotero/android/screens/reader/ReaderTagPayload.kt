@@ -7,6 +7,9 @@ import org.zotero.android.sync.Tag
  * Only a completely valid explicit array (including []) replaces existing tags.
  */
 internal object ReaderTagPayload {
+    /** Reader callbacks must not write annotation or tag data in read-only libraries. */
+    fun canPersistAnnotationChanges(metadataEditable: Boolean): Boolean = metadataEditable
+
     fun parseOrPreserve(data: JsonObject, previous: List<Tag>): List<Tag> {
         val field = data.get("tags") ?: return previous
         if (!field.isJsonArray) return previous
