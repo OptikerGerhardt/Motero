@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -254,7 +255,7 @@ internal fun ReaderPageScrubberContent(
                             ScrubberThumbnail(
                                 bitmap = viewState.thumbnailCache.getOrNull(index),
                                 height = ScrubberThumbnailHeight,
-                                modifier = Modifier.width(with(density) { slotWidthsPx[position].toDp() }),
+                                modifier = Modifier.requiredWidth(with(density) { slotWidthsPx[position].toDp() }),
                                 testId = position,
                             )
                         }
