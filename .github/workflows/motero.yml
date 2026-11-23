@@ -36,6 +36,11 @@ jobs:
           fetch-depth: 0
           submodules: recursive
           persist-credentials: false
+      - name: Require release baseline parity on develop
+        if: github.base_ref == 'develop' || github.ref == 'refs/heads/develop'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/release_baseline_guard.py
       - name: Check version and existing releases
         id: meta
         env:

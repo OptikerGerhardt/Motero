@@ -1,0 +1,177 @@
+#!/usr/bin/env python3
+"""Verify that a squash-only integration branch incorporated the published release."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
+
+BASELINE_MARKER = '.github/release-baseline'
+BUILD_CONFIG = 'buildSrc/src/main/kotlin/BuildConfig.kt'
+HEX_SHA = re.compile(r'^[0-9a-f]{40}$')
+RELEASE_TAG = re.compile(r'^v[0-9]+[.][0-9]+[.][0-9]+-[0-9]+$')
+VERSION_CODE = re.compile(r'^\s*const\s+val\s+versionCode\s*=\s*(\d+)\b', re.MULTILINE)
+READER_TREE = re.compile(r'^160000 commit ([0-9a-f]{40})\treader$')
+VALID_READER_STATUSES = {'identical', 'ahead'}
+
+
+def git(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(['git', *args], check=check, text=True, capture_output=True)
+
+
+def parse_version_code(content: str) -> int:
+    matches = VERSION_CODE.findall(content)
+    if len(matches) != 1:
+        raise ValueError('BuildConfig.kt must contain exactly one numeric versionCode')
+    return int(matches[0])
+
+
+def parse_reader_tree(content: str) -> str:
+    match = READER_TREE.fullmatch(content.strip())
+    if not match:
+        raise ValueError('Missing/invalid reader submodule gitlink')
+    return match.group(1)
+
+
+def evaluate(main_version: int, candidate_version: int, main_pin: str,
+             candidate_pin: str, release_integrated: bool,
+             reader_status: str | None) -> list[str]:
+    problems = []
+    if not release_integrated:
+        problems.append('Candidate has no verified checkpoint for the current release. Integrate the published release and update the baseline marker.')
+    if candidate_version < main_version:
+        problems.append(f'Candidate versionCode {candidate_version} is below published release {main_version}.')
+    if not HEX_SHA.fullmatch(main_pin) or not HEX_SHA.fullmatch(candidate_pin):
+        problems.append('Invalid reader gitlink SHA.')
+    elif main_pin != candidate_pin and reader_status not in VALID_READER_STATUSES:
+        problems.append(f'Reader gitlink {candidate_pin[:12]} must be the published pin {main_pin[:12]} or a proven descendant (GitHub compare: {reader_status!r}).')
+    return problems
+
+
+def github_api(repo: str, path: str, token: str) -> dict:
+    if not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', repo):
+        raise ValueError('Invalid repository identifier')
+    if not token:
+        raise ValueError('GITHUB_TOKEN is required to verify the release baseline')
+    url = f'https://api.github.com/repos/{repo}/{path}'
+    request = Request(url, headers={'Accept': 'application/vnd.github+json',
+                                    'Authorization': f'Bearer {token}',
+                                    'X-GitHub-Api-Version': '2022-11-28',
+                                    'User-Agent': 'motero-baseline-guard'})
+    with urlopen(request, timeout=15) as response:
+        return json.load(response)
+
+
+def fetch_latest_release(repo: str, token: str) -> str:
+    tag = github_api(repo, 'releases/latest', token).get('tag_name')
+    if not isinstance(tag, str) or not RELEASE_TAG.fullmatch(tag):
+        raise ValueError('Invalid published Motero release tag')
+    release = f'refs/tags/{tag}'
+    git('fetch', '--no-tags', 'origin',
+        '+refs/heads/main:refs/remotes/origin/main', f'{release}:{release}')
+    return release
+
+
+def github_reader_compare(repo: str, old: str, new: str, token: str) -> str:
+    if not (HEX_SHA.fullmatch(old) and HEX_SHA.fullmatch(new)):
+        raise ValueError('Invalid Reader SHA')
+    status = github_api(repo, f'compare/{old}...{new}', token).get('status')
+    if not isinstance(status, str):
+        raise ValueError('GitHub Reader compare returned no status')
+    return status
+
+
+def is_ancestor(ancestor: str, descendant: str) -> bool:
+    result = git('merge-base', '--is-ancestor', ancestor, descendant, check=False)
+    if result.returncode not in (0, 1):
+        raise RuntimeError(f'Could not check ancestry: {result.stderr.strip()}')
+    return result.returncode == 0
+
+
+def verified_checkpoint(released: str, candidate: str) -> str | None:
+    if is_ancestor(released, candidate):
+        return released
+
+    marker = git('show', f'{candidate}:{BASELINE_MARKER}', check=False)
+    if marker.returncode or marker.stdout.strip() != released:
+        return None
+
+    # Squash keeps the tree of the baseline sync, without joining release history.
+    # Prove that merging the release at the checkpoint gives the same tree.
+    # Subsequent PRs can then work on the synchronized code normally.
+    checkpoint = git('log', '-1', '--first-parent', '--format=%H', candidate, '--', BASELINE_MARKER).stdout.strip()
+    if not HEX_SHA.fullmatch(checkpoint):
+        return None
+    checkpoint_tree = git('rev-parse', f'{checkpoint}^{{tree}}').stdout.strip()
+    merged = git('merge-tree', '--write-tree', '--no-messages', '--name-only', '-z',
+                 checkpoint, released, check=False)
+    if merged.returncode not in (0, 1):
+        raise RuntimeError(f'Could not compare release and checkpoint trees: {merged.stderr.strip()}')
+    merge_tree, *conflicts = merged.stdout.rstrip('\0').split('\0')
+    if not HEX_SHA.fullmatch(merge_tree):
+        raise ValueError('Could not identify the release merge tree')
+    # A later release may itself contain the old checkpoint marker. That
+    # administrative file can differ, but all released content must match.
+    if any(path != BASELINE_MARKER for path in conflicts):
+        return None
+    delta = git('diff', '--quiet', checkpoint_tree, merge_tree, '--',
+                '.', f':(exclude){BASELINE_MARKER}', check=False)
+    if delta.returncode not in (0, 1):
+        raise RuntimeError(f'Could not verify the release merge tree: {delta.stderr.strip()}')
+    return checkpoint if delta.returncode == 0 else None
+
+
+def run(release_ref: str, main_ref: str, candidate_ref: str, repo: str, token: str) -> int:
+    released = git('rev-parse', '--verify', f'{release_ref}^{{commit}}').stdout.strip()
+    if not is_ancestor(released, main_ref):
+        raise ValueError('The published tag does not point to a commit in main history')
+    main_code = parse_version_code(git('show', f'{released}:{BUILD_CONFIG}').stdout)
+    candidate_code = parse_version_code(git('show', f'{candidate_ref}:{BUILD_CONFIG}').stdout)
+    main_pin = parse_reader_tree(git('ls-tree', released, 'reader').stdout)
+    candidate_pin = parse_reader_tree(git('ls-tree', candidate_ref, 'reader').stdout)
+    checkpoint = verified_checkpoint(released, candidate_ref)
+    status = 'identical' if main_pin == candidate_pin else github_reader_compare(repo, main_pin, candidate_pin, token)
+    failures = evaluate(main_code, candidate_code, main_pin, candidate_pin,
+                        checkpoint is not None, status)
+    report = [
+        '## Release baseline guard',
+        f'- Published release: `{release_ref}` at `{released}`, versionCode `{main_code}`, Reader `{main_pin}`',
+        f'- Candidate: `{candidate_ref}`, versionCode `{candidate_code}`, Reader `{candidate_pin}`',
+        f'- Reader compare: `{status}`',
+        f'- Verified release checkpoint: {checkpoint or "MISSING"}',
+        '- Result: **FAIL**' if failures else '- Result: **PASS**',
+    ]
+    report += [f'- Blocker: {problem}' for problem in failures]
+    report += ['- This check does **not** prove semantic behavior, live sync, BOOX, or regression parity.']
+    summary = '\n'.join(report) + '\n'
+    print(summary)
+    if os.environ.get('GITHUB_STEP_SUMMARY'):
+        with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as f:
+            f.write(summary)
+    return 1 if failures else 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--release', help='Use an already fetched release tag or commit')
+    parser.add_argument('--main', default='refs/remotes/origin/main')
+    parser.add_argument('--candidate', default='HEAD')
+    args = parser.parse_args()
+    repo = os.environ.get('GITHUB_REPOSITORY', '')
+    token = os.environ.get('GITHUB_TOKEN', '')
+    try:
+        release = args.release or fetch_latest_release(repo, token)
+        return run(release, args.main, args.candidate, repo, token)
+    except (ValueError, RuntimeError, subprocess.CalledProcessError, HTTPError, URLError, TimeoutError) as exc:
+        print(f'::error title=Release baseline guard::Unable to verify release parity: {exc}', file=sys.stderr)
+        return 2  # An unavailable verification must never be treated as green.
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

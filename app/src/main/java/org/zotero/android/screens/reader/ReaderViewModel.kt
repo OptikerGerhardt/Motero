@@ -900,16 +900,37 @@ class ReaderViewModel @Inject constructor(
             }
         }
         val isHistoryChange = params["history"]?.takeIf { !it.isJsonNull }?.asBoolean ?: false
+        val keysWithTags = rawAnnotations.mapNotNull { entry ->
+            val data = entry.asJsonObject
+            data["id"]?.asString?.takeIf { data["tags"]?.isJsonArray == true }
+        }.toSet()
         for (editedAnnotation in editedAnnotations) {
-            this.annotations[editedAnnotation.key] = editedAnnotation
-            if (isHistoryChange) {
-                showCommentChangedByHistory(editedAnnotation)
-            }
-            if (viewState.fileType == ReaderFileType.PDF) {
-                editedAnnotation as PDFDocumentAnnotation
-                updatePdfDatabaseAnnotation(editedAnnotation)
-            } else {
-                updateHtmlEpubDatabaseAnnotation(editedAnnotation as NewReaderAnnotation)
+            try {
+                if (editedAnnotation is PDFDocumentAnnotation) {
+                    updatePdfDatabaseAnnotation(editedAnnotation, editedAnnotation.key in keysWithTags)
+                } else {
+                    updateHtmlEpubDatabaseAnnotation(editedAnnotation as NewReaderAnnotation)
+                }
+                this.annotations[editedAnnotation.key] = editedAnnotation
+                if (isHistoryChange) showCommentChangedByHistory(editedAnnotation)
+            } catch (error: Exception) {
+                ignoreDbCallbackOnReaderModificationItemKeys.remove(editedAnnotation.key)
+                Timber.e(error, "Could not save annotation changes")
+                updateState { copy(error = Error.cantUpdateAnnotation) }
+                runCatching {
+                    dbWrapperMain.realmDbStorage.perform { coordinator ->
+                        try {
+                            val item = coordinator.perform(ReadItemDbRequest(library.identifier, editedAnnotation.key))
+                            val (saved, json) = generateAnnotationJsonForReader(item) ?: return@perform
+                            this.annotations[saved.key] = saved
+                            viewModelScope.launch {
+                                readerWebCallChainExecutor.updateView(JsonArray().apply { add(json) }, JsonArray(), JsonArray())
+                            }
+                        } finally {
+                            coordinator.invalidate()
+                        }
+                    }
+                }.onFailure { Timber.e(it, "Could not reload annotation after write failure") }
             }
         }
     }
@@ -933,7 +954,9 @@ class ReaderViewModel @Inject constructor(
             annotations = annotations,
             userId = this.userId,
         )
-        dbWrapperMain.realmDbStorage.perform(request)
+        dbWrapperMain.realmDbStorage.perform(listOf(request) + annotations.filter { it.tags.isNotEmpty() }.map {
+            EditTagsForItemDbRequest(it.key, library.identifier, it.tags)
+        })
 
     }
 
@@ -944,6 +967,9 @@ class ReaderViewModel @Inject constructor(
     private suspend fun _select(key: String?, didSelectInDocument: Boolean, inlineTextEditing: Boolean = false) {
         if (key != null && annotation(key) == null) return
         if (key == viewState.selectedAnnotationKey) {
+            if (key != null && didSelectInDocument && viewState.readerAnnotationArgs == null) {
+                openAnnotationDialog(suppressPopup = inlineTextEditing)
+            }
             return
         }
         val existing = viewState.selectedAnnotationKey
@@ -994,10 +1020,11 @@ class ReaderViewModel @Inject constructor(
         }
     }
 
-    private fun updatePdfDatabaseAnnotation(annotation: PDFDocumentAnnotation) {
+    private fun updatePdfDatabaseAnnotation(annotation: PDFDocumentAnnotation, hasTags: Boolean) {
         val key = annotation.key
         val libraryId = this.library.identifier
         val requests = mutableListOf<DbRequest>()
+        if (hasTags) requests.add(EditTagsForItemDbRequest(key, libraryId, annotation.tags))
 
         val fieldValues = mutableMapOf(
             KeyBaseKeyPair(key = FieldKeys.Item.Annotation.color, baseKey = null) to annotation.color,
@@ -1079,14 +1106,19 @@ class ReaderViewModel @Inject constructor(
             annotation = annotation,
         )
         ignoreDbCallbackOnReaderModificationItemKeys.add(annotation.key)
-        dbWrapperMain.realmDbStorage.perform(request)
+        dbWrapperMain.realmDbStorage.perform(listOf(request, EditTagsForItemDbRequest(annotation.key, library.identifier, annotation.tags)))
     }
 
     private fun setTags(tags: List<Tag>, key: String) {
+        val annotation = annotation(key) ?: return
+        if (annotation.editability(userId, library) != org.zotero.android.pdf.data.AnnotationEditability.editable) return
         val changes = JsonObject().apply {
             addProperty("id", key)
             add("tags", JsonArray().apply {
-                for (tag in tags) add(JsonObject().apply { addProperty("name", tag.name) })
+                for (tag in tags) add(JsonObject().apply {
+                    addProperty("name", tag.name)
+                    if (tag.color.isNotEmpty()) addProperty("color", tag.color)
+                })
             })
         }
         viewModelScope.launch { readerWebCallChainExecutor.editAnnotation(changes) }

@@ -157,6 +157,10 @@ android {
 
 dependencies {
 
+    // Real-device Compose measurement / tap checks, isolated to instrumentation.
+    androidTestImplementation(Libs.Compose.uiTestJunit4)
+    debugImplementation(Libs.Compose.uiTestManifest)
+
     //Material design
     implementation(Libs.materialDesign)
     implementation(Libs.Compose.material)
