@@ -225,6 +225,35 @@ class PdfTagPayloadRealmInstrumentedTest {
         }
     }
 
+    @Test fun failedAnnotationTransactionRollsBackTagsAndSyncMetadataAfterReopen() {
+        edit(listOf(Tag("original", "#223344")))
+        fun syncChanges(): Int = Realm.getInstance(configuration).use { realm ->
+            requireNotNull(realm.where<RItem>().key(key, libraryId).findFirst()).changes.size
+        }
+        val before = syncChanges()
+        // Model the annotation-field request failing after tag processing.
+        // Both requests must remain atomic; a partial save must not queue sync.
+        val failingAnnotationWrite = object : DbRequest {
+            override val needsWrite: Boolean = true
+            override fun process(database: Realm) {
+                throw IllegalStateException("simulated annotation-field write failure")
+            }
+        }
+        val failed = runCatching {
+            RealmDbStorage(configuration).perform(listOf(
+                EditTagsForItemDbRequest(key, libraryId, listOf(Tag("replacement", ""))),
+                failingAnnotationWrite,
+            ))
+        }
+        assertTrue("The failed write must propagate", failed.isFailure)
+        assertEquals(listOf("original" to "#223344"), reload())
+        assertEquals(before, syncChanges())
+        // The database remains usable after rollback and a subsequent valid save.
+        edit(listOf(Tag("replacement", "")))
+        assertEquals(listOf("replacement" to ""), reload())
+        assertEquals(before + 1, syncChanges())
+    }
+
     @Test fun existingLibraryTagColorIsNotOverwrittenByAnnotationPayload() {
         // RTag is shared across all items in a library. Annotation tag edits
         // change assignments, not the library-wide color configuration.
