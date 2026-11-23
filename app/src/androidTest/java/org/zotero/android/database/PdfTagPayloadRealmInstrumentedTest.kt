@@ -175,4 +175,28 @@ class PdfTagPayloadRealmInstrumentedTest {
         assertEquals(before + 1, changeCount())
         assertEquals(emptyList<Pair<String, String>>(), reload())
     }
+
+    @Test fun malformedPdfTagPayloadDoesNotClearTagsOrScheduleSync() {
+        val original = parse("""[{"name":"keep","color":"#112233"}]""")
+        edit(original.tags)
+        fun changes(): Int = Realm.getInstance(configuration).use { realm ->
+            requireNotNull(realm.where<RItem>().key(key, libraryId).findFirst()).changes.size
+        }
+        val before = changes()
+        for (invalid in listOf(
+            """{"name":"not-an-array"}""",
+            """[{"name":"valid"},null]""",
+            """[{"name":"valid"},{"name":""}]""",
+            """[{"name":"valid","color":42}]"""
+        )) {
+            val payload = parse(invalid)
+            assertFalse("Malformed tags must not be treated as explicit []: $invalid", payload.hasTagsInPayload)
+            val preserved = payload.preservingTagsFrom(original)
+            assertEquals(original.tags, preserved.tags)
+            // Production PDF update only schedules EditTagsForItemDbRequest
+            // when hasTagsInPayload is true. Reopen Realm to verify no mutation.
+            assertEquals(listOf("keep" to "#112233"), reload())
+            assertEquals(before, changes())
+        }
+    }
 }
