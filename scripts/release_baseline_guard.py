@@ -97,9 +97,7 @@ def run(main_ref: str, candidate_ref: str, repo: str, token: str) -> int:
     ]
     report += [f'- Blocker: {problem}' for problem in failures]
     report += ['- This check does **not** prove semantic behavior, live sync, BOOX, or regression parity.']
-    summary = '
-'.join(report) + '
-'
+    summary = '\n'.join(report) + '\n'
     print(summary)
     if os.environ.get('GITHUB_STEP_SUMMARY'):
         with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as f:
