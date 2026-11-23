@@ -27,14 +27,12 @@ data class PDFDocumentAnnotation(
     override val sortIndex: String,
     override val dateAdded: Date,
     override val dateModified: Date,
-    val isZoteroAnnotation: Boolean
+    val isZoteroAnnotation: Boolean,
+    override val tags: List<Tag> = emptyList(),
 ): ReaderAnnotation {
     override fun isAuthor(currentUserId: Long): Boolean {
         return this.isAuthor
     }
-
-    override val tags: List<Tag>
-        get() = emptyList()
 
     override fun author(displayName: String, username: String): String {
         return this.author
