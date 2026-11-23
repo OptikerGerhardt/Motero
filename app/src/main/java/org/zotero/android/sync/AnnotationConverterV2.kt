@@ -49,9 +49,15 @@ class AnnotationConverterV2 {
             val parsedTags = rawTags?.map { value ->
                 if (!value.isJsonObject) return@map null
                 val tag = value.asJsonObject
-                val name = tag["name"]?.takeIf { it.isJsonPrimitive }?.asString
-                    ?.takeIf { it.isNotBlank() } ?: return@map null
-                Tag(name, tag["color"]?.takeIf { it.isJsonPrimitive }?.asString ?: "")
+                val name = tag["name"]?.takeIf {
+                    it.isJsonPrimitive && it.asJsonPrimitive.isString
+                }?.asString?.takeIf { it.isNotBlank() } ?: return@map null
+                val colorField = tag["color"]
+                if (colorField != null && !colorField.isJsonNull &&
+                    (!colorField.isJsonPrimitive || !colorField.asJsonPrimitive.isString)) {
+                    return@map null
+                }
+                Tag(name, colorField?.takeUnless { it.isJsonNull }?.asString ?: "")
             }
             val validTags = parsedTags != null && parsedTags.none { it == null }
             val tags = if (validTags) parsedTags!!.filterNotNull() else emptyList()
