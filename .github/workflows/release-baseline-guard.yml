@@ -3,9 +3,11 @@ name: Release baseline guard
 # Unprivileged, read-only check. Human review required for this workflow change.
 on:
   pull_request:
-    branches: [develop]
+    branches: [main, develop]
   push:
     branches: [main, develop]
+  release:
+    types: [published]
   schedule:
     - cron: '17 5 * * *'
   workflow_dispatch:
@@ -30,16 +32,25 @@ jobs:
             +refs/heads/develop:refs/remotes/origin/develop
       - name: Test baseline guard negative cases
         run: python3 -m unittest discover -s scripts/tests -p test_release_baseline_guard.py -v
-      - name: Require published main and Reader ancestry
+      - name: Verify the published baseline and Reader ancestry
+        if: github.event_name != 'pull_request' || github.base_ref == 'develop'
         env:
+          GH_TOKEN: ${{ github.token }}
           GITHUB_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           candidate=HEAD
           # A main push or scheduled/manual check audits current develop for drift.
-          if [[ "$GITHUB_EVENT_NAME" == 'schedule' || "$GITHUB_EVENT_NAME" == 'workflow_dispatch' ||
+          if [[ "$GITHUB_EVENT_NAME" == 'release' || "$GITHUB_EVENT_NAME" == 'schedule' || "$GITHUB_EVENT_NAME" == 'workflow_dispatch' ||
                 ( "$GITHUB_EVENT_NAME" == 'push' && "$GITHUB_REF" == 'refs/heads/main' ) ]]; then
             candidate=refs/remotes/origin/develop
           fi
+          tag=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq '.tag_name')
+          if [[ ! "$tag" =~ ^v[0-9]+[.][0-9]+[.][0-9]+-[0-9]+$ ]]; then
+            echo "::error::Unexpected Motero release tag"
+            exit 1
+          fi
+          release_ref="refs/tags/$tag"
+          git fetch --no-tags origin "$release_ref:$release_ref"
           python3 scripts/release_baseline_guard.py \
-            --main refs/remotes/origin/main --candidate "$candidate"
+            --release "$release_ref" --main refs/remotes/origin/main --candidate "$candidate"

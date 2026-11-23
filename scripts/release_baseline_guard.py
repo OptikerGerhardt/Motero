@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""Fail closed when a develop candidate loses released main code or Reader history.
-
-This check verifies ancestry and version monotonicity, not behavioral equivalence.
-Do not use it in place of release/regression tests or human approval.
-"""
+"""Verify that a squash-only integration branch incorporated the published release."""
 
 from __future__ import annotations
 
@@ -16,6 +12,7 @@ import sys
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+BASELINE_MARKER = '.github/release-baseline'
 BUILD_CONFIG = 'buildSrc/src/main/kotlin/BuildConfig.kt'
 HEX_SHA = re.compile(r'^[0-9a-f]{40}$')
 VERSION_CODE = re.compile(r'^\s*const\s+val\s+versionCode\s*=\s*(\d+)\b', re.MULTILINE)
@@ -42,13 +39,13 @@ def parse_reader_tree(content: str) -> str:
 
 
 def evaluate(main_version: int, candidate_version: int, main_pin: str,
-             candidate_pin: str, main_is_ancestor: bool,
+             candidate_pin: str, release_integrated: bool,
              reader_status: str | None) -> list[str]:
     problems = []
-    if not main_is_ancestor:
-        problems.append('Current main is NOT an ancestor of the candidate. Integrate current main into develop before accepting new changes.')
+    if not release_integrated:
+        problems.append('Candidate has no verified checkpoint for the current release. Integrate the published release and update the baseline marker.')
     if candidate_version < main_version:
-        problems.append(f'Candidate versionCode {candidate_version} is below published main {main_version}.')
+        problems.append(f'Candidate versionCode {candidate_version} is below published release {main_version}.')
     if not HEX_SHA.fullmatch(main_pin) or not HEX_SHA.fullmatch(candidate_pin):
         problems.append('Invalid reader gitlink SHA.')
     elif main_pin != candidate_pin and reader_status not in VALID_READER_STATUSES:
@@ -76,23 +73,54 @@ def github_reader_compare(repo: str, old: str, new: str, token: str) -> str:
     return status
 
 
-def run(main_ref: str, candidate_ref: str, repo: str, token: str) -> int:
-    main_code = parse_version_code(git('show', f'{main_ref}:{BUILD_CONFIG}').stdout)
+def is_ancestor(ancestor: str, descendant: str) -> bool:
+    result = git('merge-base', '--is-ancestor', ancestor, descendant, check=False)
+    if result.returncode not in (0, 1):
+        raise RuntimeError(f'Could not check ancestry: {result.stderr.strip()}')
+    return result.returncode == 0
+
+
+def verified_checkpoint(released: str, candidate: str) -> str | None:
+    if is_ancestor(released, candidate):
+        return released
+
+    marker = git('show', f'{candidate}:{BASELINE_MARKER}', check=False)
+    if marker.returncode or marker.stdout.strip() != released:
+        return None
+
+    # Squash keeps the tree of the baseline sync, without joining release history.
+    # Prove that merging the release at the checkpoint gives the same tree.
+    # Subsequent PRs can then work on the synchronized code normally.
+    checkpoint = git('log', '-1', '--first-parent', '--format=%H', candidate, '--', BASELINE_MARKER).stdout.strip()
+    if not HEX_SHA.fullmatch(checkpoint):
+        return None
+    checkpoint_tree = git('rev-parse', f'{checkpoint}^{{tree}}').stdout.strip()
+    merged = git('merge-tree', '--write-tree', '--no-messages', checkpoint, released, check=False)
+    if merged.returncode not in (0, 1):
+        raise RuntimeError(f'Could not compare release and checkpoint trees: {merged.stderr.strip()}')
+    if merged.returncode == 0 and merged.stdout.strip() == checkpoint_tree:
+        return checkpoint
+    return None
+
+
+def run(release_ref: str, main_ref: str, candidate_ref: str, repo: str, token: str) -> int:
+    released = git('rev-parse', '--verify', f'{release_ref}^{{commit}}').stdout.strip()
+    if not is_ancestor(released, main_ref):
+        raise ValueError('The published tag does not point to a commit in main history')
+    main_code = parse_version_code(git('show', f'{released}:{BUILD_CONFIG}').stdout)
     candidate_code = parse_version_code(git('show', f'{candidate_ref}:{BUILD_CONFIG}').stdout)
-    main_pin = parse_reader_tree(git('ls-tree', main_ref, 'reader').stdout)
+    main_pin = parse_reader_tree(git('ls-tree', released, 'reader').stdout)
     candidate_pin = parse_reader_tree(git('ls-tree', candidate_ref, 'reader').stdout)
-    ancestry = git('merge-base', '--is-ancestor', main_ref, candidate_ref, check=False)
-    if ancestry.returncode not in (0, 1):
-        raise RuntimeError(f'Could not check ancestry: {ancestry.stderr.strip()}')
+    checkpoint = verified_checkpoint(released, candidate_ref)
     status = 'identical' if main_pin == candidate_pin else github_reader_compare(repo, main_pin, candidate_pin, token)
     failures = evaluate(main_code, candidate_code, main_pin, candidate_pin,
-                        ancestry.returncode == 0, status)
+                        checkpoint is not None, status)
     report = [
         '## Release baseline guard',
-        f'- Published main: `{main_ref}`, versionCode `{main_code}`, Reader `{main_pin}`',
+        f'- Published release: `{release_ref}` at `{released}`, versionCode `{main_code}`, Reader `{main_pin}`',
         f'- Candidate: `{candidate_ref}`, versionCode `{candidate_code}`, Reader `{candidate_pin}`',
         f'- Reader compare: `{status}`',
-        '- Main ancestry: ' + ('included' if ancestry.returncode == 0 else 'MISSING'),
+        f'- Verified release checkpoint: {checkpoint or "MISSING"}',
         '- Result: **FAIL**' if failures else '- Result: **PASS**',
     ]
     report += [f'- Blocker: {problem}' for problem in failures]
@@ -107,11 +135,12 @@ def run(main_ref: str, candidate_ref: str, repo: str, token: str) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--release', required=True)
     parser.add_argument('--main', default='refs/remotes/origin/main')
     parser.add_argument('--candidate', default='HEAD')
     args = parser.parse_args()
     try:
-        return run(args.main, args.candidate, os.environ.get('GITHUB_REPOSITORY', ''),
+        return run(args.release, args.main, args.candidate, os.environ.get('GITHUB_REPOSITORY', ''),
                    os.environ.get('GITHUB_TOKEN', ''))
     except (ValueError, RuntimeError, subprocess.CalledProcessError, HTTPError, URLError, TimeoutError) as exc:
         print(f'::error title=Release baseline guard::Unable to verify release parity: {exc}', file=sys.stderr)

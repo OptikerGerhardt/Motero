@@ -1,7 +1,9 @@
-"""Pure checks do not require network access, an Android SDK, or Git history."""
+"""Check release rules and squash integration using a disposable Git repository."""
 
 import importlib.util
+import os
 from pathlib import Path
+import tempfile
 import unittest
 
 SOURCE = Path(__file__).resolve().parents[1] / 'release_baseline_guard.py'
@@ -31,9 +33,9 @@ class ReleaseBaselineGuardTest(unittest.TestCase):
         problems = mod.evaluate(335, 334, OLD, OLD, True, 'identical')
         self.assertTrue(any('versionCode 334' in p for p in problems))
 
-    def test_stale_develop_is_blocked_after_new_main_commit(self):
+    def test_stale_develop_is_blocked_after_new_release(self):
         problems = mod.evaluate(335, 335, OLD, OLD, False, 'identical')
-        self.assertTrue(any('NOT an ancestor' in p for p in problems))
+        self.assertTrue(any('no verified checkpoint' in p for p in problems))
 
     def test_newer_reader_is_allowed_if_descendant(self):
         self.assertEqual([], mod.evaluate(335, 336, OLD, NEW, True, 'ahead'))
@@ -45,6 +47,61 @@ class ReleaseBaselineGuardTest(unittest.TestCase):
 
     def test_missing_pins_fail_closed(self):
         self.assertTrue(mod.evaluate(335, 335, 'garbled', NEW, True, 'ahead'))
+
+
+class SquashCheckpointTest(unittest.TestCase):
+    def setUp(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        previous = Path.cwd()
+        self.addCleanup(os.chdir, previous)
+        os.chdir(directory.name)
+        mod.git('init', '-b', 'main')
+        mod.git('config', 'user.name', 'Motero Test')
+        mod.git('config', 'user.email', 'test@example.invalid')
+        self.commit('reader-fix', 'base')
+        mod.git('branch', 'develop')
+        self.released = self.commit('reader-fix', 'published fix')
+        mod.git('checkout', 'develop')
+        self.commit('emulator', 'develop-only test')
+
+    def commit(self, filename, content):
+        path = Path(filename)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content + '\n', encoding='utf-8')
+        mod.git('add', filename)
+        mod.git('commit', '-m', filename)
+        return mod.git('rev-parse', 'HEAD').stdout.strip()
+
+    def sync(self):
+        mod.git('merge', '--squash', self.released)
+        return self.commit(mod.BASELINE_MARKER, self.released)
+
+    def test_uncopied_content_with_matching_marker_is_rejected(self):
+        invalid = self.commit(mod.BASELINE_MARKER, self.released)
+        self.assertIsNone(mod.verified_checkpoint(self.released, invalid))
+
+    def test_squashed_release_and_later_changes_are_accepted(self):
+        synced = self.sync()
+        self.assertFalse(mod.is_ancestor(self.released, synced))
+        self.assertEqual(synced, mod.verified_checkpoint(self.released, synced))
+        self.assertTrue(Path('emulator').exists())
+        follow_up = self.commit('reader-fix', 'follow-up fix')
+        self.assertEqual(synced, mod.verified_checkpoint(self.released, follow_up))
+
+    def test_synthetic_pull_request_merge_keeps_the_squash_checkpoint(self):
+        mod.git('checkout', '-b', 'sync')
+        proposed = self.sync()
+        mod.git('checkout', 'develop')
+        mod.git('merge', '--no-ff', proposed)
+        merge = mod.git('rev-parse', 'HEAD').stdout.strip()
+        self.assertIsNotNone(mod.verified_checkpoint(self.released, merge))
+
+    def test_new_release_invalidates_old_checkpoint(self):
+        synced = self.sync()
+        mod.git('checkout', 'main')
+        next_release = self.commit('changes', 'subsequent publication')
+        self.assertIsNone(mod.verified_checkpoint(next_release, synced))
 
 
 if __name__ == '__main__':
