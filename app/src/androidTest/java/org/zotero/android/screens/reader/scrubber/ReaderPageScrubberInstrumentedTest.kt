@@ -105,7 +105,7 @@ class ReaderPageScrubberInstrumentedTest {
                 val cells = widths.indices.map { bounds("reader-scrubber-cell-$it") }
                 assertTrue("Must have multiple real thumbnails", cells.size >= 2)
                 assertTrue("Left edge must align with actual row", abs(cells.first().left - row.left) <= 1f)
-                assertTrue("Rightmost real thumbnail must meet row edge",
+                assertTrue("Rightmost thumbnail must meet row edge: density=$density viewport=$widthPx budget=$budget row=$row last=${cells.last()} slotWidths=$widths",
                     abs(cells.last().right - row.right) <= 1f)
                 cells.zipWithNext().forEach { (a, b) ->
                     assertTrue("Thumbnail hitboxes must not overlap", b.left >= a.right)
