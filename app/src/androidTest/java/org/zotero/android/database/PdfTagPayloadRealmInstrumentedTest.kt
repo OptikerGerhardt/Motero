@@ -225,7 +225,9 @@ class PdfTagPayloadRealmInstrumentedTest {
         }
     }
 
-    @Test fun pdfTagColorChangeSurvivesCloseReopenAndQueuesOneSyncChange() {
+    @Test fun existingLibraryTagColorIsNotOverwrittenByAnnotationPayload() {
+        // RTag is shared across all items in a library. Annotation tag edits
+        // change assignments, not the library-wide color configuration.
         val first = parse("""[{"name":"Quick","color":"#112233"}]""")
         edit(first.tags)
         fun changes(): Int = Realm.getInstance(configuration).use { realm ->
@@ -235,11 +237,10 @@ class PdfTagPayloadRealmInstrumentedTest {
         val recolored = parse("""[{"name":"Quick","color":"#aabbcc"}]""")
         assertTrue(recolored.hasTagsInPayload)
         edit(recolored.tags)
-        assertEquals(listOf("Quick" to "#aabbcc"), reload())
-        assertEquals(before + 1, changes())
+        assertEquals(listOf("Quick" to "#112233"), reload())
+        assertEquals(before, changes())
         edit(recolored.tags)
-        assertEquals(before + 1, changes())
-        assertEquals(listOf("Quick" to "#aabbcc"), reload())
+        assertEquals(before, changes())
+        assertEquals(listOf("Quick" to "#112233"), reload())
     }
-
 }
