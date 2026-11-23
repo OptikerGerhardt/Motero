@@ -301,4 +301,35 @@ class PdfTagPayloadRealmInstrumentedTest {
             assertEquals(before, syncChanges())
         }
     }
+
+    @Test fun explicitClearRolledBackWhenFollowingAnnotationWriteFails() {
+        val original = listOf(Tag("preserved", "#778899"))
+        edit(original)
+        fun syncState(): Pair<String, Int> = Realm.getInstance(configuration).use { realm ->
+            val item = requireNotNull(realm.where<RItem>().key(key, libraryId).findFirst())
+            item.changeType to item.changes.size
+        }
+        val before = syncState()
+        val clearPayload = JsonParser.parseString("""{"tags":[]}""").asJsonObject
+        val clearTags = ReaderTagPayload.parseOrPreserve(clearPayload, original)
+        assertTrue(clearTags.isEmpty())
+        val failingWrite = object : DbRequest {
+            override val needsWrite = true
+            override fun process(database: Realm) {
+                throw IllegalStateException("annotation update rejected after tag clear")
+            }
+        }
+        assertTrue(runCatching {
+            RealmDbStorage(configuration).perform(
+                listOf(EditTagsForItemDbRequest(key, libraryId, clearTags), failingWrite)
+            )
+        }.isFailure)
+        // Reload from disk after the failed batch: [] must not partially erase tags
+        // or create an uploadable sync change.
+        assertEquals(listOf("preserved" to "#778899"), reload())
+        assertEquals(before, syncState())
+        edit(clearTags)
+        assertEquals(emptyList<Pair<String, String>>(), reload())
+        assertEquals(before.second + 1, syncState().second)
+    }
 }
