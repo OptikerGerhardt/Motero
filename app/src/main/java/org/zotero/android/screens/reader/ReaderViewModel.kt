@@ -861,7 +861,7 @@ class ReaderViewModel @Inject constructor(
             Timber.w("ReaderViewModel: refusing annotation save in read-only library")
             return
         }
-        val rawAnnotations = params["annotations"]?.asJsonArray
+        val rawAnnotations = ReaderTagPayload.annotationArrayOrNull(params)
         if (rawAnnotations == null) {
             Timber.e("ReaderViewModel: annotations missing - ${params["annotations"] ?: emptyList<String>()}")
             return
