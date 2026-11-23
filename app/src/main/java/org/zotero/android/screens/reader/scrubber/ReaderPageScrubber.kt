@@ -13,13 +13,11 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -44,7 +42,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -248,28 +246,37 @@ internal fun ReaderPageScrubberContent(
                             }
                         },
                 ) {
-                    Row(
+                    // Measure and position in physical pixels. Row's dp spacing and
+                    // child constraints can round independently at fractional density,
+                    // causing a cumulative right-hand gap despite exact slot arithmetic.
+                    Layout(
                         modifier = Modifier.fillMaxWidth().testTag("reader-scrubber-row"),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        landmarkPageIndices.forEachIndexed { position, index ->
-                            ScrubberThumbnail(
-                                bitmap = viewState.thumbnailCache.getOrNull(index),
-                                height = ScrubberThumbnailHeight,
-                                modifier = Modifier.layout { measurable, constraints ->
-                                    // Exact physical pixels: Dp width modifiers can be remeasured
-                                    // under different density/parent constraints, leaving a tail.
-                                    val widthPx = slotWidthsPx[position]
-                                    val placeable = measurable.measure(
-                                        constraints.copy(minWidth = widthPx, maxWidth = widthPx)
-                                    )
-                                    layout(widthPx, placeable.height) {
-                                        placeable.placeRelative(0, 0)
-                                    }
-                                },
-                                testId = position,
-                            )
+                        content = {
+                            landmarkPageIndices.forEachIndexed { position, index ->
+                                ScrubberThumbnail(
+                                    bitmap = viewState.thumbnailCache.getOrNull(index),
+                                    height = ScrubberThumbnailHeight,
+                                    modifier = Modifier,
+                                    testId = position,
+                                )
+                            }
+                        },
+                    ) { measurables, constraints ->
+                        val gapPx = (6.dp).roundToPx()
+                        val placeables = measurables.mapIndexed { index, measurable ->
+                            val widthPx = slotWidthsPx[index]
+                            measurable.measure(Constraints.fixedWidth(widthPx).copy(
+                                minHeight = 0,
+                                maxHeight = constraints.maxHeight,
+                            ))
+                        }
+                        val heightPx = placeables.maxOfOrNull { it.height } ?: 0
+                        layout(constraints.maxWidth, heightPx) {
+                            var x = 0
+                            placeables.forEach { placeable ->
+                                placeable.placeRelative(x, (heightPx - placeable.height) / 2)
+                                x += placeable.width + gapPx
+                            }
                         }
                     }
 
