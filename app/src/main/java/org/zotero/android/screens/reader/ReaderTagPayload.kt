@@ -1,5 +1,6 @@
 package org.zotero.android.screens.reader
 
+import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import org.zotero.android.sync.Tag
 
@@ -7,6 +8,10 @@ import org.zotero.android.sync.Tag
  * Only a completely valid explicit array (including []) replaces existing tags.
  */
 internal object ReaderTagPayload {
+    /** Malformed save envelopes must not throw before the read-only/write gate. */
+    fun annotationArrayOrNull(params: JsonObject): JsonArray? =
+        params.get("annotations")?.takeIf { it.isJsonArray }?.asJsonArray
+
     /** Reader callbacks must not write annotation or tag data in read-only libraries. */
     fun canPersistAnnotationChanges(metadataEditable: Boolean): Boolean = metadataEditable
 
