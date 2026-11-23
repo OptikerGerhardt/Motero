@@ -210,6 +210,10 @@ class PdfTagPayloadRealmInstrumentedTest {
         val before = changes()
         for (invalid in listOf(
             """{"name":"not-an-array"}""",
+            """null""",
+            """false""",
+            """42""",
+            """"not-an-array"""",
             """[{"name":"valid"},null]""",
             """[{"name":"valid"},{"name":""}]""",
             """[{"name":"valid","color":42}]"""
