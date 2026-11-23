@@ -19,7 +19,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: agent-dispatcher-${{ github.repository }}-${{ github.event.issue.number || github.event.pull_request.number || github.run_id }}-${{ github.event_name }}
+  group: agent-dispatcher-${{ github.repository }}-${{ github.event.issue.number || github.event.pull_request.number || github.run_id }}
   cancel-in-progress: false
 
 jobs:
@@ -45,8 +45,8 @@ jobs:
     timeout-minutes: 5
     permissions:
       contents: read
-      pull-requests: read
-      issues: write
+      # The issues API serves both resource types. This job labels PRs only.
+      pull-requests: write
     steps:
       - name: Checkout trusted default-branch dispatcher only
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -87,7 +87,15 @@ jobs:
                 if (race.status !== 422) throw race;
               }
             }
-            await github.rest.issues.addLabels({owner,repo,issue_number:pull_number,labels:[target]});
+            try {
+              await github.rest.issues.addLabels({owner,repo,issue_number:pull_number,labels:[target]});
+            } catch (error) {
+              if (error.status === 403) {
+                core.error('PR label write denied for ' + context.eventName +
+                  '. The transition was not applied. Check the GITHUB_TOKEN permission for pull requests.');
+              }
+              throw error;
+            }
             for (const name of labels.filter(x => AGENT_LABELS.includes(x) && x !== target)) {
               try {
                 await github.rest.issues.removeLabel({owner,repo,issue_number:pull_number,name});
