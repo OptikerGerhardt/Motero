@@ -155,4 +155,48 @@ class ReaderPageScrubberInstrumentedTest {
             .performTouchInput { click(percentOffset(0.95f, 0.5f)) }
         compose.runOnIdle { assertEquals(listOf(0), harness.taps) }
     }
+    @Test
+    fun twoPageLayoutKeepsBothRealHitboxesFlushAcrossResizeAndFractionalDensity() {
+        val harness = mount(pageCount = 2)
+        for (density in listOf(1.25f, 2.625f)) {
+            for (widthPx in listOf(319, 501, 319)) {
+                harness.setViewport(density, widthPx)
+                val row = bounds("reader-scrubber-row")
+                val first = bounds("reader-scrubber-cell-0")
+                val last = bounds("reader-scrubber-cell-1")
+                assertTrue("Two-page left edge: density=$density width=$widthPx first=$first row=$row",
+                    abs(first.left - row.left) <= 1f)
+                assertTrue("Two-page right edge: density=$density width=$widthPx last=$last row=$row",
+                    abs(last.right - row.right) <= 1f)
+                assertTrue("Two-page hitboxes overlap: first=$first last=$last",
+                    first.right <= last.left)
+            }
+        }
+        compose.onNodeWithTag("reader-scrubber-track", useUnmergedTree = true)
+            .performTouchInput {
+                click(percentOffset(0.05f, 0.5f))
+                click(percentOffset(0.95f, 0.5f))
+            }
+        compose.runOnIdle { assertEquals(listOf(0, 1), harness.taps) }
+    }
+
+    @Test
+    fun zeroPageTrackDoesNotDispatchNavigationOrScrub() {
+        val harness = mount(pageCount = 0)
+        compose.onNodeWithTag("reader-scrubber-track", useUnmergedTree = true)
+            .performTouchInput {
+                click(percentOffset(0.5f, 0.5f))
+                down(percentOffset(0.1f, 0.5f))
+                advanceEventTime(500)
+                moveTo(percentOffset(0.9f, 0.5f))
+                up()
+            }
+        compose.runOnIdle {
+            assertTrue(harness.taps.isEmpty())
+            assertTrue(harness.scrubStarts.isEmpty())
+            assertTrue(harness.scrubPages.isEmpty())
+            assertTrue(harness.scrubEnds.isEmpty())
+        }
+    }
+
 }
