@@ -1,73 +1,43 @@
-# Release baseline parity gate
+# Release baseline parity
 
-## Why
+The `Release baseline parity` job checks all PRs to `develop`, relevant
+pushes, releases and the daily schedule. It reads the latest published stable
+GitHub release tag, verifies that the tag resolves to a commit on `main`, and
+rejects an older build number or a Reader gitlink outside the released Reader
+history. CI fails when it cannot verify the baseline.
 
-`main` is the published app. `develop` may have newer CI but must never silently
-regress to an older app/Reader revision. On 2026-11-23, `main` was 1.1.9/335
-with Reader `9302152841b60f9ec9e5703eb6a3fc87025168fa`, while `develop`
-was still 1.1.8/334 with Reader `d7eb5e5ec77a0c48f1ca562e8d30e4afec53c569`.
-Existing emulator checks did not establish release parity.
+## Integrate a published release
 
-## Required mechanical check
+Open a focused, reviewed PR against current `develop`. Squash the latest
+published tag into its sources, preserve develop-only CI and tests, and record
+the published commit SHA in `.github/release-baseline`. The checker finds the
+commit introducing that SHA and verifies that merging the release at that
+checkpoint leaves its tree unchanged. This supports squash-only branch rules
+without force-pushing. A SHA written into the file by itself fails verification.
 
-`.github/workflows/release-baseline-guard.yml` runs on all PRs to `develop`
-(no changed-path filter), pushes to `main`/`develop`, daily, and manually. It:
+Resolve conflicting released changes at the checkpoint before carrying
+additional changes forward. Rerun relevant exact-SHA regression checks, including
+Android build, Reader tests and instrumentation. The baseline check verifies
+integration history and version/Reader monotonicity. Device behavior and live
+account sync require separate checks.
 
-1. Fetches **live** `main` and `develop` refs, failing if current `main` is
-   not an ancestor of the candidate. A baseline-sync PR that merges `main`
-   into a feature branch can pass as long as its proposed result includes it.
-2. Rejects a candidate whose `versionCode` is lower than that of `main`.
-3. Reads the **gitlink**, not the reader branch tip, and verifies a new Reader
-   pin is identical to or a GitHub-verified descendant of the published pin.
-4. Fails closed if refs, gitlinks, or Reader comparison cannot be verified.
+## Activate the gate
 
-The check is intentionally conservative: when `main` receives a new release,
-new work on stale `develop` is blocked until a reviewed integration of `main`
-into `develop` preserves the released fixes and the newer test infrastructure.
-Never force-push, replace the published Reader pin with an older one, or change
-version fields simply to make the check pass.
+1. Review and merge the focused default-branch monitor PR to `main` so GitHub
+   can run the schedule and see main/release events.
+2. Land the published-release sync, then review and merge the guard to `develop`.
+3. After a green run on a real `develop` PR, add **Release baseline parity**
+   to the existing required checks in GitHub's `develop` ruleset. Retain PR,
+   build, linear history, deletion and force-push protections.
 
-## Important: default-branch activation
+A new release can invalidate earlier green PR runs. GitHub may leave old
+check conclusions in place until rerun. Recheck the live release and base
+immediately before merging. User approval is required for workflow and
+branch-rule changes.
 
-GitHub runs scheduled workflows only from the repository's default branch
-(`main`). Pushes to `main` also require this workflow file to exist on
-`main`. While this workflow is present only on the proposed `develop` PR,
-only its pull-request validation is active; **daily drift monitoring and main
-push alerts are NOT active yet**. Following human review, mirror the same
-minimal workflow and checker through a human-approved PR to `main`, without
-merging unrelated stale `develop` code into the release. Do not claim
-continuous monitoring before this activation is verified.
+## Avoid duplicate work
 
-## Required human GitHub setting
-
-After the isolated workflow PR is reviewed and merged to `develop`, use
-**Settings → Rules → Rulesets** for `develop` to require the exact check
-**Release baseline parity**, with PRs and no force pushes. Verify the real
-check name on a PR before activating it. Only the human owner can edit the
-ruleset; a passing optional workflow alone does not prevent merging.
-
-If this check is already failing because `develop` is stale, integrate `main`
-into `develop` in a separately reviewed PR first. Do not weaken or temporarily
-skip the test to rush a feature. Keep branch protections configured by the
-human owner. A main push will produce a drift signal, but GitHub does not
-necessarily invalidate already-successful PR checks when **a different branch**
-(`main`) advances; final pre-merge SHA comparison remains mandatory.
-
-## Agent gate before EVERY change
-
-For a candidate PR/Issue, record: current `main`/`develop`/PR HEAD SHAs;
-`versionCode`; `reader` gitlink SHA; precise already-released equivalent
-fixes; semantic difference; unique missing tests; owner; and exact-head CI.
-If the requested bug is already fixed, do **not** write a second production
-fix. Create only independently justified tests or a narrowed follow-up.
-Repeated status comments are not productive work.
-
-For the 1.1.9 baseline integration, independently verify PDF/EPUB Quick Tags,
-annotation save-failure recovery and sync bookkeeping, pen/eraser behavior,
-Reader crop/scroll/annotation changes, the Realm/Compose emulator workflow,
-security and CI files. Re-run build, unit, Reader and relevant emulator tests
-on the resulting SHA. BOOX and live account sync are separate manual gates.
-
-This ancestry check cannot prove behavioral compatibility, that every
-published feature still works, or that a modified workflow is trustworthy.
-It complements, not replaces, exact-SHA regression tests and human review.
+Before implementing an Android or Reader issue, compare the current published
+tag, `develop` and the PR HEAD. Record the already shipped behavior and the
+remaining change/test gap in the PR template. When the release already fixes
+an issue, keep only independently valuable missing regression tests.

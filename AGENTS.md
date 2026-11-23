@@ -30,24 +30,10 @@ See `docs/BRANCHING_AND_SECURITY.md` in the relevant branch. `main` remains the 
 
 Verbindliches Protokoll: `docs/AGENT_HANDOFF_DISPATCHER.md` und `.github/scripts/agent-handoff-core.cjs`. Jede bestätigte offene Review-Beanstandung muss einen zugewiesenen nächsten Bearbeiter und einen klaren PR-Status (`agent:needs-fix` o. Ä.) erhalten. Bei Review-Handoff dokumentiere SHA, Tests und die einzeilige `agent-handoff:v1`-Markierung; bis zur menschlichen Aktivierung der `issue_comment`-Action auf dem Default-Branch setze Labels stets auch eigenständig. Keine riskanten Auto-Merges und niemals Änderungen direkt nach `main`. Wiederholte No-op-Zyklen mit bearbeitbaren Issues sind ein Planungsfehler und müssen durch einen konkreten, unabhängigen Arbeitsauftrag behoben werden.
 
+## Release parity
 
-## Release-parity and duplicate-work gate (mandatory)
-
-Before planning or editing **any** Android/Reader issue or PR, compare fresh
-`main`, `develop` and PR HEAD SHAs, versionCode, **pinned** Reader
-gitlink, affected code paths, existing tests and release notes. Record an
-evidence-backed per-acceptance-criterion matrix: already shipped on `main`,
-implemented but untested, truly missing, or redundant. An open issue, stale PR
-or a green test on an old base does not prove a production defect still exists.
-When shipped behavior already meets the goal, stop duplicate code work and
-preserve only genuine test gaps on a current baseline.
-
-The mechanical check and its activation requirements are in
-[Release baseline parity gate](docs/RELEASE_BASELINE_GATE.md).
-Do not merge feature work to `develop` when that check fails. Sync
-released `main` to `develop` by independently reviewed integration,
-preserving newer CI and all shipped fixes; never overwrite published recovery
-paths or move the Reader pin backwards. A new release may invalidate earlier
-green PR checks. Re-fetch all refs and rerun appropriate exact-SHA regression
-checks immediately before approval/merge. Release/sync/security-sensitive
-merges and ruleset activation remain human-only.
+- Before Android/Reader work, compare published tag, develop and PR SHA, build
+  number, Reader gitlink, affected code and existing tests. Record the shipped
+  behavior and unique remaining change or test in the PR.
+- Require a green [release baseline check](docs/RELEASE_BASELINE_GATE.md) and
+  relevant exact-SHA tests before merging. Revalidate after a new release.

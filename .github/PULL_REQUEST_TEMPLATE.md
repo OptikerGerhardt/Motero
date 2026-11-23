@@ -6,7 +6,7 @@
 
 ## Published main / develop parity (mandatory)
 
-- Current `main` SHA, published versionCode, pinned Reader SHA:
+- Published release tag and commit, versionCode, pinned Reader SHA:
 - Current `develop` SHA, versionCode, pinned Reader SHA:
 - Already shipped equivalent code/fix on `main`:
 - Unique missing behavior and test coverage (link to exact code/tests):
@@ -26,7 +26,7 @@ valuable independent regressions.
 
 ## Integration gate
 
-- [ ] Current published main commit is included (or a reviewed baseline-sync is the subject of this PR)
+- [ ] Current published release is verified by the baseline check
 - [ ] Published Reader commit is preserved or advanced to a proven descendant
 - [ ] Relevant published fixes, including save-error recovery, remain intact
 - [ ] CI and independent SHA-specific review completed
