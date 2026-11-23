@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 SOURCE = Path(__file__).resolve().parents[1] / 'release_baseline_guard.py'
 spec = importlib.util.spec_from_file_location('release_baseline_guard', SOURCE)
@@ -16,6 +17,21 @@ NEW = 'b' * 40
 
 
 class ReleaseBaselineGuardTest(unittest.TestCase):
+    def test_fetch_published_release_uses_exact_refs(self):
+        with patch.object(mod, 'github_api', return_value={'tag_name': 'v1.1.9-335'}), \
+             patch.object(mod, 'git') as git:
+            self.assertEqual('refs/tags/v1.1.9-335', mod.fetch_latest_release('owner/repo', 'test-token'))
+            git.assert_called_once_with('fetch', '--no-tags', 'origin',
+                                        '+refs/heads/main:refs/remotes/origin/main',
+                                        'refs/tags/v1.1.9-335:refs/tags/v1.1.9-335')
+
+    def test_unexpected_release_tag_is_rejected_before_fetch(self):
+        with patch.object(mod, 'github_api', return_value={'tag_name': 'refs/heads/develop'}), \
+             patch.object(mod, 'git') as git:
+            with self.assertRaisesRegex(ValueError, 'Invalid published'):
+                mod.fetch_latest_release('owner/repo', 'test-token')
+            git.assert_not_called()
+
     def test_parse_versions_and_gitlink(self):
         self.assertEqual(335, mod.parse_version_code('  const val versionCode = 335 // Build\n'))
         self.assertEqual(OLD, mod.parse_reader_tree(f'160000 commit {OLD}\treader\n'))

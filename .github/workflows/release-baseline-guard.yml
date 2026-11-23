@@ -25,17 +25,15 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Refresh authoritative release and integration refs
+      - name: Refresh the integration ref
         run: |
           git fetch --no-tags origin \
-            +refs/heads/main:refs/remotes/origin/main \
             +refs/heads/develop:refs/remotes/origin/develop
       - name: Test baseline guard negative cases
         run: python3 -m unittest discover -s scripts/tests -p test_release_baseline_guard.py -v
       - name: Verify the published baseline and Reader ancestry
         if: github.event_name != 'pull_request' || github.base_ref == 'develop'
         env:
-          GH_TOKEN: ${{ github.token }}
           GITHUB_TOKEN: ${{ github.token }}
         shell: bash
         run: |
@@ -45,12 +43,4 @@ jobs:
                 ( "$GITHUB_EVENT_NAME" == 'push' && "$GITHUB_REF" == 'refs/heads/main' ) ]]; then
             candidate=refs/remotes/origin/develop
           fi
-          tag=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq '.tag_name')
-          if [[ ! "$tag" =~ ^v[0-9]+[.][0-9]+[.][0-9]+-[0-9]+$ ]]; then
-            echo "::error::Unexpected Motero release tag"
-            exit 1
-          fi
-          release_ref="refs/tags/$tag"
-          git fetch --no-tags origin "$release_ref:$release_ref"
-          python3 scripts/release_baseline_guard.py \
-            --release "$release_ref" --main refs/remotes/origin/main --candidate "$candidate"
+          python3 scripts/release_baseline_guard.py --candidate "$candidate"

@@ -15,6 +15,7 @@ from urllib.request import Request, urlopen
 BASELINE_MARKER = '.github/release-baseline'
 BUILD_CONFIG = 'buildSrc/src/main/kotlin/BuildConfig.kt'
 HEX_SHA = re.compile(r'^[0-9a-f]{40}$')
+RELEASE_TAG = re.compile(r'^v[0-9]+[.][0-9]+[.][0-9]+-[0-9]+$')
 VERSION_CODE = re.compile(r'^\s*const\s+val\s+versionCode\s*=\s*(\d+)\b', re.MULTILINE)
 READER_TREE = re.compile(r'^160000 commit ([0-9a-f]{40})\treader$')
 VALID_READER_STATUSES = {'identical', 'ahead'}
@@ -53,21 +54,34 @@ def evaluate(main_version: int, candidate_version: int, main_pin: str,
     return problems
 
 
-def github_reader_compare(repo: str, old: str, new: str, token: str) -> str:
+def github_api(repo: str, path: str, token: str) -> dict:
     if not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', repo):
         raise ValueError('Invalid repository identifier')
-    if not (HEX_SHA.fullmatch(old) and HEX_SHA.fullmatch(new)):
-        raise ValueError('Invalid Reader SHA')
     if not token:
-        raise ValueError('GITHUB_TOKEN is required to verify Reader ancestry')
-    url = f'https://api.github.com/repos/{repo}/compare/{old}...{new}'
+        raise ValueError('GITHUB_TOKEN is required to verify the release baseline')
+    url = f'https://api.github.com/repos/{repo}/{path}'
     request = Request(url, headers={'Accept': 'application/vnd.github+json',
                                     'Authorization': f'Bearer {token}',
                                     'X-GitHub-Api-Version': '2022-11-28',
                                     'User-Agent': 'motero-baseline-guard'})
     with urlopen(request, timeout=15) as response:
-        result = json.load(response)
-    status = result.get('status')
+        return json.load(response)
+
+
+def fetch_latest_release(repo: str, token: str) -> str:
+    tag = github_api(repo, 'releases/latest', token).get('tag_name')
+    if not isinstance(tag, str) or not RELEASE_TAG.fullmatch(tag):
+        raise ValueError('Invalid published Motero release tag')
+    release = f'refs/tags/{tag}'
+    git('fetch', '--no-tags', 'origin',
+        '+refs/heads/main:refs/remotes/origin/main', f'{release}:{release}')
+    return release
+
+
+def github_reader_compare(repo: str, old: str, new: str, token: str) -> str:
+    if not (HEX_SHA.fullmatch(old) and HEX_SHA.fullmatch(new)):
+        raise ValueError('Invalid Reader SHA')
+    status = github_api(repo, f'compare/{old}...{new}', token).get('status')
     if not isinstance(status, str):
         raise ValueError('GitHub Reader compare returned no status')
     return status
@@ -145,13 +159,15 @@ def run(release_ref: str, main_ref: str, candidate_ref: str, repo: str, token: s
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--release', required=True)
+    parser.add_argument('--release', help='Use an already fetched release tag or commit')
     parser.add_argument('--main', default='refs/remotes/origin/main')
     parser.add_argument('--candidate', default='HEAD')
     args = parser.parse_args()
+    repo = os.environ.get('GITHUB_REPOSITORY', '')
+    token = os.environ.get('GITHUB_TOKEN', '')
     try:
-        return run(args.release, args.main, args.candidate, os.environ.get('GITHUB_REPOSITORY', ''),
-                   os.environ.get('GITHUB_TOKEN', ''))
+        release = args.release or fetch_latest_release(repo, token)
+        return run(release, args.main, args.candidate, repo, token)
     except (ValueError, RuntimeError, subprocess.CalledProcessError, HTTPError, URLError, TimeoutError) as exc:
         print(f'::error title=Release baseline guard::Unable to verify release parity: {exc}', file=sys.stderr)
         return 2  # An unavailable verification must never be treated as green.

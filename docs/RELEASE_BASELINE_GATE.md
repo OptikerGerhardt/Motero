@@ -26,9 +26,10 @@ account sync require separate checks.
 1. Review and merge the focused default-branch monitor PR to `main` so GitHub
    can run the schedule and see main/release events.
 2. Land the published-release sync, then review and merge the guard to `develop`.
-3. After a green run on a real `develop` PR, add **Release baseline parity**
-   to the existing required checks in GitHub's `develop` ruleset. Retain PR,
-   build, linear history, deletion and force-push protections.
+3. The required `build` job runs the same checker before building any
+   `develop` PR. GitHub blocks merging when that step fails. The separate
+   **Release baseline parity** job also reports the result directly.
+
 
 A new release can invalidate earlier green PR runs. GitHub may leave old
 check conclusions in place until rerun. Recheck the live release and base
