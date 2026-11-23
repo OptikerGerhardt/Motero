@@ -58,11 +58,15 @@ class ReaderPageScrubberInstrumentedTest {
         var viewportWidth by mutableIntStateOf(initialWidthPx)
 
         compose.setContent {
+            // The Android host measures the outer width using its own density.
+            // Capture it before overriding LocalDensity for the scrubber subtree;
+            // otherwise 319px becomes 319 * hostDensity / testDensity pixels.
+            val hostDensity = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(density)) {
                 MaterialTheme {
                     ReaderPageScrubberContent(
                         viewState = ReaderScrubberViewState(thumbnailCache = thumbnails),
-                        modifier = Modifier.width(with(LocalDensity.current) { viewportWidth.toDp() }),
+                        modifier = Modifier.width(with(hostDensity) { viewportWidth.toDp() }),
                         onLandmarksComputed = { },
                         onScrubStart = { scrubStarts.add(Unit) },
                         onScrubTo = { scrubPages.add(it) },
