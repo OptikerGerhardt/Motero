@@ -254,7 +254,7 @@ internal fun ReaderPageScrubberContent(
                             ScrubberThumbnail(
                                 bitmap = viewState.thumbnailCache.getOrNull(index),
                                 height = ScrubberThumbnailHeight,
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier.width(with(density) { slotWidthsPx[position].toDp() }),
                                 testId = position,
                             )
                         }
