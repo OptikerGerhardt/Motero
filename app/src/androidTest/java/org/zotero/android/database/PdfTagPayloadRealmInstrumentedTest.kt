@@ -457,4 +457,37 @@ class PdfTagPayloadRealmInstrumentedTest {
         assertEquals(emptyList<Pair<String, String>>(), reload())
         assertEquals(afterRename.second + 1, state().second)
     }
+
+    @Test fun epubColoredAndNameOnlyTagReplacementIsIdempotentAcrossRealmReopens() {
+        // EPUB uses ReaderTagPayload.parseOrPreserve, not the PDF converter.
+        // Verify that color and name-only assignments survive separate Realm
+        // instances and that a repeated identical callback does not queue sync.
+        fun syncState(): Pair<String, Int> = Realm.getInstance(configuration).use { realm ->
+            val item = requireNotNull(realm.where<RItem>().key(key, libraryId).findFirst())
+            item.changeType to item.changes.size
+        }
+        val colored = JsonParser.parseString(
+            """{"tags":[{"name":"highlighted","color":"#13579b"},{"name":"plain"}]}"""
+        ).asJsonObject
+        val parsed = ReaderTagPayload.parseOrPreserve(colored, emptyList())
+        assertEquals(listOf(Tag("highlighted", "#13579b"), Tag("plain", "")), parsed)
+        edit(parsed)
+        assertEquals(listOf("highlighted" to "#13579b", "plain" to ""), reload())
+        val afterAdd = syncState()
+        assertEquals(UpdatableChangeType.user.name, afterAdd.first)
+
+        edit(ReaderTagPayload.parseOrPreserve(colored, parsed))
+        assertEquals(afterAdd, syncState())
+        assertEquals(listOf("highlighted" to "#13579b", "plain" to ""), reload())
+
+        val nameOnly = JsonParser.parseString("""{"tags":[{"name":"plain"}]}""").asJsonObject
+        edit(ReaderTagPayload.parseOrPreserve(nameOnly, parsed))
+        assertEquals(listOf("plain" to ""), reload())
+        val afterRemove = syncState()
+        assertEquals(afterAdd.second + 1, afterRemove.second)
+
+        edit(ReaderTagPayload.parseOrPreserve(nameOnly, listOf(Tag("plain", ""))))
+        assertEquals(afterRemove, syncState())
+        assertEquals(listOf("plain" to ""), reload())
+    }
 }
