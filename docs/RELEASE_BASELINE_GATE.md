@@ -27,6 +27,17 @@ into `develop` preserves the released fixes and the newer test infrastructure.
 Never force-push, replace the published Reader pin with an older one, or change
 version fields simply to make the check pass.
 
+## Important: default-branch activation
+
+GitHub runs scheduled workflows only from the repository's default branch
+(`main`). Pushes to `main` also require this workflow file to exist on
+`main`. While this workflow is present only on the proposed `develop` PR,
+only its pull-request validation is active; **daily drift monitoring and main
+push alerts are NOT active yet**. Following human review, mirror the same
+minimal workflow and checker through a human-approved PR to `main`, without
+merging unrelated stale `develop` code into the release. Do not claim
+continuous monitoring before this activation is verified.
+
 ## Required human GitHub setting
 
 After the isolated workflow PR is reviewed and merged to `develop`, use
