@@ -64,8 +64,13 @@ class RealmDbStorage(val config: RealmConfiguration) {
 
     fun perform(requests: List<DbRequest>) {
         val coordinator = RealmDbCoordinator().init(config)
-        coordinator.perform(requests)
-        coordinator.invalidate()
+        try {
+            coordinator.perform(requests)
+        } finally {
+            // A failed annotation/tag transaction must not leak its Realm instance.
+            // Realm itself rolls back the transaction on an exception.
+            coordinator.invalidate()
+        }
     }
 
     fun performCoordinator(
