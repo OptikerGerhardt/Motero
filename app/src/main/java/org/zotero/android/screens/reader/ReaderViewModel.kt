@@ -731,13 +731,12 @@ class ReaderViewModel @Inject constructor(
             val text = data["text"]?.asString ?: return@mapNotNull null
             val type = (data["type"]?.asString)?.let { AnnotationType.valueOf(it) }
                 ?: return@mapNotNull null
-            val rawTags = data["tags"]?.asJsonArray ?: return@mapNotNull null
-            val tags = rawTags.mapNotNull { dataAsJson ->
-                val data = dataAsJson.asJsonObject
-                val name = data["name"]?.asString ?: return@mapNotNull null
-                val color = data["color"]?.asString ?: return@mapNotNull null
-                Tag(name = name, color = color)
-            }
+            // Partial EPUB/HTML saves may omit tags. Keep the existing assignments
+            // rather than dropping the annotation or clearing its persisted tags.
+            val tags = ReaderTagPayload.parseOrPreserve(
+                data = data,
+                previous = this.annotations[id]?.tags.orEmpty(),
+            )
             NewReaderAnnotation(
                 key = id,
                 type = type,
@@ -858,7 +857,11 @@ class ReaderViewModel @Inject constructor(
     }
 
     private fun saveAnnotations(params: JsonObject) {
-        val rawAnnotations = params["annotations"]?.asJsonArray
+        if (!ReaderTagPayload.canPersistAnnotationChanges(library.metadataEditable)) {
+            Timber.w("ReaderViewModel: refusing annotation save in read-only library")
+            return
+        }
+        val rawAnnotations = ReaderTagPayload.annotationArrayOrNull(params)
         if (rawAnnotations == null) {
             Timber.e("ReaderViewModel: annotations missing - ${params["annotations"] ?: emptyList<String>()}")
             return
@@ -901,15 +904,19 @@ class ReaderViewModel @Inject constructor(
         }
         val isHistoryChange = params["history"]?.takeIf { !it.isJsonNull }?.asBoolean ?: false
         for (editedAnnotation in editedAnnotations) {
-            this.annotations[editedAnnotation.key] = editedAnnotation
+            val effectiveAnnotation = if (editedAnnotation is PDFDocumentAnnotation) {
+                editedAnnotation.preservingTagsFrom(this.annotations[editedAnnotation.key] as? PDFDocumentAnnotation)
+            } else {
+                editedAnnotation
+            }
+            this.annotations[effectiveAnnotation.key] = effectiveAnnotation
             if (isHistoryChange) {
-                showCommentChangedByHistory(editedAnnotation)
+                showCommentChangedByHistory(effectiveAnnotation)
             }
             if (viewState.fileType == ReaderFileType.PDF) {
-                editedAnnotation as PDFDocumentAnnotation
-                updatePdfDatabaseAnnotation(editedAnnotation)
+                updatePdfDatabaseAnnotation(effectiveAnnotation as PDFDocumentAnnotation)
             } else {
-                updateHtmlEpubDatabaseAnnotation(editedAnnotation as NewReaderAnnotation)
+                updateHtmlEpubDatabaseAnnotation(effectiveAnnotation as NewReaderAnnotation)
             }
         }
     }
@@ -1068,18 +1075,26 @@ class ReaderViewModel @Inject constructor(
                 fieldValues = fieldValues,
             )
         )
+        // Keep tag edits in the same Realm transaction as the annotation
+        // update. An absent field must not clear existing tag assignments.
+        if (annotation.hasTagsInPayload) {
+            requests.add(EditTagsForItemDbRequest(key, libraryId, annotation.tags))
+        }
 
         ignoreDbCallbackOnReaderModificationItemKeys.add(key)
         dbWrapperMain.realmDbStorage.perform(requests)
     }
 
     private fun updateHtmlEpubDatabaseAnnotation(annotation: NewReaderAnnotation) {
-        val request = EditHtmlEpubAnnotationDbRequest(
-            libraryId = this.library.identifier,
-            annotation = annotation,
+        val requests = listOf(
+            EditHtmlEpubAnnotationDbRequest(
+                libraryId = this.library.identifier,
+                annotation = annotation,
+            ),
+            EditTagsForItemDbRequest(annotation.key, this.library.identifier, annotation.tags),
         )
         ignoreDbCallbackOnReaderModificationItemKeys.add(annotation.key)
-        dbWrapperMain.realmDbStorage.perform(request)
+        dbWrapperMain.realmDbStorage.perform(requests)
     }
 
     private fun setTags(tags: List<Tag>, key: String) {

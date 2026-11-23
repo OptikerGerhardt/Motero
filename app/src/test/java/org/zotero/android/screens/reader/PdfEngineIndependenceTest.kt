@@ -18,6 +18,24 @@ import org.zotero.android.sync.AnnotationSortIndex
 import java.util.Locale
 
 class PdfEngineIndependenceTest {
+    @Test fun `save callback rejects non array annotations instead of throwing`() {
+        for (payload in listOf(
+            """{}""", """{"annotations":null}""", """{"annotations":true}""",
+            """{"annotations":17}""", """{"annotations":"invalid"}""",
+            """{"annotations":{}}"""
+        )) {
+            assertNull(ReaderTagPayload.annotationArrayOrNull(JsonParser.parseString(payload).asJsonObject))
+        }
+        assertEquals(0, ReaderTagPayload.annotationArrayOrNull(
+            JsonParser.parseString("""{"annotations":[]}""").asJsonObject
+        )!!.size())
+    }
+
+    @Test fun `read only libraries reject annotation saves even with tag only payloads`() {
+        assertFalse(ReaderTagPayload.canPersistAnnotationChanges(false))
+        assertTrue(ReaderTagPayload.canPersistAnnotationChanges(true))
+    }
+
     @Test fun `existing sort indexes stay ASCII and sortable under Arabic locale`() {
         val previous = Locale.getDefault()
         try {
@@ -52,6 +70,7 @@ class PdfEngineIndependenceTest {
                     val json = JsonParser.parseString("""{
                         "id":"ABCDEF12","type":"${type.name}","pageLabel":"iii","text":"Alpha beta",
                         "comment":"  Retained comment  ","color":"#e56eee","sortIndex":"00007|000032|00120",
+                        "tags":[{"name":"Quick"},{"name":"Ordinary","color":"#ff6666"}],
                         "dateCreated":"2026-10-31T10:30:00.000Z","dateModified":"2026-10-31T11:30:00.000Z",
                         "position":{"pageIndex":7,"rects":[[10.5,20.5,30.5,40.5]],
                         "paths":[[10.5,20.5,30.5,40.5]],"width":2.5,"fontSize":12,"rotation":90}
@@ -61,6 +80,9 @@ class PdfEngineIndependenceTest {
                     assertEquals(7, result.page); assertEquals("iii", result.pageLabel)
                     assertEquals("Retained comment", result.comment); assertEquals("#e56eee", result.color)
                     assertEquals("00007|000032|00120", result.sortIndex)
+                    assertEquals(listOf("Quick", "Ordinary"), result.tags.map { it.name })
+                    assertEquals(listOf("", "#ff6666"), result.tags.map { it.color })
+                    assertTrue(result.hasTagsInPayload)
                     assertEquals(3600000L, result.dateModified.time - result.dateAdded.time)
                     assertEquals("Author", result.author("Other", "other")); assertTrue(result.isAuthor(42))
                     if (type == AnnotationType.ink) {
@@ -71,6 +93,23 @@ class PdfEngineIndependenceTest {
                     }
                     if (type in listOf(AnnotationType.highlight, AnnotationType.underline)) assertEquals("Alpha beta", result.text)
                     if (type == AnnotationType.text) { assertEquals(12f,result.fontSize);assertEquals(90,result.rotation) }
+                    // Missing tag data must not be interpreted as a request to
+                    // remove all tags. An explicit [] must be allowed to do so.
+                    val omitted = requireNotNull(AnnotationConverterV2.annotation(
+                        json.deepCopy().apply { remove("tags") }, "Author", true))
+                    assertFalse(omitted.hasTagsInPayload)
+                    assertTrue(omitted.tags.isEmpty())
+                    val merged = omitted.preservingTagsFrom(result)
+                    assertEquals(result.tags, merged.tags)
+                    assertEquals(result.comment, merged.comment)
+                    assertFalse(merged.hasTagsInPayload)
+                    assertEquals(result.tags, result.preservingTagsFrom(omitted).tags)
+                    val removed = requireNotNull(AnnotationConverterV2.annotation(
+                        json.deepCopy().apply { add("tags", JsonParser.parseString("[]")) }, "Author", true))
+                    assertTrue(removed.hasTagsInPayload)
+                    assertTrue(removed.tags.isEmpty())
+                    assertTrue(removed.preservingTagsFrom(result).tags.isEmpty())
+                    assertTrue(omitted.preservingTagsFrom(null).tags.isEmpty())
                 }
             }
         }

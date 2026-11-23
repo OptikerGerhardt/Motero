@@ -27,14 +27,17 @@ data class PDFDocumentAnnotation(
     override val sortIndex: String,
     override val dateAdded: Date,
     override val dateModified: Date,
-    val isZoteroAnnotation: Boolean
+    val isZoteroAnnotation: Boolean,
+    override val tags: List<Tag> = emptyList(),
+    val hasTagsInPayload: Boolean = false,
 ): ReaderAnnotation {
+    /** Reader partial saves omit tags; only an explicit tags array replaces them. */
+    fun preservingTagsFrom(previous: PDFDocumentAnnotation?): PDFDocumentAnnotation =
+        if (hasTagsInPayload || previous == null) this else copy(tags = previous.tags)
+
     override fun isAuthor(currentUserId: Long): Boolean {
         return this.isAuthor
     }
-
-    override val tags: List<Tag>
-        get() = emptyList()
 
     override fun author(displayName: String, username: String): String {
         return this.author
