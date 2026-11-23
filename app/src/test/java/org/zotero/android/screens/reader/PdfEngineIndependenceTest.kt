@@ -18,6 +18,11 @@ import org.zotero.android.sync.AnnotationSortIndex
 import java.util.Locale
 
 class PdfEngineIndependenceTest {
+    @Test fun `read only libraries reject annotation saves even with tag only payloads`() {
+        assertFalse(ReaderTagPayload.canPersistAnnotationChanges(false))
+        assertTrue(ReaderTagPayload.canPersistAnnotationChanges(true))
+    }
+
     @Test fun `existing sort indexes stay ASCII and sortable under Arabic locale`() {
         val previous = Locale.getDefault()
         try {
