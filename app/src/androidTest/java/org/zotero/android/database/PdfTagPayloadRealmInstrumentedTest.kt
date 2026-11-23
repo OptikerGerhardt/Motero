@@ -224,4 +224,22 @@ class PdfTagPayloadRealmInstrumentedTest {
             assertEquals(before, changes())
         }
     }
+
+    @Test fun pdfTagColorChangeSurvivesCloseReopenAndQueuesOneSyncChange() {
+        val first = parse("""[{"name":"Quick","color":"#112233"}]""")
+        edit(first.tags)
+        fun changes(): Int = Realm.getInstance(configuration).use { realm ->
+            requireNotNull(realm.where<RItem>().key(key, libraryId).findFirst()).changes.size
+        }
+        val before = changes()
+        val recolored = parse("""[{"name":"Quick","color":"#aabbcc"}]""")
+        assertTrue(recolored.hasTagsInPayload)
+        edit(recolored.tags)
+        assertEquals(listOf("Quick" to "#aabbcc"), reload())
+        assertEquals(before + 1, changes())
+        edit(recolored.tags)
+        assertEquals(before + 1, changes())
+        assertEquals(listOf("Quick" to "#aabbcc"), reload())
+    }
+
 }
