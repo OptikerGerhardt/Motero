@@ -332,4 +332,35 @@ class PdfTagPayloadRealmInstrumentedTest {
         assertEquals(emptyList<Pair<String, String>>(), reload())
         assertEquals(before.second + 1, syncState().second)
     }
+
+    @Test fun tagOnlyUpdateDoesNotMutateSiblingAnnotationOrItsSyncQueue() {
+        val siblingKey = "SIBLINGANNOTATION"
+        Realm.getInstance(configuration).use { realm ->
+            realm.executeTransaction {
+                val sibling = realm.createObject<RItem>()
+                sibling.key = siblingKey
+                sibling.rawType = ItemTypes.annotation
+                sibling.customLibraryKey = RCustomLibraryType.myLibrary.name
+                sibling.dateAdded = Date(0L)
+                sibling.dateModified = Date(0L)
+                sibling.changeType = UpdatableChangeType.sync.name
+            }
+        }
+        val storage = RealmDbStorage(configuration)
+        storage.perform(EditTagsForItemDbRequest(siblingKey, libraryId, listOf(Tag("sibling", "#112233"))))
+        val before = Realm.getInstance(configuration).use { realm ->
+            val sibling = requireNotNull(realm.where<RItem>().key(siblingKey, libraryId).findFirst())
+            sibling.changeType to sibling.changes.size
+        }
+        val pdf = parse("""[{"name":"only-primary","color":"#445566"}]""")
+        storage.perform(EditTagsForItemDbRequest(key, libraryId, pdf.tags))
+        // Both assertions read a newly opened disk-backed Realm, not live managed objects.
+        Realm.getInstance(configuration).use { realm ->
+            val primary = requireNotNull(realm.where<RItem>().key(key, libraryId).findFirst())
+            val sibling = requireNotNull(realm.where<RItem>().key(siblingKey, libraryId).findFirst())
+            assertEquals(listOf("only-primary"), primary.tags.orEmpty().mapNotNull { it.tag?.name })
+            assertEquals(listOf("sibling"), sibling.tags.orEmpty().mapNotNull { it.tag?.name })
+            assertEquals(before, sibling.changeType to sibling.changes.size)
+        }
+    }
 }
