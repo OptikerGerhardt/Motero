@@ -9,7 +9,6 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -120,8 +119,8 @@ class ReaderPageScrubberInstrumentedTest {
         val harness = mount(pageCount = 100, initialDensity = 1.25f, initialWidthPx = 319)
         val track = compose.onNodeWithTag("reader-scrubber-track", useUnmergedTree = true)
         track.performTouchInput {
-            click(Offset(size.width * 0.1f, size.height * 0.5f))
-            click(Offset(size.width * 0.9f, size.height * 0.5f))
+            click(percentOffset(0.1f, 0.5f))
+            click(percentOffset(0.9f, 0.5f))
         }
         compose.runOnIdle {
             assertEquals(2, harness.taps.size)
@@ -130,9 +129,9 @@ class ReaderPageScrubberInstrumentedTest {
         }
 
         track.performTouchInput {
-            down(Offset(size.width * 0.1f, size.height * 0.5f))
+            down(percentOffset(0.1f, 0.5f))
             advanceEventTime(500)
-            moveTo(Offset(size.width * 0.85f, size.height * 0.5f))
+            moveTo(percentOffset(0.85f, 0.5f))
             up()
         }
         compose.runOnIdle {
@@ -153,7 +152,7 @@ class ReaderPageScrubberInstrumentedTest {
         assertTrue(abs(cell.right - row.right) <= 1f)
 
         compose.onNodeWithTag("reader-scrubber-track", useUnmergedTree = true)
-            .performTouchInput { click(Offset(size.width * 0.95f, size.height * 0.5f)) }
+            .performTouchInput { click(percentOffset(0.95f, 0.5f)) }
         compose.runOnIdle { assertEquals(listOf(0), harness.taps) }
     }
 }
