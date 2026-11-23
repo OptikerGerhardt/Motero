@@ -115,6 +115,42 @@ class ReaderPageScrubberInstrumentedTest {
     }
 
     @Test
+    fun diagnosticMeasuredSlotsAndGapsConserveTrackWidthForTwoAndManyPages() {
+        for (pageCount in listOf(2, 100)) {
+            val harness = mount(pageCount = pageCount)
+            for (density in listOf(1.25f, 2.625f)) {
+                for (viewport in listOf(319, 501, 319)) {
+                    harness.setViewport(density, viewport)
+                    val row = bounds("reader-scrubber-row")
+                    val track = bounds("reader-scrubber-track")
+                    val budget = row.width.roundToInt()
+                    val expected = computeScrubberSlotWidths(budget, pageCount, density)
+                    val cells = expected.indices.map { bounds("reader-scrubber-cell-$it") }
+                    val measuredWidths = cells.map { it.width.roundToInt() }
+                    val measuredGaps = cells.zipWithNext().map { (a, b) ->
+                        (b.left - a.right).roundToInt()
+                    }
+                    val occupied = measuredWidths.sum() + measuredGaps.sum()
+                    val diagnostic = "pages=$pageCount density=$density viewport=$viewport " +
+                        "row=$row track=$track expected=$expected " +
+                        "measuredWidths=$measuredWidths measuredGaps=$measuredGaps " +
+                        "occupied=$occupied budget=$budget"
+                    android.util.Log.i("ScrubberLayoutGate", diagnostic)
+                    assertEquals("Slot count: $diagnostic", expected.size, cells.size)
+                    assertTrue("First slot offset: $diagnostic",
+                        abs(cells.first().left - row.left) <= 1f)
+                    assertTrue("Measured widths diverge from slot constraints: $diagnostic",
+                        expected.zip(measuredWidths).all { (a, b) -> abs(a - b) <= 1 })
+                    assertTrue("Measured slot+gap sum diverges from parent: $diagnostic",
+                        abs(occupied - budget) <= 1)
+                    assertTrue("Right edge diverges from parent: $diagnostic",
+                        abs(cells.last().right - row.right) <= 1f)
+                }
+            }
+        }
+    }
+
+    @Test
     fun actualTouchTrackMapsLeftRightTapsAndLongPressDragToPages() {
         val harness = mount(pageCount = 100, initialDensity = 1.25f, initialWidthPx = 319)
         val track = compose.onNodeWithTag("reader-scrubber-track", useUnmergedTree = true)
