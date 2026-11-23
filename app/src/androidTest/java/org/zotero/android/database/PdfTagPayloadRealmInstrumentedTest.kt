@@ -23,6 +23,7 @@ import org.zotero.android.database.requests.key
 import org.zotero.android.sync.AnnotationConverterV2
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.Tag
+import org.zotero.android.screens.reader.ReaderTagPayload
 import java.util.Date
 import java.util.UUID
 
@@ -132,6 +133,26 @@ class PdfTagPayloadRealmInstrumentedTest {
         // an intentional [] clear operation by the save path.
         assertFalse(malformed.hasTagsInPayload && malformed.tags.isEmpty())
         assertEquals(listOf("keep" to "#112233"), reload())
+    }
+
+    @Test fun epubPartialMalformedAndExplicitEmptyPayloadsSurviveDiskReload() {
+        val initial = listOf(Tag("quick", ""), Tag("colored", "#445566"))
+        edit(initial)
+        val omitted = JsonParser.parseString("""{"comment":"changed"}""").asJsonObject
+        val malformed = JsonParser.parseString("""{"tags":[{"name":"valid"},null]}""").asJsonObject
+        val wrongType = JsonParser.parseString("""{"tags":{"name":"invalid"}}""").asJsonObject
+        val nameOnly = JsonParser.parseString("""{"tags":[{"name":"renamed"}]}""").asJsonObject
+        val explicitEmpty = JsonParser.parseString("""{"tags":[]}""").asJsonObject
+        for (payload in listOf(omitted, malformed, wrongType)) {
+            val preserved = ReaderTagPayload.parseOrPreserve(payload, initial)
+            assertEquals(initial, preserved)
+            edit(preserved)
+            assertEquals(listOf("colored" to "#445566", "quick" to ""), reload())
+        }
+        edit(ReaderTagPayload.parseOrPreserve(nameOnly, initial))
+        assertEquals(listOf("renamed" to ""), reload())
+        edit(ReaderTagPayload.parseOrPreserve(explicitEmpty, initial))
+        assertEquals(emptyList<Pair<String, String>>(), reload())
     }
 
 }
