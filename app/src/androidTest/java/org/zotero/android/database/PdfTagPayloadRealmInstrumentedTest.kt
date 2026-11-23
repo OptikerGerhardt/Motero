@@ -363,4 +363,34 @@ class PdfTagPayloadRealmInstrumentedTest {
             assertEquals(before, sibling.changeType to sibling.changes.size)
         }
     }
+
+    @Test fun failedFieldWriteBeforeTagRequestLeavesDurableAssignmentsAndSyncUntouched() {
+        // Mirror the PDF save ordering: field edits precede EditTagsForItemDbRequest.
+        // An early failure must never apply a later explicit [] clear operation.
+        edit(listOf(Tag("original", "#445566")))
+        fun syncState(): Pair<String, Int> = Realm.getInstance(configuration).use { realm ->
+            val item = requireNotNull(realm.where<RItem>().key(key, libraryId).findFirst())
+            item.changeType to item.changes.size
+        }
+        val before = syncState()
+        val failingFieldWrite = object : DbRequest {
+            override val needsWrite = true
+            override fun process(database: Realm) {
+                throw IllegalStateException("simulated PDF field update failure")
+            }
+        }
+        val result = runCatching {
+            RealmDbStorage(configuration).perform(listOf(
+                failingFieldWrite,
+                EditTagsForItemDbRequest(key, libraryId, emptyList()),
+            ))
+        }
+        assertTrue(result.isFailure)
+        assertEquals(listOf("original" to "#445566"), reload())
+        assertEquals(before, syncState())
+        // Verify the failed coordinator released the Realm and a later save works.
+        edit(emptyList())
+        assertEquals(emptyList<Pair<String, String>>(), reload())
+        assertEquals(before.second + 1, syncState().second)
+    }
 }
