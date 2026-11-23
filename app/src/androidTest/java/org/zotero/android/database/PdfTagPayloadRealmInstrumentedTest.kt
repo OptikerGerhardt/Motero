@@ -119,7 +119,7 @@ class PdfTagPayloadRealmInstrumentedTest {
         Realm.getInstance(configuration).use { realm ->
             val item = requireNotNull(realm.where<RItem>().key(key, libraryId).findFirst())
             assertEquals(before, item.changes.size)
-            assertEquals(1, item.tags.size)
+            assertEquals(1, item.tags?.size)
         }
         assertEquals(listOf("stable" to "#224466"), reload())
     }
