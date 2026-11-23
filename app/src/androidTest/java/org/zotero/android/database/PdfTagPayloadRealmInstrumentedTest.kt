@@ -393,4 +393,28 @@ class PdfTagPayloadRealmInstrumentedTest {
         assertEquals(emptyList<Pair<String, String>>(), reload())
         assertEquals(before.second + 1, syncState().second)
     }
+
+    @Test fun missingAnnotationTagWriteCannotCreatePhantomItemOrAlterExistingSyncState() {
+        edit(listOf(Tag("retained", "#334455")))
+        fun state(): Pair<String, Int> = Realm.getInstance(configuration).use { realm ->
+            val item = requireNotNull(realm.where<RItem>().key(key, libraryId).findFirst())
+            item.changeType to item.changes.size
+        }
+        val before = state()
+        val missingKey = "MISSINGANNOTATION"
+        val result = runCatching {
+            RealmDbStorage(configuration).perform(
+                EditTagsForItemDbRequest(missingKey, libraryId, listOf(Tag("phantom", "")))
+            )
+        }
+        // A missing annotation must never materialize a phantom item or
+        // change an unrelated annotation's durable tags / pending sync queue.
+        Realm.getInstance(configuration).use { realm ->
+            assertEquals(null, realm.where<RItem>().key(missingKey, libraryId).findFirst())
+        }
+        assertEquals(listOf("retained" to "#334455"), reload())
+        assertEquals(before, state())
+        // Both a rejected request and a safe no-op satisfy isolation.
+        if (result.isFailure) assertTrue(result.exceptionOrNull() != null)
+    }
 }
