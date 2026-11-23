@@ -155,4 +155,24 @@ class PdfTagPayloadRealmInstrumentedTest {
         assertEquals(emptyList<Pair<String, String>>(), reload())
     }
 
+
+    @Test fun omittedAndInvalidEpubTagsDoNotCreateSyncChangesButExplicitEmptyDoes() {
+        val initial = listOf(Tag("keep", "#445566"))
+        edit(initial)
+        fun changeCount(): Int = Realm.getInstance(configuration).use { realm ->
+            requireNotNull(realm.where<RItem>().key(key, libraryId).findFirst()).changes.size
+        }
+        val before = changeCount()
+        val omitted = JsonParser.parseString("""{"comment":"updated"}""").asJsonObject
+        val malformed = JsonParser.parseString("""{"tags":[{"name":"other"},null]}""").asJsonObject
+        for (payload in listOf(omitted, malformed)) {
+            edit(ReaderTagPayload.parseOrPreserve(payload, initial))
+            assertEquals(before, changeCount())
+            assertEquals(listOf("keep" to "#445566"), reload())
+        }
+        val cleared = JsonParser.parseString("""{"tags":[]}""").asJsonObject
+        edit(ReaderTagPayload.parseOrPreserve(cleared, initial))
+        assertEquals(before + 1, changeCount())
+        assertEquals(emptyList<Pair<String, String>>(), reload())
+    }
 }
