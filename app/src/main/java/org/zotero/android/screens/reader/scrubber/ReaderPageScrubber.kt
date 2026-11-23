@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -245,7 +246,7 @@ internal fun ReaderPageScrubberContent(
                         },
                 ) {
                     Row(
-                        modifier = Modifier.testTag("reader-scrubber-row"),
+                        modifier = Modifier.fillMaxWidth().testTag("reader-scrubber-row"),
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -253,7 +254,7 @@ internal fun ReaderPageScrubberContent(
                             ScrubberThumbnail(
                                 bitmap = viewState.thumbnailCache.getOrNull(index),
                                 height = ScrubberThumbnailHeight,
-                                width = with(density) { slotWidthsPx[position].toDp() },
+                                modifier = Modifier.weight(1f),
                                 testId = position,
                             )
                         }
@@ -323,24 +324,23 @@ private fun rememberFastLongPressViewConfiguration(): ViewConfiguration {
 private fun ScrubberThumbnail(
     bitmap: Bitmap?,
     height: Dp,
-    width: Dp,
+    modifier: Modifier,
     testId: Int,
 ) {
-    val modifier = Modifier
+    val cellModifier = modifier
         .clip(shape = RoundedCornerShape(6.dp))
         .background(MaterialTheme.colorScheme.surface)
         .testTag("reader-scrubber-cell-$testId")
 
     Box(
-        modifier = modifier.width(width).height(height),
+        modifier = cellModifier.height(height),
         contentAlignment = Alignment.Center,
     ) {
         if (bitmap == null) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .width(width)
-                    .height(height),
+                    .fillMaxSize(),
             ) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(16.dp),
