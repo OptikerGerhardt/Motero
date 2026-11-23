@@ -25,9 +25,11 @@ class EditTagsForItemDbRequest(
     override fun process(database: Realm) {
         val item = database.where<RItem>().key(this.key, this.libraryId).findFirst() ?: return
 
+        if (item.deleted) return
         var tagsDidChange = false
 
-        val tagsToRemove = item.tags!!.where().tagNameNotIn(this.tags.map { it.name }).findAll()
+        val query = item.tags!!.where()
+        val tagsToRemove = if (tags.isEmpty()) query.findAll() else query.tagNameNotIn(tags.map { it.name }).findAll()
         if (!tagsToRemove.isEmpty()) {
             tagsDidChange = true
         }
@@ -36,7 +38,7 @@ class EditTagsForItemDbRequest(
 
         tagsToRemove.deleteAllFromRealm()
         if (!baseTagsToRemove.isEmpty()) {
-            database.where<RTag>().nameIn(baseTagsToRemove).findAll().deleteAllFromRealm()
+            database.where<RTag>().library(libraryId).nameIn(baseTagsToRemove).findAll().deleteAllFromRealm()
         }
 
         for (tag in this.tags) {
