@@ -733,15 +733,10 @@ class ReaderViewModel @Inject constructor(
                 ?: return@mapNotNull null
             // Partial EPUB/HTML saves may omit tags. Keep the existing assignments
             // rather than dropping the annotation or clearing its persisted tags.
-            val rawTags = data["tags"]?.takeIf { it.isJsonArray }?.asJsonArray
-            val tags = rawTags?.mapNotNull { tagValue ->
-                if (!tagValue.isJsonObject) return@mapNotNull null
-                val tagData = tagValue.asJsonObject
-                val name = tagData["name"]?.takeIf { it.isJsonPrimitive }?.asString
-                    ?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
-                val tagColor = tagData["color"]?.takeIf { it.isJsonPrimitive }?.asString ?: ""
-                Tag(name = name, color = tagColor)
-            } ?: this.annotations[id]?.tags.orEmpty()
+            val tags = ReaderTagPayload.parseOrPreserve(
+                data = data,
+                previous = this.annotations[id]?.tags.orEmpty(),
+            )
             NewReaderAnnotation(
                 key = id,
                 type = type,
