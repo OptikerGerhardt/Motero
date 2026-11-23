@@ -176,6 +176,31 @@ class PdfTagPayloadRealmInstrumentedTest {
         assertEquals(emptyList<Pair<String, String>>(), reload())
     }
 
+
+    @Test fun malformedEpubTagFieldsNeverReplaceDiskAssignmentsOrQueueSync() {
+        val original = listOf(Tag("keep", "#334455"))
+        edit(original)
+        fun changeCount(): Int = Realm.getInstance(configuration).use { realm ->
+            requireNotNull(realm.where<RItem>().key(key, libraryId).findFirst()).changes.size
+        }
+        val before = changeCount()
+        val invalidFields = listOf(
+            """{"tags":[{"name":42}]}""",
+            """{"tags":[{"name":"valid","color":42}]}""",
+            """{"tags":[{"name":"valid"},{"name":""}]}""",
+            """{"tags":[{"name":"valid"},false]}""",
+            """{"tags":null}"""
+        )
+        for (json in invalidFields) {
+            val payload = JsonParser.parseString(json).asJsonObject
+            val preserved = ReaderTagPayload.parseOrPreserve(payload, original)
+            assertEquals("Invalid EPUB payload must preserve assignments: $json", original, preserved)
+            edit(preserved)
+            assertEquals(listOf("keep" to "#334455"), reload())
+            assertEquals("Invalid EPUB payload must not queue sync: $json", before, changeCount())
+        }
+    }
+
     @Test fun malformedPdfTagPayloadDoesNotClearTagsOrScheduleSync() {
         val original = parse("""[{"name":"keep","color":"#112233"}]""")
         edit(original.tags)
