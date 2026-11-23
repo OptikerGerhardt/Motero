@@ -104,5 +104,16 @@ class SquashCheckpointTest(unittest.TestCase):
         self.assertIsNone(mod.verified_checkpoint(next_release, synced))
 
 
+    def test_integration_after_publishing_the_previous_marker(self):
+        prior_sync = self.sync()
+        mod.git('checkout', 'main')
+        mod.git('merge', '--squash', prior_sync)
+        latest = self.commit('release-notes', 'second release')
+        mod.git('checkout', 'develop')
+        mod.git('merge', '--squash', latest)
+        integrated = self.commit(mod.BASELINE_MARKER, latest)
+        self.assertEqual(integrated, mod.verified_checkpoint(latest, integrated))
+
+
 if __name__ == '__main__':
     unittest.main()

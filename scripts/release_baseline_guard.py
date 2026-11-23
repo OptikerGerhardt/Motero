@@ -95,12 +95,22 @@ def verified_checkpoint(released: str, candidate: str) -> str | None:
     if not HEX_SHA.fullmatch(checkpoint):
         return None
     checkpoint_tree = git('rev-parse', f'{checkpoint}^{{tree}}').stdout.strip()
-    merged = git('merge-tree', '--write-tree', '--no-messages', checkpoint, released, check=False)
+    merged = git('merge-tree', '--write-tree', '--no-messages', '--name-only', '-z',
+                 checkpoint, released, check=False)
     if merged.returncode not in (0, 1):
         raise RuntimeError(f'Could not compare release and checkpoint trees: {merged.stderr.strip()}')
-    if merged.returncode == 0 and merged.stdout.strip() == checkpoint_tree:
-        return checkpoint
-    return None
+    merge_tree, *conflicts = merged.stdout.rstrip('\0').split('\0')
+    if not HEX_SHA.fullmatch(merge_tree):
+        raise ValueError('Could not identify the release merge tree')
+    # A later release may itself contain the old checkpoint marker. That
+    # administrative file can differ, but all released content must match.
+    if any(path != BASELINE_MARKER for path in conflicts):
+        return None
+    delta = git('diff', '--quiet', checkpoint_tree, merge_tree, '--',
+                '.', f':(exclude){BASELINE_MARKER}', check=False)
+    if delta.returncode not in (0, 1):
+        raise RuntimeError(f'Could not verify the release merge tree: {delta.stderr.strip()}')
+    return checkpoint if delta.returncode == 0 else None
 
 
 def run(release_ref: str, main_ref: str, candidate_ref: str, repo: str, token: str) -> int:
