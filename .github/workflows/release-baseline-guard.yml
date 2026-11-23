@@ -1,0 +1,56 @@
+name: Release baseline guard
+
+# Unprivileged, read-only check. Human review required for this workflow change.
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  release:
+    types: [published]
+  schedule:
+    - cron: '17 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release-baseline-parity:
+    name: Release baseline parity
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Refresh authoritative release and integration refs
+        run: |
+          git fetch --no-tags origin \
+            +refs/heads/main:refs/remotes/origin/main \
+            +refs/heads/develop:refs/remotes/origin/develop
+      - name: Test baseline guard negative cases
+        run: python3 -m unittest discover -s scripts/tests -p test_release_baseline_guard.py -v
+      - name: Verify the published baseline and Reader ancestry
+        if: github.event_name != 'pull_request' || github.base_ref == 'develop'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          candidate=HEAD
+          # A main push or scheduled/manual check audits current develop for drift.
+          if [[ "$GITHUB_EVENT_NAME" == 'release' || "$GITHUB_EVENT_NAME" == 'schedule' || "$GITHUB_EVENT_NAME" == 'workflow_dispatch' ||
+                ( "$GITHUB_EVENT_NAME" == 'push' && "$GITHUB_REF" == 'refs/heads/main' ) ]]; then
+            candidate=refs/remotes/origin/develop
+          fi
+          tag=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq '.tag_name')
+          if [[ ! "$tag" =~ ^v[0-9]+[.][0-9]+[.][0-9]+-[0-9]+$ ]]; then
+            echo "::error::Unexpected Motero release tag"
+            exit 1
+          fi
+          release_ref="refs/tags/$tag"
+          git fetch --no-tags origin "$release_ref:$release_ref"
+          python3 scripts/release_baseline_guard.py \
+            --release "$release_ref" --main refs/remotes/origin/main --candidate "$candidate"
