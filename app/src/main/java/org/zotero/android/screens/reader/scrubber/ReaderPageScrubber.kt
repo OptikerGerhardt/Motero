@@ -44,6 +44,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
@@ -255,7 +257,17 @@ internal fun ReaderPageScrubberContent(
                             ScrubberThumbnail(
                                 bitmap = viewState.thumbnailCache.getOrNull(index),
                                 height = ScrubberThumbnailHeight,
-                                modifier = Modifier.requiredWidth(with(density) { slotWidthsPx[position].toDp() }),
+                                modifier = Modifier.layout { measurable, constraints ->
+                                    // Exact physical pixels: Dp width modifiers can be remeasured
+                                    // under different density/parent constraints, leaving a tail.
+                                    val widthPx = slotWidthsPx[position]
+                                    val placeable = measurable.measure(
+                                        constraints.copy(minWidth = widthPx, maxWidth = widthPx)
+                                    )
+                                    layout(widthPx, placeable.height) {
+                                        placeable.placeRelative(0, 0)
+                                    }
+                                },
                                 testId = position,
                             )
                         }
