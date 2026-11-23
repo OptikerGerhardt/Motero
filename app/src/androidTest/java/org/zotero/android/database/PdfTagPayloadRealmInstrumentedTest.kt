@@ -417,4 +417,44 @@ class PdfTagPayloadRealmInstrumentedTest {
         // Both a rejected request and a safe no-op satisfy isolation.
         if (result.isFailure) assertTrue(result.exceptionOrNull() != null)
     }
+
+    @Test fun pdfTagOnlyLifecyclePreservesOmissionAndSyncAcrossDiskReopens() {
+        fun state(): Pair<String, Int> = Realm.getInstance(configuration).use { realm ->
+            val item = requireNotNull(realm.where<RItem>().key(key, libraryId).findFirst())
+            item.changeType to item.changes.size
+        }
+        val initial = parse("""[{"name":"quick"},{"name":"colored","color":"#2468ac"}]""")
+        assertTrue(initial.hasTagsInPayload)
+        edit(initial.tags)
+        assertEquals(listOf("colored" to "#2468ac", "quick" to ""), reload())
+        val afterAdd = state()
+        assertEquals(UpdatableChangeType.user.name, afterAdd.first)
+
+        // A partial PDF callback carries no tag update; its in-memory
+        // representation must retain the previous assignments as well.
+        val partial = parse(null).preservingTagsFrom(initial)
+        assertFalse(partial.hasTagsInPayload)
+        assertEquals(initial.tags, partial.tags)
+        assertEquals(listOf("colored" to "#2468ac", "quick" to ""), reload())
+        assertEquals(afterAdd, state())
+
+        // A valid name-only replacement is distinct from both omission and [].
+        val renamed = parse("""[{"name":"replacement"}]""")
+        assertTrue(renamed.hasTagsInPayload)
+        edit(renamed.tags)
+        assertEquals(listOf("replacement" to ""), reload())
+        val afterRename = state()
+        assertEquals(afterAdd.second + 1, afterRename.second)
+
+        // Repeating an identical save must not schedule another sync change.
+        edit(renamed.tags)
+        assertEquals(afterRename, state())
+        assertEquals(listOf("replacement" to ""), reload())
+
+        val cleared = parse("[]")
+        assertTrue(cleared.hasTagsInPayload)
+        edit(cleared.tags)
+        assertEquals(emptyList<Pair<String, String>>(), reload())
+        assertEquals(afterRename.second + 1, state().second)
+    }
 }
