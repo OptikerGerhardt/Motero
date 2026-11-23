@@ -276,4 +276,29 @@ class PdfTagPayloadRealmInstrumentedTest {
         assertEquals(before, changes())
         assertEquals(listOf("Quick" to "#112233"), reload())
     }
+
+    @Test fun readOnlyGateLeavesDiskTagsAndSyncMetadataUnchangedForPdfAndEpubPayloads() {
+        // Exercises the production permission predicate with real disk state.
+        // Full ReaderViewModel callback wiring remains a separate E2E gate.
+        edit(listOf(Tag("protected", "#556677")))
+        fun syncChanges(): Int = Realm.getInstance(configuration).use { realm ->
+            requireNotNull(realm.where<RItem>().key(key, libraryId).findFirst()).changes.size
+        }
+        val before = syncChanges()
+        val pdf = parse("""[{"name":"replacement"}]""")
+        val epub = JsonParser.parseString("""{"tags":[]}""").asJsonObject
+        assertTrue(pdf.hasTagsInPayload)
+        assertEquals(emptyList<Tag>(), ReaderTagPayload.parseOrPreserve(epub, listOf(Tag("protected", "#556677"))))
+        for (isPdf in listOf(true, false)) {
+            val editable = false
+            if (ReaderTagPayload.canPersistAnnotationChanges(editable)) {
+                val tags = if (isPdf) pdf.tags else ReaderTagPayload.parseOrPreserve(
+                    epub, listOf(Tag("protected", "#556677"))
+                )
+                edit(tags)
+            }
+            assertEquals(listOf("protected" to "#556677"), reload())
+            assertEquals(before, syncChanges())
+        }
+    }
 }
