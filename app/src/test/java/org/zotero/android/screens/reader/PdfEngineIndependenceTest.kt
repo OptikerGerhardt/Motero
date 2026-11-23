@@ -18,6 +18,19 @@ import org.zotero.android.sync.AnnotationSortIndex
 import java.util.Locale
 
 class PdfEngineIndependenceTest {
+    @Test fun `save callback rejects non array annotations instead of throwing`() {
+        for (payload in listOf(
+            """{}""", """{"annotations":null}""", """{"annotations":true}""",
+            """{"annotations":17}""", """{"annotations":"invalid"}""",
+            """{"annotations":{}}"""
+        )) {
+            assertNull(ReaderTagPayload.annotationArrayOrNull(JsonParser.parseString(payload).asJsonObject))
+        }
+        assertEquals(0, ReaderTagPayload.annotationArrayOrNull(
+            JsonParser.parseString("""{"annotations":[]}""").asJsonObject
+        )!!.size())
+    }
+
     @Test fun `read only libraries reject annotation saves even with tag only payloads`() {
         assertFalse(ReaderTagPayload.canPersistAnnotationChanges(false))
         assertTrue(ReaderTagPayload.canPersistAnnotationChanges(true))
