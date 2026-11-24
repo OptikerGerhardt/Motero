@@ -24,17 +24,39 @@ After verifying the action, an agent writes a regular GitHub PR conversation com
 Replace state and SHA with the **actual** PR HEAD. Supported states: `in-progress`, `needs-review`, `needs-fix`, `review-passed`, `ready-for-human-review`, `blocked`.
 
 The event-driven workflow will only act when:
-- GitHub confirms the comment was posted by the **repository owner's** account; outsiders' text, copied commands, and forks are ignored.
+- GitHub confirms the comment was posted by the **repository owner's or dedicated development account**; outsiders' text, copied commands, and forks are ignored.
 - The marker contains the exact **current HEAD SHA**.
 - The PR targets `develop` or a declared `feature/...` integration branch, never `main`.
 - The transition follows the allowed state machine. A pass requires a prior review request; changing code after approval invalidates the old approval label.
 - The workflow only applies labels. It never sets approval, merges, skips CI, runs PR code, or starts a new ChatGPT automation. Agent 3/4 remain responsible for actual review/quality.
 
+## Merge decisions and blocked work
+
+- Agent 1 records merge criteria before implementation. A BOOX check blocks
+  only when a changed behavior depends on the device or there is a concrete
+  BOOX regression signal. For shared layouts, use a representative emulator
+  test. Record optional device checks separately.
+- Agent 3 reviews the current HEAD against those criteria. A new blocker needs
+  a reproducible defect or a named missing check, one owner, and a resume
+  condition. A successful release baseline check can coexist with diverged
+  Git history under squash merges.
+- After an exact-SHA review pass, Agent 4 decides on the next run. Merge an
+  eligible low-risk PR into develop once required CI passes and the PR is
+  mergeable. Record any blocker or required human decision.
+- When CI, hardware or human input is pending, move to independent work and
+  resume when the named condition is met. After two passes without progress,
+  park the PR with an owner and resume condition instead of writing another
+  status-only update. Use an allowed transition for any label change.
+- For a required BOOX check, give the user a compatible installable test build,
+  the device and exact steps, and the expected observation. Request a
+  screenshot or recording only if it helps diagnose the result.
+
 ## Workflow activation and limits
 
-`.github/workflows/agent-handoff.yml` is staged on `develop` **but is not yet active**. GitHub sources both `pull_request_target` and `issue_comment` workflows from the repository's **default branch** (`main`), including for PRs targeting develop. Therefore **all automatic event-driven handoffs require human-approved promotion of this workflow file into main**. The dispatcher never checks out or executes untrusted PR code. Until promotion, every agent must apply its status labels itself, and Agent 1 must reconcile missed handoffs.
-
-Deploy the dispatcher into main **only as a separately reviewed workflow-only PR**, not by merging the entire develop branch. This technical activation does not authorize agents to merge PRs, push code to main, change permissions or release APKs. Review the action's explicit minimal `issues: write` permission and pin before promotion.
+The dispatcher is active on the default branch. Use exact-HEAD markers
+and verify the resulting status label. Reconcile failed dispatches without
+bypassing review or CI. Only the owner or the dedicated development
+account can submit authenticated handoffs.
 
 ## Verification checklist
 
@@ -45,4 +67,4 @@ Deploy the dispatcher into main **only as a separately reviewed workflow-only PR
 
 ## Important boundary
 
-GitHub settings Rulesets are still not applied, and the agent connector uses the owner's identity. These policies and Actions cannot cryptographically distinguish human and AI changes using that same account. A separate restricted app/login would be necessary to enforce human-only main merges independently.
+The dispatcher labels PRs. GitHub rules and the branching policy govern merges. Use the release baseline check through the required build on develop.
