@@ -3,7 +3,7 @@
 ## Branches
 
 - `main`: stable product/release branch. **Human-only merge decision**, no autonomous merges, direct pushes, force pushes, or automatic releases by agents. The default GitHub branch remains `main`.
-- `develop`: tested integration branch for small and medium changes. Reviewed, low-risk PRs may be **squash-merged by Agent 4** after its own explicit final verification; high-risk changes require human approval.
+- `develop`: tested integration branch for small and medium changes. The owner decides every merge after exact-HEAD review and required checks.
 - `feature/<topic>`: optional shared integration branch for a large feature. Small scoped PRs can target it after review; the complete feature goes through a human-approved PR into `develop`.
 - `fix/<issue>`, `agent/<issue>`, `ci/<topic>`: short-lived, single-owner PR branches.
 
@@ -11,15 +11,10 @@ A PR can target another branch. Do not stack unrelated changes merely to keep th
 
 ## Authority, PR state and scope
 
-1. Agent 1 plans scoped issues, dependencies and test criteria.
-2. Agent 2 implements, adds tests and submits to `develop` or a parent feature branch. No direct code push to `develop` after initial setup.
-3. Agent 3 independently reviews the precise HEAD SHA, relevant upstream changes, licensing and reproducible tests. When accepted, records an explicit pass tied to that SHA and moves to `agent:review-passed`.
-4. Agent 4 verifies current HEAD and base, green required workflow jobs, open review findings, data integrity, security and scope. Only if **every low-risk integration condition is satisfied** may Agent 4 merge the PR into `develop` or its explicit parent feature branch via `squash` and an expected HEAD SHA. No bypass of failed/missing tests or branch policies.
-5. Agent 4 records the merge SHA and closes/updates the associated sub-issue where acceptance criteria have been met. Agent 1 replenishes independent work and tracks dependent issues. `main` merges remain human-only.
-
-**Human approval is required** for: any PR into `main`; whole-feature PRs, major architectural or breaking changes; releases/APK signing; credential/permissions changes, `.github/workflows` and security rules; dependency/license changes with elevated risk; data migration, sync/annotation format changes or possible data loss; uncertainty about backwards compatibility or missing decisive tests.
-
-Use `agent:ready-for-human-review` for these high-impact changes or PRs to `main`. Do not label all low-risk completed PRs as human-only. `agent:blocked` pauses only the affected PR; independent work continues.
+1. Agents prepare issue proposals by default. They write code and open an active implementation PR only after the owner explicitly delegates the selected work.
+2. For delegated work, Agent 2 implements the agreed scope and runs the agreed checks. Agent 3 reviews the exact HEAD and records evidence.
+3. Agent 4 confirms the target base, required green CI and disposition of review findings, then presents a merge recommendation. The owner decides separately whether and when to merge or publish.
+4. Preserve existing branch, CI, signing and security gates. Follow the [handoff protocol](AGENT_HANDOFF_DISPATCHER.md) for blockers and independent work.
 
 **Ownership**: one modifying agent per branch. Agent 2 may work on a different PR during Agent 3/4 review, but Agent 4 must explicitly take over a `needs-fix` branch and Agent 2 must not write concurrently. Old passing reviews do not automatically apply to a changed SHA or base.
 
