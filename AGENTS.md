@@ -28,7 +28,7 @@ See `docs/BRANCHING_AND_SECURITY.md` in the relevant branch. `main` remains the 
 
 ## Deterministische Agenten-Übergaben
 
-Verbindliches Protokoll: `docs/AGENT_HANDOFF_DISPATCHER.md` und `.github/scripts/agent-handoff-core.cjs`. Jede bestätigte offene Review-Beanstandung muss einen zugewiesenen nächsten Bearbeiter und einen klaren PR-Status (`agent:needs-fix` o. Ä.) erhalten. Bei Review-Handoff dokumentiere SHA, Tests und die einzeilige `agent-handoff:v1`-Markierung; bis zur menschlichen Aktivierung der `issue_comment`-Action auf dem Default-Branch setze Labels stets auch eigenständig. Keine riskanten Auto-Merges und niemals Änderungen direkt nach `main`. Wiederholte No-op-Zyklen mit bearbeitbaren Issues sind ein Planungsfehler und müssen durch einen konkreten, unabhängigen Arbeitsauftrag behoben werden.
+Follow [the agent handoff protocol](docs/AGENT_HANDOFF_DISPATCHER.md). Define merge criteria up front. Record concrete blockers with an owner and resume condition. Continue independent work while a PR waits.
 
 ## Release parity
 
