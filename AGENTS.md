@@ -20,3 +20,11 @@
 - Follow signing/release-policy.json: private Motero signer, non-debuggable, API 28+, V3 rotation without legacy rollback; no development-key fallback. Keep receiver permissions aligned with AndroidX Core; never restore legacy PERMISSION trust.
 - Require API 31/35 update/data-retention and old-key-refusal gates before publication. Keep legacy debug-signed releases quarantined as drafts, with original tags/assets intact.
 - Never commit credentials, private keys or personal PDFs, or print secrets. Existing debug.keystore is the public upstream test key, for development/negative tests only.
+
+## Agent queue
+
+Start each scheduled pass with open PRs labelled `agent:attention` and the
+latest Agent queue watchdog summary. Confirm the current phase and HEAD.
+Take the phase's stated action or record a concrete external blocker, then
+continue independent work. A watchdog label is a reminder, not a review
+result. The hourly watchdog ignores status chatter and keeps merge gates.
