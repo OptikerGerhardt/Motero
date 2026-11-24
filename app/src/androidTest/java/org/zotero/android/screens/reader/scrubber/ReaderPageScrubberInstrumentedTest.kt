@@ -1,6 +1,10 @@
 package org.zotero.android.screens.reader.scrubber
 
 import android.graphics.Bitmap
+import android.graphics.Color
+import android.graphics.pdf.PdfDocument
+import android.graphics.pdf.PdfRenderer
+import android.os.ParcelFileDescriptor
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
@@ -10,14 +14,20 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.click
 import androidx.compose.ui.unit.Density
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import java.io.File
 import kotlinx.collections.immutable.toPersistentList
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -32,7 +42,7 @@ import kotlin.math.roundToInt
  * Uses fixed pixel viewport sizes at fractional Compose densities to expose
  * gaps caused by converting measured slot widths back into Dp.
  *
- * Physical BOOX handling and actual PDF rendering are separate manual gates.
+ * Physical BOOX behavior requires separate device evidence.
  */
 @RunWith(AndroidJUnit4::class)
 class ReaderPageScrubberInstrumentedTest {
@@ -46,10 +56,15 @@ class ReaderPageScrubberInstrumentedTest {
         val scrubEnds: MutableList<Unit>,
     )
 
-    private fun mount(pageCount: Int, initialDensity: Float = 1f, initialWidthPx: Int = 319): Harness {
+    private fun mount(
+        pageCount: Int,
+        initialDensity: Float = 1f,
+        initialWidthPx: Int = 319,
+        pages: List<Bitmap>? = null,
+    ): Harness {
         // Non-null pixels keep the real thumbnail/image path active and avoid spinners.
         val bitmap = Bitmap.createBitmap(4, 6, Bitmap.Config.ARGB_8888)
-        val thumbnails = List<Bitmap?>(pageCount) { bitmap }.toPersistentList()
+        val thumbnails = List<Bitmap?>(pageCount) { index -> pages?.get(index) ?: bitmap }.toPersistentList()
         val taps = mutableListOf<Int>()
         val scrubPages = mutableListOf<Int>()
         val scrubStarts = mutableListOf<Unit>()
@@ -224,6 +239,69 @@ class ReaderPageScrubberInstrumentedTest {
                 click(percentOffset(0.95f, 0.5f))
             }
         compose.runOnIdle { assertEquals(listOf(0, 1), harness.taps) }
+    }
+
+    @Test
+    @OptIn(ExperimentalTestApi::class)
+    fun renderedPdfThumbnailsFillTheirExpectedWidthAndKeepOnlyAspectRatioGutters() {
+        val colors = listOf(Color.RED, Color.GREEN, Color.BLUE)
+        val pages = renderPdfThumbnails(colors, listOf(64 to 128, 64 to 64, 128 to 64))
+        val harness = mount(pageCount = pages.size, pages = pages)
+        for (density in listOf(1.2f, 1.25f, 1.3f, 2.625f)) {
+            for (viewportWidth in listOf(319, 501)) {
+                harness.setViewport(density, viewportWidth)
+                val row = compose.onNodeWithTag("reader-scrubber-row", useUnmergedTree = true)
+                val pixels = row.captureToImage().toPixelMap()
+                val rowBounds = bounds("reader-scrubber-row")
+                val cells = pages.indices.map { bounds("reader-scrubber-cell-$it") }
+                assertEquals(viewportWidth - 2 * (8 * density).roundToInt(), pixels.width)
+                assertEquals(rowBounds.left, cells.first().left, 0.01f)
+                assertEquals(rowBounds.right, cells.last().right, 0.01f)
+
+                pages.forEachIndexed { index, bitmap ->
+                    val cell = cells[index]
+                    val centerLine = (0 until pixels.width).filter { x ->
+                        pixels[x, pixels.height / 2].toArgb() == colors[index]
+                    }
+                    val expected = minOf(cell.width, cell.height * bitmap.width / bitmap.height)
+                    val diagnostic = "page=$index density=$density width=$viewportWidth"
+                    assertTrue("PDF preview is missing: $diagnostic", centerLine.isNotEmpty())
+                    assertEquals(diagnostic, expected, centerLine.size.toFloat(), 2f)
+                    val drawnCenter = (centerLine.first() + centerLine.last() + 1) / 2f
+                    assertEquals(diagnostic, cell.center.x - rowBounds.left, drawnCenter, 1f)
+                }
+            }
+        }
+    }
+
+    private fun renderPdfThumbnails(colors: List<Int>, sizes: List<Pair<Int, Int>>): List<Bitmap> {
+        val cache = InstrumentationRegistry.getInstrumentation().targetContext.cacheDir
+        val file = File.createTempFile("scrubber-preview", ".pdf", cache)
+        try {
+            val document = PdfDocument()
+            try {
+                sizes.forEachIndexed { index, (width, height) ->
+                    val page = document.startPage(PdfDocument.PageInfo.Builder(width, height, index + 1).create())
+                    page.canvas.drawColor(colors[index])
+                    document.finishPage(page)
+                }
+                file.outputStream().use(document::writeTo)
+            } finally {
+                document.close()
+            }
+            val descriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
+            return PdfRenderer(descriptor).use { renderer ->
+                sizes.indices.map { index ->
+                    renderer.openPage(index).use { page ->
+                        Bitmap.createBitmap(page.width, page.height, Bitmap.Config.ARGB_8888).also { bitmap ->
+                            page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                        }
+                    }
+                }
+            }
+        } finally {
+            file.delete()
+        }
     }
 
     @Test
