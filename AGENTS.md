@@ -21,10 +21,14 @@
 - Require API 31/35 update/data-retention and old-key-refusal gates before publication. Keep legacy debug-signed releases quarantined as drafts, with original tags/assets intact.
 - Never commit credentials, private keys or personal PDFs, or print secrets. Existing debug.keystore is the public upstream test key, for development/negative tests only.
 
-## Agent queue
+## Scheduled agents
 
-Start each scheduled pass with open PRs labelled `agent:attention` and the
-latest Agent queue watchdog summary. Confirm the current phase and HEAD.
-Take the phase's stated action or record a concrete external blocker, then
-continue independent work. A watchdog label is a reminder, not a review
-result. The hourly watchdog ignores status chatter and keeps merge gates.
+- Default to planning. For each issue, record the problem, alternatives, a
+  possible PR breakdown, acceptance tests, and open decisions. Implementation
+  starts only after the owner explicitly selects and delegates the work.
+- Do not approve your own work, merge PRs, or publish releases. For delegated
+  changes, hand the reviewed commit and test evidence to the owner for decision.
+- The watchdog only escalates existing internal PRs with a current
+  `agent:implementation-delegated` label that the owner applied. Treat
+  `agent:attention` as a reminder. Continue independent issue planning while
+  waiting for an owner decision or an external check.
