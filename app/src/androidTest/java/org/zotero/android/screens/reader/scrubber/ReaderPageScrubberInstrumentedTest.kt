@@ -253,18 +253,35 @@ class ReaderPageScrubberInstrumentedTest {
                 val row = compose.onNodeWithTag("reader-scrubber-row", useUnmergedTree = true)
                 val pixels = row.captureToImage().toPixelMap()
                 val rowBounds = bounds("reader-scrubber-row")
-                val cells = pages.indices.map { bounds("reader-scrubber-cell-$it") }
+                // At 319 px and density 2.625, the 277 px content budget fits
+                // only two preferred-width landmarks (first and last page).
+                // At the other tested sizes, all three pages must be visible.
+                // Specify the expected landmarks independently of the production helper
+                // so the test still catches incorrect landmark selection or missing images.
+                val expectedPageIndices = if (density == 2.625f && viewportWidth == 319) {
+                    listOf(0, 2)
+                } else {
+                    listOf(0, 1, 2)
+                }
+                val cells = expectedPageIndices.indices.map { bounds("reader-scrubber-cell-$it") }
+                compose.onNodeWithTag("reader-scrubber-cell-${expectedPageIndices.size}", useUnmergedTree = true)
+                    .assertDoesNotExist()
                 assertEquals(viewportWidth - 2 * (8 * density).roundToInt(), pixels.width)
                 assertEquals(rowBounds.left, cells.first().left, 0.01f)
                 assertEquals(rowBounds.right, cells.last().right, 0.01f)
+                if (expectedPageIndices.size == 2) {
+                    assertTrue("The sampled-out middle page must not be drawn",
+                        (0 until pixels.width).none { x -> pixels[x, pixels.height / 2].toArgb() == colors[1] })
+                }
 
-                pages.forEachIndexed { index, bitmap ->
-                    val cell = cells[index]
+                expectedPageIndices.forEachIndexed { slot, index ->
+                    val bitmap = pages[index]
+                    val cell = cells[slot]
                     val centerLine = (0 until pixels.width).filter { x ->
                         pixels[x, pixels.height / 2].toArgb() == colors[index]
                     }
                     val expected = minOf(cell.width, cell.height * bitmap.width / bitmap.height)
-                    val diagnostic = "page=$index density=$density width=$viewportWidth"
+                    val diagnostic = "page=$index slot=$slot density=$density width=$viewportWidth"
                     assertTrue("PDF preview is missing: $diagnostic", centerLine.isNotEmpty())
                     assertEquals(diagnostic, expected, centerLine.size.toFloat(), 2f)
                     val drawnCenter = (centerLine.first() + centerLine.last() + 1) / 2f
