@@ -24,10 +24,11 @@
 
 ## Agent work
 
-Default to [issue planning and review](docs/AGENT_HANDOFF_DISPATCHER.md).
-Summarize possible PRs in the issue. Start code only when the owner has
-explicitly delegated the selected change. The owner decides every merge and
-release separately. Preserve the existing [CI and branching gates](docs/BRANCHING_AND_SECURITY.md).
+Pick up and solve actionable issues autonomously. Agent 4 merges reviewed
+fixes into `develop` and scoped sub-PRs into their `feature/<topic>` branch
+after current-HEAD review and CI. Present only the completed feature PR to
+the owner for product approval. Read the [handoff protocol](docs/AGENT_HANDOFF_DISPATCHER.md)
+and preserve [branching and release gates](docs/BRANCHING_AND_SECURITY.md).
 
 ## Release parity
 

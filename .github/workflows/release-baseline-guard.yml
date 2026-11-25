@@ -3,7 +3,7 @@ name: Release baseline guard
 # Unprivileged, read-only check. Human review required for this workflow change.
 on:
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, 'feature/**']
   push:
     branches: [main, develop]
   release:
@@ -32,7 +32,7 @@ jobs:
       - name: Test baseline guard negative cases
         run: python3 -m unittest discover -s scripts/tests -p test_release_baseline_guard.py -v
       - name: Verify the published baseline and Reader ancestry
-        if: github.event_name != 'pull_request' || github.base_ref == 'develop'
+        if: github.event_name != 'pull_request' || github.base_ref == 'develop' || startsWith(github.base_ref, 'feature/')
         env:
           GITHUB_TOKEN: ${{ github.token }}
         shell: bash

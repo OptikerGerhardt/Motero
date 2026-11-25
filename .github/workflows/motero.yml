@@ -4,7 +4,7 @@ on:
   push:
     branches: [main, develop]
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, 'feature/**']
   workflow_dispatch:
     inputs:
       reuse_build_run_id:
@@ -37,7 +37,7 @@ jobs:
           submodules: recursive
           persist-credentials: false
       - name: Require release baseline parity on develop
-        if: github.base_ref == 'develop' || github.ref == 'refs/heads/develop'
+        if: github.base_ref == 'develop' || startsWith(github.base_ref, 'feature/') || github.ref == 'refs/heads/develop'
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: python3 scripts/release_baseline_guard.py

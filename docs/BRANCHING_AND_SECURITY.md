@@ -3,18 +3,25 @@
 ## Branches
 
 - `main`: stable product/release branch. **Human-only merge decision**, no autonomous merges, direct pushes, force pushes, or automatic releases by agents. The default GitHub branch remains `main`.
-- `develop`: tested integration branch for small and medium changes. The owner decides every merge after exact-HEAD review and required checks.
-- `feature/<topic>`: optional shared integration branch for a large feature. Small scoped PRs can target it after review; the complete feature goes through a human-approved PR into `develop`.
+- `develop`: tested integration branch for small and medium changes. Agent 4 may squash-merge ordinary issue fixes after exact-HEAD review and required checks. The owner decides the merge of each complete feature.
+- `feature/<topic>`: optional shared integration branch for a large feature. Agent 4 merges reviewed sub-PRs here. Open one complete feature PR from this branch into `develop` for the owner.
 - `fix/<issue>`, `agent/<issue>`, `ci/<topic>`: short-lived, single-owner PR branches.
 
 A PR can target another branch. Do not stack unrelated changes merely to keep the agent cycle running. If an unmerged PR is a technical dependency, record the exact base/required commit and do not pretend the main/develop tests covered the integration.
 
 ## Authority, PR state and scope
 
-1. Agents prepare issue proposals by default. They write code and open an active implementation PR only after the owner explicitly delegates the selected work.
-2. For delegated work, Agent 2 implements the agreed scope and runs the agreed checks. Agent 3 reviews the exact HEAD and records evidence.
-3. Agent 4 confirms the target base, required green CI and disposition of review findings, then presents a merge recommendation. The owner decides separately whether and when to merge or publish.
-4. Preserve existing branch, CI, signing and security gates. Follow the [handoff protocol](AGENT_HANDOFF_DISPATCHER.md) for blockers and independent work.
+1. Agent 1 plans actionable issues and selects the destination. Use `develop`
+   for standalone fixes and `feature/<topic>` for parts of a larger feature.
+2. Agent 2 implements and tests the scoped issue. Agent 3 independently
+   reviews the exact HEAD and records evidence.
+3. Agent 4 checks the current HEAD and target base, green CI, and resolution of
+   review findings. Squash-merge eligible fixes and sub-PRs with the expected
+   HEAD SHA. Close completed issues or record the remaining integration step.
+4. For a completed feature, Agent 4 presents one reviewed PR to the owner for
+   merge into `develop`. Owner approval remains required for `main`, releases
+   and changes to permissions, signing or security controls. Preserve all CI
+   and branch gates.
 
 **Ownership**: one modifying agent per branch. Agent 2 may work on a different PR during Agent 3/4 review, but Agent 4 must explicitly take over a `needs-fix` branch and Agent 2 must not write concurrently. Old passing reviews do not automatically apply to a changed SHA or base.
 
