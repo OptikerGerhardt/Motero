@@ -12,7 +12,7 @@ on:
       - 'app/build.gradle.kts'
       - 'buildSrc/src/main/kotlin/Libs.kt'
   pull_request:
-    branches: [develop]
+    branches: [develop, 'feature/**']
     paths:
       - '.github/workflows/android-emulator-instrumentation.yml'
       - 'app/src/androidTest/**'

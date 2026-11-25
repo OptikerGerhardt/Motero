@@ -2,21 +2,22 @@
 
 The four scheduled ChatGPT agents remain the **workers**. GitHub is the durable source of truth. The dispatcher is a small, event-driven **status-label coordinator**, not a coding agent, review approval, merge bot or test substitute.
 
-## Issue proposals first
+## Autonomous issue queue
 
-- Agent 1 prioritizes an open issue and records the problem, shipped behavior,
-  dependencies and the decision needed from the owner.
-- Agent 2 lays out options and one or more possible PRs with scope, likely files,
-  risks and acceptance checks. Keep the proposal in the issue. Write code
-  only after the owner selects the scope and explicitly delegates implementation.
-- Agent 3 challenges the proposal, especially regression and device-test needs.
-  Agent 4 summarizes the recommendation and the owner’s decision points.
-- Once the proposal is ready, move on to another issue. Reopen a finished
-  proposal only when new evidence or the owner’s decision changes it.
-- For delegated changes, the existing phase labels track implementation,
-  exact-HEAD review and repairs. Agent 4 presents the final review evidence
-  under `agent:ready-for-human-review`; the owner decides whether to merge.
-  An implementation decision does not grant release approval.
+- At each scheduled run, read the current `develop` instructions and inspect
+  open issues, PRs and their CI. Resume the next owned handoff or take the next
+  independent actionable issue. Issue work needs no separate product approval.
+- Agent 1 prioritizes issues, identifies shipped overlap and scopes a fix or a
+  set of sub-PRs. Agent 2 implements and tests one scoped change at a time.
+- Agent 3 reviews the exact HEAD. Agent 4 fixes assigned review findings or
+  decides integration after the exact-HEAD pass and green CI.
+- For an ordinary issue fix, Agent 4 merges to `develop`. For a larger feature,
+  Agent 4 merges scoped sub-PRs into a shared `feature/<topic>` branch. Then
+  present one complete feature PR into `develop` under
+  `agent:ready-for-human-review`. The owner decides that merge.
+- Once an issue is resolved, record the merge or the remaining feature
+  integration, then take the next issue. Preserve existing approval gates
+  for `main`, releases and security-sensitive changes.
 
 ## Machine-readable GitHub PR handoff marker
 
@@ -33,7 +34,7 @@ The event-driven workflow will only act when:
 - The marker contains the exact **current HEAD SHA**.
 - The PR targets `develop` or a declared `feature/...` integration branch, never `main`.
 - The transition follows the allowed state machine. A pass requires a prior review request; changing code after approval invalidates the old approval label.
-- The workflow only applies labels. It never sets approval, merges, skips CI, runs PR code, or starts a new ChatGPT automation. Agents provide review evidence for the owner.
+- The workflow only applies labels. It never sets approval, merges, skips CI, runs PR code, or starts a new ChatGPT automation. The scheduled workers carry out the resulting handoffs.
 
 ## Merge decisions and blocked work
 
@@ -45,9 +46,9 @@ The event-driven workflow will only act when:
   a reproducible defect or a named missing check, one owner, and a resume
   condition. A successful release baseline check can coexist with diverged
   Git history under squash merges.
-- After an exact-SHA review pass, Agent 4 reports the merge recommendation
-  on the next run. Include required CI, mergeability and any remaining blocker.
-  The owner makes the merge decision.
+- After an exact-SHA review pass, Agent 4 merges an eligible fix or sub-PR
+  on the next run once the current CI is green. A complete feature PR goes
+  to the owner with acceptance evidence and any remaining decision.
 - When CI, hardware or human input is pending, move to independent work and
   resume when the named condition is met. After two passes without progress,
   park the PR with an owner and resume condition instead of writing another
