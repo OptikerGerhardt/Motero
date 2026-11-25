@@ -22,13 +22,12 @@
 - Never commit credentials, private keys or personal PDFs, or print secrets. Existing debug.keystore is the public upstream test key, for development/negative tests only.
 
 
-## Branching and merge gates (develop)
+## Agent work
 
-See `docs/BRANCHING_AND_SECURITY.md` in the relevant branch. `main` remains the human-approved release branch; `develop` is the shared tested integration branch. New independent implementation PRs target `develop` or an explicit parent feature branch; only a human-authorized PR may target/merge into `main`. Reviewed low-risk PRs may be squash-merged into `develop` by Agent 4 following SHA-specific independent review, successful current CI checks, explicit scope verification and a final mergeability check. No agent auto-merges releases, changes credentials, security rules, workflow definitions or data migrations. Review/CI is required on the actual PR branch and compatible target base. These are agent/process policies, not proof that GitHub settings enforce restrictions. The GitHub admin account is shared with the connected integration; it cannot technically distinguish agent from human until account separation is introduced.
-
-## Deterministische Agenten-Übergaben
-
-Follow [the agent handoff protocol](docs/AGENT_HANDOFF_DISPATCHER.md). Define merge criteria up front. Record concrete blockers with an owner and resume condition. Continue independent work while a PR waits.
+Default to [issue planning and review](docs/AGENT_HANDOFF_DISPATCHER.md).
+Summarize possible PRs in the issue. Start code only when the owner has
+explicitly delegated the selected change. The owner decides every merge and
+release separately. Preserve the existing [CI and branching gates](docs/BRANCHING_AND_SECURITY.md).
 
 ## Release parity
 
