@@ -1,7 +1,6 @@
 # Android instrumentation test gate
 
-Scope: issue #25 (unblocks parts of #21 and #22). The new workflow is intentionally
-**separate** from the Motero build/release workflow and does not sign or publish APKs.
+Scope: issue #25 (unblocks parts of #21 and #22). The workflow landed in PR #26. It runs separately from the Motero build and release workflow and does not sign or publish APKs.
 
 ## Running the tests
 
@@ -28,23 +27,20 @@ real connected test reports even when the job fails.
 - `ComposeMeasurementInstrumentedTest` checks that a real Compose layout
   can report child bounds and receive a tap in an emulator. It is a smoke test,
   **not** the actual ReaderPageScrubber layout/drag/rotation regression.
-  That remains issue #21/PR #20 after the harness is merged.
+  PR #20 separately added real scrubber instrumentation. See its [Android 15 run](https://github.com/OptikerGerhardt/Motero/actions/runs/45642856153/job/139305880305). Issue #21 tracks remaining verification.
 - BOOX device behavior, live Zotero account synchronization and manual reader
   navigation are **not run** in this workflow. They must never be represented
   as successful automated tests.
 - A job does not count as passed until GitHub Actions reports a completed
   successful `instrumentation` job for its **exact PR HEAD**.
 
-## Follow-up after the workflow is proven
+## Remaining verification
 
-1. Human reviewer (`OptikerGerhardt`) verifies and authorizes this
-   workflow/dependency infrastructure PR into `develop`; bots must not merge it.
-2. On a reserved scope, add a real `saveAnnotations → EditTagsForItemDbRequest → Realm → reload`
-   integration test on existing PR #3 (issue #22), against the current base.
-3. On a separate reserved scope, add real `ReaderPageScrubber` measured bounds and tap/drag/rotation
-   tests on existing PR #20 (issue #21).
-4. A different worker reviews the exact HEAD, target base, and CI evidence.
-   Any eligible worker can integrate once the acceptance and approval gates pass.
+- On a reserved scope, add the real `saveAnnotations → EditTagsForItemDbRequest → Realm → reload`
+  integration test in PR #3 (issue #22).
+- Compare the evidence from merged PR #20 with issue #21’s remaining acceptance criteria, including physical-device verification.
+- A different worker reviews the exact HEAD, target base and CI evidence. Integrate under the
+  [branch and approval rules](BRANCHING_AND_SECURITY.md). Future workflow or dependency infrastructure changes require owner approval.
 
 If the emulator fails to start or tests do not compile, capture the exact
 GitHub run, failing command and log. Fix that issue before declaring the
