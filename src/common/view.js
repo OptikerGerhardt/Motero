@@ -191,6 +191,7 @@ class View {
 			onManualCropChanged: this._options.onManualCropChanged,
 			onCropEditorChanged: this._options.onCropEditorChanged,
             onCropEditorState: this._options.onCropEditorState,
+            onBookmarkColorsOpen: this._options.onBookmarkColorsOpen,
 		};
 		return common;
 	}
@@ -553,6 +554,7 @@ class View {
         for (const v of [this._view,this._sdtView]) {
             if (!v) continue;
             v._options.deviceProfile = profile;
+            if (changed) v._booxReader?.bookmarkColors.dismiss();
             if (profile.readingAssist === false) v._booxReader?.readingCue?.clear();
             v._directHighlight?.reset();
             v._penInput?.applyProfile(profile);

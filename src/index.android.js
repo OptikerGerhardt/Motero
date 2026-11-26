@@ -145,6 +145,7 @@ window.createView = (encodedOptions) => {
 		onManualCropChanged: (params) => postMessage('onManualCropChanged', params),
 		onCropEditorChanged: (open) => postMessage('onCropEditorChanged', { open }),
         onCropEditorState: params => postMessage('onCropEditorState', params),
+        onBookmarkColorsOpen: open => postMessage('onBookmarkColorsOpen', { open }),
 	});
     if (options.type === 'epub') {
         const created = window._view;
@@ -175,6 +176,7 @@ window.fitToWidth = () => window._view.fitToWidth();
 window.setPageFitting = (options, apply = true) => window._view.setPageFitting(options, apply);
 window.beginManualCrop = options => window._view?._activeView?._pageFitting?.openCropEditor(options);
 window.cropEditorAction = options => window._view?._activeView?._pageFitting?.editor?.action(options);
+window.dismissBookmarkColors = () => window._view?._activeView?._booxReader?.bookmarkColors.dismiss(true);
 window.focusReaderAnnotation = async id => {
     const reader = window._view, view = reader?._activeView;
     const annotation = view?._annotations?.find(a => a.id === id);

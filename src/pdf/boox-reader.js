@@ -1,6 +1,7 @@
 import { BOOKMARK_TAG, isReaderBookmark, bookmarkToggleOff, readerBookmarkCorner } from '../common/reader-bookmark.mjs';
 import { PDFViewportIndicators } from './viewport-indicators.js';
 import { PDFReadingPositionCue } from './reading-position-cue.mjs';
+import { BookmarkColorPicker } from './bookmark-color-picker';
 import { showAnnotationPalette } from '../common/mobile-annotation-palette';
 import { PDF_NOTE_DIMENSIONS } from '../common/defines';
 import { getSortIndex } from './selection';
@@ -57,6 +58,7 @@ export class PDFBooxReader {
 			else { this.readingScale = scale; this.readingMode = this.readingModeForScale(scale); this.readingFit = this.view._pageFitting?.snapshot(); }
 		};
 		this.onPage = () => {
+			this.bookmarkColors.dismiss();
 			this.closePalette();
 			if (this.edge && this.edge.pageIndex !== this.viewer.currentPageNumber - 1) this.clearEdge();
             this.readingCue?.schedule();
@@ -71,6 +73,7 @@ export class PDFBooxReader {
 		this.bus.on('rotationchanging', this.onScale);
 		this.viewportWidth = this.viewer.container.clientWidth;
 		this.onResize = () => {
+			this.bookmarkColors.dismiss();
 			let width = this.viewer.container.clientWidth;
 			if (width !== this.viewportWidth) this.clearNavigation(true);
 			else {
@@ -84,6 +87,7 @@ export class PDFBooxReader {
 		};
 		this.win.addEventListener('resize', this.onResize);
         this.indicators = new PDFViewportIndicators(view);
+        this.bookmarkColors = new BookmarkColorPicker(this);
         this.readingCue = new PDFReadingPositionCue(view);
 	}
 
@@ -133,26 +137,52 @@ export class PDFBooxReader {
         // Include the inset flag on short landscape viewports as well as
         // the original upper-right shortcut region.
 		if (!readerBookmarkCorner(bounds, view._options.indicatorInsets, event.clientX, event.clientY)) return false;
-		this.addBookmark(view._pageFitting?.centeredPageIndex() ?? this.viewer.currentPageNumber-1).catch(console.error);
+		this.addBookmark(this.bookmarkPageIndex()).catch(console.error);
 		return true;
 	}
 
-	addBookmark(pageIndex) {
+	bookmarkPageIndex() {
+		return this.view._pageFitting?.centeredPageIndex() ?? this.viewer.currentPageNumber - 1;
+	}
+
+	findBookmark(pageIndex) {
+		// Shared with the shortcut. Annotation order gives a stable target on pages
+		// containing several bookmarks, including imported and read-only notes.
+		return this.view._annotations.find(a => isReaderBookmark(a) && a.position?.pageIndex === pageIndex);
+	}
+
+	canUseBookmarkCorner(event) {
+		const view = this.view, container = this.viewer.container;
+		return !this.entering && !view._destroyed && !view._readOnly && view._tool.type === 'pointer'
+			&& !view.action?.triggered && !view._pageFitting?.editor && !view._pageFitting?.zooming
+			&& container.contains(event.target)
+			&& readerBookmarkCorner(container.getBoundingClientRect(),
+				view._options.indicatorInsets, event.clientX, event.clientY)
+			&& !this.isOverview();
+	}
+
+	addBookmark(pageIndex, selection) {
 		let previous = this.bookmarkRequests.get(pageIndex) || Promise.resolve();
-		let request = previous.catch(() => {}).then(() => this.placeBookmark(pageIndex));
+		let request = previous.catch(() => {}).then(() => this.placeBookmark(pageIndex, selection));
 		this.bookmarkRequests.set(pageIndex, request);
 		return request.finally(() => {
 			if (this.bookmarkRequests.get(pageIndex) === request) this.bookmarkRequests.delete(pageIndex);
 		});
 	}
 
-	async placeBookmark(pageIndex) {
+	async placeBookmark(pageIndex, selection) {
 		let view = this.view, page = this.viewer.getPageView(pageIndex);
         if (!page || view._destroyed || view._readOnly) return;
-        const existing = view._annotations.find(a => isReaderBookmark(a)
-            && a.position.pageIndex === pageIndex);
+        const existing = this.findBookmark(pageIndex);
+        if (selection && existing?.id !== selection.id) return;
         if (existing) {
-            if (existing.readOnly) return;
+            if (existing.readOnly || existing.isExternal) return;
+            if (selection) {
+                if (existing.color.toLowerCase() !== selection.color) {
+                    view._onUpdateAnnotations([{ id: existing.id, color: selection.color }]);
+                }
+                return;
+            }
             const action = bookmarkToggleOff(existing, this.de ? 'de-DE' : navigator.language);
             if (action.delete) view._onDeleteAnnotationsFromPalette([existing.id]);
             else view._onUpdateAnnotations([{ id: existing.id, ...action.changes }]);
@@ -167,6 +197,7 @@ export class PDFBooxReader {
 		// Always use the unpadded content frame, including when paper/manual fit is selected.
 		let bounds = await view._pageFitting.boundsFor(pageIndex);
 		if (view._destroyed || view._readOnly || page.viewport.rotation !== rotation) return;
+		if (selection && this.findBookmark(pageIndex)) return;
 		let viewport = page.pdfPage.getViewport({ scale: 1, rotation });
 		let size = Math.min(PDF_NOTE_DIMENSIONS, (bounds[2] - bounds[0]) * viewport.width,
 			(bounds[3] - bounds[1]) * viewport.height);
@@ -177,7 +208,7 @@ export class PDFBooxReader {
 		let p1 = viewport.convertToPdfPoint(right, top + size);
 		let position = { pageIndex, rects: [[Math.min(p0[0], p1[0]), Math.min(p0[1], p1[1]),
 			Math.max(p0[0], p1[0]), Math.max(p0[1], p1[1])]] };
-        const requestedColor = view._options.bookmarkColor;
+        const requestedColor = selection?.color ?? view._options.bookmarkColor;
         const color = /^#[0-9a-f]{6}$/i.test(requestedColor || '') ? requestedColor : '#000000';
         view._onAddAnnotation({ type: 'note', color, position,
             pageLabel: view._getPageLabel(pageIndex, true), sortIndex: getSortIndex(view._pdfPages, position),
@@ -278,6 +309,7 @@ export class PDFBooxReader {
 	}
 
 	onScroll() {
+		this.bookmarkColors.dismiss();
 		const anchor = this.paletteAnchor;
         if (anchor) {
             // Neighbor crop layout may adjust scroll offsets while preserving
@@ -307,6 +339,7 @@ export class PDFBooxReader {
 
 	clearNavigation(cancelEntry = false) {
 		if (cancelEntry) this.entering = null;
+		this.bookmarkColors?.dismiss();
 		this.closePalette(); this.clearEdge(); this.gestureScroll = null;
         this.readingCue?.clear();
 		this.win.clearTimeout(this.scrollSettled);
@@ -315,6 +348,7 @@ export class PDFBooxReader {
 	scheduleIndicators() { this.indicators?.schedule(); }
 
 	destroy() {
+        this.bookmarkColors.destroy();
         this.indicators?.destroy();
 		this.clearNavigation(); this.win.clearTimeout(this.gestureExpiry);
 		this.doc.removeEventListener('pointerdown', this.onDown, true);

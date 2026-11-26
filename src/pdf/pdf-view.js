@@ -502,6 +502,7 @@ class PDFView {
 		this._iframeWindow.addEventListener('touchend', this._handleTouchEnd.bind(this), { passive: false });
         // Record the entire gesture path before PDF.js can consume movement.
         this._iframeWindow.addEventListener('pointermove', event => {
+            this._booxReader?.bookmarkColors.move(event);
             const down = this._readerPriorityDown;
             if (down && Math.hypot(event.clientX-down.x,event.clientY-down.y)>8) this._readerPriorityDown=null;
         }, {capture:true,passive:true});
@@ -509,6 +510,13 @@ class PDFView {
 		// PDF.js consumes pointer endings during pinch gestures. Observe them before
 		// its container listeners so no finger remains registered in our gesture.
 		this._iframeWindow.addEventListener('pointerup', event => {
+            const colors = this._booxReader?.bookmarkColors;
+            if (colors?.contains(event) || colors?.owns(event)) {
+                this._bookmarkPointerUp = event;
+                this._pageFitting?.onUp(event);
+                colors.end(event);
+                return;
+            }
             if (this._consumePaletteDismissal?.(event)) return;
             if (this._isForeignPointer(event)) { event.stopImmediatePropagation(); return; }
             this._pageFitting?.onUp(event);
@@ -516,20 +524,25 @@ class PDFView {
             if (!this._chromeTapGuard?.up(event)) this._directHighlight?.up(event);
 		}, true);
 		this._iframeWindow.addEventListener('pointercancel', event => {
+            if (this._booxReader?.bookmarkColors.end(event)) return;
             if (this._consumePaletteDismissal?.(event)) return;
             this._readerPriorityDown=null;
 			this._chromeTapGuard?.reset();
 			this._directHighlight?.gesture.interrupted(event);
 		}, true);
         this._iframeWindow.addEventListener('pointerup', event => {
-            try { this._handlePointerUp(event); }
-            finally { this._penInput?.finishRelease(event); }
+			try { this._handlePointerUp(event); }
+			finally {
+				this._bookmarkPointerUp = null;
+				this._penInput?.finishRelease(event);
+			}
         });
         this._iframeWindow.addEventListener('pointercancel', event => {
             try { this._handlePointerCancel(event); }
             finally { this._penInput?.finishRelease(event); }
         });
 		this._iframeWindow.addEventListener('lostpointercapture', event => {
+            this._booxReader?.bookmarkColors.end(event);
             if (this.action?.type === 'ink') this._handlePointerCancel(event);
             else this._handleTouchTransformInterrupted(event);
         });
@@ -1664,6 +1677,7 @@ class PDFView {
 
 	setTool(tool) {
 		this._directHighlight?.reset();
+		if (tool.type !== 'pointer') this._booxReader?.bookmarkColors.dismiss();
 		if (['highlight', 'underline'].includes(tool.type) && /^#[\da-f]{6}$/i.test(tool.color)) {
 			this._directHighlightColor = tool.color;
 		}
@@ -3785,10 +3799,20 @@ class PDFView {
     }
 
 	_handlePointerDown(event) {
+        const colors = this._booxReader?.bookmarkColors;
+        if (colors?.contains(event)) {
+            if (event.type === 'pointerdown' && !event.isPrimary) colors.dismiss();
+            return;
+        }
         if (event.target?.closest?.('.boox-highlight-palette')) return;
         if (this._isForeignPointer(event) && !(event.type === 'pointerdown' && ['pen','mouse'].includes(event.pointerType))) { event.stopImmediatePropagation?.(); return; }
         if (this._pageFitting?.editor) return;
         if (this._consumePaletteDismissal?.(event)) return;
+        if (event.type === 'pointerdown' && colors?.start(event)) {
+            this._readerPriorityDown = null;
+            this._clearPendingBackdropTap();
+            return;
+        }
         if (event.type==='pointerdown' && ['touch','pen'].includes(event.pointerType)) {
             this._readerPriorityDown=event.isPrimary ? {x:event.clientX,y:event.clientY,time:Date.now()} : null;
         }
@@ -4099,7 +4123,8 @@ class PDFView {
 
 	_handleTouchEnd(event) {
 		// Native touch clicks must reach the crop editor's buttons and select.
-		if (this._pageFitting?.editor || event.target?.closest?.('.boox-manual-crop')) return;
+		if (this._pageFitting?.editor || event.target?.closest?.('.boox-manual-crop')
+				|| this._booxReader?.bookmarkColors.contains(event)) return;
 		this._nativeTextSelection?.handlePointerUp();
 		// Don't let another finger's native-touch handoff abort a transform in progress
 		if (!this._touchTransform && this._nativeTextSelection?.shouldAllowNativeTouch(event)) {
@@ -4118,6 +4143,8 @@ class PDFView {
 	}
 
     _handlePointerMove(event) {
+        const colors = this._booxReader?.bookmarkColors;
+        if (colors?.contains(event) || colors?.owns(event)) return;
         if (!this._isForeignPointer(event)) this._handlePointerMoveThrottled(event);
     }
 	_handlePointerMoveThrottled = throttle((event) => {
@@ -4599,6 +4626,8 @@ class PDFView {
     }
 
 	_handlePointerUp(event) {
+        if (this._booxReader?.bookmarkColors.contains(event)) return;
+        if (this._bookmarkPointerUp === event) return;
         if (this.action?.type === 'updateAnnotationRange') this._directHighlight?.magnifier.hide();
         if (event.target?.closest?.('.boox-highlight-palette')) return;
         if (this.action?.type === 'ink' && this.action.pointerID !== undefined && event.pointerId !== this.action.pointerID) { event.stopImmediatePropagation?.(); return; }
@@ -4968,6 +4997,11 @@ class PDFView {
 	}
 
 	_handleContextMenu(event) {
+        const colors = this._booxReader?.bookmarkColors;
+        if (colors?.contains(event) || colors?.owns(event)) {
+            event.preventDefault();
+            return;
+        }
         if (event.pointerType === 'pen' && (this._isPenInUse() || this._penInput?.eraser)) {
             event.preventDefault(); return;
         }
@@ -5050,6 +5084,14 @@ class PDFView {
 	}
 
 	_handleKeyDown(event) {
+		if (this._booxReader?.bookmarkColors.isOpen) {
+			if (event.key === 'Escape') {
+				this._booxReader.bookmarkColors.dismiss(true);
+				event.preventDefault();
+				event.stopImmediatePropagation();
+			}
+			return;
+		}
 		// TODO: Cursor should be updated on key down/up as well. I.e. for shift and text selection
 		// TODO: Arrows keys should modify selection range when holding shift
 		if (this._textAnnotationFocused()) {

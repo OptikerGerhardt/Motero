@@ -23,6 +23,15 @@ export class PDFViewportIndicators {
         e.firstChild.style.cssText='width:100%;height:100%;fill:currentColor';
         this.doc.documentElement.append(e);this.flags.set(index,e);return e;
     }
+    anchor(index) {
+        const flag = this.flags.get(index);
+        return flag && { left: parseFloat(flag.style.left), top: parseFloat(flag.style.top) };
+    }
+    setPalettePage(pageIndex) {
+        if (this.palettePage != null) this.flags.get(this.palettePage)?.style.removeProperty('visibility');
+        this.palettePage = pageIndex;
+        if (pageIndex != null) this.flags.get(pageIndex)?.style.setProperty('visibility', 'hidden');
+    }
     update() {
         for (const flag of this.hiddenPageFlags) flag.style.visibility='';
         this.hiddenPageFlags.clear();
@@ -54,6 +63,7 @@ export class PDFViewportIndicators {
             const flag=this.flags.get(i)||this.create(i);
             flag.style.left=(indices.length>1 ? Math.max(b.left+12,Math.min(b.right,right)-gap-34) : safe.left)+'px';
             flag.style.top=safe.top+'px';flag.style.display='block';
+            flag.style.visibility=i === this.palettePage ? 'hidden' : '';
             const color=bookmarkColor(this.bookmarked.get(i));
             flag.style.color=color === '#000000' && view._themeColorScheme === 'dark' ? '#ddd' : color;
             shown.add(i);

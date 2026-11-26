@@ -1,0 +1,82 @@
+.motero-bookmark-picker {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    isolation: isolate;
+}
+
+.motero-bookmark-ribbon {
+    position: absolute;
+    top: var(--flag-top);
+    right: var(--flag-right);
+    width: 23.8px;
+    height: 34px;
+    box-sizing: border-box;
+    overflow: hidden;
+    background: var(--flag-color);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - var(--flag-notch, 7.65px)), 0 100%);
+    transition: width 180ms ease, height 180ms ease, clip-path 180ms ease;
+}
+
+.motero-bookmark-ribbon[data-expanded] {
+    --flag-notch: 12px;
+    width: 54px;
+    height: var(--flag-height);
+}
+
+.motero-bookmark-ribbon[data-instant] {
+    transition: none;
+}
+
+.motero-bookmark-ribbon:focus {
+    outline: none;
+}
+
+.motero-bookmark-ribbon-colors {
+    position: absolute;
+    inset: 7px 3px 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    background: var(--color-background, Canvas);
+    box-shadow: inset 0 0 0 1px var(--color-border, #8886);
+    border-radius: 3px;
+}
+
+.motero-bookmark-ribbon:not([data-expanded]) .motero-bookmark-ribbon-colors {
+    visibility: hidden;
+}
+
+.motero-bookmark-ribbon-colors button {
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    width: 44px;
+    flex: 0 0 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.motero-bookmark-ribbon-colors button:focus-visible {
+    outline: 2px solid var(--accent-blue, Highlight);
+    outline-offset: -3px;
+}
+
+.motero-bookmark-ribbon-colors button span {
+    width: 24px;
+    height: 24px;
+    box-sizing: border-box;
+    border-radius: 50%;
+    background: var(--swatch-color);
+    box-shadow: inset 0 0 0 1px #0002;
+}
+
+.motero-bookmark-ribbon-colors button[aria-pressed="true"] span {
+    box-shadow: inset 0 0 0 2px var(--swatch-color), inset 0 0 0 4px white;
+}
