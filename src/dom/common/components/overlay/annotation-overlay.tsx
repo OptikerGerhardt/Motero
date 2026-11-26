@@ -1,5 +1,5 @@
 import { wordRange } from '../../mobile-word-range.mjs';
-import { isBlackReaderBookmark, readerIndicatorPosition, BOOKMARK_FLAG_PATH } from '../../../../common/reader-bookmark.mjs';
+import { isReaderBookmark, readerIndicatorPosition, BOOKMARK_FLAG_PATH } from '../../../../common/reader-bookmark.mjs';
 import React, {
 	memo,
 	useCallback,
@@ -506,7 +506,7 @@ const Note: React.FC<NoteProps> = (props) => {
 	rect.y += doc.defaultView.scrollY;
 	let rtl = isRTL(annotation.range.commonAncestorContainer);
 	let staggerOffset = (staggerIndex || 0) * 15;
-    let bookmark = isBlackReaderBookmark(annotation);
+    let bookmark = isReaderBookmark(annotation);
     let x = rect.left + (rtl ? -25 : rect.width + 25) + (rtl ? -1 : 1) * staggerOffset;
     const safe = readerIndicatorPosition({top:0,left:0,width:doc.defaultView.innerWidth,height:doc.defaultView.innerHeight},props.indicatorInsets,34);
     if (bookmark && rect.right >= doc.defaultView.scrollX && rect.left < doc.defaultView.scrollX + doc.defaultView.innerWidth) x = doc.defaultView.scrollX + safe.left + 17 - staggerOffset;
@@ -940,7 +940,7 @@ type ResizerProps = {
 };
 
 let CommentIcon = React.forwardRef<SVGSVGElement, CommentIconProps>((props, ref) => {
-	let size = props.large ? (isBlackReaderBookmark(props.annotation) ? 34 : 24) : 14;
+	let size = props.large ? (isReaderBookmark(props.annotation) ? 34 : 24) : 14;
 	let x = props.x - size / 2;
 	let y = props.y - size / 2;
 	return <>
@@ -951,12 +951,12 @@ let CommentIcon = React.forwardRef<SVGSVGElement, CommentIconProps>((props, ref)
 			y={y}
 			width={size}
 			height={size}
-			viewBox={isBlackReaderBookmark(props.annotation) ? '5 2 14 20' : '0 0 24 24'}
+			viewBox={isReaderBookmark(props.annotation) ? '5 2 14 20' : '0 0 24 24'}
             preserveAspectRatio="xMaxYMin meet"
 			data-annotation-id={props.annotation?.id}
 			ref={ref}
 		>
-            {isBlackReaderBookmark(props.annotation) ? <path d={BOOKMARK_FLAG_PATH} fill="currentColor"/> : <IconNoteLarge/>}
+            {isReaderBookmark(props.annotation) ? <path d={BOOKMARK_FLAG_PATH} fill="currentColor"/> : <IconNoteLarge/>}
 		</svg>
 		{props.selected && (
 			<SelectionBorder rect={new DOMRect(x, y, size, size)}/>

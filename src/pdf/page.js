@@ -23,7 +23,7 @@ import {
 } from '../common/defines';
 import { getRectRotationOnText } from './selection';
 
-import { isBlackReaderBookmark, bookmarkFlagRect, BOOKMARK_FLAG_PATH } from '../common/reader-bookmark.mjs';
+import { isReaderBookmark, isGeneratedBookmarkComment, bookmarkFlagRect, BOOKMARK_FLAG_PATH } from '../common/reader-bookmark.mjs';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -233,7 +233,7 @@ export default class Page {
 	_pushNote(items, annotation) {
 		let position = this._p2v(annotation.position);
 		let viewRect = position.rects[0];
-        if (isBlackReaderBookmark(annotation) && this._layer._options?.platform === 'android') {
+        if (isGeneratedBookmarkComment(annotation) && this._layer._options?.platform === 'android') {
             viewRect = bookmarkFlagRect(this._originalPage.viewport);
         }
 		items.push({
@@ -243,8 +243,9 @@ export default class Page {
 			// Fit the icon into the annotation rect (22 pt)
 			scale: round((viewRect[2] - viewRect[0]) / NOTE_ICON_SIZE),
 			color: annotation.color,
-            bookmark: isBlackReaderBookmark(annotation),
-            opacity: isBlackReaderBookmark(annotation) ? 0.7 : 1
+            bookmark: isReaderBookmark(annotation),
+            legacyBookmark: isGeneratedBookmarkComment(annotation),
+            opacity: isReaderBookmark(annotation) ? 0.7 : 1
 		});
 	}
 
@@ -768,10 +769,10 @@ export default class Page {
 			g.setAttribute('opacity', item.opacity);
 		}
         if (item.bookmark) {
-            if (this._layer._options?.platform === 'android') g.setAttribute('data-reader-bookmark', 'true');
+            if (this._layer._options?.platform === 'android' && item.legacyBookmark) g.setAttribute('data-reader-bookmark', 'true');
             const path = doc.createElementNS(SVG_NS, 'path');
             path.setAttribute('d', BOOKMARK_FLAG_PATH);
-            path.setAttribute('fill', '#000000');
+            path.setAttribute('fill', item.color);
             // Note coordinates use a 22-point box; the flag uses a 24-unit viewBox.
             path.setAttribute('transform', `scale(${NOTE_ICON_SIZE / 24})`);
             g.append(path);

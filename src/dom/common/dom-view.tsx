@@ -351,6 +351,7 @@ abstract class DOMView<State extends DOMViewState, Data> {
             onEraser: (active: boolean, physical: boolean) => (this._options as any).onPenEraser?.(active, physical),
             onRoute: (event: PointerEvent) => routeReadingPen(this, event),
             isReadingPen: () => (this._options as any).isReadingPen?.(),
+            isPenHighlighting: () => (this._options as any).isPenHighlighting?.(),
         });
         if (this._options.platform === 'android' && this._options.mobileAnnotations) this._directHighlight = new DOMDirectHighlight(this);
 		this._iframeWindow.addEventListener('contextmenu', this._handleContextMenu.bind(this));

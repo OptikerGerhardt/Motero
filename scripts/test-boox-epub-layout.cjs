@@ -128,6 +128,32 @@ const root=path.resolve(__dirname,'../build/android');
   await page.evaluate(()=>window.setAppearance({lineHeight:1.25,margins:8,verticalMargins:3,fontFamily:'serif',textAlignment:'justify',fontBoldness:0}));
   assert.equal(await page.evaluate(()=>{const v=window._view._view;return v._iframeWindow.getComputedStyle(v._iframeDocument.querySelector('replaced-body p')).textAlign;}),'justify');
   console.log('PASS EPUB alignment and stroke weight apply without replacing the font; page frame is centered');
+  await open('paginated');
+  const markerStat = () => page.evaluate(() => window.messages
+    .filter(m => m.message?.event === 'onChangeViewStats' && m.message.params.stats.epubProgressMarkers)
+    .at(-1)?.message.params.stats.epubProgressMarkers ?? []);
+  await page.waitForFunction(()=>window.messages.some(m=>m.message?.params?.stats?.epubProgressMarkers?.some(marker=>marker.kind==='chapter')));
+  const chapterMarkers = (await markerStat()).filter(marker => marker.kind === 'chapter');
+  assert.ok(chapterMarkers.length > 1);
+  assert.ok(chapterMarkers.every(marker => marker.fraction >= 0 && marker.fraction <= 1));
+  await page.evaluate(()=>window._view._view.addAndroidBookmark());
+  await page.waitForFunction(()=>window.messages.some(m=>m.message?.params?.stats?.epubProgressMarkers?.some(marker=>marker.kind==='bookmark')));
+  const beforeResize = await markerStat();
+  const measure = () => page.evaluate(() => {
+    const v = window._view._view;
+    const rect = v._iframeDocument.querySelector('.sections').getBoundingClientRect();
+    return { width: v._iframeWindow.innerWidth, left: rect.left + v.flow._offsetLeft, size: rect.width };
+  });
+  await page.setViewportSize({width: 900, height: 393});
+  await page.waitForFunction(()=>window._view._view._iframeWindow.innerWidth >= 890);
+  let frame = await measure();
+  assert.ok(Math.abs(frame.left - (frame.width - frame.left - frame.size)) < 2, 'landscape EPUB margins are symmetric');
+  assert.deepEqual(await markerStat(), beforeResize, 'EPUB navigation anchors remain stable across rotation');
+  await page.setViewportSize({width: 393, height: 900});
+  await page.waitForFunction(()=>window._view._view._iframeWindow.innerWidth <= 400);
+  frame = await measure();
+  assert.ok(Math.abs(frame.left - (frame.width - frame.left - frame.size)) < 2, 'portrait EPUB margins remain symmetric');
+  console.log('PASS EPUB chapter/bookmark locators remain stable across rotation');
   assert.deepEqual(errors,[]);
  }finally{await browser?.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);process.exitCode=1;});

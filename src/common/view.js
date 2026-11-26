@@ -161,6 +161,7 @@ class View {
             viewportInset: this._options.viewportInset,
             viewportInsets: this._options.viewportInsets,
             indicatorInsets: this._options.indicatorInsets,
+            bookmarkColor: this._options.bookmarkColor,
 			onAddAnnotation,
 			onUpdateAnnotations,
 			onDeleteAnnotationsFromPalette: ids => this._annotationManager.deleteAnnotations(ids),
@@ -462,6 +463,7 @@ class View {
 		if (!tool) {
 			tool = { type: 'pointer' };
 		}
+        this._explicitAnnotationTool = true;
         this._baseTool = tool;
         if (tool.type === 'ink') this._lastInkTool = tool;
         this._syncPenTool();
@@ -491,8 +493,9 @@ class View {
 
     _useDetectedPen() {
         if (this._type === 'pdf' && this._deviceProfile?.penOnly && !this._options.readOnly
-            && !this._annotationToolbarOpen && this._baseTool.type === 'pointer') {
-            this.setTool(this._inkTool());
+            && !this._annotationToolbarOpen && !this._explicitAnnotationTool && this._baseTool.type === 'pointer') {
+            this._baseTool = this._inkTool();
+            this._syncPenTool();
         }
     }
 

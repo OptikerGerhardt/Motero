@@ -1,9 +1,10 @@
 // Portable Android input ownership. No stroke/document data is logged or stored.
 // Runs in capture before fitting, edge taps, selection and PDF.js touch handling.
 export class MobilePenInput {
-    constructor(win, { profile = {}, onTakeover = () => {}, onSignal = event => {}, onEraser = () => {}, onRoute = () => false, isReadingPen = () => false } = {}) {
+    constructor(win, { profile = {}, onTakeover = () => {}, onSignal = event => {}, onEraser = () => {}, onRoute = () => false, isReadingPen = () => false, isPenHighlighting = () => false } = {}) {
         this.win = win; this.profile = profile; this.onTakeover = onTakeover;
         this.onSignal = onSignal; this.onEraser = onEraser; this.onRoute = onRoute; this.isReadingPen = isReadingPen;
+        this.isPenHighlighting = isPenHighlighting;
         this.contacts = new Set(); this.blocked = new Set(); this.owner = null;
         this.until = 0; this.eraser = false; this.button = false; this.physical = false;
         this.listeners = [];
@@ -36,14 +37,16 @@ export class MobilePenInput {
         if (e.pointerType === 'pen') {
             this.onSignal(e);
             const epoch = this.penEpoch = (this.penEpoch || 0) + 1;
-            if (down) {
-                // A new real pen contact recovers a lost release and takes over a palm.
-                this.onTakeover(); this.owner = e.pointerId;
-                for (const id of this.contacts) this.blocked.add(id);
+            const physical = e.button === 5 || !!(e.buttons & 32);
+            if (down && (!this.isReadingPen() || physical)) {
+                // A new drawing contact recovers a lost release from the last pen.
+                this.onTakeover();
+                this.owner = e.pointerId;
             }
             if (this.owner !== null && this.owner !== e.pointerId) { this.stop(e); return; }
             if (up) {
-                this.owner = null; this.until = Date.now() + 300;
+                if (this.owner !== null) this.until = Date.now() + 300;
+                this.owner = null;
                 const cancelled = e.type === 'pointercancel';
                 const buttonStillHeld = !cancelled && !!(e.buttons & (this.profile.buttonMask === 4 ? 4 : 2));
                 this.button = buttonStillHeld;
@@ -55,7 +58,6 @@ export class MobilePenInput {
                 if (this.onRoute(e)) this.stop(e);
                 return;
             }
-            const physical = e.button === 5 || !!(e.buttons & 32);
             const button = !!(e.buttons & (this.profile.buttonMask === 4 ? 4 : 2));
             if (this.profile.eraserButtonMode === 'toggle') {
                 if (button && !this.button) this.toggle = !this.toggle;
@@ -63,6 +65,10 @@ export class MobilePenInput {
             else this.toggle = false;
             this.button = button; this.physical = physical;
             this.setEraser(physical || !!this.toggle || (this.profile.eraserButtonMode !== 'toggle' && button), physical);
+            if (down && (!this.isReadingPen() || this.isPenHighlighting())) {
+                this.owner = e.pointerId;
+                for (const id of this.contacts) this.blocked.add(id);
+            }
             if (this.onRoute(e)) this.stop(e);
             return;
         }
@@ -125,7 +131,10 @@ export function routeReadingPen(view, event) {
         view._readingPen = null;
         if (!options.isReadingPen?.()) return false;
         view._readingPen = { id: event.pointerId, highlight: !!options.isPenHighlighting?.() };
-        if (view._readingPen.highlight) highlight?.gesture.down(event, true);
+        if (view._readingPen.highlight && highlight) {
+            highlight.gesture.reset();
+            highlight.gesture.down(event, true);
+        }
         return true;
     }
     const contact = view._readingPen;

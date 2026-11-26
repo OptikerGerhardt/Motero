@@ -3,6 +3,7 @@ import View from './common/view';
 import { ReadingProgress } from './common/reading-progress.mjs';
 import { navigateWithHardwareButton } from './pdf/hardware-navigation.mjs';
 import { createAnnotationSelectionHandler } from './common/annotation-selection-handler.mjs';
+import { isReaderBookmark } from './common/reader-bookmark.mjs';
 
 var port;
 
@@ -61,6 +62,7 @@ window.createView = (encodedOptions) => {
 
 	let url = new URL(options.url).toString();
 	delete options.url;
+	let lastEpubProgressMarkers;
 	window._view = new View({
 		...options,
 		platform: 'android',
@@ -79,7 +81,7 @@ window.createView = (encodedOptions) => {
 			// Skip while a text annotation is being inline-edited — stealing the selection
 			// here would delete the still-empty annotation under the focused editor
 			let newNote = annotations.find(x => x.type === 'note' && x.dateCreated === x.dateModified);
-			if (newNote && !/^(Lesezeichen|Bookmark) · /.test(newNote.comment || '')
+			if (newNote && !isReaderBookmark(newNote)
 					&& !window._view.getFocusedTextAnnotationID()) {
 				window._view.selectAnnotations([newNote.id]);
 			}
@@ -126,7 +128,12 @@ window.createView = (encodedOptions) => {
 			postMessage('onChangeViewState', { state });
 		},
 		onChangeViewStats: (stats) => {
-			postMessage('onChangeViewStats', { stats });
+            const { epubProgressMarkers, ...currentStats } = stats;
+            if (epubProgressMarkers !== lastEpubProgressMarkers) {
+                lastEpubProgressMarkers = epubProgressMarkers;
+                currentStats.epubProgressMarkers = epubProgressMarkers;
+            }
+			postMessage('onChangeViewStats', { stats: currentStats });
 		},
 		onBackdropTap: () => {
 			postMessage('onBackdropTap');
@@ -184,6 +191,11 @@ window.focusReaderBookmark = window.focusReaderAnnotation;
 window.cancelManualCrop = () => window._view?._activeView?._pageFitting?.editor?.close();
 window.setDirectHighlight = enabled => window._view.setDirectHighlight(enabled);
 window.setReaderChromeVisible = visible => window._view?.setReaderChromeVisible(visible);
+window.setReaderBookmarkColor = color => {
+    if (!/^#[0-9a-f]{6}$/i.test(color || '')) return;
+    if (window._view) window._view._options.bookmarkColor = color;
+    if (window._view?._view) window._view._view._options.bookmarkColor = color;
+};
 window.setReaderIndicatorInsets = value => {
     if (!window._view) return;
     window._view._options.indicatorInsets = value;

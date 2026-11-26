@@ -1,4 +1,4 @@
-import { isBlackReaderBookmark, readerIndicatorPosition, BOOKMARK_FLAG_PATH } from '../common/reader-bookmark.mjs';
+import { isGeneratedBookmarkComment, bookmarkColor, readerIndicatorPosition, BOOKMARK_FLAG_PATH } from '../common/reader-bookmark.mjs';
 import { readingUnit } from './reading-unit.mjs';
 
 /** Reading uses stable viewport hints, one per spread leaf. Only an explicit
@@ -29,7 +29,13 @@ export class PDFViewportIndicators {
         const view=this.view,v=this.viewer,c=v.container,b=c.getBoundingClientRect();
         if (this.annotations!==view._annotations) {
             this.annotations=view._annotations;
-            this.bookmarked=new Set((view._annotations||[]).filter(isBlackReaderBookmark).map(a=>a.position.pageIndex));
+            this.bookmarked=new Map();
+            for (const annotation of view._annotations || []) {
+                const index=annotation.position?.pageIndex;
+                if (isGeneratedBookmarkComment(annotation) && Number.isInteger(index) && !this.bookmarked.has(index)) {
+                    this.bookmarked.set(index,annotation);
+                }
+            }
         }
         const reading=this.bookmarked.size > 0 && !view._booxReader?.isOverview() && !view._pageFitting?.editor;
         const indices=reading ? readingUnit(view._pageFitting?.centeredPageIndex() ?? v.currentPageNumber-1,v.pagesCount,v.spreadMode) : [];
@@ -48,7 +54,7 @@ export class PDFViewportIndicators {
             const flag=this.flags.get(i)||this.create(i);
             flag.style.left=(indices.length>1 ? Math.max(b.left+12,Math.min(b.right,right)-gap-34) : safe.left)+'px';
             flag.style.top=safe.top+'px';flag.style.display='block';
-            flag.style.color=view._themeColorScheme==='dark'?'#ddd':'#000';
+            flag.style.color=bookmarkColor(this.bookmarked.get(i));
             shown.add(i);
             for (const physical of page.div.querySelectorAll('[data-reader-bookmark]')) {
                 physical.style.visibility='hidden';this.hiddenPageFlags.add(physical);

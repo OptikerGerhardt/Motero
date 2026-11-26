@@ -1,5 +1,5 @@
 import { pageLineBalance } from './page-frame.mjs';
-import { readerBookmarkCorner } from '../../common/reader-bookmark.mjs';
+import { BOOKMARK_TAG, bookmarkColor, bookmarkToggleOff, isReaderBookmark, readerBookmarkCorner } from '../../common/reader-bookmark.mjs';
 import injectCSS from './stylesheets/inject.scss';
 import Path from "epubjs/src/utils/path";
 import {
@@ -165,15 +165,20 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
             range.setStart(node, offset);
             range.setEnd(node, offset + length);
         }
-        let annotation = this.getAnnotationFromRange(range, 'note', '#000000');
+        const color = bookmarkColor({ color: (this._options as any).bookmarkColor });
+        let annotation = this.getAnnotationFromRange(range, 'note', color);
         if (!annotation) return false;
-        let existing = this._annotations.find(a => a.type === 'note' && a.sortIndex === annotation!.sortIndex
-                && /^(Lesezeichen|Bookmark) · /.test(a.comment || ''));
+        let existing = this._annotations.find(a => isReaderBookmark(a) && a.sortIndex === annotation!.sortIndex);
         if (existing) {
-            if (!existing.readOnly) this._options.onDeleteAnnotationsFromPalette?.([existing.id]);
+            if (!existing.readOnly && !existing.isExternal) {
+                const result = bookmarkToggleOff(existing, this._iframeWindow.navigator.language);
+                if (result.delete) this._options.onDeleteAnnotationsFromPalette?.([existing.id]);
+                else this._options.onUpdateAnnotations([{ id: existing.id, ...result.changes }]);
+            }
             return true;
         }
         let label = this._iframeWindow.navigator.language.startsWith('de') ? 'Lesezeichen' : 'Bookmark';
+        annotation.tags = [{ name: BOOKMARK_TAG }];
         annotation.comment = label + ' · ' + new Intl.DateTimeFormat(
             this._iframeWindow.navigator.language, { dateStyle: 'short', timeStyle: 'short' }
         ).format(new Date());
@@ -1139,6 +1144,52 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 		this._options.onChangeViewState(viewState);
 	}
 
+    override setAnnotations(annotations: WADMAnnotation[]) {
+        super.setAnnotations(annotations);
+        if (this.initialized && this.flow && this._options.platform === 'android') this._updateViewStats();
+    }
+
+    private _progressOutline?: OutlineItem[];
+    private _progressAnnotations?: typeof this._annotations;
+    private _progressMarkers: NonNullable<ViewStats['epubProgressMarkers']> = [];
+
+    private _getProgressMarkers(): ViewStats['epubProgressMarkers'] {
+        if (this._options.platform !== 'android') return;
+        if (this._progressOutline === this._outline && this._progressAnnotations === this._annotations) {
+            return this._progressMarkers;
+        }
+        this._progressOutline = this._outline;
+        this._progressAnnotations = this._annotations;
+        const markers: NonNullable<ViewStats['epubProgressMarkers']> = [];
+        const lastPage = Math.max(1, this.pageMapping.length - 1);
+        const addOutline = (items: OutlineItem[]) => {
+            for (const item of items) {
+                const href = item.location.href;
+                const target = href && this._getHrefTarget(href);
+                if (href && target) {
+                    const range = this._iframeDocument.createRange();
+                    range.selectNodeContents(target);
+                    range.collapse(true);
+                    const page = this.pageMapping.getPageIndex(range) ?? 0;
+                    markers.push({ kind: 'chapter', locator: href, title: item.title, fraction: page / lastPage });
+                }
+                if (item.items) addOutline(item.items);
+            }
+        };
+        addOutline(this._outline ?? []);
+        for (const annotation of this._annotations) {
+            if (!isReaderBookmark(annotation) || annotation.position?.type !== 'FragmentSelector') continue;
+            const locator = annotation.position.value;
+            const range = this.getRange(locator);
+            if (!range) continue;
+            const page = this.pageMapping.getPageIndex(range) ?? 0;
+            markers.push({ kind: 'bookmark', locator, title: annotation.comment ?? '',
+                fraction: page / lastPage, color: bookmarkColor(annotation) });
+        }
+        this._progressMarkers = markers;
+        return markers;
+    }
+
 	// View stats provide information about the view
 	protected override _updateViewStats() {
 		let startRange = this.flow.startRange;
@@ -1148,6 +1199,7 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 		let canNavigateToNextPage = this.flow.canNavigateToNextPage();
 		let viewStats: ViewStats = {
 			pageIndex: pageIndex ?? undefined,
+            epubProgressMarkers: this._getProgressMarkers(),
 			pageLabel: pageLabel ?? '',
 			pagesCount: this.pageMapping.length,
 			usePhysicalPageNumbers: this.pageMapping.isPhysical,

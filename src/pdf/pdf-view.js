@@ -1,4 +1,4 @@
-import { isBlackReaderBookmark, readerBookmarkCorner } from '../common/reader-bookmark.mjs';
+import { isGeneratedBookmarkComment, readerBookmarkCorner } from '../common/reader-bookmark.mjs';
 import { readerResourceBudget } from '../common/reader-resource-budget.mjs';
 import { beginPaletteEdit, finishPaletteEdit } from '../common/annotation-edit-palette';
 import { readingUnit } from './reading-unit.mjs';
@@ -478,6 +478,7 @@ class PDFView {
             onEraser: (active, physical) => this._options.onPenEraser?.(active, physical),
             onRoute: event => routeReadingPen(this, event),
             isReadingPen: () => this._options.isReadingPen?.(),
+            isPenHighlighting: () => this._options.isPenHighlighting?.(),
         });
 		// this._iframeWindow.document.body.draggable = true;
 
@@ -3502,7 +3503,7 @@ class PDFView {
 		for (let annotation of annotations) {
             // Reader bookmark flags use the viewport shortcut; their legacy
             // persisted note rect must not leave an invisible text hit target.
-            if (this._options.platform === 'android' && isBlackReaderBookmark(annotation)) continue;
+            if (this._options.platform === 'android' && isGeneratedBookmarkComment(annotation)) continue;
 			if (annotation.type === 'text' && annotation.position.rotation) {
 				let tm = getRotationTransform(annotation.position.rects[0], annotation.position.rotation);
 				let rect = position.rects[0];
