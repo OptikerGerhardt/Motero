@@ -97,6 +97,12 @@ open class Defaults @Inject constructor(
         )
     }
 
+    fun rememberReaderTarget(target: org.zotero.android.screens.reader.data.ReaderLaunchTarget) {
+        sharedPreferences.edit { putString("lastReaderTarget", target.encode()) }
+    }
+
+    fun lastReaderTarget(): String? = sharedPreferences.getString("lastReaderTarget", null)
+
     fun setHighlightColorHex(str: String) {
         sharedPreferences.edit { putString(highlightColorHex, str) }
     }

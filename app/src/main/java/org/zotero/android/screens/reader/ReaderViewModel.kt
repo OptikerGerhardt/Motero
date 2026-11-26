@@ -1848,6 +1848,10 @@ class ReaderViewModel @Inject constructor(
                 updateState {
                     copy(isReaderLoading = false)
                 }
+                if (viewState.fileType == ReaderFileType.PDF || viewState.fileType == ReaderFileType.EPUB) {
+                    org.zotero.android.screens.reader.data.ReaderLaunchTarget.from(userId, library.identifier, key)
+                        ?.let(defaults::rememberReaderTarget)
+                }
                 readerWebCallChainExecutor.updateInterface(pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
             }
 
@@ -1996,9 +2000,21 @@ class ReaderViewModel @Inject constructor(
         val position = pageProgress?.substringBefore(" (")
         val percent = if(pageIndex != null && pagesCount != null && pagesCount > 0) "${(pageIndex.toDouble()/pagesCount*100).roundToInt()}%" else null
         val progressMode = defaults.getReaderSettings().effectiveProgressMode()
-        if (viewState.pageProgress != pageProgress || viewState.progressMode != progressMode) {
+        val epubMarkers = stats?.get("epubProgressMarkers")?.takeIf { it.isJsonArray }?.asJsonArray?.mapNotNull { entry ->
+            val marker = entry.takeIf { it.isJsonObject }?.asJsonObject ?: return@mapNotNull null
+            val kind = marker.stringOrNull("kind")?.takeIf { it == "chapter" || it == "bookmark" } ?: return@mapNotNull null
+            val locator = marker.stringOrNull("locator") ?: return@mapNotNull null
+            val fraction = marker.get("fraction")?.takeIf { it.isJsonPrimitive }?.asFloat
+                ?.takeIf { it.isFinite() }?.coerceIn(0f, 1f) ?: return@mapNotNull null
+            org.zotero.android.screens.reader.data.EpubProgressMarker(kind, locator, marker.stringOrNull("title").orEmpty(), fraction, marker.stringOrNull("color"))
+        }
+        val epubPageChanged = viewState.fileType == ReaderFileType.EPUB &&
+            (pageIndex != viewState.epubPageIndex || pagesCount != viewState.epubPageCount)
+        if (viewState.pageProgress != pageProgress || viewState.progressMode != progressMode ||
+            epubPageChanged || epubMarkers != null) {
             updateState { copy(pageProgress = pageProgress, progressPosition = position, progressPercent = percent,
-                progressMode = progressMode) }
+                progressMode = progressMode, epubPageIndex = pageIndex, epubPageCount = pagesCount,
+                epubProgressMarkers = epubMarkers ?: epubProgressMarkers) }
         }
     }
 
@@ -3020,6 +3036,19 @@ class ReaderViewModel @Inject constructor(
         return updateAppearanceAccordingToSettings(isSettingsUpdate = true, applyFit = applyFit)
     }
 
+    fun navigateEpubProgress(fraction: Float, marker: org.zotero.android.screens.reader.data.EpubProgressMarker? = null) {
+        if (viewState.fileType != ReaderFileType.EPUB || viewState.isReaderLoading) return
+        val location: Map<String, Any> = when (marker?.kind) {
+            "chapter" -> mapOf("href" to marker.locator)
+            "bookmark" -> mapOf("pageNumber" to marker.locator)
+            else -> {
+                val count = viewState.epubPageCount?.takeIf { it > 0 } ?: return
+                mapOf("pageIndex" to (fraction.coerceIn(0f, 1f) * (count - 1)).roundToInt())
+            }
+        }
+        viewModelScope.launch { readerWebCallChainExecutor.show(location) }
+    }
+
     fun setReaderProgress(bottomInset: Float) {
         val state = viewState
         readerWebCallChainExecutor.setReaderProgress(mapOf(
@@ -3049,6 +3078,7 @@ class ReaderViewModel @Inject constructor(
             val readerSettings = defaults.getReaderSettings()
             if (isSettingsUpdate) {
                 readerWebCallChainExecutor.updateInterface(pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
+                readerWebCallChainExecutor.setReaderBookmarkColor(readerSettings.effectiveBookmarkColor())
                 if (viewState.fileType == ReaderFileType.PDF || viewState.fileType == ReaderFileType.EPUB) {
                     readerWebCallChainExecutor.setSpreadMode(readerSettings.spreadsMode)
                 }
@@ -3245,6 +3275,9 @@ data class ReaderViewState(
     val pageProgress: String? = null,
     val progressPosition: String? = null,
     val progressPercent: String? = null,
+    val epubPageIndex: Int? = null,
+    val epubPageCount: Int? = null,
+    val epubProgressMarkers: List<org.zotero.android.screens.reader.data.EpubProgressMarker> = emptyList(),
     val progressMode: String = "both",
     val canNavigateBack: Boolean = false,
     val canNavigateForward: Boolean = false,

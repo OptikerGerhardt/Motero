@@ -1447,6 +1447,14 @@ class ItemDetailsViewModel @Inject constructor(
                 is LongPressOptionItem.MoveToTrashAttachment -> {
                     delete(longPressOptionItem.attachment)
                 }
+                is LongPressOptionItem.PinReaderShortcut -> {
+                    val attachment = longPressOptionItem.attachment
+                    val pinned = org.zotero.android.screens.reader.data.ReaderLaunchTarget.from(
+                        defaults.getUserId(), attachment.libraryId, attachment.key
+                    )?.requestShortcut(context, attachment.title) == true
+                    if (!pinned) android.widget.Toast.makeText(context,
+                        org.zotero.android.R.string.reader_pin_shortcut_unavailable, android.widget.Toast.LENGTH_LONG).show()
+                }
                 is LongPressOptionItem.ShareDocument -> {
                     shareAttachment(longPressOptionItem.attachment)
                 }
@@ -1496,7 +1504,12 @@ class ItemDetailsViewModel @Inject constructor(
     fun onAttachmentLongClick(attachment: Attachment) {
         val actions = mutableListOf<LongPressOptionItem>()
         val attachmentType = attachment.type
-        if (attachmentType is Attachment.Kind.file) actions.add(LongPressOptionItem.ShareDocument(attachment))
+        if (attachmentType is Attachment.Kind.file) {
+            actions.add(LongPressOptionItem.ShareDocument(attachment))
+            if (attachmentType.contentType in listOf("application/pdf", "application/epub+zip")) {
+                actions.add(LongPressOptionItem.PinReaderShortcut(attachment))
+            }
+        }
         if (attachmentType is Attachment.Kind.file && attachmentType.location == Attachment.FileLocation.local) {
             actions.add(LongPressOptionItem.DeleteAttachmentFile(attachment))
         }

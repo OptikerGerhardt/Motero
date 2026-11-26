@@ -181,7 +181,7 @@ internal fun ReaderBox(
             }
             if (viewState.fileType == ReaderFileType.EPUB) {
                 androidx.compose.animation.AnimatedVisibility(
-                    visible = viewState.isTopBarVisible && viewState.showCreationToolbar && !viewState.showSideBar,
+                    visible = viewState.isTopBarVisible && !viewState.showSideBar,
                     enter = slideInVertically(tween(220)) { it } + fadeIn(tween(160)),
                     exit = slideOutVertically(tween(180)) { it } + fadeOut(tween(140)),
                     modifier = Modifier.align(Alignment.BottomCenter),

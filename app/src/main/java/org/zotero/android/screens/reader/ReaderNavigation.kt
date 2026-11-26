@@ -171,10 +171,15 @@ internal fun ZoteroNavigation.closeReader() {
 fun ZoteroNavigation.toReaderScreen(
     readerParams: String,
     readerEncodedFilePathParam: String,
+    replaceExisting: Boolean = false,
 ) {
     // Navigation owns the session, not a process-global flag left behind by a
     // recreated tablet graph or Activity. Dialogs above a reader also count.
-    if (runCatching { navController.getBackStackEntry(ReaderDestinations.READER_SCREEN_ROUTE) }.isSuccess) return
+    val existing = runCatching { navController.getBackStackEntry(ReaderDestinations.READER_SCREEN_ROUTE) }.getOrNull()
+    if (existing != null) {
+        if (!replaceExisting || existing.arguments?.getString(ARG_READER_SCREEN) == readerParams) return
+        navController.popBackStack(ReaderDestinations.READER_SCREEN_ROUTE, inclusive = true)
+    }
     navController.navigate("${ReaderDestinations.READER_SCREEN}/$readerParams?uri=$readerEncodedFilePathParam")
 }
 

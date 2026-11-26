@@ -533,6 +533,11 @@ class ReaderWebCallChainExecutor @Inject constructor(
         readerWebViewHandler.evaluateJavascript("window.dismissReaderSelection?.();") {}
     }
 
+    fun setReaderBookmarkColor(color: String) {
+        if (!color.matches(Regex("^#[0-9a-fA-F]{6}$"))) return
+        readerWebViewHandler.evaluateJavascript("window.setReaderBookmarkColor('$color');") {}
+    }
+
     suspend fun updateView(modifications: JsonArray, insertions: JsonArray, deletions: JsonArray) {
         val encodedDeletions = encodeAsJSONForJavascript(gson = this.gson, data = deletions)
         val encodedInsertions = encodeAsJSONForJavascript(gson = this.gson, data = insertions)
@@ -564,6 +569,7 @@ class ReaderWebCallChainExecutor @Inject constructor(
             indicatorInsets = readerIndicatorInsets,
             readingProgress = readingProgress,
             pageBackground = defaults.getReaderSettings().effectivePageBackground(isDark),
+            bookmarkColor = defaults.getReaderSettings().effectiveBookmarkColor(),
             pageNavigation = defaults.getReaderSettings().effectivePageNavigation(),
             deviceProfile = org.zotero.android.ereader.DeviceProfileStore.state.value.copy(
                 eraserSize = defaults.getActiveEraserSize(), eraserMode = defaults.getActiveEraserMode(),

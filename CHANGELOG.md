@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.1.10 — Build 336
+
+- EPUBs bleiben im Querformat zwischen Navigationsleiste und Displayausschnitt mittig. Die PDF-Vorschauleiste verteilt Vorschaubilder bündig über die verfügbare Breite (#46, #18).
+- Die Stifttaste wechselt vorübergehend zwischen Stift und Radierer. Bei geöffneter Werkzeugleiste ohne aktives Werkzeug zeigt der Stift auf den Text und markiert beim Ziehen mit gedrückter Taste direkt. Die erste Stifteingabe im PDF kann den gespeicherten Zeichenstift aktivieren (#47, #11).
+- Lesezeichen erkennen das Tag `Bookmark` und ältere Notizen. Neue Lesezeichen verwenden die gespeicherte Standardfarbe. Vorhandene Lesezeichen behalten ihre eigene Farbe (#4).
+- Der EPUB-Fortschrittsstreifen zeigt Kapitel und Lesezeichen. PDF- und EPUB-Dokumente lassen sich an den Startbildschirm heften. Auf Wunsch öffnet Motero beim Start das letzte verfügbare Dokument (#41, #13, #14).
+
 ## 1.1.9 — Build 335
 
 - PDF- und EPUB-Annotationen speichern Quick Tags und gewöhnliche Tags bei Bearbeitungen in derselben Datenbanktransaktion.

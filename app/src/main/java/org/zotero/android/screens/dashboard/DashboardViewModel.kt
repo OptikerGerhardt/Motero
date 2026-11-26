@@ -56,6 +56,13 @@ import org.zotero.android.uicomponents.bottomsheet.LongPressOptionItem
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionsHolder
 import org.zotero.android.uicomponents.snackbar.SnackbarMessage
 import org.zotero.android.webdav.WebDavSessionStorage
+import org.zotero.android.database.RealmDbCoordinator
+import org.zotero.android.database.objects.Attachment
+import org.zotero.android.database.requests.ReadItemDbRequest
+import org.zotero.android.screens.reader.data.ReaderArgs
+import org.zotero.android.screens.reader.data.ReaderLaunchDestination
+import org.zotero.android.screens.reader.data.ReaderLaunchTarget
+import org.zotero.android.sync.AttachmentCreator
 import timber.log.Timber
 import java.io.File
 import java.nio.charset.StandardCharsets
@@ -65,6 +72,7 @@ import javax.inject.Inject
 class DashboardViewModel @Inject constructor(
     private val dbWrapperMain: DbWrapperMain,
     private val fileStore: FileStore,
+    private val readerDefaults: org.zotero.android.architecture.Defaults,
     private val conflictResolutionUseCase: ConflictResolutionUseCase,
     private val debugLogging: DebugLogging,
     private val debugLoggingDialogDataEventStream: DebugLoggingDialogDataEventStream,
@@ -459,6 +467,30 @@ class DashboardViewModel @Inject constructor(
         fileStore.setSelectedCollectionId(collectionId)
         return collectionId
 
+    }
+
+    fun resolveReaderTarget(target: ReaderLaunchTarget, replaceExisting: Boolean): ReaderLaunchDestination? {
+        if (!sessionController.isLoggedIn || target.accountId != readerDefaults.getUserId()) return null
+        return runCatching {
+            val coordinator = RealmDbCoordinator().init(dbWrapperMain.realmDbStorage.config)
+            try {
+                val item = coordinator.perform(ReadItemDbRequest(target.libraryId, target.key))
+                if (item.deleted || item.trash) return@runCatching null
+                val attachment = AttachmentCreator.attachment(
+                    item = item, fileStorage = fileStore, isForceRemote = false,
+                    urlDetector = null, defaults = readerDefaults,
+                )?.type as? Attachment.Kind.file ?: return@runCatching null
+                if (attachment.contentType !in listOf("application/pdf", "application/epub+zip")) return@runCatching null
+                val file = fileStore.attachmentFile(target.libraryId, target.key, attachment.filename)
+                if (!file.isFile) return@runCatching null
+                val library = coordinator.perform(ReadLibraryDbRequest(target.libraryId))
+                val args = ReaderArgs(target.key, item.parent?.key, library)
+                ReaderLaunchDestination(navigationParamsMarshaller.encodeObjectToBase64(args),
+                    android.net.Uri.encode(file.absolutePath), replaceExisting)
+            } finally {
+                coordinator.invalidate()
+            }
+        }.getOrNull()
     }
 
     suspend fun getInitialCollectionArgs(): String {
