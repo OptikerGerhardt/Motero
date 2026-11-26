@@ -25,7 +25,7 @@ data class ReaderLaunchTarget(val accountId: Long, val groupId: Int?, val key: S
             .setIntent(intent)
             .setShortLabel(title.take(36).ifBlank { key })
             .setLongLabel(title.take(128).ifBlank { key })
-            .setIcon(IconCompat.createWithResource(context, R.drawable.share_24))
+            .setIcon(IconCompat.createWithResource(context, R.drawable.ic_reader_bookmark))
             .build()
         return ShortcutManagerCompat.isRequestPinShortcutSupported(context)
             && runCatching { ShortcutManagerCompat.requestPinShortcut(context, shortcut, null) }.getOrDefault(false)

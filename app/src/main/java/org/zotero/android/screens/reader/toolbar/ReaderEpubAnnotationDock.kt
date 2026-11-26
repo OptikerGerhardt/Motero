@@ -59,9 +59,10 @@ internal fun ReaderEpubAnnotationDock(viewModel: ReaderViewModel, state: ReaderV
                     if (optionsHeight > 0.dp) ReaderPdfToolOptions(viewModel, state, Modifier.fillMaxWidth().height(48.dp))
                 }
                 Box(Modifier.fillMaxWidth().height(60.dp).clipToBounds()) {
-                    EpubProgressTrack(viewModel, state, !tools,
+                    EpubProgressTrack(state, !tools,
                         Modifier.align(Alignment.Center).width(previewWidth).height(60.dp)
-                            .graphicsLayer { translationY = -travelPx * slide })
+                            .graphicsLayer { translationY = -travelPx * slide },
+                        onNavigate = viewModel::navigateEpubProgress)
                     if (slide > 0f || tools) ReaderPdfAnnotationToolbar(viewModel, state,
                         Modifier.align(Alignment.Center).width(minOf(width, toolWidth)).height(60.dp)
                             .graphicsLayer { translationY = travelPx * (1 - slide) },
@@ -73,7 +74,12 @@ internal fun ReaderEpubAnnotationDock(viewModel: ReaderViewModel, state: ReaderV
 }
 
 @Composable
-private fun EpubProgressTrack(viewModel: ReaderViewModel, state: ReaderViewState, enabled: Boolean, modifier: Modifier) {
+internal fun EpubProgressTrack(
+    state: ReaderViewState,
+    enabled: Boolean,
+    modifier: Modifier,
+    onNavigate: (Float, EpubProgressMarker?) -> Unit,
+) {
     val markers = state.epubProgressMarkers
     val color = MaterialTheme.colorScheme.onSurface
     val bookmark = painterResource(R.drawable.ic_reader_bookmark)
@@ -91,7 +97,7 @@ private fun EpubProgressTrack(viewModel: ReaderViewModel, state: ReaderViewState
                 contentDescription = state.pageProgress?.let { "$title. $it" } ?: title
                 customActions = markers.map { marker ->
                     CustomAccessibilityAction(markerLabel(marker)) {
-                        viewModel.navigateEpubProgress(marker.fraction, marker)
+                        onNavigate(marker.fraction, marker)
                         true
                     }
                 }
@@ -103,7 +109,7 @@ private fun EpubProgressTrack(viewModel: ReaderViewModel, state: ReaderViewState
                     val hits = markers.filter { abs(point.x - (inset + it.fraction * trackWidth)) <= 24.dp.toPx() }
                         .sortedBy { abs(point.x - (inset + it.fraction * trackWidth)) }
                     if (hits.size > 1) choices = hits
-                    else viewModel.navigateEpubProgress((point.x - inset) / trackWidth, hits.firstOrNull())
+                    else onNavigate((point.x - inset) / trackWidth, hits.firstOrNull())
                 }
             } else Modifier
         Canvas(Modifier.fillMaxSize().then(interaction)) {
@@ -144,7 +150,7 @@ private fun EpubProgressTrack(viewModel: ReaderViewModel, state: ReaderViewState
             choices.forEach { marker ->
                 DropdownMenuItem(text = { Text(markerLabel(marker)) }, onClick = {
                     choices = emptyList()
-                    viewModel.navigateEpubProgress(marker.fraction, marker)
+                    onNavigate(marker.fraction, marker)
                 })
             }
         }
