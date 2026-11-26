@@ -126,9 +126,11 @@ internal fun ReaderBox(
                 safeInsets
             }
             val safeTop = with(density) { WindowInsets.statusBarsIgnoringVisibility.union(WindowInsets.displayCutout).getTop(this) / this.density }
-            val safeRight = with(density) { WindowInsets.displayCutout.getRight(this, LocalLayoutDirection.current) / this.density }
-            androidx.compose.runtime.LaunchedEffect(safeTop, safeRight, viewState.isReaderLoading) {
-                viewModel.setReaderIndicatorInsets(safeTop, safeRight)
+            val navigationInsets = WindowInsets.navigationBarsIgnoringVisibility.union(WindowInsets.displayCutout)
+            val safeRight = with(density) { navigationInsets.getRight(this, LocalLayoutDirection.current) / this.density }
+            val safeBottom = with(density) { navigationInsets.getBottom(this) / this.density }
+            androidx.compose.runtime.LaunchedEffect(safeTop, safeRight, safeBottom, viewState.isReaderLoading) {
+                viewModel.setReaderIndicatorInsets(safeTop, safeRight, safeBottom)
             }
             val cropInsets = WindowInsets.statusBarsIgnoringVisibility.union(WindowInsets.displayCutout)
                 .union(WindowInsets.navigationBarsIgnoringVisibility.only(WindowInsetsSides.Bottom))

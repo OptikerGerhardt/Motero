@@ -47,8 +47,8 @@ class ReaderWebCallChainExecutor @Inject constructor(
         readerWebViewHandler.evaluateJavascript("window.setReaderProgress?.(${gson.toJson(value)});") {}
     }
     private var readerIndicatorInsets: Map<String, Float> = emptyMap()
-    fun setReaderIndicatorInsets(top: Float, right: Float) {
-        readerIndicatorInsets = mapOf("top" to top, "right" to right)
+    fun setReaderIndicatorInsets(top: Float, right: Float, bottom: Float) {
+        readerIndicatorInsets = mapOf("top" to top, "right" to right, "bottom" to bottom)
         readerWebViewHandler.evaluateJavascript("window.setReaderIndicatorInsets?.(${gson.toJson(readerIndicatorInsets)});") {}
     }
     private var lastInterface: Pair<String, String>? = null
@@ -262,6 +262,9 @@ class ReaderWebCallChainExecutor @Inject constructor(
                         }
                         "onCropEditorChanged" -> {
                             observable.emitAsync(Result.Success(ReaderWebData.setCropEditorOpen(data["params"].asJsonObject["open"].asBoolean)))
+                        }
+                        "onBookmarkColorsOpen" -> {
+                            observable.emitAsync(Result.Success(ReaderWebData.setBookmarkColorsOpen(data["params"].asJsonObject["open"].asBoolean)))
                         }
 
                         "onChangeViewState" -> {
@@ -747,6 +750,10 @@ class ReaderWebCallChainExecutor @Inject constructor(
 
     suspend fun beginManualCrop() = suspendCancellableCoroutine { cont ->
         readerWebViewHandler.evaluateJavascript("javascript:window.beginManualCrop({nativeControls:true});") { cont.resume(Unit) }
+    }
+
+    fun dismissBookmarkColors() {
+        readerWebViewHandler.evaluateJavascript("window.dismissBookmarkColors?.();") {}
     }
 
     fun cropEditorAction(action: String, scope: String? = null, top: Double? = null, bottom: Double? = null, left: Double? = null, right: Double? = null) {

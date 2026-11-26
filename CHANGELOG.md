@@ -1,5 +1,9 @@
 # Änderungen
 
+## 1.1.11 — Build 337
+
+- Ein langer Druck oben rechts verlängert das PDF-Lesezeichen-Fähnchen und zeigt darin die neun Zotero-Farben. Die Auswahl ändert das Lesezeichen auf der aktuellen Seite. Im E-Reader-Modus öffnet und schließt das Fähnchen sofort (#7).
+
 ## 1.1.10 — Build 336
 
 - EPUBs bleiben im Querformat zwischen Navigationsleiste und Displayausschnitt mittig. Die PDF-Vorschauleiste verteilt Vorschaubilder bündig über die verfügbare Breite (#46, #18).

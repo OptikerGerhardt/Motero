@@ -436,7 +436,7 @@ class ReaderViewModel @Inject constructor(
     private var automaticRecoveryUsed = false
     fun onReaderRendererGone() {
         postScrubTrimJob?.cancel()
-        updateState { copy(manualCropOpen = false, isReaderLoading = true, selectedAnnotationKey = null,
+        updateState { copy(manualCropOpen = false, bookmarkColorsOpen = false, isReaderLoading = true, selectedAnnotationKey = null,
             readerAnnotationArgs = null, readerAnnotationMoreArgs = null, showCreationToolbar = false, selectedText = null, rendererFailed = automaticRecoveryUsed,
             canUndoAnnotation = false, canRedoAnnotation = false, rendererGeneration = if (automaticRecoveryUsed) rendererGeneration else rendererGeneration + 1) }
         automaticRecoveryUsed = true
@@ -1803,6 +1803,7 @@ class ReaderViewModel @Inject constructor(
             is ReaderWebData.setCropEditorOpen -> {
                 updateState { copy(manualCropOpen = successValue.open) }
             }
+            is ReaderWebData.setBookmarkColorsOpen -> updateState { copy(bookmarkColorsOpen = successValue.open) }
             is ReaderWebData.setManualCrop -> {
                 if (viewState.fileType == ReaderFileType.PDF) {
                     val crop = successValue.params["crop"]?.takeIf { it.isJsonObject }?.asJsonObject
@@ -3064,8 +3065,8 @@ class ReaderViewModel @Inject constructor(
     }
 
     private var minimumVerticalMargin = -7f
-    fun setReaderIndicatorInsets(top: Float, right: Float) {
-        readerWebCallChainExecutor.setReaderIndicatorInsets(top, right)
+    fun setReaderIndicatorInsets(top: Float, right: Float, bottom: Float) {
+        readerWebCallChainExecutor.setReaderIndicatorInsets(top, right, bottom)
     }
 
     fun setReaderViewportInsets(top: Float, bottom: Float, viewportHeight: Float) {
@@ -3140,6 +3141,7 @@ class ReaderViewModel @Inject constructor(
 
     fun onProtectedReaderBack() {
         when {
+            viewState.bookmarkColorsOpen -> dismissBookmarkColors()
             viewState.showPdfSearch -> hidePdfSearch()
             viewState.showSideBar -> toggleSideBar()
             viewState.selectedAnnotationKey != null || viewState.selectedText != null -> viewModelScope.launch {
@@ -3150,6 +3152,10 @@ class ReaderViewModel @Inject constructor(
             }
             else -> setReaderChromeVisible(true)
         }
+    }
+
+    fun dismissBookmarkColors() {
+        readerWebCallChainExecutor.dismissBookmarkColors()
     }
 
     fun navigatePageHistoryBack() {
@@ -3237,6 +3243,7 @@ data class ReaderViewState(
     val annotationSearchTerm: String = "",
     val bookmarksOnly: Boolean = false,
     val manualCropOpen: Boolean = false,
+    val bookmarkColorsOpen: Boolean = false,
     val cropEditorPage: Int = 1,
     val cropEditorCount: Int = 1,
     val cropEditorScope: String = "all",

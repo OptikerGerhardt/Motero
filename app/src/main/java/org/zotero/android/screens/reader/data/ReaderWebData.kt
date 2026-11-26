@@ -16,6 +16,7 @@ sealed interface ReaderWebData {
     data class setHistoryState(val canUndo: Boolean, val canRedo: Boolean = false) : ReaderWebData
     data class setCropEditorState(val state: JsonObject) : ReaderWebData
     data class setCropEditorOpen(val open: Boolean) : ReaderWebData
+    data class setBookmarkColorsOpen(val open: Boolean) : ReaderWebData
     data class setViewState(val params: JsonObject) : ReaderWebData
     data class setViewStats(val params: JsonObject) : ReaderWebData
     data class showUrl(val url: String) : ReaderWebData
