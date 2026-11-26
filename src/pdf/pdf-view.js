@@ -514,7 +514,9 @@ class PDFView {
             if (colors?.contains(event) || colors?.owns(event)) {
                 this._bookmarkPointerUp = event;
                 this._pageFitting?.onUp(event);
-                colors.end(event);
+                if (colors.end(event) && colors.isOpen && event.pointerType === 'pen') {
+                    this._penInput?.finishControlRelease(event);
+                }
                 return;
             }
             if (this._consumePaletteDismissal?.(event)) return;

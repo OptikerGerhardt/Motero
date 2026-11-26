@@ -31,12 +31,10 @@ const palette = ['#ffd400', '#ff6666', '#5fb236', '#2ea8e5', '#a28ae5', '#e56eee
         const errors = [];
         page.on('pageerror', error => errors.push(error.stack));
         const cdp = await page.context().newCDPSession(page);
-        const penTap = async (x, y) => {
-            await cdp.send('Input.dispatchMouseEvent', { type:'mousePressed', x, y, button:'left',
-                buttons:1, pointerType:'pen', clickCount:1, force:0.5 });
-            await cdp.send('Input.dispatchMouseEvent', { type:'mouseReleased', x, y, button:'left',
-                buttons:0, pointerType:'pen', clickCount:1 });
-        };
+        const pen = (type, x, y) => cdp.send('Input.dispatchMouseEvent', {
+            type, x, y, button:'left', pointerType:'pen', clickCount:1,
+            buttons:type === 'mousePressed' ? 1 : 0, force:type === 'mousePressed' ? 0.5 : 0,
+        });
         const touch = (type, points=[]) => cdp.send('Input.dispatchTouchEvent', {
             type, touchPoints: points.map((point, index) => ({...point, id:index+1, radiusX:2, radiusY:2})),
         });
@@ -136,7 +134,9 @@ const palette = ['#ffd400', '#ff6666', '#5fb236', '#2ea8e5', '#a28ae5', '#e56eee
         await page.evaluate(() => window.setDeviceProfile({penOnly:true}));
         await longPress();
         const purple = await ribbon.locator('button[data-color="#a28ae5"]').boundingBox();
-        await penTap(purple.x+purple.width/2, purple.y+purple.height/2);
+        const penX = purple.x+purple.width/2, penY = purple.y+purple.height/2;
+        await pen('mousePressed', penX, penY);
+        await pen('mouseReleased', penX, penY);
         await ribbon.waitFor({state:'detached'});
         assert.deepEqual((await annotations()).map(a => [a.type,a.color]), [['note','#a28ae5']]);
         console.log('PASS real pen can choose a swatch without drawing or taking over the control');
@@ -165,6 +165,16 @@ const palette = ['#ffd400', '#ff6666', '#5fb236', '#2ea8e5', '#a28ae5', '#e56eee
         await page.waitForFunction(() => window._view._view._annotations[0]?.color === '#000000');
         assert.equal((await annotations())[0].position.pageIndex, spreadIndex);
         console.log('PASS instant E-Ink with clipped, scrollable swatches on a short spread');
+
+        await open({deviceProfile:{penOnly:false}});
+        const point = await corner();
+        await pen('mousePressed', point.x, point.y);
+        await ribbon.waitFor({state:'visible'});
+        await pen('mouseReleased', point.x, point.y);
+        assert.equal((await annotations()).length, 0);
+        await pick('#a28ae5');
+        assert.deepEqual((await annotations()).map(a => [a.type,a.color]), [['note','#a28ae5']]);
+        console.log('PASS immediately choosing with touch after opening the flag with the pen');
 
         await open({readOnly:true});
         await touch('touchStart',[await corner()]);

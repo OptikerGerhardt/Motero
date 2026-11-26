@@ -91,6 +91,13 @@ export class MobilePenInput {
         if (this.owner !== null || release.epoch !== this.penEpoch) return;
         this.setEraser(!!this.toggle || (this.profile.eraserButtonMode !== 'toggle' && this.button));
     }
+    finishControlRelease(event) {
+        if (this.pendingRelease?.event !== event || this.owner !== null) return;
+        // Opening a control with the pen is complete. Keep suppressing
+        // contacts already classified as palms, while allowing a fresh tap.
+        this.until = 0;
+        this.finishRelease(event);
+    }
     setEraser(active, physical = false) {
         if (this.eraser === active && !!this.reportedPhysical === physical) return;
         this.eraser = active;
