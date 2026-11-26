@@ -121,6 +121,8 @@ internal fun EpubProgressTrack(
             for (dot in 0..divisions) {
                 drawCircle(color.copy(alpha = .44f), 1.5.dp.toPx(), Offset(x(dot.toFloat() / divisions), centerY))
             }
+            val markerX = x(current)
+            drawCircle(color, 1.75.dp.toPx(), Offset(markerX, centerY))
             for (marker in markers.filter { it.kind == "chapter" }) {
                 drawCircle(color, 3.5.dp.toPx(), Offset(x(marker.fraction), centerY))
             }
@@ -132,7 +134,6 @@ internal fun EpubProgressTrack(
                     with(bookmark) { draw(Size(flagSize, flagSize), colorFilter = ColorFilter.tint(tint)) }
                 }
             }
-            val markerX = x(current)
             val gap = 8.dp.toPx()
             val tipSize = 3.dp.toPx()
             for (direction in listOf(-1, 1)) {

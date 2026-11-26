@@ -481,8 +481,13 @@ class DashboardViewModel @Inject constructor(
                     urlDetector = null, defaults = readerDefaults,
                 )?.type as? Attachment.Kind.file ?: return@runCatching null
                 if (attachment.contentType !in listOf("application/pdf", "application/epub+zip")) return@runCatching null
-                val file = fileStore.attachmentFile(target.libraryId, target.key, attachment.filename)
-                if (!file.isFile) return@runCatching null
+                val filename = attachment.filename
+                if (filename.isBlank() || filename == "." || filename == ".." || filename.any { it == '/' || it == '\\' }) {
+                    return@runCatching null
+                }
+                val directory = fileStore.attachmentDirectory(target.libraryId, target.key).canonicalFile
+                val file = File(directory, filename).canonicalFile
+                if (file.parentFile != directory || !file.isFile) return@runCatching null
                 val library = coordinator.perform(ReadLibraryDbRequest(target.libraryId))
                 val args = ReaderArgs(target.key, item.parent?.key, library)
                 ReaderLaunchDestination(navigationParamsMarshaller.encodeObjectToBase64(args),
