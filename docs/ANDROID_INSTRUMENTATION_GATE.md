@@ -36,8 +36,8 @@ real connected test reports even when the job fails.
 
 ## Remaining verification
 
-- On a reserved scope, add the real `saveAnnotations → EditTagsForItemDbRequest → Realm → reload`
-  integration test in PR #3 (issue #22).
+- For issue #22, compare PR #3’s unique persistence tests with coverage on current `develop`.
+  Preserve missing coverage in a scoped test-only PR. The published tag fix already covers the obsolete product work in PR #3.
 - Compare the evidence from merged PR #20 with issue #21’s remaining acceptance criteria, including physical-device verification.
 - A different worker reviews the exact HEAD, target base and CI evidence. Integrate under the
   [branch and approval rules](BRANCHING_AND_SECURITY.md). Future workflow or dependency infrastructure changes require owner approval.
