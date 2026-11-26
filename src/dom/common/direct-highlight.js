@@ -31,8 +31,8 @@ export class DOMDirectHighlight {
 			de: navigator.language.startsWith('de'), closePalette: () => this.closePalette(),
 			showPalette: annotations => showAnnotationPalette.call(this.host, annotations) };
 		this.gesture = new HoldToHighlight({
-			canStart: event => this.canStart(event),
-			prepare: event => this.annotationAt(event) || this.wordAt(event),
+			canStart: (event, immediate) => this.canStart(event, immediate),
+			prepare: (event, immediate) => (!immediate && this.annotationAt(event)) || this.wordAt(event),
 			start: (prepared, event) => this.start(prepared, event),
 			update: event => this.queueUpdate(event), finish: () => this.finish(), cancel: () => this.clear(),
 			tap: (down, up) => {
@@ -131,12 +131,12 @@ export class DOMDirectHighlight {
         const id = this.view._getAnnotationsAtPoint(event.clientX, event.clientY)[0];
 		return this.view._annotationsByID.get(id);
 	}
-	canStart(event) {
+	canStart(event, immediate = false) {
 		const view = this.view;
 		if (!view.initialized || view._options.readOnly || this.inControls(event) || !['pointer', 'highlight', 'underline'].includes(view._tool.type)) return false;
 		const annotation = this.annotationAt(event);
 		if (annotation) return !annotation.readOnly;
-		return view._tool.type === 'pointer' && this.enabled && !event.composedPath().some(el => el?.matches?.('a[href]')); // Resolve words only after the hold delay.
+		return view._tool.type === 'pointer' && (immediate || this.enabled) && !event.composedPath().some(el => el?.matches?.('a[href]')); // Resolve words only after the hold delay.
 	}
 	wordAt(event) {
 		const caret = this.view._getCaretRangeAtPoint(event.clientX, event.clientY)?.toRange();

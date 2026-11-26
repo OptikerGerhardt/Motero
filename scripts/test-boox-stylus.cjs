@@ -73,6 +73,34 @@ const root=path.resolve(__dirname,'../build/android'),fixture=path.resolve(__dir
   assert.equal(await page.evaluate(()=>window._view._view._readerChromeVisible),true);
   console.log('PASS stylus drag highlighting remains available with open chrome and no selected drawing tool');
 
+  await page.evaluate(()=>{
+    window.setTool({type:'eraser',size:12,eraserMode:'area'});
+    window.setPenEraser(true);
+  });
+  assert.equal(await page.evaluate(()=>window._view._tool.type),'ink');
+  await page.evaluate(()=>window.setPenEraser(false));
+  assert.equal(await page.evaluate(()=>window._view._tool.type),'eraser');
+  await page.evaluate(()=>{window.clearTool();window.setAnnotationToolbarOpen(true);});
+  const neutral = await page.evaluate(()=>({
+    count:window._view._annotationManager._annotations.length,
+    taps:window.messages.filter(m=>m.message?.event==='onBackdropTap').length
+  }));
+  await pen('mousePressed',word[0].x,word[0].y);
+  await pen('mouseMoved',word[1].x,word[1].y);
+  await pen('mouseReleased',word[1].x,word[1].y,0);
+  assert.deepEqual(await page.evaluate(()=>({
+    count:window._view._annotationManager._annotations.length,
+    taps:window.messages.filter(m=>m.message?.event==='onBackdropTap').length
+  })),neutral);
+  await page.evaluate(()=>window.setPenEraser(true));
+  assert.equal(await page.evaluate(()=>window._view._tool.type),'pointer');
+  await pen('mousePressed',word[0].x,word[0].y);
+  await page.waitForFunction(()=>window._view._view._directHighlight.gesture.active);
+  await pen('mouseMoved',word[1].x,word[1].y);
+  await pen('mouseReleased',word[1].x,word[1].y,0);
+  await page.evaluate(()=>window.setPenEraser(false));
+  await page.waitForFunction(n=>window._view._annotationManager._annotations.length===n+1,neutral.count);
+  console.log('PASS the button inverts explicit eraser mode; pointer mode stays neutral until button drag');
   assert.deepEqual(errors,[]);
   console.log('PASS hardware eraser restores the base tool; native edits use undo/redo; disabling the profile removes its presentation');
  } finally {if(browser)await browser.close();await new Promise(r=>server.close(r));}

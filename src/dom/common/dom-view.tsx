@@ -1,6 +1,6 @@
 import { beginPaletteEdit, finishPaletteEdit } from '../../common/annotation-edit-palette';
 import { DOMDirectHighlight } from './direct-highlight';
-import { MobilePenInput } from '../../common/mobile-pen-input.mjs';
+import { MobilePenInput, routeReadingPen } from '../../common/mobile-pen-input.mjs';
 import injectCSS from './stylesheets/inject.scss';
 import annotationsCSS from './stylesheets/annotations.scss';
 import {
@@ -348,6 +348,9 @@ abstract class DOMView<State extends DOMViewState, Data> {
                 this._iframeDocument.body.classList.remove('creating-touch-annotation');
             },
             onSignal: (event: PointerEvent) => this._handlePenSignal(event),
+            onEraser: (active: boolean, physical: boolean) => (this._options as any).onPenEraser?.(active, physical),
+            onRoute: (event: PointerEvent) => routeReadingPen(this, event),
+            isReadingPen: () => (this._options as any).isReadingPen?.(),
         });
         if (this._options.platform === 'android' && this._options.mobileAnnotations) this._directHighlight = new DOMDirectHighlight(this);
 		this._iframeWindow.addEventListener('contextmenu', this._handleContextMenu.bind(this));

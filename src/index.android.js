@@ -228,6 +228,7 @@ window.redoReaderAnnotation = () => {
 };
 
 window.setDeviceProfile = profile => window._view?.setDeviceProfile(profile);
+window.setAnnotationToolbarOpen = open => window._view?.setAnnotationToolbarOpen(open);
 window.setPenEraser = active => window._view?.setPenEraser(active, 'key');
 window.addAnnotation = options => window._view.addAnnotation(JSON.parse(decodeBase64(options.annotation)));
 window.editAnnotation = options => {

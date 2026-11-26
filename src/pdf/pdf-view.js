@@ -2,7 +2,7 @@ import { isBlackReaderBookmark, readerBookmarkCorner } from '../common/reader-bo
 import { readerResourceBudget } from '../common/reader-resource-budget.mjs';
 import { beginPaletteEdit, finishPaletteEdit } from '../common/annotation-edit-palette';
 import { readingUnit } from './reading-unit.mjs';
-import { MobilePenInput } from '../common/mobile-pen-input.mjs';
+import { MobilePenInput, routeReadingPen } from '../common/mobile-pen-input.mjs';
 import { appendInkSamples } from './ink-samples.mjs';
 import Page from './page';
 import { p2v, v2p } from './lib/coordinates';
@@ -471,8 +471,13 @@ class PDFView {
                 if (this._pageNavigation) this._pageNavigation.gesture = null;
                 this._pageFitting?.resetInput();
             },
-            onSignal: event => this._handlePenSignal(event),
-            onEraser: active => this._options.onPenEraser?.(active),
+            onSignal: event => {
+                if (event.type === 'pointerdown') this._options.onPenDetected?.();
+                this._handlePenSignal(event);
+            },
+            onEraser: (active, physical) => this._options.onPenEraser?.(active, physical),
+            onRoute: event => routeReadingPen(this, event),
+            isReadingPen: () => this._options.isReadingPen?.(),
         });
 		// this._iframeWindow.document.body.draggable = true;
 
