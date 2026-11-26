@@ -35,16 +35,16 @@ real connected test reports even when the job fails.
 - A job does not count as passed until GitHub Actions reports a completed
   successful `instrumentation` job for its **exact PR HEAD**.
 
-## Handoff after the workflow is proven
+## Follow-up after the workflow is proven
 
 1. Human reviewer (`OptikerGerhardt`) verifies and authorizes this
    workflow/dependency infrastructure PR into `develop`; bots must not merge it.
-2. Agent 4 adds a real `saveAnnotations → EditTagsForItemDbRequest → Realm → reload`
+2. On a reserved scope, add a real `saveAnnotations → EditTagsForItemDbRequest → Realm → reload`
    integration test on existing PR #3 (issue #22), against the current base.
-3. Agent 2 adds real `ReaderPageScrubber` measured bounds and tap/drag/rotation
+3. On a separate reserved scope, add real `ReaderPageScrubber` measured bounds and tap/drag/rotation
    tests on existing PR #20 (issue #21).
-4. Agent 3 independently reviews SHA-bound behavior and verified CI results;
-   Agent 4 integrates only after required acceptance gates are satisfied.
+4. A different worker reviews the exact HEAD, target base, and CI evidence.
+   Any eligible worker can integrate once the acceptance and approval gates pass.
 
 If the emulator fails to start or tests do not compile, capture the exact
 GitHub run, failing command and log. Fix that issue before declaring the
