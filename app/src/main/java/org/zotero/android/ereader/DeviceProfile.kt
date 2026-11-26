@@ -16,6 +16,8 @@ data class DeviceProfile(
     val eraserButtonMode: String = "hold",
     val buttonMask: Int = 2,
     val eraserSize: Float = 12f,
+    val inkColor: String = "#ffd400",
+    val inkSize: Float = 2f,
     val eraserMode: String = "stroke",
     val readingAssist: Boolean = true,
 )

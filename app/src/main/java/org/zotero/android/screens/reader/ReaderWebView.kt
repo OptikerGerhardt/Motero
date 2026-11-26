@@ -31,6 +31,13 @@ fun ReaderWebView(viewModel: ReaderViewModel, modifier: Modifier = Modifier) {
         viewModel.viewStates.map { it.rendererGeneration to it.rendererFailed }.distinctUntilChanged()
     }
     val state by recovery.observeAsState(0 to false)
+    val toolbarMode = remember(viewModel) {
+        viewModel.viewStates.map { it.showCreationToolbar to it.isReaderLoading }.distinctUntilChanged()
+    }
+    val (toolbarOpen, readerLoading) = toolbarMode.observeAsState(false to true).value
+    androidx.compose.runtime.LaunchedEffect(toolbarOpen, readerLoading, state.first) {
+        if (!readerLoading) viewModel.syncAnnotationToolbarMode(toolbarOpen)
+    }
     org.zotero.android.ereader.DeviceProfileStore.initialize(androidx.compose.ui.platform.LocalContext.current)
     val deviceProfile by org.zotero.android.ereader.DeviceProfileStore.state.collectAsState()
     androidx.compose.runtime.DisposableEffect(viewModel) {

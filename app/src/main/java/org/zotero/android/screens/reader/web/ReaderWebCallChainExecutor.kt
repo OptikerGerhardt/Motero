@@ -566,7 +566,8 @@ class ReaderWebCallChainExecutor @Inject constructor(
             pageBackground = defaults.getReaderSettings().effectivePageBackground(isDark),
             pageNavigation = defaults.getReaderSettings().effectivePageNavigation(),
             deviceProfile = org.zotero.android.ereader.DeviceProfileStore.state.value.copy(
-                eraserSize = defaults.getActiveEraserSize(), eraserMode = defaults.getActiveEraserMode()),
+                eraserSize = defaults.getActiveEraserSize(), eraserMode = defaults.getActiveEraserMode(),
+                inkColor = defaults.getInkColorHex(), inkSize = defaults.getActiveLineWidth()),
         )
 
         val flowModeString = when (defaults.getReaderSettings().pageLayoutFlowMode) {
