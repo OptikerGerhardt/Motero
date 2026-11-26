@@ -1,0 +1,10 @@
+{
+  "protocol": 1,
+  "worker": 0,
+  "token": "setup-test-v1",
+  "acquiredAt": "2026-11-26T17:55:09.948Z",
+  "expiresAt": "2026-11-26T17:56:09.948Z",
+  "action": "setup-test",
+  "target": "not a real task",
+  "state": "active"
+}
