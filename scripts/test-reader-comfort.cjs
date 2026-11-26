@@ -19,13 +19,22 @@ const root=path.resolve(__dirname,'../build/android'),fixture=path.resolve(__dir
   }
   for(const spreadMode of [1,2]){
    const first=spreadMode===1?4:5;await open({spreadMode,pageIndex:first,navigation:'continuous',mode:'width',crop:[0,0,1,1]});
-   await page.evaluate(i=>{const v=window._view._view;for(const n of [i,i+1])v._onAddAnnotation({type:'note',color:'#000000',pageLabel:String(n+1),sortIndex:String(n).padStart(5,'0')+'|00001',comment:'Bookmark · fixture',position:{pageIndex:n,rects:[[10,10,32,32]]}});v._render();},first);
+   await page.evaluate(i=>{
+    const v=window._view._view;
+    for(const [n,color,tags] of [[i,'#000000',[]],[i+1,'#2ea8e5',[{name:'Bookmark'}]]]){
+     v._onAddAnnotation({type:'note',color,tags,pageLabel:String(n+1),
+      sortIndex:String(n).padStart(5,'0')+'|00001',comment:'Bookmark · fixture',
+      position:{pageIndex:n,rects:[[10,10,32,32]]}});
+    }
+    v._render();
+   },first);
    await page.waitForFunction(()=>window._view._view._iframeWindow.document.querySelectorAll('.motero-bookmark-indicator').length===2);
    let expected;
    for(const top of [70,40,20,0,20,40,70]){
     await page.evaluate(({i,top})=>{const v=window._view._view._pageFitting.viewer,p=v.getPageView(i);v.container.scrollTop+=p.div.getBoundingClientRect().top-top;v.update();},{i:first,top});await page.waitForTimeout(60);
-    const flags=await page.evaluate(()=>{const v=window._view._view,w=v._iframeWindow;return [...w.document.querySelectorAll('.motero-bookmark-indicator')].map(e=>{const r=e.getBoundingClientRect();return{index:e.dataset.pageIndex,x:r.x,y:r.y,pointer:w.getComputedStyle(e).pointerEvents};}).sort((a,b)=>a.index-b.index);});
+    const flags=await page.evaluate(()=>{const v=window._view._view,w=v._iframeWindow;return [...w.document.querySelectorAll('.motero-bookmark-indicator')].map(e=>{const r=e.getBoundingClientRect(),style=w.getComputedStyle(e);return{index:e.dataset.pageIndex,x:r.x,y:r.y,pointer:style.pointerEvents,color:style.color};}).sort((a,b)=>a.index-b.index);});
     assert.equal(flags.length,2);for(const f of flags){assert.equal(f.y,40);assert.equal(f.pointer,'none');}
+    assert.deepEqual(flags.map(f=>f.color),['rgb(0, 0, 0)','rgb(46, 168, 229)']);
     if(expected)for(let i=0;i<2;i++){assert.equal(flags[i].index,expected[i].index);assert.ok(Math.abs(flags[i].x-expected[i].x)<1,'a spread bookmark cannot teleport when scrolling');}else expected=flags;
    }
    console.log('PASS stable per-leaf bookmark flags in spread '+spreadMode);

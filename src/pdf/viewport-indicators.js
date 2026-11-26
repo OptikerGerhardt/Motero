@@ -1,4 +1,4 @@
-import { isGeneratedBookmarkComment, bookmarkColor, readerIndicatorPosition, BOOKMARK_FLAG_PATH } from '../common/reader-bookmark.mjs';
+import { isLegacyReaderBookmark, bookmarkColor, readerIndicatorPosition, BOOKMARK_FLAG_PATH } from '../common/reader-bookmark.mjs';
 import { readingUnit } from './reading-unit.mjs';
 
 /** Reading uses stable viewport hints, one per spread leaf. Only an explicit
@@ -32,7 +32,7 @@ export class PDFViewportIndicators {
             this.bookmarked=new Map();
             for (const annotation of view._annotations || []) {
                 const index=annotation.position?.pageIndex;
-                if (isGeneratedBookmarkComment(annotation) && Number.isInteger(index) && !this.bookmarked.has(index)) {
+                if (isLegacyReaderBookmark(annotation) && Number.isInteger(index) && !this.bookmarked.has(index)) {
                     this.bookmarked.set(index,annotation);
                 }
             }
@@ -54,7 +54,8 @@ export class PDFViewportIndicators {
             const flag=this.flags.get(i)||this.create(i);
             flag.style.left=(indices.length>1 ? Math.max(b.left+12,Math.min(b.right,right)-gap-34) : safe.left)+'px';
             flag.style.top=safe.top+'px';flag.style.display='block';
-            flag.style.color=bookmarkColor(this.bookmarked.get(i));
+            const color=bookmarkColor(this.bookmarked.get(i));
+            flag.style.color=color === '#000000' && view._themeColorScheme === 'dark' ? '#ddd' : color;
             shown.add(i);
             for (const physical of page.div.querySelectorAll('[data-reader-bookmark]')) {
                 physical.style.visibility='hidden';this.hiddenPageFlags.add(physical);

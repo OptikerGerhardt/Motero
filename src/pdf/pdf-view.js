@@ -1,4 +1,4 @@
-import { isGeneratedBookmarkComment, readerBookmarkCorner } from '../common/reader-bookmark.mjs';
+import { isLegacyReaderBookmark, readerBookmarkCorner } from '../common/reader-bookmark.mjs';
 import { readerResourceBudget } from '../common/reader-resource-budget.mjs';
 import { beginPaletteEdit, finishPaletteEdit } from '../common/annotation-edit-palette';
 import { readingUnit } from './reading-unit.mjs';
@@ -3503,7 +3503,7 @@ class PDFView {
 		for (let annotation of annotations) {
             // Reader bookmark flags use the viewport shortcut; their legacy
             // persisted note rect must not leave an invisible text hit target.
-            if (this._options.platform === 'android' && isGeneratedBookmarkComment(annotation)) continue;
+            if (this._options.platform === 'android' && isLegacyReaderBookmark(annotation)) continue;
 			if (annotation.type === 'text' && annotation.position.rotation) {
 				let tm = getRotationTransform(annotation.position.rects[0], annotation.position.rotation);
 				let rect = position.rects[0];

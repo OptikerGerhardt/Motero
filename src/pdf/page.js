@@ -23,7 +23,7 @@ import {
 } from '../common/defines';
 import { getRectRotationOnText } from './selection';
 
-import { isReaderBookmark, isGeneratedBookmarkComment, bookmarkFlagRect, BOOKMARK_FLAG_PATH } from '../common/reader-bookmark.mjs';
+import { isReaderBookmark, isLegacyReaderBookmark, bookmarkFlagRect, BOOKMARK_FLAG_PATH } from '../common/reader-bookmark.mjs';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -233,7 +233,8 @@ export default class Page {
 	_pushNote(items, annotation) {
 		let position = this._p2v(annotation.position);
 		let viewRect = position.rects[0];
-        if (isGeneratedBookmarkComment(annotation) && this._layer._options?.platform === 'android') {
+        const cornerBookmark = isLegacyReaderBookmark(annotation);
+        if (cornerBookmark && this._layer._options?.platform === 'android') {
             viewRect = bookmarkFlagRect(this._originalPage.viewport);
         }
 		items.push({
@@ -244,7 +245,7 @@ export default class Page {
 			scale: round((viewRect[2] - viewRect[0]) / NOTE_ICON_SIZE),
 			color: annotation.color,
             bookmark: isReaderBookmark(annotation),
-            legacyBookmark: isGeneratedBookmarkComment(annotation),
+            cornerBookmark,
             opacity: isReaderBookmark(annotation) ? 0.7 : 1
 		});
 	}
@@ -769,7 +770,7 @@ export default class Page {
 			g.setAttribute('opacity', item.opacity);
 		}
         if (item.bookmark) {
-            if (this._layer._options?.platform === 'android' && item.legacyBookmark) g.setAttribute('data-reader-bookmark', 'true');
+            if (this._layer._options?.platform === 'android' && item.cornerBookmark) g.setAttribute('data-reader-bookmark', 'true');
             const path = doc.createElementNS(SVG_NS, 'path');
             path.setAttribute('d', BOOKMARK_FLAG_PATH);
             path.setAttribute('fill', item.color);

@@ -8,8 +8,6 @@ export const hasBookmarkTag = annotation => annotation?.type === 'note'
     && annotation.tags.some(tag => String(tag?.name ?? tag ?? '').trim().toLowerCase() === 'bookmark');
 export const isReaderBookmark = annotation => annotation?.type === 'note'
     && (hasBookmarkTag(annotation) || isLegacyReaderBookmark(annotation));
-export const isBlackReaderBookmark = annotation => isLegacyReaderBookmark(annotation)
-    && /^#000000$/i.test(annotation.color || '');
 export const removeLegacyBookmarkPrefix = comment =>
     String(comment || '').replace(/^(?:Lesezeichen|Bookmark)\s*·\s*/i, '');
 export const bookmarkColor = annotation =>

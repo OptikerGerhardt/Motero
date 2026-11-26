@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isReaderBookmark, hasBookmarkTag, isLegacyReaderBookmark, isBlackReaderBookmark,
+import { isReaderBookmark, hasBookmarkTag, isLegacyReaderBookmark,
     removeLegacyBookmarkPrefix, isGeneratedBookmarkComment, bookmarkToggleOff, bookmarkColor, BOOKMARK_TAG } from '../../src/common/reader-bookmark.mjs';
 
 test('Bookmark tag is canonical irrespective of note color or comment', () => {
@@ -19,8 +19,6 @@ test('Bookmark tag is canonical irrespective of note color or comment', () => {
 test('Legacy prefixes remain recognized without making ordinary notes bookmarks', () => {
     assert.ok(isReaderBookmark({ type: 'note', color: '#aaaaaa', comment: 'Lesezeichen · gestern' }));
     assert.ok(isLegacyReaderBookmark({ type: 'note', color: '#2ea8e5', comment: 'Bookmark · yesterday' }));
-    assert.ok(isBlackReaderBookmark({ type: 'note', color: '#000000', comment: 'Bookmark · today' }));
-    assert.ok(!isBlackReaderBookmark({ type: 'note', color: '#2ea8e5', comment: 'Bookmark · yesterday' }));
     assert.equal(removeLegacyBookmarkPrefix('Bookmark · 10:30\nOwn notes'), '10:30\nOwn notes');
     assert.equal(removeLegacyBookmarkPrefix('Ordinary note'), 'Ordinary note');
 });
