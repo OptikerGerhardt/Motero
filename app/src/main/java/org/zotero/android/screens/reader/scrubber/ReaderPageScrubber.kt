@@ -13,9 +13,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -40,11 +39,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
@@ -60,7 +63,6 @@ private val ScrubberThumbnailHeight = 44.dp
 private val ScrubberPreviewWidth = 40.dp
 private val ScrubberSelectedBorderWidth = 2.5.dp
 
-private const val AssumedPageAspectRatio = 0.72f
 
 @Composable
 internal fun ReaderPageIndicatorLabel(
@@ -133,6 +135,34 @@ internal fun ReaderPageScrubber(
     enabled: Boolean = true,
 ) {
     val viewState by viewModel.viewStates.observeAsState(ReaderScrubberViewState())
+    ReaderPageScrubberContent(
+        viewState = viewState,
+        modifier = modifier,
+        enabled = enabled,
+        onLandmarksComputed = viewModel::onLandmarksComputed,
+        onScrubStart = viewModel::onScrubStart,
+        onScrubTo = viewModel::onScrubTo,
+        onScrubEnd = viewModel::onScrubEnd,
+        onTapAt = viewModel::onTapAt,
+    )
+}
+
+/**
+ * The same composable used in production, with its state/callbacks supplied by the caller.
+ * Keeps the Hilt ViewModel out of layout instrumentation, without replacing the UI
+ * with a synthetic row. Test tags mark the actual row, touch track and hitboxes.
+ */
+@Composable
+internal fun ReaderPageScrubberContent(
+    viewState: ReaderScrubberViewState,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    onLandmarksComputed: (List<Int>) -> Unit,
+    onScrubStart: () -> Unit,
+    onScrubTo: (Int) -> Unit,
+    onScrubEnd: () -> Unit,
+    onTapAt: (Int) -> Unit,
+) {
     val pageCount = viewState.thumbnailCache.size
     val density = LocalDensity.current
 
@@ -143,17 +173,20 @@ internal fun ReaderPageScrubber(
         val maxAllowedWidth = maxWidth
         val horizontalPillPadding = 8.dp
 
-        val landmarkPageIndices = remember(maxAllowedWidth, pageCount) {
-            val rowBudgetPx = with(density) { (maxAllowedWidth - horizontalPillPadding * 2).toPx() }
-                .coerceAtLeast(0f)
-                .roundToInt()
-            val landmarkCount = computeLandmarkCount(rowBudgetPx, pageCount, density.density)
-            computeLandmarkIndices(pageCount, landmarkCount)
+        // BoxWithConstraints already exposes physical pixel constraints. Converting its
+        // maxWidth back to pixels can double-scale when density is overridden.
+        val rowBudgetPx = (constraints.maxWidth - 2 * with(density) { horizontalPillPadding.roundToPx() })
+            .coerceAtLeast(0)
+        val slotWidthsPx = remember(rowBudgetPx, pageCount, density.density) {
+            computeScrubberSlotWidths(rowBudgetPx, pageCount, density.density)
+        }
+        val landmarkPageIndices = remember(pageCount, slotWidthsPx) {
+            computeLandmarkIndices(pageCount, slotWidthsPx.size)
         }
 
         LaunchedEffect(landmarkPageIndices) {
             if (landmarkPageIndices.isNotEmpty()) {
-                viewModel.onLandmarksComputed(landmarkPageIndices)
+                onLandmarksComputed(landmarkPageIndices)
             }
         }
 
@@ -166,14 +199,15 @@ internal fun ReaderPageScrubber(
                 Box(
                     modifier = Modifier
                         .padding(horizontal = horizontalPillPadding, vertical = 8.dp)
+                        .testTag("reader-scrubber-track")
                         .onSizeChanged { contentWidthPx = it.width }
                         .pointerInput(pageCount, enabled) {
                             if (enabled && pageCount > 0) {
                                 detectDragGesturesAfterLongPress(
                                     onDragStart = { offset ->
                                         dragXPx = offset.x.coerceIn(0f, size.width.toFloat())
-                                        viewModel.onScrubStart()
-                                        viewModel.onScrubTo(
+                                        onScrubStart()
+                                        onScrubTo(
                                             pageFromX(
                                                 offset.x,
                                                 size.width,
@@ -185,7 +219,7 @@ internal fun ReaderPageScrubber(
                                         change.consume()
                                         dragXPx =
                                             change.position.x.coerceIn(0f, size.width.toFloat())
-                                        viewModel.onScrubTo(
+                                        onScrubTo(
                                             pageFromX(
                                                 change.position.x,
                                                 size.width,
@@ -193,8 +227,8 @@ internal fun ReaderPageScrubber(
                                             )
                                         )
                                     },
-                                    onDragEnd = { viewModel.onScrubEnd() },
-                                    onDragCancel = { viewModel.onScrubEnd() },
+                                    onDragEnd = { onScrubEnd() },
+                                    onDragCancel = { onScrubEnd() },
                                 )
                             }
                         }
@@ -202,7 +236,7 @@ internal fun ReaderPageScrubber(
                             if (enabled && pageCount > 0) {
                                 detectTapGestures(
                                     onTap = { offset ->
-                                        viewModel.onTapAt(
+                                        onTapAt(
                                             pageFromX(
                                                 offset.x,
                                                 size.width,
@@ -214,15 +248,37 @@ internal fun ReaderPageScrubber(
                             }
                         },
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        landmarkPageIndices.forEach { index ->
-                            ScrubberThumbnail(
-                                bitmap = viewState.thumbnailCache.getOrNull(index),
-                                height = ScrubberThumbnailHeight,
-                            )
+                    // Measure and position in physical pixels. Row's dp spacing and
+                    // child constraints can round independently at fractional density,
+                    // causing a cumulative right-hand gap despite exact slot arithmetic.
+                    Layout(
+                        modifier = Modifier.fillMaxWidth().testTag("reader-scrubber-row"),
+                        content = {
+                            landmarkPageIndices.forEachIndexed { position, index ->
+                                ScrubberThumbnail(
+                                    bitmap = viewState.thumbnailCache.getOrNull(index),
+                                    height = ScrubberThumbnailHeight,
+                                    modifier = Modifier,
+                                    testId = position,
+                                )
+                            }
+                        },
+                    ) { measurables, constraints ->
+                        val gapPx = (6.dp).roundToPx()
+                        val placeables = measurables.mapIndexed { index, measurable ->
+                            val widthPx = slotWidthsPx[index]
+                            measurable.measure(Constraints.fixedWidth(widthPx).copy(
+                                minHeight = 0,
+                                maxHeight = constraints.maxHeight,
+                            ))
+                        }
+                        val heightPx = placeables.maxOfOrNull { it.height } ?: 0
+                        layout(constraints.maxWidth, heightPx) {
+                            var x = 0
+                            placeables.forEach { placeable ->
+                                placeable.placeRelative(x, (heightPx - placeable.height) / 2)
+                                x += placeable.width + gapPx
+                            }
                         }
                     }
 
@@ -290,21 +346,23 @@ private fun rememberFastLongPressViewConfiguration(): ViewConfiguration {
 private fun ScrubberThumbnail(
     bitmap: Bitmap?,
     height: Dp,
+    modifier: Modifier,
+    testId: Int,
 ) {
-    val modifier = Modifier
+    val cellModifier = modifier
         .clip(shape = RoundedCornerShape(6.dp))
         .background(MaterialTheme.colorScheme.surface)
+        .testTag("reader-scrubber-cell-$testId")
 
     Box(
-        modifier = modifier.width(32.dp).height(height),
+        modifier = cellModifier.height(height),
         contentAlignment = Alignment.Center,
     ) {
         if (bitmap == null) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .width(32.dp)
-                    .height(height),
+                    .fillMaxSize(),
             ) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(16.dp),
@@ -313,29 +371,36 @@ private fun ScrubberThumbnail(
                 )
             }
         } else {
-            val aspectRatio = bitmap.width.toFloat() / bitmap.height.toFloat()
             Image(
-                modifier = Modifier
-                    .height(height)
-                    .aspectRatio(aspectRatio),
+                modifier = Modifier.fillMaxSize(),
                 bitmap = bitmap.asImageBitmap(),
+                contentScale = ContentScale.Fit,
                 contentDescription = null,
             )
         }
     }
 }
 
-private fun computeLandmarkCount(contentWidthPx: Int, pageCount: Int, densityValue: Float): Int {
-    if (pageCount <= 0 || contentWidthPx <= 0) {
-        return 0
-    }
-    if (pageCount == 1) {
-        return 1
-    }
-    val assumedSlotWidthPx = ScrubberThumbnailHeight.value * AssumedPageAspectRatio * densityValue
-    val spacingPx = 6.dp.value * densityValue
-    val count = ((contentWidthPx + spacingPx) / (assumedSlotWidthPx + spacingPx)).toInt()
-    return count.coerceIn(2, pageCount)
+/**
+ * Partition the measured row width into thumbnail hitboxes. The remainder is assigned
+ * one pixel at a time, so no trailing unused strip remains at fractional densities.
+ */
+internal fun computeScrubberSlotWidths(contentWidthPx: Int, pageCount: Int, densityValue: Float): List<Int> {
+    if (pageCount <= 0 || contentWidthPx <= 0 || densityValue <= 0f) return emptyList()
+    val spacingPx = (6f * densityValue).roundToInt()
+    val targetWidthPx = (32f * densityValue).roundToInt().coerceAtLeast(1)
+    // Keep at least one physical pixel per hitbox, even in a tiny constrained viewport.
+    // A forced two-cell minimum would otherwise overflow when the gap alone exceeds the budget.
+    val maxFittingCount = ((contentWidthPx.toLong() + spacingPx) / (spacingPx + 1L))
+        .coerceAtLeast(1L).coerceAtMost(pageCount.toLong()).toInt()
+    val preferredCount = ((contentWidthPx.toLong() + spacingPx) / (targetWidthPx + spacingPx))
+        .coerceAtLeast(2L).coerceAtMost(pageCount.toLong()).toInt()
+    val count = if (pageCount == 1) 1 else preferredCount.coerceAtMost(maxFittingCount)
+    val gapPx = spacingPx * (count - 1)
+    val usablePx = (contentWidthPx - gapPx).coerceAtLeast(0)
+    val base = usablePx / count
+    val remainder = usablePx % count
+    return List(count) { index -> base + if (index < remainder) 1 else 0 }
 }
 
 private fun computeLandmarkIndices(pageCount: Int, desiredCount: Int): List<Int> {
