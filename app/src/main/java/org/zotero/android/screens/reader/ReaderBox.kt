@@ -137,10 +137,17 @@ internal fun ReaderBox(
             androidx.compose.runtime.LaunchedEffect(epubTop, epubBottom, viewportHeight, viewState.fileType) {
                 if (viewState.fileType == ReaderFileType.EPUB) viewModel.setReaderViewportInsets(epubTop, epubBottom, viewportHeight)
             }
+            val horizontalInsets = WindowInsets.navigationBarsIgnoringVisibility.union(WindowInsets.displayCutout)
+            val direction = LocalLayoutDirection.current
+            // Landscape can place the navigation bar or cutout on just one side.
+            // Inset both sides equally so the EPUB column stays centered on the screen.
+            val epubSide = maxOf(horizontalInsets.getLeft(density, direction), horizontalInsets.getRight(density, direction))
             val readingModifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)
-                .then(if (viewState.fileType == ReaderFileType.EPUB) Modifier
-                    .windowInsetsPadding(WindowInsets.navigationBarsIgnoringVisibility.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal))
-                    else if (viewState.fileType == ReaderFileType.HTML) Modifier.windowInsetsPadding(readingInsets) else Modifier)
+                .then(when (viewState.fileType) {
+                    ReaderFileType.EPUB -> Modifier.windowInsetsPadding(WindowInsets(epubSide, 0, epubSide, 0))
+                    ReaderFileType.HTML -> Modifier.windowInsetsPadding(readingInsets)
+                    else -> Modifier
+                })
 
             ReaderWebView(viewModel = viewModel, modifier = readingModifier)
             if (viewState.fileType == ReaderFileType.EPUB) {
