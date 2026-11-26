@@ -126,9 +126,11 @@ internal fun ReaderBox(
                 safeInsets
             }
             val safeTop = with(density) { WindowInsets.statusBarsIgnoringVisibility.union(WindowInsets.displayCutout).getTop(this) / this.density }
-            val safeRight = with(density) { WindowInsets.displayCutout.getRight(this, LocalLayoutDirection.current) / this.density }
-            androidx.compose.runtime.LaunchedEffect(safeTop, safeRight, viewState.isReaderLoading) {
-                viewModel.setReaderIndicatorInsets(safeTop, safeRight)
+            val navigationInsets = WindowInsets.navigationBarsIgnoringVisibility.union(WindowInsets.displayCutout)
+            val safeRight = with(density) { navigationInsets.getRight(this, LocalLayoutDirection.current) / this.density }
+            val safeBottom = with(density) { navigationInsets.getBottom(this) / this.density }
+            androidx.compose.runtime.LaunchedEffect(safeTop, safeRight, safeBottom, viewState.isReaderLoading) {
+                viewModel.setReaderIndicatorInsets(safeTop, safeRight, safeBottom)
             }
             val cropInsets = WindowInsets.statusBarsIgnoringVisibility.union(WindowInsets.displayCutout)
                 .union(WindowInsets.navigationBarsIgnoringVisibility.only(WindowInsetsSides.Bottom))
@@ -137,10 +139,17 @@ internal fun ReaderBox(
             androidx.compose.runtime.LaunchedEffect(epubTop, epubBottom, viewportHeight, viewState.fileType) {
                 if (viewState.fileType == ReaderFileType.EPUB) viewModel.setReaderViewportInsets(epubTop, epubBottom, viewportHeight)
             }
+            val horizontalInsets = WindowInsets.navigationBarsIgnoringVisibility.union(WindowInsets.displayCutout)
+            val direction = LocalLayoutDirection.current
+            // Landscape can place the navigation bar or cutout on just one side.
+            // Inset both sides equally so the EPUB column stays centered on the screen.
+            val epubSide = maxOf(horizontalInsets.getLeft(density, direction), horizontalInsets.getRight(density, direction))
             val readingModifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)
-                .then(if (viewState.fileType == ReaderFileType.EPUB) Modifier
-                    .windowInsetsPadding(WindowInsets.navigationBarsIgnoringVisibility.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal))
-                    else if (viewState.fileType == ReaderFileType.HTML) Modifier.windowInsetsPadding(readingInsets) else Modifier)
+                .then(when (viewState.fileType) {
+                    ReaderFileType.EPUB -> Modifier.windowInsetsPadding(WindowInsets(epubSide, 0, epubSide, 0))
+                    ReaderFileType.HTML -> Modifier.windowInsetsPadding(readingInsets)
+                    else -> Modifier
+                })
 
             ReaderWebView(viewModel = viewModel, modifier = readingModifier)
             if (viewState.fileType == ReaderFileType.EPUB) {
@@ -174,7 +183,7 @@ internal fun ReaderBox(
             }
             if (viewState.fileType == ReaderFileType.EPUB) {
                 androidx.compose.animation.AnimatedVisibility(
-                    visible = viewState.isTopBarVisible && viewState.showCreationToolbar && !viewState.showSideBar,
+                    visible = viewState.isTopBarVisible && !viewState.showSideBar,
                     enter = slideInVertically(tween(220)) { it } + fadeIn(tween(160)),
                     exit = slideOutVertically(tween(180)) { it } + fadeOut(tween(140)),
                     modifier = Modifier.align(Alignment.BottomCenter),

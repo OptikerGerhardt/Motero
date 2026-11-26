@@ -41,6 +41,10 @@ sealed class LongPressOptionItem(
         resIcon = Drawables.share_24
     )
 
+    data class PinReaderShortcut(val attachment: Attachment): LongPressOptionItem(
+        titleId = org.zotero.android.R.string.reader_pin_shortcut,
+    )
+
     data class DeleteAttachmentFile(val attachment: Attachment): LongPressOptionItem(
         titleId = Strings.item_detail_delete_attachment_file,
         resIcon = Drawables.file_download_off_24px

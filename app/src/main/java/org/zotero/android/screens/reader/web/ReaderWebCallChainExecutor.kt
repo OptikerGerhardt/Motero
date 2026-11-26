@@ -47,8 +47,8 @@ class ReaderWebCallChainExecutor @Inject constructor(
         readerWebViewHandler.evaluateJavascript("window.setReaderProgress?.(${gson.toJson(value)});") {}
     }
     private var readerIndicatorInsets: Map<String, Float> = emptyMap()
-    fun setReaderIndicatorInsets(top: Float, right: Float) {
-        readerIndicatorInsets = mapOf("top" to top, "right" to right)
+    fun setReaderIndicatorInsets(top: Float, right: Float, bottom: Float) {
+        readerIndicatorInsets = mapOf("top" to top, "right" to right, "bottom" to bottom)
         readerWebViewHandler.evaluateJavascript("window.setReaderIndicatorInsets?.(${gson.toJson(readerIndicatorInsets)});") {}
     }
     private var lastInterface: Pair<String, String>? = null
@@ -262,6 +262,9 @@ class ReaderWebCallChainExecutor @Inject constructor(
                         }
                         "onCropEditorChanged" -> {
                             observable.emitAsync(Result.Success(ReaderWebData.setCropEditorOpen(data["params"].asJsonObject["open"].asBoolean)))
+                        }
+                        "onBookmarkColorsOpen" -> {
+                            observable.emitAsync(Result.Success(ReaderWebData.setBookmarkColorsOpen(data["params"].asJsonObject["open"].asBoolean)))
                         }
 
                         "onChangeViewState" -> {
@@ -533,6 +536,11 @@ class ReaderWebCallChainExecutor @Inject constructor(
         readerWebViewHandler.evaluateJavascript("window.dismissReaderSelection?.();") {}
     }
 
+    fun setReaderBookmarkColor(color: String) {
+        if (!color.matches(Regex("^#[0-9a-fA-F]{6}$"))) return
+        readerWebViewHandler.evaluateJavascript("window.setReaderBookmarkColor('$color');") {}
+    }
+
     suspend fun updateView(modifications: JsonArray, insertions: JsonArray, deletions: JsonArray) {
         val encodedDeletions = encodeAsJSONForJavascript(gson = this.gson, data = deletions)
         val encodedInsertions = encodeAsJSONForJavascript(gson = this.gson, data = insertions)
@@ -564,9 +572,11 @@ class ReaderWebCallChainExecutor @Inject constructor(
             indicatorInsets = readerIndicatorInsets,
             readingProgress = readingProgress,
             pageBackground = defaults.getReaderSettings().effectivePageBackground(isDark),
+            bookmarkColor = defaults.getReaderSettings().effectiveBookmarkColor(),
             pageNavigation = defaults.getReaderSettings().effectivePageNavigation(),
             deviceProfile = org.zotero.android.ereader.DeviceProfileStore.state.value.copy(
-                eraserSize = defaults.getActiveEraserSize(), eraserMode = defaults.getActiveEraserMode()),
+                eraserSize = defaults.getActiveEraserSize(), eraserMode = defaults.getActiveEraserMode(),
+                inkColor = defaults.getInkColorHex(), inkSize = defaults.getActiveLineWidth()),
         )
 
         val flowModeString = when (defaults.getReaderSettings().pageLayoutFlowMode) {
@@ -740,6 +750,10 @@ class ReaderWebCallChainExecutor @Inject constructor(
 
     suspend fun beginManualCrop() = suspendCancellableCoroutine { cont ->
         readerWebViewHandler.evaluateJavascript("javascript:window.beginManualCrop({nativeControls:true});") { cont.resume(Unit) }
+    }
+
+    fun dismissBookmarkColors() {
+        readerWebViewHandler.evaluateJavascript("window.dismissBookmarkColors?.();") {}
     }
 
     fun cropEditorAction(action: String, scope: String? = null, top: Double? = null, bottom: Double? = null, left: Double? = null, right: Double? = null) {

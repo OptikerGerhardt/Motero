@@ -54,6 +54,25 @@ internal class DashboardActivity : BaseActivity() {
     private val viewModel: DashboardViewModel by viewModels()
 
     private var pickFileCallPoint: CallPoint = AllItems
+    private val readerLaunch = kotlinx.coroutines.flow.MutableStateFlow<org.zotero.android.screens.reader.data.ReaderLaunchDestination?>(null)
+
+    private fun resolveReaderLaunch(intent: Intent, allowRecent: Boolean) {
+        val targetType = org.zotero.android.screens.reader.data.ReaderLaunchTarget
+        val explicit = intent.action == targetType.ACTION
+        val serialized = if (explicit) intent.getStringExtra(targetType.EXTRA)
+            else defaults.lastReaderTarget().takeIf { allowRecent }
+        val target = targetType.parse(serialized)?.takeIf { it.accountId == defaults.getUserId() }
+        readerLaunch.value = target?.let { viewModel.resolveReaderTarget(it, explicit) }
+        if (explicit && readerLaunch.value == null) longToast(getString(org.zotero.android.R.string.reader_shortcut_unavailable))
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.action == org.zotero.android.screens.reader.data.ReaderLaunchTarget.ACTION) {
+            resolveReaderLaunch(intent, allowRecent = false)
+        }
+    }
 
     @Inject
     lateinit var defaults: Defaults
@@ -67,6 +86,9 @@ internal class DashboardActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdgeAndTranslucency()
+        org.zotero.android.ereader.DeviceProfileStore.initialize(this)
+        if (savedInstanceState == null) resolveReaderLaunch(intent,
+            allowRecent = org.zotero.android.ereader.DeviceProfileStore.state.value.reopenLastDocument)
 
         KeyboardVisibilityEvent.setEventListener(
             this,
@@ -165,7 +187,8 @@ internal class DashboardActivity : BaseActivity() {
                                     onOpenFile = onOpenFile,
                                     onOpenWebpage = onOpenWebpage,
                                     onExportHtml = onExportHtml,
-                                    onExitApp = { finish() }
+                                    onExitApp = { finish() },
+                                    readerLaunch = readerLaunch,
                                 )
                             } else {
                                 DashboardRootPhoneNavigation(
@@ -175,7 +198,8 @@ internal class DashboardActivity : BaseActivity() {
                                     onOpenWebpage = onOpenWebpage,
                                     viewEffect = viewEffect,
                                     onExportHtml = onExportHtml,
-                                    onExitApp = { finish() }
+                                    onExitApp = { finish() },
+                                    readerLaunch = readerLaunch,
                                 )
                             }
                             DashboardTopLevelDialogs(viewState = viewState, viewModel = viewModel)

@@ -1,6 +1,6 @@
 # Motero: offener Featureplan
 
-Stand: **21. November 2026**. [Changelog](CHANGELOG.md) · [Build-Nachweise](BUILD_STATUS.md) · [Plan-Historie](docs/FEATUREPLAN_HISTORY.md)
+Stand: **26. November 2026**. [Changelog](CHANGELOG.md) · [Build-Nachweise](BUILD_STATUS.md) · [Plan-Historie](docs/FEATUREPLAN_HISTORY.md)
 
 ## Weitere optionale Erweiterungen
 
@@ -16,7 +16,7 @@ PDF-Gliederungen werden am Desktop erstellt, nicht als Android-Feature verfolgt.
 
 ## Ausstehende Prüfungen, keine fehlenden Grundfunktionen
 
-- **Echte Geräte:** BOOX Go Color 7 Gen II/InkSense, EMR-Stiftgerät, Pixel und Tablet: Stifttasten/Handballenschutz, Displayabstände, Sidebar/Rotation und E-Ink-Latenz bestätigen. Portabler Stiftmodus, Hold/Toggle, Eraser-Tip, Diagnostik und E-Reader-Profil existieren bereits.
+- **Echte Geräte:** BOOX Go Color 7 Gen II/InkSense, EMR-Stiftgerät, Pixel und Tablet: Stifttasten/Handballenschutz, Displayabstände, Sidebar/Rotation und E-Ink-Latenz bestätigen. Build 336 ergänzt die Stifttasten-Umkehr und Direktmarkierung. Die tatsächliche Zuordnung und Zuverlässigkeit der BOOX-Taste sowie Startbildschirm-Verknüpfungen separat am Gerät prüfen.
 - **Originaldateien:** Descartes (658 Seiten) und der Hobbes-Auszug (21 Seiten) sind in Chromium geprüft. Vollständige Leviathan-/Kant-Prüfung bleibt offen, insbesondere anhand der betroffenen Seiten außerhalb des Hobbes-Auszugs. Born wurde in Build 329 am Original geprüft und in Build 334 an drei Problemseiten gegengeprüft. Neue Fehler als Regression erfassen.
 - **EPUB-Sonderfälle:** Kundera-Überschriften mit einer zweiten Datei gegenprüfen; CJK-/vertikale Layouts und spezielle CFI/Pagebreak-Dateien nur anhand reproduzierbarer Originalfälle ändern. Kein pauschaler Formatierungsfehler behauptet.
 - **Echter Kontosync / externe Übergabe:** Live-Synchronisation und tatsächliches Öffnen geteilter Dateien in einer zweiten App separat bestätigen. Automatische Emulator-/Browserprüfungen ersetzen diese Nachweise nicht.

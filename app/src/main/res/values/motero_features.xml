@@ -8,4 +8,11 @@
     <string name="reader_manual_crop">Manual crop…</string>
     <string name="reader_bookmarks_filter">Show only bookmarks</string>
     <string name="reader_text_size">Font size</string>
+    <string name="reader_reopen_last_document">Reopen the last document at startup</string>
+    <string name="reader_pin_shortcut">Add to Home screen</string>
+    <string name="reader_pin_shortcut_unavailable">This launcher does not support pinned document shortcuts.</string>
+    <string name="reader_shortcut_unavailable">This document is unavailable in the current account. Open it from the library.</string>
+    <string name="reader_epub_navigation">Reading navigation</string>
+    <string name="reader_epub_chapter">Chapter</string>
+    <string name="reader_epub_bookmark">Bookmark</string>
 </resources>

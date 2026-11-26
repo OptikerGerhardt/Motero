@@ -65,7 +65,8 @@ internal fun DashboardRootPhoneNavigation(
     onOpenWebpage: (url: String) -> Unit,
     onExportHtml: (file: File) -> Unit,
     onExitApp:() -> Unit,
-    viewEffect: Consumable<DashboardViewEffect>?
+    viewEffect: Consumable<DashboardViewEffect>?,
+    readerLaunch: kotlinx.coroutines.flow.MutableStateFlow<org.zotero.android.screens.reader.data.ReaderLaunchDestination?>,
 ) {
 
     val navController = rememberNavController()
@@ -73,6 +74,15 @@ internal fun DashboardRootPhoneNavigation(
     val navigation = remember(navController) {
         ZoteroNavigation(navController, dispatcher)
     }
+    androidx.compose.runtime.LaunchedEffect(navigation, readerLaunch) {
+        readerLaunch.collect { target ->
+            if (target != null) {
+                navigation.toReaderScreen(target.params, target.encodedPath, target.replaceExisting)
+                readerLaunch.compareAndSet(target, null)
+            }
+        }
+    }
+
 
 
     LaunchedEffect(key1 = viewEffect) {

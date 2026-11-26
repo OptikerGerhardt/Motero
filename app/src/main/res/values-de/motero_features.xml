@@ -8,4 +8,12 @@
     <string name="reader_manual_crop">Manueller Zuschnitt…</string>
     <string name="reader_bookmarks_filter">Nur Lesezeichen anzeigen</string>
     <string name="reader_text_size">Schriftgröße</string>
+    <string name="reader_bookmark_default_color">Standardfarbe für Lesezeichen</string>
+    <string name="reader_reopen_last_document">Zuletzt gelesenes Dokument beim Start öffnen</string>
+    <string name="reader_pin_shortcut">Zum Startbildschirm hinzufügen</string>
+    <string name="reader_pin_shortcut_unavailable">Dieser Launcher unterstützt keine angehefteten Dokumente.</string>
+    <string name="reader_shortcut_unavailable">Dieses Dokument ist im aktuellen Konto nicht verfügbar. Öffne es aus der Bibliothek.</string>
+    <string name="reader_epub_navigation">Lesenavigation</string>
+    <string name="reader_epub_chapter">Kapitel</string>
+    <string name="reader_epub_bookmark">Lesezeichen</string>
 </resources>

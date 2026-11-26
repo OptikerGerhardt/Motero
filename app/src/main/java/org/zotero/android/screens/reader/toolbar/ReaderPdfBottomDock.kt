@@ -35,25 +35,8 @@ internal fun ReaderPdfBottomDock(viewModel: ReaderViewModel, state: ReaderViewSt
             (previews.thumbnailCache.size.coerceAtLeast(1) * 38 + 10).dp).coerceAtLeast(48.dp)
         val toolLayout = readerToolDockLayout(maxWidth.value, epub = false)
         val toolWidth = toolLayout.width.dp
-        val targetWidth = if (tools) toolWidth.value else previewWidth.value
-        val animatedWidth = remember { Animatable(targetWidth) }
-        val animatedSlide = remember { Animatable(if (tools) 1f else 0f) }
-        // Sequence from the actual animated width. Reversing mid-transition or
-        // receiving more thumbnails cannot turn an expansion into early clipping.
-        LaunchedEffect(tools, targetWidth) {
-            val timing = dockTiming(animatedWidth.value, targetWidth)
-            val targetSlide = if (tools) 1f else 0f
-            if (timing.widthDelay == 0) {
-                if (animatedWidth.value != targetWidth) animatedWidth.animateTo(targetWidth, tween(timing.contentDelay))
-                if (animatedSlide.value != targetSlide) animatedSlide.animateTo(targetSlide, tween(180))
-            } else {
-                if (animatedSlide.value != targetSlide) animatedSlide.animateTo(targetSlide, tween(timing.widthDelay))
-                if (animatedWidth.value != targetWidth) animatedWidth.animateTo(targetWidth, tween(140))
-            }
-        }
-        val width = animatedWidth.value.dp
+        val (width, slide) = readerDockTransition(if (tools) toolWidth else previewWidth, tools)
         val contentWidth = minOf(width, toolWidth)
-        val slide = animatedSlide.value
         val optionTool = state.activeTool ?: state.pdfOptionsTool
         val optionSize = if (optionTool == org.zotero.android.screens.reader.data.ReaderAnnotationTool.ink ||
             optionTool == org.zotero.android.screens.reader.data.ReaderAnnotationTool.text) 96.dp else 48.dp
@@ -85,6 +68,26 @@ internal fun ReaderPdfBottomDock(viewModel: ReaderViewModel, state: ReaderViewSt
             }
         }
     }
+}
+
+@Composable
+internal fun readerDockTransition(target: androidx.compose.ui.unit.Dp, tools: Boolean): Pair<androidx.compose.ui.unit.Dp, Float> {
+    val targetWidth = target.value
+    val animatedWidth = remember { Animatable(targetWidth) }
+    val animatedSlide = remember { Animatable(if (tools) 1f else 0f) }
+    // Sequence from the actual animated width so interruptions do not clip the outgoing content.
+    LaunchedEffect(tools, targetWidth) {
+        val timing = dockTiming(animatedWidth.value, targetWidth)
+        val targetSlide = if (tools) 1f else 0f
+        if (timing.widthDelay == 0) {
+            if (animatedWidth.value != targetWidth) animatedWidth.animateTo(targetWidth, tween(timing.contentDelay))
+            if (animatedSlide.value != targetSlide) animatedSlide.animateTo(targetSlide, tween(180))
+        } else {
+            if (animatedSlide.value != targetSlide) animatedSlide.animateTo(targetSlide, tween(timing.widthDelay))
+            if (animatedWidth.value != targetWidth) animatedWidth.animateTo(targetWidth, tween(140))
+        }
+    }
+    return animatedWidth.value.dp to animatedSlide.value
 }
 
 internal data class DockTiming(val widthDelay: Int, val contentDelay: Int)

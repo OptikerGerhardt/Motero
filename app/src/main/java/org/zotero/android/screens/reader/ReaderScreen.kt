@@ -102,6 +102,9 @@ internal fun ReaderScreen(
     BackHandler(enabled = deviceProfile.protectReaderEdges && noReaderDialog && !viewState.manualCropOpen) {
         viewModel.onProtectedReaderBack()
     }
+    BackHandler(enabled = viewState.bookmarkColorsOpen && noReaderDialog && !viewState.manualCropOpen) {
+        viewModel.dismissBookmarkColors()
+    }
 
 
     org.zotero.android.uicomponents.ReaderHardwareButtons(

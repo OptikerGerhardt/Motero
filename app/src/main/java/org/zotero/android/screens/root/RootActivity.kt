@@ -60,8 +60,14 @@ class RootActivity : BaseActivity(), Screen<RootViewState, RootViewEffect> {
     }
 
     private fun navigateToDashboard() {
-        val intent: Intent = DashboardActivity.getIntent(this)
-        startActivity(intent)
+        val target = org.zotero.android.screens.reader.data.ReaderLaunchTarget
+        val dashboard = DashboardActivity.getIntent(this)
+        if (intent.action == target.ACTION) {
+            dashboard.action = target.ACTION
+            dashboard.putExtra(target.EXTRA, intent.getStringExtra(target.EXTRA))
+        }
+        dashboard.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        startActivity(dashboard)
         finish()
     }
 

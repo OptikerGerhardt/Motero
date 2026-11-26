@@ -63,6 +63,10 @@ fun EReaderSettingsScreen(stylusOnly: Boolean = false, nativeSelection: Boolean 
                     ReaderControlSwitch(R.string.reader326_ink_mode, profile.eReader) { DeviceProfileStore.update(profile.copy(eReader = it)) }
                     ControlDescription(R.string.reader326_ink_description)
                     NewSettingsDivider()
+                    ReaderControlSwitch(R.string.reader_reopen_last_document, profile.reopenLastDocument) {
+                        DeviceProfileStore.update(profile.copy(reopenLastDocument = it))
+                    }
+                    NewSettingsDivider()
                     NewSettingsSectionTitle(Strings.settings_page_turning_title)
                     org.zotero.android.screens.settings.pageturning.ReaderPageTurningControls()
                     ReaderControlSwitch(R.string.reader333_reading_assist, profile.readingAssist) { DeviceProfileStore.update(profile.copy(readingAssist = it)) }

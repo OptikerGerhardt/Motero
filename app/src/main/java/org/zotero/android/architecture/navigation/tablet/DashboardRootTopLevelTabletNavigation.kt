@@ -37,6 +37,7 @@ internal fun DashboardRootTopLevelTabletNavigation(
     onExportHtml: (file: File) -> Unit,
     onExitApp:() -> Unit,
     viewEffect: Consumable<DashboardViewEffect>?,
+    readerLaunch: kotlinx.coroutines.flow.MutableStateFlow<org.zotero.android.screens.reader.data.ReaderLaunchDestination?>,
 ) {
     val context = LocalContext.current
     val navController = rememberNavController()
@@ -44,6 +45,15 @@ internal fun DashboardRootTopLevelTabletNavigation(
     val navigation = remember(navController) {
         ZoteroNavigation(navController, dispatcher)
     }
+    androidx.compose.runtime.LaunchedEffect(navigation, readerLaunch) {
+        readerLaunch.collect { target ->
+            if (target != null) {
+                navigation.toReaderScreen(target.params, target.encodedPath, target.replaceExisting)
+                readerLaunch.compareAndSet(target, null)
+            }
+        }
+    }
+
 
     ZoteroNavHost(
         navController = navController,
