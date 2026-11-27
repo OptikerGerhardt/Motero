@@ -1,0 +1,18 @@
+<resources>
+    <string name="reader_widget_name">Motero-Dokument</string>
+    <string name="reader_widget_configure">Dokument-Widget einrichten</string>
+    <string name="reader_widget_no_documents">Lade ein PDF oder EPUB in Motero herunter, um es hier hinzuzufügen.</string>
+    <string name="reader_widget_search">Heruntergeladene Dokumente suchen</string>
+    <string name="reader_widget_choose_document">Dokument wechseln</string>
+    <string name="reader_widget_symbol_label">Symbol</string>
+    <string name="reader_widget_label_label">Beschriftung</string>
+    <string name="reader_widget_star">Stern</string>
+    <string name="reader_widget_flag">Fähnchen</string>
+    <string name="reader_widget_triangle">Dreieck</string>
+    <string name="reader_widget_square">Quadrat</string>
+    <string name="reader_widget_year">Jahr im Quadrat</string>
+    <string name="reader_widget_author">Autor</string>
+    <string name="reader_widget_author_year">Autor und Erscheinungsjahr</string>
+    <string name="reader_widget_short_title">Kurztitel</string>
+    <string name="reader_widget_save">Speichern</string>
+</resources>

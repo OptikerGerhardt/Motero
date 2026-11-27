@@ -23,6 +23,8 @@ class ReaderCustomWebView(context: Context, attrs: AttributeSet? = null) : WebVi
     private var activeSelectionActionMode: ActionMode? = null
 
     var onUserGestureDetected: (() -> Unit)? = null
+    var neutralStylus = false
+    private var ignoreNeutralStylusContact = false
     private var gestureDownX = 0f
     private var gestureDownY = 0f
     private var gestureAlreadyReportedThisTouch = false
@@ -35,6 +37,12 @@ class ReaderCustomWebView(context: Context, attrs: AttributeSet? = null) : WebVi
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         when (ev.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
+                val profile = org.zotero.android.ereader.DeviceProfileStore.state.value
+                val barrelButton = if (profile.buttonMask == 4) MotionEvent.BUTTON_TERTIARY else MotionEvent.BUTTON_SECONDARY
+                ignoreNeutralStylusContact = neutralStylus
+                    && ev.getToolType(0) == MotionEvent.TOOL_TYPE_STYLUS
+                    && ev.buttonState and barrelButton == 0
+                    && !org.zotero.android.ereader.DeviceInput.isEraserButtonHeld
                 gestureDownX = ev.x
                 gestureDownY = ev.y
                 gestureAlreadyReportedThisTouch = false
@@ -57,6 +65,12 @@ class ReaderCustomWebView(context: Context, attrs: AttributeSet? = null) : WebVi
                     onUserGestureDetected?.invoke()
                 }
             }
+        }
+        if (ignoreNeutralStylusContact) {
+            if (ev.actionMasked == MotionEvent.ACTION_UP || ev.actionMasked == MotionEvent.ACTION_CANCEL) {
+                ignoreNeutralStylusContact = false
+            }
+            return true
         }
         return super.dispatchTouchEvent(ev)
     }

@@ -6,9 +6,15 @@ import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import org.zotero.android.R
+import org.zotero.android.architecture.Defaults
+import org.zotero.android.database.objects.Attachment
+import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RCustomLibraryType
+import org.zotero.android.files.FileStore
 import org.zotero.android.screens.root.RootActivity
+import org.zotero.android.sync.AttachmentCreator
 import org.zotero.android.sync.LibraryIdentifier
+import java.io.File
 
 /** A launcher intent names an attachment in the current account. It never carries a file path. */
 data class ReaderLaunchTarget(val accountId: Long, val groupId: Int?, val key: String) {
@@ -18,11 +24,25 @@ data class ReaderLaunchTarget(val accountId: Long, val groupId: Int?, val key: S
 
     fun encode(): String = "$accountId:${groupId ?: 0}:$key"
 
+    fun launchIntent(context: Context): Intent = Intent(context, RootActivity::class.java)
+        .setAction(ACTION).putExtra(EXTRA, encode())
+
+    fun localDocument(item: RItem, fileStore: FileStore, defaults: Defaults): File? {
+        if (item.deleted || item.trash || item.parent?.deleted == true || item.parent?.trash == true) return null
+        val attachment = AttachmentCreator.attachment(
+            item = item, fileStorage = fileStore, isForceRemote = false,
+            urlDetector = null, defaults = defaults,
+        )?.type as? Attachment.Kind.file ?: return null
+        if (attachment.contentType != "application/pdf" && attachment.contentType != "application/epub+zip") return null
+        val filename = attachment.filename
+        if (filename.isBlank() || filename == "." || filename == ".." || filename.any { it == '/' || it == '\\' }) return null
+        val directory = fileStore.attachmentDirectory(libraryId, key).canonicalFile
+        return File(directory, filename).canonicalFile.takeIf { it.parentFile == directory && it.isFile }
+    }
+
     fun requestShortcut(context: Context, title: String): Boolean {
-        val intent = Intent(context, RootActivity::class.java)
-            .setAction(ACTION).putExtra(EXTRA, encode())
         val shortcut = ShortcutInfoCompat.Builder(context, "document-${encode()}")
-            .setIntent(intent)
+            .setIntent(launchIntent(context))
             .setShortLabel(title.take(36).ifBlank { key })
             .setLongLabel(title.take(128).ifBlank { key })
             .setIcon(IconCompat.createWithResource(context, R.drawable.ic_reader_bookmark))

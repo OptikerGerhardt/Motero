@@ -1,0 +1,45 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/reader_widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:background="@drawable/reader_widget_background"
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp">
+
+    <FrameLayout
+        android:layout_width="32dp"
+        android:layout_height="32dp">
+
+        <ImageView
+            android:id="@+id/reader_widget_symbol"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/ic_reader_bookmark"
+            android:tint="#FFFFFF"
+            android:importantForAccessibility="no" />
+
+        <TextView
+            android:id="@+id/reader_widget_year_text"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:importantForAccessibility="no"
+            android:textColor="#FFFFFF"
+            android:textSize="9sp"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/reader_widget_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="6dp"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:text="@string/reader_widget_name"
+        android:textColor="#FFFFFF"
+        android:textSize="13sp" />
+</LinearLayout>

@@ -65,7 +65,7 @@ data class ReaderSettings(
     var appearanceChoice: String? = null,
     var lastLightAppearance: String? = null,
     var lastDarkAppearance: String? = null,
-    // Global default for new bookmark notes. Missing older settings keep black.
+    // Explicit choices from earlier builds are retained.
     var bookmarkColor: String? = null,
 ) {
     // Older versions saved the paper and interface separately. Migrate an
@@ -107,7 +107,7 @@ data class ReaderSettings(
     fun effectiveTextScale(): Float = textScale.takeIf { it.isFinite() && it in 0.6f..1.8f } ?: 1f
     fun effectiveBookmarkColor(): String = bookmarkColor?.takeIf {
         it.matches(Regex("^#[0-9a-fA-F]{6}$"))
-    } ?: "#000000"
+    } ?: org.zotero.android.database.objects.AnnotationsConfig.defaultActiveColor
     fun effectiveProgressMode(): String = epubProgressMode?.takeIf { it in listOf("both", "hidden", "position", "percent") } ?: "both"
     fun fitReference(): String = when {
         pageFitMode() == "none" -> "page"

@@ -45,16 +45,18 @@ class ReaderBookmarkAndTextSizeTest {
         assertEquals("Own text", annotation("Own text", tags = listOf(Tag(BOOKMARK_TAG, ""))).bookmarkDetails())
     }
 
-    @Test fun `bookmark color remains global with backwards compatible default`() {
+    @Test fun `bookmark color remains global with a yellow default`() {
         val settings = ReaderSettings.default()
-        assertEquals("#000000", settings.effectiveBookmarkColor())
+        assertEquals("#ffd400", settings.effectiveBookmarkColor())
         settings.bookmarkColor = "#2ea8e5"
         val restored = Gson().fromJson(Gson().toJson(settings), ReaderSettings::class.java)
         assertEquals("#2ea8e5", restored.effectiveBookmarkColor())
+        settings.bookmarkColor = "#000000"
+        assertEquals("#000000", settings.effectiveBookmarkColor())
         settings.bookmarkColor = "red"
-        assertEquals("#000000", settings.effectiveBookmarkColor())
+        assertEquals("#ffd400", settings.effectiveBookmarkColor())
         settings.bookmarkColor = "javascript:invalid"
-        assertEquals("#000000", settings.effectiveBookmarkColor())
+        assertEquals("#ffd400", settings.effectiveBookmarkColor())
     }
 
     @Test fun `old saved typography migrates to one hundred percent without changing other settings`() {
@@ -62,7 +64,7 @@ class ReaderBookmarkAndTextSizeTest {
         assertEquals(1f, old.effectiveTextScale(), 0f)
         assertEquals(1.5f, old.lineHeight, 0f)
         assertEquals("content", old.pageFitMode())
-        assertEquals("#000000", old.effectiveBookmarkColor())
+        assertEquals("#ffd400", old.effectiveBookmarkColor())
     }
 
     @Test fun `font sizes round trip and invalid persisted values recover safely`() {

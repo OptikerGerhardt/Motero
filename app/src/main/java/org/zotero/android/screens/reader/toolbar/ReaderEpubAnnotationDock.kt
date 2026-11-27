@@ -82,58 +82,88 @@ internal fun EpubProgressTrack(
 ) {
     val markers = state.epubProgressMarkers
     val color = MaterialTheme.colorScheme.onSurface
+    val dots = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .62f)
     val bookmark = painterResource(R.drawable.ic_reader_bookmark)
     val title = stringResource(R.string.reader_epub_navigation)
     val chapterLabel = stringResource(R.string.reader_epub_chapter)
     val bookmarkLabel = stringResource(R.string.reader_epub_bookmark)
+    val previousLabel = stringResource(R.string.reader_epub_previous_chapter)
+    val nextLabel = stringResource(R.string.reader_epub_next_chapter)
     fun markerLabel(marker: EpubProgressMarker): String =
         marker.title.ifBlank { if (marker.kind == "bookmark") bookmarkLabel else chapterLabel }
+
     var choices by remember { mutableStateOf(emptyList<EpubProgressMarker>()) }
-    LaunchedEffect(enabled, markers) { choices = emptyList() }
+    var menuOpen by remember { mutableStateOf(false) }
+    LaunchedEffect(enabled, markers) { menuOpen = false }
+    val navigate by rememberUpdatedState(onNavigate)
     val current = (state.epubPageIndex ?: 0).toFloat() / ((state.epubPageCount ?: 1) - 1).coerceAtLeast(1)
+    val track = remember(markers, current) { epubTrackWindow(markers, current) }
     Box(modifier) {
         val interaction = if (enabled) Modifier
             .semantics {
                 contentDescription = state.pageProgress?.let { "$title. $it" } ?: title
-                customActions = markers.map { marker ->
-                    CustomAccessibilityAction(markerLabel(marker)) {
-                        onNavigate(marker.fraction, marker)
-                        true
+                customActions = buildList {
+                    track.previous?.let { add(CustomAccessibilityAction(previousLabel) { navigate(it.fraction, it); true }) }
+                    track.next?.let { add(CustomAccessibilityAction(nextLabel) { navigate(it.fraction, it); true }) }
+                    for (marker in track.markers) {
+                        add(CustomAccessibilityAction(markerLabel(marker)) { navigate(marker.fraction, marker); true })
                     }
                 }
             }
-            .pointerInput(markers) {
+            .pointerInput(track) {
                 detectTapGestures { point ->
-                    val inset = 20.dp.toPx()
+                    val inset = 32.dp.toPx()
                     val trackWidth = (size.width - 2 * inset).coerceAtLeast(1f)
-                    val hits = markers.filter { abs(point.x - (inset + it.fraction * trackWidth)) <= 24.dp.toPx() }
-                        .sortedBy { abs(point.x - (inset + it.fraction * trackWidth)) }
-                    if (hits.size > 1) choices = hits
-                    else onNavigate((point.x - inset) / trackWidth, hits.firstOrNull())
+                    val edge = when {
+                        point.x < inset -> track.previous
+                        point.x >= size.width - inset -> track.next
+                        else -> null
+                    }
+                    if (edge != null) {
+                        navigate(edge.fraction, edge)
+                    } else {
+                        fun distance(marker: EpubProgressMarker) =
+                            abs(point.x - (inset + track.project(marker.fraction) * trackWidth))
+                        val hits = track.markers.filter { distance(it) <= 24.dp.toPx() }.sortedBy(::distance)
+                        if (hits.size > 1) {
+                            choices = hits
+                            menuOpen = true
+                        } else {
+                            navigate(track.unproject((point.x - inset) / trackWidth), hits.firstOrNull())
+                        }
+                    }
                 }
             } else Modifier
         Canvas(Modifier.fillMaxSize().then(interaction)) {
-            val inset = 20.dp.toPx()
+            val inset = 32.dp.toPx()
             val trackWidth = (size.width - 2 * inset).coerceAtLeast(1f)
             val centerY = size.height / 2
-            fun x(fraction: Float) = inset + trackWidth * fraction.coerceIn(0f, 1f)
-            val divisions = (trackWidth / 10.dp.toPx()).toInt().coerceAtLeast(1)
+            fun x(fraction: Float) = inset + trackWidth * track.project(fraction)
+            val divisions = (trackWidth / 5.dp.toPx()).toInt().coerceAtLeast(1)
             for (dot in 0..divisions) {
-                drawCircle(color.copy(alpha = .44f), 1.5.dp.toPx(), Offset(x(dot.toFloat() / divisions), centerY))
+                drawCircle(dots, 1.25.dp.toPx(), Offset(inset + trackWidth * dot / divisions, centerY))
             }
             val markerX = x(current)
             drawCircle(color, 1.75.dp.toPx(), Offset(markerX, centerY))
-            for (marker in markers.filter { it.kind == "chapter" }) {
-                drawCircle(color, 3.5.dp.toPx(), Offset(x(marker.fraction), centerY))
+            for (marker in track.markers.filter { it.kind == "chapter" }) {
+                drawCircle(dots, 3.5.dp.toPx(), Offset(x(marker.fraction), centerY))
             }
             val flagSize = 14.dp.toPx()
-            for (marker in markers.filter { it.kind == "bookmark" }) {
+            for (marker in track.markers.filter { it.kind == "bookmark" }) {
                 val tint = marker.color?.removePrefix("#")?.takeIf { it.length == 6 }?.toLongOrNull(16)
                     ?.let { Color((0xFF000000L or it).toInt()) } ?: color
                 translate(x(marker.fraction) - flagSize / 2, centerY - flagSize / 2) {
                     with(bookmark) { draw(Size(flagSize, flagSize), colorFilter = ColorFilter.tint(tint)) }
                 }
             }
+            fun edgeChevron(centerX: Float, direction: Int) {
+                val tip = 3.dp.toPx()
+                val point = Offset(centerX + direction * tip, centerY)
+                drawLine(dots, Offset(centerX - direction * tip, centerY - tip), point, 1.5.dp.toPx())
+                drawLine(dots, Offset(centerX - direction * tip, centerY + tip), point, 1.5.dp.toPx())
+            }
+            if (track.previous != null) edgeChevron(inset / 2, -1)
+            if (track.next != null) edgeChevron(size.width - inset / 2, 1)
             val gap = 8.dp.toPx()
             val tipSize = 3.dp.toPx()
             for (direction in listOf(-1, 1)) {
@@ -147,11 +177,12 @@ internal fun EpubProgressTrack(
                 drawPath(triangle, color)
             }
         }
-        DropdownMenu(expanded = enabled && choices.isNotEmpty(), onDismissRequest = { choices = emptyList() }) {
+        DropdownMenu(expanded = enabled && menuOpen, onDismissRequest = { menuOpen = false }) {
             choices.forEach { marker ->
                 DropdownMenuItem(text = { Text(markerLabel(marker)) }, onClick = {
-                    choices = emptyList()
-                    onNavigate(marker.fraction, marker)
+                    // Preserve the popup's measured contents throughout its exit animation.
+                    menuOpen = false
+                    navigate(marker.fraction, marker)
                 })
             }
         }

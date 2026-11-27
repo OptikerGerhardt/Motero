@@ -29,7 +29,7 @@ This fork is maintained independently and is not affiliated with or endorsed by 
 - Optional app-wide E-Reader mode, stylus-only annotation with finger navigation, palm protection, configurable eraser buttons and local input diagnostics. [Controls and hardware limits](docs/E_READER_AND_STYLUS.md).
 
 - Direct drag highlighting in PDFs and EPUBs, touch editing of existing annotations, Zotero tags, and an animated bottom PDF dock with annotation Undo, long-press Redo, inline color/size controls, and area/stroke erasing.
-- Black bookmark flags, a bookmark filter, and direct jump/delete shortcuts. Every annotation card offers a direct jump and its options in the header.
+- Colored bookmark flags, a bookmark filter, and direct jump/delete shortcuts. Every annotation card offers a direct jump and its options in the header.
 - Reader appearance applied at startup, matching system-bar contrast and page previews.
 - Continuous cropped PDF pages, temporary two-finger access to full pages, and an overview that stays open when two complete pages are visible.
 - Font size, font choice, spacing and percentage-based side margins, plus independent EPUB top/bottom margins for EPUBs and Reading Mode. EPUB controls float above the text without moving the reading position.
@@ -37,7 +37,8 @@ This fork is maintained independently and is not affiliated with or endorsed by 
 - Automatic or manual content cropping, shared by the page-fitting modes. Manual frames for all, odd, or even pages are saved per attachment.
 - SmartScroll, hardware-button navigation, and edge taps in vertical, horizontal, and wrapped PDF layouts.
 - Continuous scrolling or single-page swipe navigation: short pages are centered and tall pages enter at the reading edge, with two-finger access to the page overview.
-- A top-right bookmark shortcut for the centered reading page: tap to add a black bookmark, then tap again to remove it. Existing bookmark colors are preserved.
+- Tap the top-right corner of a PDF or EPUB to toggle a bookmark. Hold the corner to pick its color. The color control with no active annotation tool sets the default for new bookmarks and stylus-button highlights.
+- Add a Motero document widget from the Android launcher for a downloaded PDF or EPUB. Each widget has its own symbol and author, year or short-title label. The attachment menu also pins a document shortcut.
 - Tag suggestions ranked by use in the current document and library, with explicit creation of new tags.
 - EPUB navigation, local reading-position restoration, and progress displays cycled by tapping the footer, including hidden.
 - Global reader controls for direct/Android text selection and optional protection against Android system Back keys/gestures, plus ordinary volume-key list scrolling. [Reader changes](docs/READER_NEXT_UPDATE.md).

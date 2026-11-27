@@ -1,0 +1,4 @@
+<resources>
+    <string name="reader_epub_previous_chapter">Vorheriges Kapitel</string>
+    <string name="reader_epub_next_chapter">Nächstes Kapitel</string>
+</resources>

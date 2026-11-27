@@ -1,0 +1,19 @@
+<resources>
+    <string name="reader_widget_name">Motero document</string>
+    <string name="reader_widget_configure">Set up document widget</string>
+    <string name="reader_widget_no_documents">Download a PDF or EPUB in Motero to add it here.</string>
+    <string name="reader_widget_search">Search downloaded documents</string>
+    <string name="reader_widget_choose_document">Change document</string>
+    <string name="reader_widget_symbol_label">Symbol</string>
+    <string name="reader_widget_label_label">Label</string>
+    <string name="reader_widget_star">Star</string>
+    <string name="reader_widget_flag">Flag</string>
+    <string name="reader_widget_triangle">Triangle</string>
+    <string name="reader_widget_square">Square</string>
+    <string name="reader_widget_year">Year in a square</string>
+    <string name="reader_widget_author">Author</string>
+    <string name="reader_widget_author_year">Author and publication year</string>
+    <string name="reader_widget_short_title">Short title</string>
+    <string name="reader_widget_save">Save</string>
+    <string name="reader_widget_config_class" translatable="false">org.zotero.android.screens.reader.widget.DocumentWidgetConfigActivity</string>
+</resources>

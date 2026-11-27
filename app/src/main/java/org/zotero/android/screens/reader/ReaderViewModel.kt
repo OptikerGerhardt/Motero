@@ -427,7 +427,9 @@ class ReaderViewModel @Inject constructor(
 
         updatePdfPageAppearanceMode(defaults.getReaderSettings())
         updateState {
-            copy(isDark = pdfReaderCurrentThemeEventStream.currentValue()!!.isDark, progressMode = defaults.getReaderSettings().effectiveProgressMode())
+            copy(isDark = pdfReaderCurrentThemeEventStream.currentValue()!!.isDark,
+                progressMode = defaults.getReaderSettings().effectiveProgressMode(),
+                bookmarkColor = defaults.getReaderSettings().effectiveBookmarkColor())
         }
         progressHandler.muteProgressToolbarForScreen()
 
@@ -2565,12 +2567,20 @@ class ReaderViewModel @Inject constructor(
     }
 
     fun setPdfToolColor(hex: String) {
-        val tool = viewState.activeTool ?: viewState.pdfOptionsTool ?: return
-        viewModelScope.launch { setToolOptions(hex, null, tool) }
+        val tool = viewState.activeTool
+        if (tool == null) {
+            if (hex !in AnnotationsConfig.allColors) return
+            val settings = defaults.getReaderSettings()
+            defaults.setReaderSettings(settings.copy(bookmarkColor = hex))
+            updateState { copy(bookmarkColor = hex) }
+            readerWebCallChainExecutor.setReaderBookmarkColor(hex)
+        } else {
+            viewModelScope.launch { setToolOptions(hex, null, tool) }
+        }
     }
 
     fun setPdfToolSize(size: Float) {
-        val tool = viewState.activeTool ?: viewState.pdfOptionsTool ?: return
+        val tool = viewState.activeTool ?: return
         if (!size.isFinite()) return
         val bounded = size.coerceIn(if (tool == ReaderAnnotationTool.text) 6f else .5f,
             if (tool == ReaderAnnotationTool.text) 72f else 25f)
@@ -2682,8 +2692,9 @@ class ReaderViewModel @Inject constructor(
         readerWebView?.evaluateJavascript("window.setAnnotationToolbarOpen?.($open);", null)
     }
 
-    fun setHardwareEraser(active: Boolean) {
-        readerWebView?.evaluateJavascript("window.setPenEraser?.($active);", null)
+    fun setHardwareEraser(active: Boolean, held: Boolean, fromMotion: Boolean = false) {
+        val source = if (fromMotion) "native" else "key"
+        readerWebView?.evaluateJavascript("window.setPenEraser?.($active, '$source', $held);", null)
     }
     fun applyDeviceProfile(profile: org.zotero.android.ereader.DeviceProfile) {
         val effective = profile.copy(eraserSize = activeEraserSize, eraserMode = defaults.getActiveEraserMode(),
@@ -2755,7 +2766,7 @@ class ReaderViewModel @Inject constructor(
         }
         _select(key = null, didSelectInDocument = true)
         updateState {
-            copy(activeTool = annotationTool, pdfOptionsTool = annotationTool)
+            copy(activeTool = annotationTool)
         }
         triggerEffect(ReaderViewEffect.ScreenRefresh)
     }
@@ -3079,6 +3090,7 @@ class ReaderViewModel @Inject constructor(
             val readerSettings = defaults.getReaderSettings()
             if (isSettingsUpdate) {
                 readerWebCallChainExecutor.updateInterface(pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
+                updateState { copy(bookmarkColor = readerSettings.effectiveBookmarkColor()) }
                 readerWebCallChainExecutor.setReaderBookmarkColor(readerSettings.effectiveBookmarkColor())
                 if (viewState.fileType == ReaderFileType.PDF || viewState.fileType == ReaderFileType.EPUB) {
                     readerWebCallChainExecutor.setSpreadMode(readerSettings.spreadsMode)
@@ -3235,7 +3247,7 @@ data class ReaderViewState(
     val isDark: Boolean = false,
     val error: ReaderViewModel.Error? = null,
     val activeTool: ReaderAnnotationTool? = null,
-    val pdfOptionsTool: ReaderAnnotationTool? = null,
+    val bookmarkColor: String = AnnotationsConfig.defaultActiveColor,
     val selectedAnnotationKey: String? = null,
     val selectedAnnotationCommentActive: Boolean = false,
     val focusSidebarKey: String? = null,

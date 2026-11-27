@@ -79,6 +79,24 @@
             android:windowSoftInputMode="adjustResize" />
 
         <activity
+            android:name=".screens.reader.widget.DocumentWidgetConfigActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
+        <receiver
+            android:name=".screens.reader.widget.DocumentWidgetProvider"
+            android:label="@string/reader_widget_name"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/reader_document_widget" />
+        </receiver>
+
+        <activity
             android:name=".screens.share.ShareActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize">
