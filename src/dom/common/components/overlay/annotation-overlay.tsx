@@ -1,5 +1,5 @@
 import { wordRange } from '../../mobile-word-range.mjs';
-import { isReaderBookmark, readerIndicatorPosition, BOOKMARK_FLAG_PATH } from '../../../../common/reader-bookmark.mjs';
+import { isReaderBookmark, bookmarkFrameAnchor, BOOKMARK_FLAG_WIDTH, BOOKMARK_FLAG_HEIGHT, BOOKMARK_FLAG_PATH } from '../../../../common/reader-bookmark.mjs';
 import React, {
 	memo,
 	useCallback,
@@ -502,17 +502,22 @@ const Note: React.FC<NoteProps> = (props) => {
 	}
 
 	let rect = annotation.range.getBoundingClientRect();
-	rect.x += doc.defaultView.scrollX;
-	rect.y += doc.defaultView.scrollY;
 	let rtl = isRTL(annotation.range.commonAncestorContainer);
 	let staggerOffset = (staggerIndex || 0) * 15;
     let bookmark = isReaderBookmark(annotation);
-    let x = rect.left + (rtl ? -25 : rect.width + 25) + (rtl ? -1 : 1) * staggerOffset;
-    const safe = readerIndicatorPosition({top:0,left:0,width:doc.defaultView.innerWidth,height:doc.defaultView.innerHeight},props.indicatorInsets,34);
-    if (bookmark && rect.right >= doc.defaultView.scrollX && rect.left < doc.defaultView.scrollX + doc.defaultView.innerWidth) x = doc.defaultView.scrollX + safe.left + 17 - staggerOffset;
-	let y = rect.top + staggerOffset;
-    if (bookmark && rect.bottom > doc.defaultView.scrollY && rect.top < doc.defaultView.scrollY + doc.defaultView.innerHeight) {
-        y = doc.defaultView.scrollY + safe.top + 17 + staggerOffset;
+    let x = doc.defaultView.scrollX + rect.left + (rtl ? -25 : rect.width + 25) + (rtl ? -1 : 1) * staggerOffset;
+    let y = doc.defaultView.scrollY + rect.top + staggerOffset;
+    if (bookmark) {
+        const win = doc.defaultView;
+        const viewport = { top: 0, left: 0, right: win.innerWidth, bottom: win.innerHeight };
+        const node = annotation.range.startContainer;
+        const section = (node.parentElement ?? doc.body).closest('.section-container');
+        const frame = section?.getBoundingClientRect() ?? viewport;
+        if (rect.bottom > 0 && rect.top < viewport.bottom && rect.right > 0 && rect.left < viewport.right) {
+            const anchor = bookmarkFrameAnchor(viewport, frame, props.indicatorInsets);
+            x = win.scrollX + anchor.left + BOOKMARK_FLAG_WIDTH / 2 - staggerOffset;
+            y = win.scrollY + anchor.top + BOOKMARK_FLAG_HEIGHT / 2;
+        }
     }
 	return (
 		<CommentIcon
@@ -552,8 +557,6 @@ let NotePreview: React.FC<NotePreviewProps> = (props) => {
 	}
 
 	let rect = annotation.range.getBoundingClientRect();
-	rect.x += doc.defaultView.scrollX;
-	rect.y += doc.defaultView.scrollY;
 	return <SelectionBorder rect={rect} preview={true} key={annotation.key} />;
 };
 NotePreview.displayName = 'NotePreview';
@@ -940,32 +943,34 @@ type ResizerProps = {
 };
 
 let CommentIcon = React.forwardRef<SVGSVGElement, CommentIconProps>((props, ref) => {
-	let size = props.large ? (isReaderBookmark(props.annotation) ? 34 : 24) : 14;
-	let x = props.x - size / 2;
-	let y = props.y - size / 2;
+	const bookmark = isReaderBookmark(props.annotation);
+    const width = props.large ? (bookmark ? BOOKMARK_FLAG_WIDTH : 24) : 14;
+    const height = props.large ? (bookmark ? BOOKMARK_FLAG_HEIGHT : 24) : 14;
+    let x = props.x - width / 2;
+    let y = props.y - height / 2;
 	return <>
 		<svg
 			color={props.color}
 			opacity={props.opacity}
 			x={x}
 			y={y}
-			width={size}
-			height={size}
-			viewBox={isReaderBookmark(props.annotation) ? '5 2 14 20' : '0 0 24 24'}
-            preserveAspectRatio="xMaxYMin meet"
+			width={width}
+			height={height}
+			viewBox={bookmark ? '0 0 24 16' : '0 0 24 24'}
+            preserveAspectRatio={bookmark ? "none" : "xMaxYMin meet"}
 			data-annotation-id={props.annotation?.id}
 			ref={ref}
 		>
-            {isReaderBookmark(props.annotation) ? <path d={BOOKMARK_FLAG_PATH} fill="currentColor"/> : <IconNoteLarge/>}
+            {bookmark ? <path d={BOOKMARK_FLAG_PATH} fill="currentColor"/> : <IconNoteLarge/>}
 		</svg>
 		{props.selected && (
-			<SelectionBorder rect={new DOMRect(x, y, size, size)}/>
+			<SelectionBorder rect={new DOMRect(x, y, width, height)}/>
 		)}
 		<foreignObject
 			x={x}
 			y={y}
-			width={size}
-			height={size}
+			width={width}
+			height={height}
 			className="needs-pointer-events"
 			tabIndex={props.tabIndex}
 			data-annotation-id={props.annotation?.id}
@@ -974,7 +979,7 @@ let CommentIcon = React.forwardRef<SVGSVGElement, CommentIconProps>((props, ref)
 				// @ts-ignore
 				xmlns="http://www.w3.org/1999/xhtml"
 				className="annotation-div"
-				style={{ width: `${size}px`, height: `${size}px` }}
+				style={{ width: width, height: height }}
 				draggable={true}
 				onPointerDown={props.onPointerDown}
 				onPointerUp={props.onPointerUp}

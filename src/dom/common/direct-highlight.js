@@ -1,3 +1,4 @@
+import { DEFAULT_BOOKMARK_COLOR } from '../../common/reader-bookmark.mjs';
 import { wordRange } from './mobile-word-range.mjs';
 import { HoldToHighlight, HIGHLIGHT_HOLD_DELAY } from '../../pdf/hold-to-highlight.mjs';
 import { showAnnotationPalette } from '../../common/mobile-annotation-palette';
@@ -32,7 +33,11 @@ export class DOMDirectHighlight {
 			showPalette: annotations => showAnnotationPalette.call(this.host, annotations) };
 		this.gesture = new HoldToHighlight({
 			canStart: (event, immediate) => this.canStart(event, immediate),
-			prepare: (event, immediate) => (!immediate && this.annotationAt(event)) || this.wordAt(event),
+			prepare: (event, immediate) => {
+                if (!immediate) return this.annotationAt(event) || this.wordAt(event);
+                const range = this.wordAt(event);
+                return range && { readingPenRange: range, color: view._options.bookmarkColor || DEFAULT_BOOKMARK_COLOR };
+            },
 			start: (prepared, event) => this.start(prepared, event),
 			update: event => this.queueUpdate(event), finish: () => this.finish(), cancel: () => this.clear(),
 			tap: (down, up) => {
@@ -48,7 +53,6 @@ export class DOMDirectHighlight {
 			},
 		});
         this.listen('pointerdown', event => {
-            this.bookmarkDown = null;
             if (this.inControls(event) || view._penInput?.rejects?.(event)) return;
             if (this.host.palette) {
                 const annotation = this.annotationAt(event);
@@ -58,24 +62,25 @@ export class DOMDirectHighlight {
                 this.closePalette(); this.dismissPointer = event.pointerId;
                 return;
             }
-            if (event.isPrimary && event.button === 0 && view._tool.type === 'pointer' && !view._options.readOnly
-                && view.isBookmarkCorner?.(event.clientX, event.clientY)
-                && this.win.getSelection()?.isCollapsed && !view._selectedAnnotationIDs.filter(Boolean).length) {
-                this.bookmarkDown = {x:event.clientX,y:event.clientY,time:Date.now()};
-            }
+            if (view.bookmarkColors?.contains(event)) return;
+            if (view.bookmarkColors?.start(event)) return;
             const annotation = this.annotationAt(event);
             this.gesture.delay = annotation?.id === this.editableNoteID ? 0 : HIGHLIGHT_HOLD_DELAY;
             if (annotation?.id !== this.editableNoteID) this.editableNoteID = null;
             this.gesture.down(event);
 		});
-		this.listen('pointermove', event => this.gesture.move(event));
+		this.listen('pointermove', event => {
+            view.bookmarkColors?.move(event);
+            this.gesture.move(event);
+        });
         this.listen('pointerup', event => {
-            const down = this.bookmarkDown; this.bookmarkDown = null;
-            if (down && event.isPrimary && !this.gesture.active && Date.now()-down.time<=400 && Math.hypot(event.clientX-down.x,event.clientY-down.y)<=8) {
-                view._bookmarkPointer = down;
-                if (view.tryCreateAndroidBookmark?.(event.clientX,event.clientY,event.target)) {
-                    this.gesture.reset(); event.preventDefault(); view._preventNextClickEvent(); return;
-                }
+            const picker = view.bookmarkColors;
+            const cancelled = picker?.press?.cancelled;
+            if (picker?.end(event) && !cancelled) {
+                this.gesture.reset();
+                event.preventDefault();
+                view._preventNextClickEvent();
+                return;
             }
             // A pending hold that became a swipe belongs to the EPUB flow.
             // Keep pointerup unconsumed so page turning works when starting on text.
@@ -106,11 +111,12 @@ export class DOMDirectHighlight {
             if (this.gesture.up(event)) { event.preventDefault(); view._preventNextClickEvent(); }
 		});
 		this.listen('pointercancel', event => {
+            view.bookmarkColors?.end(event);
             if (this.dismissPointer === event.pointerId) this.dismissPointer = this.dismissTap = null;
             this.gesture.interrupted(event);
         });
 		this.listen('contextmenu', event => {
-			if (this.gesture.state || Date.now() < (this.suppressUntil || 0)) event.preventDefault();
+			if (this.gesture.state || view.bookmarkColors?.press || Date.now() < (this.suppressUntil || 0)) event.preventDefault();
 		});
 		this.listen('touchstart', event => { if (event.touches.length > 1) this.gesture.reset(); });
 		this.listen('touchmove', event => { if (this.gesture.active && event.cancelable) event.preventDefault(); });
@@ -124,7 +130,7 @@ export class DOMDirectHighlight {
 		this.listeners.push([type, callback]);
 	}
 	inControls(event) {
-		return event.composedPath().some(el => el?.matches?.('.resizer, .boox-highlight-palette, .motero-reading-progress, input, textarea, [contenteditable="true"]'));
+		return event.composedPath().some(el => el?.matches?.('.resizer, .boox-highlight-palette, .motero-reading-progress, .motero-bookmark-picker, input, textarea, [contenteditable="true"]'));
 	}
 	annotationAt(event) {
 		if (!this.view._annotationShadowRoot) return null;
@@ -158,7 +164,8 @@ export class DOMDirectHighlight {
             else this.host.showPalette([prepared]);
 			return;
 		}
-		this.anchor = prepared; this.range = prepared;
+		this.readingPenColor = prepared.readingPenRange ? prepared.color : null;
+		this.anchor = prepared.readingPenRange || prepared; this.range = this.anchor;
 		this.view._options.onSelectAnnotations([]);
 		this.preview();
 	}
@@ -196,8 +203,9 @@ export class DOMDirectHighlight {
 	}
 	preview() {
 		const view = this.view;
-		const type = ['highlight', 'underline'].includes(view._tool.type) ? view._tool.type : this.host.view._directHighlightType || 'highlight';
-		const color = view._tool.color || ANNOTATION_COLORS[0][1];
+		const type = this.readingPenColor ? 'highlight'
+            : ['highlight', 'underline'].includes(view._tool.type) ? view._tool.type : this.host.view._directHighlightType || 'highlight';
+		const color = this.readingPenColor || view._tool.color || ANNOTATION_COLORS[0][1];
 		view._previewAnnotation = view.getAnnotationFromRange(this.range, type, color);
 		view._renderAnnotations(true);
 	}
@@ -212,9 +220,9 @@ export class DOMDirectHighlight {
 		}
 		this.clear(); this.suppressUntil = Date.now() + 800;
 	}
-	clear() { if (this.pendingFrame != null) this.win.cancelAnimationFrame(this.pendingFrame); this.pendingFrame = null; this.pendingPoint = null; this.anchor = this.range = this.editing = null; this.view._previewAnnotation = null; this.view._renderAnnotations(); }
+	clear() { if (this.pendingFrame != null) this.win.cancelAnimationFrame(this.pendingFrame); this.pendingFrame = null; this.pendingPoint = null; this.anchor = this.range = this.editing = this.readingPenColor = null; this.view._previewAnnotation = null; this.view._renderAnnotations(); }
 	closePalette() { const palette = this.host.palette; this.host.palette = null; palette?.remove(); }
-	reset() { this.bookmarkDown = null; this.editableNoteID = null; this.gesture.reset(); this.clear(); this.closePalette(); }
+	reset() { this.view.bookmarkColors?.dismiss(); this.editableNoteID = null; this.gesture.reset(); this.clear(); this.closePalette(); }
 	setEnabled(enabled) {
 		this.enabled = !!enabled; this.reset();
 		this.doc.body.classList.toggle('mobile-direct-highlight', this.enabled);

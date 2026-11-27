@@ -8,19 +8,17 @@
 .motero-bookmark-ribbon {
     position: absolute;
     top: var(--flag-top);
-    right: var(--flag-right);
-    width: 23.8px;
-    height: 34px;
+    left: var(--flag-left);
+    width: var(--flag-width);
+    height: var(--flag-collapsed-height);
     box-sizing: border-box;
     overflow: hidden;
     background: var(--flag-color);
     clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - var(--flag-notch, 7.65px)), 0 100%);
-    transition: width 180ms ease, height 180ms ease, clip-path 180ms ease;
+    transition: height 180ms ease;
 }
 
 .motero-bookmark-ribbon[data-expanded] {
-    --flag-notch: 12px;
-    width: 54px;
     height: var(--flag-height);
 }
 
@@ -34,7 +32,8 @@
 
 .motero-bookmark-ribbon-colors {
     position: absolute;
-    inset: 7px 3px 15px;
+    inset: 0 3px 4px;
+    padding-bottom: 12px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -43,7 +42,7 @@
     touch-action: pan-y;
     background: var(--color-background, Canvas);
     box-shadow: inset 0 0 0 1px var(--color-border, #8886);
-    border-radius: 3px;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 8px), 0 100%);
 }
 
 .motero-bookmark-ribbon:not([data-expanded]) .motero-bookmark-ribbon-colors {
@@ -54,7 +53,7 @@
     display: grid;
     place-items: center;
     box-sizing: border-box;
-    width: 44px;
+    width: 100%;
     flex: 0 0 44px;
     padding: 0;
     border: 0;

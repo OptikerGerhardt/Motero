@@ -66,6 +66,7 @@ class View {
 		}
 		this._baseTool = this._tool = options.tool || { type: 'pointer' };
         this._penEraserSources = new Set();
+        this._penButtonHeldSources = new Set();
 
 		// Reading Mode overlay, shown on top of the (hidden) base view
 		this._sdtView = null;
@@ -151,10 +152,10 @@ class View {
 			penActive: this._options.penActive ?? false,
 			penExclusive: this._options.deviceProfile?.penOnly ?? this._options.penExclusive ?? false,
             deviceProfile: this._options.deviceProfile,
-            onPenEraser: (active, physical) => this.setPenEraser(active, 'pointer', physical),
+            onPenEraser: (active, physical, held) => this.setPenEraser(active, 'pointer', physical, held),
             onPenDetected: () => this._useDetectedPen(),
             isReadingPen: () => this._isReadingPen(),
-            isPenHighlighting: () => this._isReadingPen() && this._penButtonActive(),
+            isPenHighlighting: () => this._isReadingPen() && !this._options.readOnly && this._penButtonHeldSources.size > 0,
 			fontFamily: this._options.fontFamily,
             directHighlight: this._options.directHighlight,
             mobileAnnotations: this._type === 'epub',
@@ -476,7 +477,8 @@ class View {
     }
 
     _penButtonActive() {
-        return this._penEraserSources.has('key') || this._penEraserSources.has('pointer');
+        return this._penEraserSources.has('key') || this._penEraserSources.has('native')
+            || this._penEraserSources.has('pointer');
     }
 
     _isReadingPen() {
@@ -520,7 +522,9 @@ class View {
         this._applyTool(tool);
     }
 
-    setPenEraser(active, source = 'pointer', physical = false) {
+    setPenEraser(active, source = 'pointer', physical = false, held = active && !physical) {
+        if (held) this._penButtonHeldSources.add(source);
+        else this._penButtonHeldSources.delete(source);
         if (active && !physical) this._penEraserSources.add(source);
         else this._penEraserSources.delete(source);
         if (source === 'pointer') {
@@ -554,7 +558,7 @@ class View {
         for (const v of [this._view,this._sdtView]) {
             if (!v) continue;
             v._options.deviceProfile = profile;
-            if (changed) v._booxReader?.bookmarkColors.dismiss();
+            if (changed) (v._booxReader?.bookmarkColors ?? v.bookmarkColors)?.dismiss();
             if (profile.readingAssist === false) v._booxReader?.readingCue?.clear();
             v._directHighlight?.reset();
             v._penInput?.applyProfile(profile);

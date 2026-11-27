@@ -475,7 +475,7 @@ class PDFView {
                 if (event.type === 'pointerdown') this._options.onPenDetected?.();
                 this._handlePenSignal(event);
             },
-            onEraser: (active, physical) => this._options.onPenEraser?.(active, physical),
+            onEraser: (active, physical, held) => this._options.onPenEraser?.(active, physical, held),
             onRoute: event => routeReadingPen(this, event),
             isReadingPen: () => this._options.isReadingPen?.(),
             isPenHighlighting: () => this._options.isPenHighlighting?.(),

@@ -26,7 +26,7 @@ export class HoldToHighlight {
 			this.multitouch = true;
 			return true;
 		}
-		if (this.multitouch || (event.button !== 0 && !(immediate && (event.buttons & 1)))
+		if (this.multitouch || (event.button !== 0 && !(immediate && (event.buttons & 1 || event.pressure > 0)))
 				|| !this.canStart(event, immediate)) {
 			return this.multitouch;
 		}

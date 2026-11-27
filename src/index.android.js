@@ -176,7 +176,10 @@ window.fitToWidth = () => window._view.fitToWidth();
 window.setPageFitting = (options, apply = true) => window._view.setPageFitting(options, apply);
 window.beginManualCrop = options => window._view?._activeView?._pageFitting?.openCropEditor(options);
 window.cropEditorAction = options => window._view?._activeView?._pageFitting?.editor?.action(options);
-window.dismissBookmarkColors = () => window._view?._activeView?._booxReader?.bookmarkColors.dismiss(true);
+window.dismissBookmarkColors = () => {
+    const view = window._view?._activeView;
+    (view?._booxReader?.bookmarkColors ?? view?.bookmarkColors)?.dismiss(true);
+};
 window.focusReaderAnnotation = async id => {
     const reader = window._view, view = reader?._activeView;
     const annotation = view?._annotations?.find(a => a.id === id);
@@ -243,7 +246,7 @@ window.redoReaderAnnotation = () => {
 
 window.setDeviceProfile = profile => window._view?.setDeviceProfile(profile);
 window.setAnnotationToolbarOpen = open => window._view?.setAnnotationToolbarOpen(open);
-window.setPenEraser = active => window._view?.setPenEraser(active, 'key');
+window.setPenEraser = (active, source = 'key', held = active) => window._view?.setPenEraser(active, source, false, held);
 window.addAnnotation = options => window._view.addAnnotation(JSON.parse(decodeBase64(options.annotation)));
 window.editAnnotation = options => {
     try { window._view.updateAnnotations([JSON.parse(decodeBase64(options.annotation))]); }

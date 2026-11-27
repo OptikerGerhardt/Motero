@@ -28,7 +28,7 @@ export class MobilePenInput {
     get busy() { return this.owner !== null || Date.now() < this.until; }
     stop(e) { if (e.cancelable) e.preventDefault(); e.stopImmediatePropagation(); }
     isControl(event) {
-        return event.target?.closest?.('.boox-highlight-palette, .boox-manual-crop, .motero-reading-progress, button, input, select, [role=toolbar]');
+        return event.target?.closest?.('.boox-highlight-palette, .boox-manual-crop, .motero-bookmark-picker, .motero-reading-progress, button, input, select, [role=toolbar]');
     }
     pointer(e) {
         const down = e.type === 'pointerdown', up = e.type === 'pointerup' || e.type === 'pointercancel';
@@ -99,10 +99,11 @@ export class MobilePenInput {
         this.finishRelease(event);
     }
     setEraser(active, physical = false) {
-        if (this.eraser === active && !!this.reportedPhysical === physical) return;
+        if (this.eraser === active && !!this.reportedPhysical === physical && !!this.reportedHeld === this.button) return;
         this.eraser = active;
         this.reportedPhysical = physical;
-        this.onEraser(active, physical);
+        this.reportedHeld = this.button;
+        this.onEraser(active, physical, this.button);
     }
     applyProfile(profile) {
         this.profile = profile || {};

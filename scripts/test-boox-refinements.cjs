@@ -47,20 +47,27 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   await touch('touchStart',[{x:385,y:30}]);await touch('touchEnd',[]);
   await page.waitForFunction(()=>window._view._view._annotations.length===1);
   const bookmark=await page.evaluate(()=>window._view._view._annotations[0]);
-  assert.equal(bookmark.position.pageIndex,centered);assert.equal(bookmark.color,'#000000');
+  assert.equal(bookmark.position.pageIndex,centered);assert.equal(bookmark.color,'#ffd400');
   await page.waitForFunction(()=>{const v=window._view._view,e=v._iframeWindow.document.querySelector('.motero-bookmark-indicator');return e&&e.style.display==='block';});
   const frameStyle=await page.evaluate(()=>{const v=window._view._view,d=v._iframeWindow.document,f=d.querySelector('.motero-page-frame');return{shadow:v._iframeWindow.getComputedStyle(f).boxShadow,flagPointer:v._iframeWindow.getComputedStyle(d.querySelector('.motero-bookmark-indicator')).pointerEvents};});
   assert.notEqual(frameStyle.shadow,'none');assert.equal(frameStyle.flagPointer,'none');
   await page.evaluate(()=>window.setReaderIndicatorInsets({top:32,right:12}));
   await page.waitForTimeout(40);
-  const flagSafe=await page.evaluate(()=>{const e=window._view._view._iframeWindow.document.querySelector('.motero-bookmark-indicator');return e.getBoundingClientRect().toJSON();});
-  assert.equal(flagSafe.top,40);assert.equal(393-flagSafe.right,40,'bookmark clearance is symmetric and below the status bar');
+  const flagSafe=await page.evaluate(()=>{
+   const v=window._view._view, e=v._iframeWindow.document.querySelector('.motero-bookmark-indicator');
+   const viewport=v._pageFitting.viewer.container.getBoundingClientRect();
+   const page=v._pageFitting.viewer.getPageView(Number(e.dataset.pageIndex));
+   const crop=v._pageFitting.layout?.boxes[Number(e.dataset.pageIndex)];
+   const rect=page.div.getBoundingClientRect();
+   return {actual:e.getBoundingClientRect().top, expected:Math.max(viewport.top, rect.top+(crop?.top||0)*rect.height/page.viewport.height)};
+  });
+  assert.ok(Math.abs(flagSafe.actual-flagSafe.expected)<.5,JSON.stringify(flagSafe));
 
   console.log('PASS cropped PDF frame keeps its shadow; off-screen page bookmark has a passive viewport flag');
 
   await touch('touchStart',[{x:385,y:30}]);await touch('touchEnd',[]);
   await page.waitForFunction(()=>window._view._view._annotations.length===0);
-  console.log('PASS a top fragment never receives the centered page bookmark; corner toggles black bookmarks');
+  console.log('PASS a top fragment never receives the centered page bookmark; corner toggles default-color bookmarks');
 
   await page.setViewportSize({width:600,height:800});
   await open('pdf','/fixture.pdf',{viewState:{pageIndex:8,scale:'page-width',scrollMode:0,spreadMode:0},pageFitting:{...fit,mode:'height'}});

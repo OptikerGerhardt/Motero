@@ -133,7 +133,7 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
    const bookmarkTap=await page.evaluate(()=>{let r=window._view._view._iframe.getBoundingClientRect();return {x:r.left+r.width*.9,y:r.top+r.height*.04};});
    await touch('touchStart',[bookmarkTap]);await touch('touchEnd',[]);
    await page.waitForFunction(()=>window._view._view._annotations.length===1);
-   const bookmark=await page.evaluate(()=>window._view._view._annotations[0]);assert.equal(bookmark.type,'note');assert.equal(bookmark.color,'#000000');
+   const bookmark=await page.evaluate(()=>window._view._view._annotations[0]);assert.equal(bookmark.type,'note');assert.equal(bookmark.color,'#ffd400');
    await touch('touchStart',[bookmarkTap]);await touch('touchEnd',[]);
    await page.waitForFunction(()=>window._view._view._annotations.length===0);
    await page.waitForFunction(id=>window.messages.some(m=>m.message?.event==='onDeleteAnnotations'&&m.message.params.ids.includes(id)),bookmark.id);

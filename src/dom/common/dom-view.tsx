@@ -348,7 +348,7 @@ abstract class DOMView<State extends DOMViewState, Data> {
                 this._iframeDocument.body.classList.remove('creating-touch-annotation');
             },
             onSignal: (event: PointerEvent) => this._handlePenSignal(event),
-            onEraser: (active: boolean, physical: boolean) => (this._options as any).onPenEraser?.(active, physical),
+            onEraser: (active: boolean, physical: boolean, held: boolean) => (this._options as any).onPenEraser?.(active, physical, held),
             onRoute: (event: PointerEvent) => routeReadingPen(this, event),
             isReadingPen: () => (this._options as any).isReadingPen?.(),
             isPenHighlighting: () => (this._options as any).isPenHighlighting?.(),
@@ -1764,7 +1764,7 @@ abstract class DOMView<State extends DOMViewState, Data> {
 	}
 
 	protected _handlePointerDown(event: PointerEvent) {
-        if ((event.target as Element)?.closest?.('.motero-reading-progress, .boox-highlight-palette')) return;
+        if ((event.target as Element)?.closest?.('.motero-reading-progress, .boox-highlight-palette, .motero-bookmark-picker')) return;
 		// Clean up in case this pointer was left behind in _handledPointerIDs,
 		// since we know this is a new interaction
 		this._handledPointerIDs.delete(event.pointerId);
@@ -1834,7 +1834,7 @@ abstract class DOMView<State extends DOMViewState, Data> {
 	}
 
 	protected _handlePointerUp(event: PointerEvent) {
-        if ((event.target as Element)?.closest?.('.motero-reading-progress, .boox-highlight-palette')) return;
+        if ((event.target as Element)?.closest?.('.motero-reading-progress, .boox-highlight-palette, .motero-bookmark-picker')) return;
 		this._handledPointerIDs.delete(event.pointerId);
         if (this._directHighlight?.navigationUps.has(event)) return;
 

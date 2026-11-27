@@ -1,6 +1,6 @@
 import ribbonStyles from '!!raw-loader!./bookmark-color-ribbon.css';
 import { ANNOTATION_COLORS, EXTRA_INK_AND_TEXT_COLORS } from '../common/defines';
-import { bookmarkColor, readerIndicatorPosition } from '../common/reader-bookmark.mjs';
+import { bookmarkColor, bookmarkFrameAnchor, BOOKMARK_FLAG_WIDTH, BOOKMARK_FLAG_HEIGHT } from '../common/reader-bookmark.mjs';
 
 const HOLD_MS = 450;
 const SLOP = 8;
@@ -85,8 +85,8 @@ export class BookmarkColorPicker {
         const bounds = reader.viewer.container.getBoundingClientRect();
         const insets = view._options.indicatorInsets || {};
         const { left, top } = reader.indicators.anchor(press.index)
-            || readerIndicatorPosition(bounds, insets);
-        const height = Math.min(COLORS.length * 44 + 22, bounds.bottom - top - Math.max(12, insets.bottom || 0));
+            || bookmarkFrameAnchor(bounds, bounds, insets);
+        const height = Math.min(COLORS.length * 44 + 24, bounds.bottom - top - Math.max(12, insets.bottom || 0));
         if (height < 66) return;
         const instant = !!view._options.deviceProfile?.eReader
             || win.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -106,7 +106,9 @@ export class BookmarkColorPicker {
             if (value) flag.style.setProperty(name, value);
         }
         flag.style.setProperty('--flag-top', top + 'px');
-        flag.style.setProperty('--flag-right', Math.max(4, Math.min(win.innerWidth - 58, win.innerWidth - left - 34)) + 'px');
+        flag.style.setProperty('--flag-left', left + 'px');
+        flag.style.setProperty('--flag-width', BOOKMARK_FLAG_WIDTH + 'px');
+        flag.style.setProperty('--flag-collapsed-height', BOOKMARK_FLAG_HEIGHT + 'px');
         flag.style.setProperty('--flag-height', height + 'px');
         flag.style.setProperty('--flag-color', current);
         const swatches = doc.createElement('div');
@@ -131,6 +133,11 @@ export class BookmarkColorPicker {
         this.isOpen = true;
         flag.tabIndex = -1;
         layer.addEventListener('keydown', event => {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                this.dismiss(true);
+                return;
+            }
             if (event.key !== 'Tab') return;
             const items = Array.from(swatches.children);
             const focused = items.indexOf(doc.activeElement);

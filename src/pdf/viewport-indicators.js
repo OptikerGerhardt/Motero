@@ -1,8 +1,7 @@
-import { isLegacyReaderBookmark, bookmarkColor, readerIndicatorPosition, BOOKMARK_FLAG_PATH } from '../common/reader-bookmark.mjs';
+import { isLegacyReaderBookmark, bookmarkColor, bookmarkFrameAnchor, BOOKMARK_FLAG_HEIGHT, BOOKMARK_FLAG_WIDTH, BOOKMARK_FLAG_PATH } from '../common/reader-bookmark.mjs';
 import { readingUnit } from './reading-unit.mjs';
 
-/** Reading uses stable viewport hints, one per spread leaf. Only an explicit
- * overview uses physical page flags; scrolling never switches their anchors. */
+/** Follow the visible PDF frame, with one flag per spread leaf. */
 export class PDFViewportIndicators {
     constructor(view) {
         this.view=view; this.win=view._iframeWindow; this.doc=this.win.document;
@@ -17,9 +16,8 @@ export class PDFViewportIndicators {
     }
     create(index) {
         const e=this.doc.createElement('div');e.className='motero-bookmark-indicator';e.dataset.pageIndex=String(index);e.setAttribute('aria-hidden','true');
-        e.style.cssText='position:fixed;pointer-events:none;z-index:100;display:none;width:34px;height:34px;opacity:.7';
-        // Trim unused SVG margins so the visible flag has equal top/right clearance.
-        e.innerHTML=`<svg viewBox="5 2 14 20" preserveAspectRatio="xMaxYMin meet"><path d="${BOOKMARK_FLAG_PATH}"/></svg>`;
+        e.style.cssText=`position:fixed;pointer-events:none;z-index:100;display:none;width:${BOOKMARK_FLAG_WIDTH}px;height:${BOOKMARK_FLAG_HEIGHT}px;opacity:.7;filter:drop-shadow(0 1px 2px #0003)`;
+        e.innerHTML=`<svg viewBox="0 0 24 16" preserveAspectRatio="none"><path d="${BOOKMARK_FLAG_PATH}"/></svg>`;
         e.firstChild.style.cssText='width:100%;height:100%;fill:currentColor';
         this.doc.documentElement.append(e);this.flags.set(index,e);return e;
     }
@@ -46,11 +44,9 @@ export class PDFViewportIndicators {
                 }
             }
         }
-        const reading=this.bookmarked.size > 0 && !view._booxReader?.isOverview() && !view._pageFitting?.editor;
+        const reading=this.bookmarked.size > 0 && !view._pageFitting?.editor;
         const indices=reading ? readingUnit(view._pageFitting?.centeredPageIndex() ?? v.currentPageNumber-1,v.pagesCount,v.spreadMode) : [];
         const shown=new Set();
-        const safe=readerIndicatorPosition(b,view._options.indicatorInsets || {});
-        const gap=b.right-safe.left-34;
         for (const i of indices) {
             if (!this.bookmarked.has(i)) continue;
             const page=v.getPageView(i),r=page?.div.getBoundingClientRect();
@@ -59,10 +55,14 @@ export class PDFViewportIndicators {
             const sx=r.width/page.viewport.width;
             const left=frame ? r.left+frame.left*sx : r.left;
             const right=frame ? r.right-frame.right*sx : r.right;
-            if (right<=b.left || left>=b.right) continue;
+            const sy=r.height/page.viewport.height;
+            const top=frame ? r.top+frame.top*sy : r.top;
+            const bottom=frame ? r.bottom-frame.bottom*sy : r.bottom;
+            if (right<=b.left || left>=b.right || top>=b.bottom || bottom<=b.top) continue;
+            const anchor=bookmarkFrameAnchor(b,{ left, right, top },view._options.indicatorInsets);
             const flag=this.flags.get(i)||this.create(i);
-            flag.style.left=(indices.length>1 ? Math.max(b.left+12,Math.min(b.right,right)-gap-34) : safe.left)+'px';
-            flag.style.top=safe.top+'px';flag.style.display='block';
+            flag.style.left=anchor.left+'px';
+            flag.style.top=anchor.top+'px';flag.style.display='block';
             flag.style.visibility=i === this.palettePage ? 'hidden' : '';
             const color=bookmarkColor(this.bookmarked.get(i));
             flag.style.color=color === '#000000' && view._themeColorScheme === 'dark' ? '#ddd' : color;

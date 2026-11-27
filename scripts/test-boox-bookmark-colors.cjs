@@ -149,13 +149,15 @@ const palette = ['#ffd400', '#ff6666', '#5fb236', '#2ea8e5', '#a28ae5', '#e56eee
             const w = flag.ownerDocument.defaultView;
             const r = flag.getBoundingClientRect();
             const rail = flag.querySelector('.motero-bookmark-ribbon-colors');
-            return {top:r.top, bottom:r.bottom, right:r.right, clip:w.getComputedStyle(flag).clipPath,
+            return {top:r.top, bottom:r.bottom, right:r.right, width:r.width, clip:w.getComputedStyle(flag).clipPath, innerClip:w.getComputedStyle(rail).clipPath,
                 transition:w.getComputedStyle(flag).transitionDuration,
                 viewport:w.innerHeight, button:rail.firstElementChild.getBoundingClientRect().height,
                 scrollable:rail.scrollHeight>rail.clientHeight, swatch:rail.querySelector('span').offsetWidth};
         });
         assert.equal(layout.transition, '0s');
-        assert.ok(layout.top >= 38 && layout.bottom <= layout.viewport-24 && layout.right <= 800 - 38);
+        assert.ok(layout.top >= 0 && layout.bottom <= layout.viewport-24 && layout.right <= 800 - 16);
+        assert.equal(layout.width, 44);
+        assert.match(layout.innerClip, /^polygon\(/);
         assert.match(layout.clip, /^polygon\(/);
         assert.equal(layout.button, 44);
         assert.equal(layout.swatch, 24);

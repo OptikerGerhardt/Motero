@@ -32,8 +32,8 @@ const root=path.resolve(__dirname,'../build/android'),fixture=path.resolve(__dir
    let expected;
    for(const top of [70,40,20,0,20,40,70]){
     await page.evaluate(({i,top})=>{const v=window._view._view._pageFitting.viewer,p=v.getPageView(i);v.container.scrollTop+=p.div.getBoundingClientRect().top-top;v.update();},{i:first,top});await page.waitForTimeout(60);
-    const flags=await page.evaluate(()=>{const v=window._view._view,w=v._iframeWindow;return [...w.document.querySelectorAll('.motero-bookmark-indicator')].map(e=>{const r=e.getBoundingClientRect(),style=w.getComputedStyle(e);return{index:e.dataset.pageIndex,x:r.x,y:r.y,pointer:style.pointerEvents,color:style.color};}).sort((a,b)=>a.index-b.index);});
-    assert.equal(flags.length,2);for(const f of flags){assert.equal(f.y,40);assert.equal(f.pointer,'none');}
+    const flags=await page.evaluate(()=>{const v=window._view._view,w=v._iframeWindow;return [...w.document.querySelectorAll('.motero-bookmark-indicator')].map(e=>{const r=e.getBoundingClientRect(),style=w.getComputedStyle(e);const page=v._pageFitting.viewer.getPageView(Number(e.dataset.pageIndex)); const bounds=page.div.getBoundingClientRect(); const box=v._pageFitting.layout?.boxes[Number(e.dataset.pageIndex)]; return{index:e.dataset.pageIndex,x:r.x,y:r.y,expectedY:Math.max(v._pageFitting.viewer.container.getBoundingClientRect().top,bounds.top+(box?.top||0)*bounds.height/page.viewport.height),pointer:style.pointerEvents,color:style.color};}).sort((a,b)=>a.index-b.index);});
+    assert.equal(flags.length,2);for(const f of flags){assert.ok(Math.abs(f.y-f.expectedY)<.5,JSON.stringify(f));assert.equal(f.pointer,'none');}
     assert.deepEqual(flags.map(f=>f.color),['rgb(0, 0, 0)','rgb(46, 168, 229)']);
     if(expected)for(let i=0;i<2;i++){assert.equal(flags[i].index,expected[i].index);assert.ok(Math.abs(flags[i].x-expected[i].x)<1,'a spread bookmark cannot teleport when scrolling');}else expected=flags;
    }

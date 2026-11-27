@@ -1,4 +1,4 @@
-import { BOOKMARK_TAG, isReaderBookmark, bookmarkToggleOff, readerBookmarkCorner } from '../common/reader-bookmark.mjs';
+import { BOOKMARK_TAG, DEFAULT_BOOKMARK_COLOR, isReaderBookmark, bookmarkToggleOff, readerBookmarkCorner } from '../common/reader-bookmark.mjs';
 import { PDFViewportIndicators } from './viewport-indicators.js';
 import { PDFReadingPositionCue } from './reading-position-cue.mjs';
 import { BookmarkColorPicker } from './bookmark-color-picker';
@@ -209,7 +209,7 @@ export class PDFBooxReader {
 		let position = { pageIndex, rects: [[Math.min(p0[0], p1[0]), Math.min(p0[1], p1[1]),
 			Math.max(p0[0], p1[0]), Math.max(p0[1], p1[1])]] };
         const requestedColor = selection?.color ?? view._options.bookmarkColor;
-        const color = /^#[0-9a-f]{6}$/i.test(requestedColor || '') ? requestedColor : '#000000';
+        const color = /^#[0-9a-f]{6}$/i.test(requestedColor || '') ? requestedColor : DEFAULT_BOOKMARK_COLOR;
         view._onAddAnnotation({ type: 'note', color, position,
             pageLabel: view._getPageLabel(pageIndex, true), sortIndex: getSortIndex(view._pdfPages, position),
             tags: [{ name: BOOKMARK_TAG }],

@@ -1,5 +1,6 @@
+import { BookmarkColorPicker } from '../../pdf/bookmark-color-picker.js';
 import { pageLineBalance } from './page-frame.mjs';
-import { BOOKMARK_TAG, bookmarkColor, bookmarkToggleOff, isReaderBookmark, readerBookmarkCorner } from '../../common/reader-bookmark.mjs';
+import { BOOKMARK_TAG, DEFAULT_BOOKMARK_COLOR, bookmarkColor, bookmarkFrameAnchor, bookmarkToggleOff, isReaderBookmark, readerBookmarkCorner } from '../../common/reader-bookmark.mjs';
 import injectCSS from './stylesheets/inject.scss';
 import Path from "epubjs/src/utils/path";
 import {
@@ -109,6 +110,7 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
         } else this._keepPosition(apply);
     }
 
+    bookmarkColors?: BookmarkColorPicker;
     private _bookmarkPointer: { x: number, y: number, time: number } | null = null;
 
     isBookmarkCorner(x: number, y: number): boolean {
@@ -136,10 +138,10 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
         this._options.onSetAnnotationPopup(null);
     }
 
-    addAndroidBookmark(): boolean {
-        if (this._options.platform !== 'android' || this._options.readOnly || !this.initialized || !this.flow) return false;
+    private _bookmarkDraft() {
+        if (this._options.platform !== 'android' || this._options.readOnly || !this.initialized || !this.flow) return null;
         let range = this.flow.startRange?.cloneRange();
-        if (!range) return false;
+        if (!range) return null;
         range = moveRangeEndsIntoTextNodes(range);
         // A paragraph may end below the screen. Resolve its first visible line.
         if (range.startContainer.nodeType === Node.TEXT_NODE) {
@@ -157,7 +159,7 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
         // Standard EPUB notes use a nonempty FragmentSelector, like desktop.
         if (range.collapsed) {
             let node = range.startContainer;
-            if (node.nodeType !== Node.TEXT_NODE || !node.textContent?.length) return false;
+            if (node.nodeType !== Node.TEXT_NODE || !node.textContent?.length) return null;
             let offset = Math.min(range.startOffset, node.textContent.length - 1);
             let code = node.textContent.charCodeAt(offset);
             if (offset > 0 && code >= 0xDC00 && code <= 0xDFFF) offset--;
@@ -165,12 +167,25 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
             range.setStart(node, offset);
             range.setEnd(node, offset + length);
         }
-        const color = bookmarkColor({ color: (this._options as any).bookmarkColor });
-        let annotation = this.getAnnotationFromRange(range, 'note', color);
+        const color = bookmarkColor({ color: (this._options as any).bookmarkColor ?? DEFAULT_BOOKMARK_COLOR });
+        return this.getAnnotationFromRange(range, 'note', color);
+    }
+
+    addAndroidBookmark(selection?: { id?: string, color: string }): boolean {
+        if (this._options.readOnly) return false;
+        if (selection?.id) {
+            const target = this._annotations.find(a => a.id === selection.id && isReaderBookmark(a));
+            if (!target || target.readOnly || target.isExternal) return false;
+            if (target.color?.toLowerCase() !== selection.color) {
+                this._options.onUpdateAnnotations([{ id: target.id, color: selection.color }]);
+            }
+            return true;
+        }
+        const annotation = this._bookmarkDraft();
         if (!annotation) return false;
-        let existing = this._annotations.find(a => isReaderBookmark(a) && a.sortIndex === annotation!.sortIndex);
+        const existing = this._annotations.find(a => isReaderBookmark(a) && a.sortIndex === annotation.sortIndex);
         if (existing) {
-            if (!existing.readOnly && !existing.isExternal) {
+            if (!selection && !existing.readOnly && !existing.isExternal) {
                 const result = bookmarkToggleOff(existing, this._iframeWindow.navigator.language);
                 if (result.delete) this._options.onDeleteAnnotationsFromPalette?.([existing.id]);
                 else this._options.onUpdateAnnotations([{ id: existing.id, ...result.changes }]);
@@ -178,6 +193,7 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
             return true;
         }
         let label = this._iframeWindow.navigator.language.startsWith('de') ? 'Lesezeichen' : 'Bookmark';
+        if (selection) annotation.color = selection.color;
         annotation.tags = [{ name: BOOKMARK_TAG }];
         annotation.comment = label + ' · ' + new Intl.DateTimeFormat(
             this._iframeWindow.navigator.language, { dateStyle: 'short', timeStyle: 'short' }
@@ -186,7 +202,7 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
     }
 
     protected override _handlePointerDown(event: PointerEvent) {
-        this._bookmarkPointer = event.isPrimary && event.button === 0
+        this._bookmarkPointer = !this.bookmarkColors?.contains(event) && event.isPrimary && event.button === 0
             ? { x: event.clientX, y: event.clientY, time: Date.now() } : null;
         super._handlePointerDown(event);
     }
@@ -241,6 +257,36 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 		this._iframeDocument.addEventListener('visibilitychange', this._onFocusReturn);
         this._iframeWindow.addEventListener('focus', this._onFocusReturn);
         window.addEventListener('focus', this._onFocusReturn);
+
+        if (this._options.platform === 'android') {
+            const win = this._iframeWindow, doc = this._iframeDocument;
+            this.bookmarkColors = new BookmarkColorPicker({
+                win, doc, view: this, de: win.navigator.language.startsWith('de'),
+                viewer: { container: doc.documentElement },
+                canUseBookmarkCorner: (event: PointerEvent) => this.initialized && !this._options.readOnly
+                    && this._tool.type === 'pointer' && !this._selectedAnnotationIDs.some(Boolean)
+                    && win.getSelection()?.isCollapsed && this.isBookmarkCorner(event.clientX, event.clientY),
+                bookmarkPageIndex: () => this.flow?.startRange && this.pageMapping.getPageIndex(this.flow.startRange),
+                findBookmark: () => {
+                    const draft = this._bookmarkDraft();
+                    return draft && this._annotations.find(a => isReaderBookmark(a) && a.sortIndex === draft.sortIndex);
+                },
+                addBookmark: async (_index: number, selection?: { id?: string, color: string }) => {
+                    this.addAndroidBookmark(selection);
+                },
+                closePalette: () => this._directHighlight?.closePalette(),
+                indicators: {
+                    anchor: () => {
+                        const viewport = doc.documentElement.getBoundingClientRect();
+                        const start = this.flow?.startRange?.startContainer;
+                        const frame = start?.parentElement?.closest('.section-container')?.getBoundingClientRect();
+                        const bounds = { top: 0, left: 0, right: win.innerWidth, bottom: win.innerHeight };
+                        return bookmarkFrameAnchor(bounds, frame ?? viewport, this._options.indicatorInsets);
+                    },
+                    setPalettePage: () => {},
+                },
+            });
+        }
 
 		return super._handleIFrameLoaded();
 	}
@@ -898,7 +944,8 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 			return;
 		}
         if (this._options.platform === 'android') {
-            this._resizeIframeTrailing.cancel();
+            this.bookmarkColors?.destroy();
+        this._resizeIframeTrailing.cancel();
             this._iframe.style.transform = '';
             this._iframe.classList.remove('mask-resizing');
             if (this._iframe.offsetWidth !== this._container.clientWidth || this._iframe.offsetHeight !== this._container.clientHeight) this._resizeIframeImmediate();
@@ -1562,6 +1609,7 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 
     override destroy() {
         this._disposed = true; this._appearanceRevision++;
+        this.bookmarkColors?.destroy();
         this._resizeIframeTrailing.cancel();
         this._iframeDocument?.removeEventListener('visibilitychange', this._onFocusReturn);
         this._iframeWindow?.removeEventListener('focus', this._onFocusReturn);

@@ -53,7 +53,19 @@ export function bookmarkToggleOff(annotation, locale) {
     };
 }
 
-export const BOOKMARK_FLAG_PATH = 'M5 2h14v20l-7-4.5-7 4.5z';
+export const DEFAULT_BOOKMARK_COLOR = '#ffd400';
+export const BOOKMARK_FLAG_WIDTH = 44;
+export const BOOKMARK_FLAG_HEIGHT = 29;
+export const BOOKMARK_FLAG_PATH = 'M0 0h24v16l-12-4.4L0 16z';
+
+// Follow the visible frame while it covers the viewport, then its exposed edge.
+export function bookmarkFrameAnchor(viewport, frame, insets = {}) {
+    const right = Math.min(viewport.right - Math.max(16, (Number(insets.right) || 0) + 8), frame.right - 8);
+    return {
+        left: Math.max(viewport.left, frame.left, right - BOOKMARK_FLAG_WIDTH),
+        top: Math.max(viewport.top, frame.top),
+    };
+}
 
 // Stable PDF-page corner in viewport coordinates, independent of saved note rects.
 export function bookmarkFlagRect(viewport) {
