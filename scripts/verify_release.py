@@ -60,6 +60,8 @@ assert ("application-label:'Motero Beta'" if beta else "application-label:'Moter
 if beta:
     version = '.'.join(re.search(r'\b' + key + r'\s*=\s*(\d+)', config).group(1) for key in ('major', 'minor', 'patch'))
     assert f"versionName='{version}-beta.{expected_code}'" in badging
+    resources = subprocess.check_output([str(args.build_tools / 'aapt2'), 'dump', 'resources', str(args.apk)], text=True)
+    assert 'string/google_app_id' not in resources, 'The Beta has no Firebase registration'
 if not args.development:
     assert 'application-debuggable' not in badging, 'Public APK must not be debuggable'
     assert int(re.search(r"(?:minSdkVersion|sdkVersion):'(\d+)'", badging).group(1)) >= policy['minimum_android_api']

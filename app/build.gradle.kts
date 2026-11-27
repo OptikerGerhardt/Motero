@@ -8,8 +8,8 @@ plugins {
     id("com.google.devtools.ksp")
     id("realm-android")
     id("kotlin-parcelize")
-    id("com.google.gms.google-services")
-    id("com.google.firebase.crashlytics")
+    id("com.google.gms.google-services") apply false
+    id("com.google.firebase.crashlytics") apply false
 
     //----Dependency plugins start----
     id("kotlinDependencies")
@@ -29,6 +29,10 @@ val moteroBetaBuild = providers.gradleProperty("moteroBetaBuild").orNull?.toInt(
 require(!moteroPublicRelease || moteroBetaBuild == null) { "Choose either stable or beta release." }
 require(moteroBetaBuild == null || moteroBetaBuild > 0) { "Beta build number must be positive." }
 val externalSigning = moteroPublicRelease || moteroBetaBuild != null
+if (moteroBetaBuild == null) {
+    apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.crashlytics")
+}
 
 android {
     compileSdk = BuildConfig.compileSdkVersion
@@ -164,13 +168,6 @@ android {
                 ) {}
             }
         }
-    }
-}
-
-if (moteroBetaBuild != null) {
-    // The separately distributed Beta does not have a Firebase registration.
-    tasks.matching { it.name == "processDevReleaseGoogleServices" }.configureEach {
-        enabled = false
     }
 }
 
