@@ -1,0 +1,23 @@
+name: Attach Beta 338 emulator reports
+on:
+  push:
+    branches: [ops/beta-338-signing-readiness]
+    paths: ['.github/workflows/beta-338-reports.yml']
+permissions:
+  contents: write
+jobs:
+  attach:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag=v1.1.11-beta.338
+          gh release view "$tag" -R "$GITHUB_REPOSITORY" --json isDraft,isPrerelease,targetCommitish | jq -e '.isDraft and .isPrerelease and .targetCommitish == "fbe85ad6f9886f508f9fcc62d6f1c486aa4d9862"'
+          for api in 31 35; do
+            file="beta-api${api}-verification.json"
+            curl -fsSL "https://raw.githubusercontent.com/OptikerGerhardt/Motero/ecc5f6e41aeb211508e1fa1787678846566d44d5/$file" -o "$file"
+            jq -e --argjson api "$api" '.android_api == $api and .beta_version == 338 and .beta_sha256 == "50dca2341dec6e81aae9f1135c5c86b723588de54cc7ca43f9d39aea14353460" and .parallel_install and .separate_application_uids and .prior_beta_data_retained and .stable_data_retained and .public_test_key_update_rejected and .beta_launch_verified' "$file"
+          done
+          gh release upload "$tag" -R "$GITHUB_REPOSITORY" beta-api31-verification.json beta-api35-verification.json
