@@ -1,0 +1,10 @@
+{
+  "protocol": 1,
+  "worker": 3,
+  "token": "w3-D13-20261127T063302Z-review",
+  "acquiredAt": "2026-11-27T06:33:02Z",
+  "expiresAt": "2026-11-27T07:03:02Z",
+  "action": "regression coverage inspection",
+  "target": "D#13 / PR#12",
+  "state": "active"
+}
