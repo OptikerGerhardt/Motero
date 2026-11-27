@@ -1,0 +1,13 @@
+{
+  "android_api": 31,
+  "stable_version": 335,
+  "beta_version": 338,
+  "beta_sha256": "50dca2341dec6e81aae9f1135c5c86b723588de54cc7ca43f9d39aea14353460",
+  "parallel_install": true,
+  "separate_application_uids": true,
+  "prior_beta_data_retained": true,
+  "stable_data_retained": true,
+  "public_test_key_update_rejected": true,
+  "beta_launch_verified": true,
+  "baseline": "synthetic previous Beta"
+}
