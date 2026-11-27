@@ -1,0 +1,21 @@
+name: Motero Beta 338 signing preflight
+on:
+  push:
+    branches: [ops/beta-338-signing-readiness]
+    paths: ['.github/workflows/beta-338-signing-readiness.yml']
+permissions: {}
+jobs:
+  signing-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check dedicated Beta signing binding without accessing its value
+        env:
+          BETA_SIGNING_CONFIGURED: ${{ secrets.MOTERO_BETA_SIGNING != '' }}
+        run: |
+          if [[ "$BETA_SIGNING_CONFIGURED" == "true" ]]; then
+            echo 'The private Beta signing binding is available.'
+          else
+            echo '::error::MOTERO_BETA_SIGNING is unavailable to GitHub Actions on this ref.'
+            exit 1
+          fi
