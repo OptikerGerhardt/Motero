@@ -128,4 +128,70 @@ class RealmTagPersistenceInstrumentedTest {
         }
         assertEquals(listOf("unchanged" to ""), readTags())
     }
+    private fun syncState(key: String = annotationKey): Pair<String, Int> =
+        Realm.getInstance(configuration).use { realm ->
+            val item = requireNotNull(realm.where<RItem>().key(key, libraryId).findFirst())
+            item.changeType to item.changes.size
+        }
+
+    @Test
+    fun existingLibraryTagColorIsNotOverwrittenByAnnotationPayload() {
+        edit(tags = listOf(Tag("Quick", "#112233")))
+        val before = syncState()
+
+        edit(tags = listOf(Tag("Quick", "#aabbcc")))
+        assertEquals(listOf("Quick" to "#112233"), readTags())
+        assertEquals(before, syncState())
+
+        // Exercise the shared RTag lookup as well as the existing assignment.
+        val siblingKey = "SIBLINGANNOTATION"
+        Realm.getInstance(configuration).use { realm ->
+            realm.executeTransaction {
+                val sibling = realm.createObject<RItem>()
+                sibling.key = siblingKey
+                sibling.rawType = ItemTypes.annotation
+                sibling.customLibraryKey = RCustomLibraryType.myLibrary.name
+                sibling.dateAdded = Date(0L)
+                sibling.dateModified = Date(0L)
+                sibling.changeType = UpdatableChangeType.sync.name
+            }
+        }
+        edit(key = siblingKey, tags = listOf(Tag("Quick", "#aabbcc")))
+        assertEquals(listOf("Quick" to "#112233"), readTags(siblingKey))
+        assertEquals(listOf("Quick" to "#112233"), readTags())
+        assertEquals(before, syncState())
+        assertEquals(UpdatableChangeType.user.name, syncState(siblingKey).first)
+    }
+
+    @Test
+    fun explicitClearRolledBackWhenFollowingAnnotationWriteFails() {
+        edit(tags = listOf(Tag("preserved", "#778899")))
+        val before = syncState()
+        val failingWrite = object : DbRequest {
+            override val needsWrite = true
+            override fun process(database: Realm) {
+                error("annotation update rejected after tag clear")
+            }
+        }
+        // Exercise the real batch coordinator, and ensure the test releases
+        // its Realm even on failure before checking durable state.
+        val coordinator = RealmDbCoordinator().init(configuration)
+        try {
+            coordinator.perform(listOf(
+                EditTagsForItemDbRequest(annotationKey, libraryId, emptyList()),
+                failingWrite,
+            ))
+            throw AssertionError("Batch should have failed")
+        } catch (expected: IllegalStateException) {
+            assertEquals("annotation update rejected after tag clear", expected.message)
+        } finally {
+            coordinator.invalidate()
+        }
+        assertEquals(listOf("preserved" to "#778899"), readTags())
+        assertEquals(before, syncState())
+
+        edit(tags = emptyList())
+        assertEquals(emptyList<Pair<String, String>>(), readTags())
+        assertEquals(before.second + 1, syncState().second)
+    }
 }
