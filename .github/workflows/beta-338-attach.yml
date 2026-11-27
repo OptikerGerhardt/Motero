@@ -1,0 +1,63 @@
+name: Attach verified Motero Beta 338
+on:
+  push:
+    branches: [ops/beta-338-signing-readiness]
+    paths: ['.github/workflows/beta-338-attach.yml']
+permissions:
+  contents: write
+concurrency:
+  group: attach-motero-beta-338
+  cancel-in-progress: false
+jobs:
+  attach:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    env:
+      BETA_TAG: v1.1.11-beta.338
+      BETA_SOURCE: fbe85ad6f9886f508f9fcc62d6f1c486aa4d9862
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: fbe85ad6f9886f508f9fcc62d6f1c486aa4d9862
+          submodules: recursive
+          persist-credentials: false
+      - name: Verify the downloaded signed APK against pinned Beta source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$BETA_SOURCE"
+          curl -fsSL --retry 3 --max-time 240 \
+            https://media.githubusercontent.com/media/OptikerGerhardt/Motero/52de4fb9759055ca7ea3c52125b4d5076c07a117/Motero_Beta_338.apk \
+            -o "$RUNNER_TEMP/Motero_Beta_338.apk"
+          printf '%s  %s\n' '50dca2341dec6e81aae9f1135c5c86b723588de54cc7ca43f9d39aea14353460' \
+            "$RUNNER_TEMP/Motero_Beta_338.apk" | sha256sum -c -
+          curl -fsSL --retry 3 --max-time 120 https://dl.google.com/android/repository/build-tools_r36_linux.zip \
+            -o "$RUNNER_TEMP/motero-build-tools.zip"
+          printf '%s  %s\n' 'b0b6376977657e8ad9b969bacf4093601da2c6fb' \
+            "$RUNNER_TEMP/motero-build-tools.zip" | sha1sum -c -
+          unzip -q "$RUNNER_TEMP/motero-build-tools.zip" -d "$RUNNER_TEMP/motero-tools"
+          tools="$RUNNER_TEMP/motero-tools/android-16"
+          out="$RUNNER_TEMP/motero-beta-338"
+          python3 scripts/verify_release.py --beta-build 338 --apk "$RUNNER_TEMP/Motero_Beta_338.apk" \
+            --build-tools "$tools" --output "$out/Motero_Beta_338_Verification.json"
+          python3 scripts/prepare_release.py --beta-build 338 --apk "$RUNNER_TEMP/Motero_Beta_338.apk" \
+            --build-tools "$tools" --output "$out"
+          cd "$out"
+          sha256sum Motero_Beta_338_Verification.json >> SHA256SUMS.txt
+          sha256sum -c SHA256SUMS.txt
+      - name: Attach checked files to the existing draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          release="$(gh release view "$BETA_TAG" --repo "$GITHUB_REPOSITORY" --json isDraft,isPrerelease,targetCommitish,assets)"
+          jq -e --arg sha "$BETA_SOURCE" \
+            '.isDraft and .isPrerelease and .targetCommitish == $sha and (.assets | length == 0)' \
+            <<<"$release" >/dev/null
+          cd "$RUNNER_TEMP/motero-beta-338"
+          sha256sum -c SHA256SUMS.txt
+          gh release upload "$BETA_TAG" --repo "$GITHUB_REPOSITORY" \
+            Motero_Beta_338.apk Motero_Beta_338_Source.zip Motero_Beta_338_Verification.json SHA256SUMS.txt
+          gh release view "$BETA_TAG" --repo "$GITHUB_REPOSITORY" --json isDraft,isPrerelease,assets \
+            --jq '{isDraft,isPrerelease,assets:[.assets[]|{name,size,digest}]}'
