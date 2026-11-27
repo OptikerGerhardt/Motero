@@ -37,8 +37,8 @@ object DeviceInput {
             updateMotionEraser(profile.eraserButtonMode == "hold" && held, held)
             val hover = event.actionMasked == MotionEvent.ACTION_HOVER_MOVE || event.actionMasked == MotionEvent.ACTION_HOVER_ENTER
             if (event.eventTime - lastDiagnosticAt >= 100 || event.actionMasked != MotionEvent.ACTION_MOVE) {
-            lastDiagnosticAt = event.eventTime
-            mutableDiagnostics.value = "Tool: ${if (tool == MotionEvent.TOOL_TYPE_ERASER) "eraser" else "stylus"}; buttons: ${event.buttonState}; pressure: ${event.getPressure(index)}; hover: $hover. Backend: standard Android/WebView. BOOX SDK/refresh: unavailable (not validated)."
+                lastDiagnosticAt = event.eventTime
+                mutableDiagnostics.value = "Tool: ${if (tool == MotionEvent.TOOL_TYPE_ERASER) "eraser" else "stylus"}; buttons: ${event.buttonState}; pressure: ${event.getPressure(index)}; hover: $hover. Backend: standard Android/WebView. BOOX SDK/refresh: unavailable (not validated)."
             }
         }
         // Observe only. Native controls filter their own palm contacts; WebView
@@ -77,10 +77,11 @@ object DeviceInput {
         onEraser?.invoke(active, penButton.held)
         return true
     }
-    private fun updateMotionEraser(active: Boolean) {
-        if (motionEraser == active) return
+    private fun updateMotionEraser(active: Boolean, held: Boolean) {
+        if (motionEraser == active && motionButtonHeld == held) return
         motionEraser = active
-        onMotionEraser?.invoke(active, penButton.held)
+        motionButtonHeld = held
+        onMotionEraser?.invoke(active, held)
     }
 
     fun reset() {
