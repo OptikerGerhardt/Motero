@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "application_id": "org.zotero.android.beta",
+  "certificate_sha256": "001e44a833c45fdb8dbb371a7ce315ccbd41beeed327b4e33ce73c00e2cbc2e3",
+  "minimum_android_api": 28,
+  "signature_scheme": "v3",
+  "release_secret": "MOTERO_BETA_SIGNING",
+  "receiver_permission": "org.zotero.android.beta.MOTERO_DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION",
+  "legacy_receiver_permission": "org.zotero.android.beta.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+}

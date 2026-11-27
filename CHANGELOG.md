@@ -1,5 +1,9 @@
 # Änderungen
 
+## 1.1.11-beta.338 — Motero Beta
+
+- Erster separater Beta-Build mit den Reader-Änderungen aus Build 337, einschließlich der Farbauswahl direkt im PDF-Lesezeichen-Fähnchen. Motero Beta verwendet das eigene Paket `org.zotero.android.beta` und eigene lokale Daten.
+
 ## 1.1.11 — Build 337
 
 - Ein langer Druck oben rechts verlängert das PDF-Lesezeichen-Fähnchen und zeigt darin die neun Zotero-Farben. Die Auswahl ändert das Lesezeichen auf der aktuellen Seite. Im E-Reader-Modus öffnet und schließt das Fähnchen sofort (#7).

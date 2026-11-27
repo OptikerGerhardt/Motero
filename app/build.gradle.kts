@@ -25,6 +25,10 @@ plugins {
 }
 
 val moteroPublicRelease = providers.gradleProperty("moteroPublicRelease").orNull == "true"
+val moteroBetaBuild = providers.gradleProperty("moteroBetaBuild").orNull?.toInt()
+require(!moteroPublicRelease || moteroBetaBuild == null) { "Choose either stable or beta release." }
+require(moteroBetaBuild == null || moteroBetaBuild > 0) { "Beta build number must be positive." }
+val externalSigning = moteroPublicRelease || moteroBetaBuild != null
 
 android {
     compileSdk = BuildConfig.compileSdkVersion
@@ -32,7 +36,7 @@ android {
 
     defaultConfig {
         applicationId = BuildConfig.appId
-        minSdk = if (moteroPublicRelease) 28 else BuildConfig.minSdkVersion
+        minSdk = if (externalSigning) 28 else BuildConfig.minSdkVersion
         targetSdk = BuildConfig.targetSdk
         versionCode = BuildConfig.versionCode
         versionName = BuildConfig.version.name
@@ -99,17 +103,24 @@ android {
             isMinifyEnabled = false
             // The public APK is signed separately with the protected Motero key.
             // Never fall back to the public upstream test key when that key is absent.
-            signingConfig = if (moteroPublicRelease) null else signingConfigs.getAt("release")
-            buildConfigField("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", if (moteroPublicRelease) "false" else "true")
-            manifestPlaceholders["enableCrashReporting"] = !moteroPublicRelease
-            if (moteroPublicRelease) extra.set("enableCrashlytics", false)
+            signingConfig = if (externalSigning) null else signingConfigs.getAt("release")
+            buildConfigField("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", if (externalSigning) "false" else "true")
+            manifestPlaceholders["enableCrashReporting"] = !externalSigning
+            if (externalSigning) extra.set("enableCrashlytics", false)
         }
     }
     setDefaultProductFlavors()
     productFlavors {
         dev {
-            resValue("string", "app_name", """"Motero""")
-            applicationIdSuffix = ".debug"
+            if (moteroBetaBuild == null) {
+                resValue("string", "app_name", """"Motero""")
+                applicationIdSuffix = ".debug"
+            } else {
+                resValue("string", "app_name", "Motero Beta")
+                applicationIdSuffix = ".beta"
+                versionCode = moteroBetaBuild
+                versionName = with(BuildConfig.version) { "$major.$minor.$patch-beta.$moteroBetaBuild" }
+            }
         }
         internal {
             resValue("string", "app_name", """"Zotero""")
@@ -137,21 +148,29 @@ android {
 
     androidComponents {
         beforeVariants {
-            if (moteroPublicRelease && it.name == "devRelease") {
+            if (externalSigning && it.name == "devRelease") {
                 it.enable = true
                 (it as com.android.build.api.variant.HasHostTestsBuilder)
                     .hostTests[com.android.build.api.variant.HostTestBuilder.UNIT_TEST_TYPE]?.enable = true
             }
+            else if (moteroBetaBuild != null) it.enable = false
             else it.ignoreUnusedVariants()
         }
         onVariants { variant ->
-            if (moteroPublicRelease && variant.name == "devRelease") {
+            if (externalSigning && variant.name == "devRelease") {
                 variant.instrumentation.transformClassesWith(
                     MoteroReceiverPermissionTransform::class.java,
                     com.android.build.api.instrumentation.InstrumentationScope.ALL
                 ) {}
             }
         }
+    }
+}
+
+if (moteroBetaBuild != null) {
+    // The separately distributed Beta does not have a Firebase registration.
+    tasks.matching { it.name == "processDevReleaseGoogleServices" }.configureEach {
+        enabled = false
     }
 }
 

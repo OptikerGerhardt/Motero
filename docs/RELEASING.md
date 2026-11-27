@@ -19,6 +19,14 @@ This signing setup was verified by the successful Build 306 release. Generating 
 
 A missing or incorrect signing secret stops publication. There is no fallback to the public development key. Pull requests cannot publish releases and receive no signing secret. Existing tags and assets must not be overwritten. App changes cannot reuse a published build number; documentation updates do not replace existing releases.
 
+## Motero Beta
+
+Motero Beta uses `org.zotero.android.beta` and the private release identity pinned in `signing/beta-policy.json`. It installs beside Motero and uses its own Android data directory. Keep the signing credentials and a recovery copy outside Git and the release assets. Every Beta update uses the same signing identity and a higher Beta build number.
+
+After building and packaging the pinned Reader, build an unsigned Beta APK with `./gradlew -PmoteroBetaBuild=338 :app:testDevReleaseUnitTest :app:assembleDevRelease`. Supply the private Beta signing JSON to `scripts/sign_release.py --beta-build 338` through `MOTERO_BETA_SIGNING` or `--secret-file`. The signer checks the package, pinned certificate, Android minimum version, permissions and bundled Reader. Use `scripts/check_beta_install.py` on fresh API 31 and 35 emulators with the latest published stable APK. Each test installs both apps, verifies data retention on a Beta update and checks that Android rejects a Beta update signed with the public development key.
+
+Package the signed APK and complete sources with `scripts/prepare_release.py --beta-build 338`. Publish the resulting files and verification reports as a GitHub prerelease with a tag such as `v1.1.11-beta.338` and with `--latest=false`. In Obtainium, add the Motero repository as a second entry, enable prereleases for that entry and set the release-title regex to `^Motero Beta`. Obtainium reads the Beta package ID from the downloaded APK.
+
 The workflow can also be started under **Actions → Motero build, test and release → Run workflow** on `main`. The release job needs `contents: write`; the build job needs `contents: read`. Third-party Actions are pinned to commit hashes.
 
 ## Local release build
