@@ -1,10 +1,10 @@
 {
   "protocol": 1,
-  "worker": 2,
-  "token": "w2-a22-20261127T142210Z",
-  "acquiredAt": "2026-11-27T14:22:10Z",
-  "expiresAt": "2026-11-27T14:47:10Z",
-  "action": "preserve unique regression test",
+  "worker": 4,
+  "token": "w4-a22-20261127T174400Z-testport",
+  "acquiredAt": "2026-11-27T17:44:00.000Z",
+  "expiresAt": "2026-11-27T18:09:00.000Z",
+  "action": "test-only regression port",
   "target": "A#22 / PR#3",
   "state": "active"
 }
