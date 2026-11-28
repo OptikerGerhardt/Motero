@@ -1,0 +1,52 @@
+name: Publish verified Motero Beta 339
+on:
+  push:
+    branches: [ops/publish-beta-339]
+    paths: ['.github/workflows/publish-beta-339.yml']
+permissions:
+  contents: write
+concurrency:
+  group: publish-motero-beta-339
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    env:
+      TAG: v1.1.11-beta.339
+      SOURCE: 8dd8604e9c2aa2d977b44dcbb682b9f45ffbdd2c
+      APK_SHA: 23dba78b3b8d736e48e4f058150d0d7d2690e5adde6f9a0d1100a1d376acaad6
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: 57d16eb3f640bc67e84a56b4384c7ff77041b9ef
+          lfs: true
+          persist-credentials: false
+      - name: Validate checksums and measured update gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = 57d16eb3f640bc67e84a56b4384c7ff77041b9ef
+          sha256sum -c SHA256SUMS.txt
+          printf '%s  Motero_Beta_339.apk\n' "$APK_SHA" | sha256sum -c -
+          jq -e --arg sha "$APK_SHA" '.verified and .package == "org.zotero.android.beta" and .version_code == 339 and .apk_sha256 == $sha and .certificate_sha256 == "001e44a833c45fdb8dbb371a7ce315ccbd41beeed327b4e33ce73c00e2cbc2e3" and .receiver_permission_verified' Motero_Beta_339_Verification.json >/dev/null
+          for api in 31 35; do
+            jq -e --arg sha "$APK_SHA" --argjson api "$api" '.android_api == $api and .stable_version == 335 and .beta_version == 339 and .beta_sha256 == $sha and .baseline == "published Beta 338" and .parallel_install and .separate_application_uids and .prior_beta_data_retained and .stable_data_retained and .public_test_key_update_rejected and .beta_launch_verified' "beta-api${api}-verification.json" >/dev/null
+          done
+      - name: Upload measured assets and publish the existing prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft,isPrerelease,targetCommitish,assets |
+            jq -e --arg source "$SOURCE" '.isDraft and .isPrerelease and .targetCommitish == $source and (.assets | length == 0)' >/dev/null
+          assets=(Motero_Beta_339.apk Motero_Beta_339_Source.zip Motero_Beta_339_Verification.json beta-api31-verification.json beta-api35-verification.json SHA256SUMS.txt)
+          gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" "${assets[@]}"
+          manifest="$(gh api "repos/$GITHUB_REPOSITORY/releases/461458921")"
+          jq -e --arg tag "$TAG" --arg src "$SOURCE" '.draft and .prerelease and .tag_name == $tag and .target_commitish == $src' <<<"$manifest" >/dev/null
+          for file in "${assets[@]}"; do
+            digest="sha256:$(sha256sum "$file" | cut -d' ' -f1)"
+            jq -e --arg name "$file" --arg digest "$digest" '.assets | any(.name == $name and .digest == $digest)' <<<"$manifest" >/dev/null
+          done
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false --prerelease --latest=false
