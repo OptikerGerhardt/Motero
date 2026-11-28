@@ -1,1 +1,1 @@
-{"protocol": 1, "worker": 1, "token": "c38e6146-1459-4295-87c4-9ae87514fe15", "acquiredAt": "2026-11-28T09:55:28.140060+00:00", "expiresAt": "2026-11-28T10:25:28.140060+00:00", "action": "implement", "target": "feature/beta-338-device-feedback", "state": "active"}
+{"protocol": 1, "worker": 1, "token": "c38e6146-1459-4295-87c4-9ae87514fe15", "acquiredAt": "2026-11-28T09:55:28.140060+00:00", "expiresAt": "2026-11-28T10:25:28.140060+00:00", "action": "implement", "target": "feature/beta-338-device-feedback", "state": "released"}
