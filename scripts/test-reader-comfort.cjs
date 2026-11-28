@@ -48,7 +48,14 @@ const root=path.resolve(__dirname,'../build/android'),fixture=path.resolve(__dir
    },first);
    await page.waitForFunction(before => {
     const v=window._view._view,f=v._pageFitting;
-    return f.viewer.currentScale < before && !f.zooming && v._iframeWindow.document.querySelector('.motero-bookmark-indicator');
+    if (f.viewer.currentScale >= before || f.zooming || f.pendingPage || f.applying) return false;
+    const flags = [...v._iframeWindow.document.querySelectorAll('.motero-bookmark-indicator')];
+    // Zoom completion and the indicator's scheduled paint run independently.
+    return flags.length > 0 && flags.every(flag => {
+     const anchor = v._booxReader.indicators.anchor(Number(flag.dataset.pageIndex));
+     const rect = flag.getBoundingClientRect();
+     return anchor && Math.abs(rect.left - anchor.left) < .5 && Math.abs(rect.top - anchor.top) < .5;
+    });
    },scale);
    const zoomFlags = await page.evaluate(()=>{
     const v=window._view._view;
