@@ -32,10 +32,36 @@ const root=path.resolve(__dirname,'../build/android'),fixture=path.resolve(__dir
    let expected;
    for(const top of [70,40,20,0,20,40,70]){
     await page.evaluate(({i,top})=>{const v=window._view._view._pageFitting.viewer,p=v.getPageView(i);v.container.scrollTop+=p.div.getBoundingClientRect().top-top;v.update();},{i:first,top});await page.waitForTimeout(60);
-    const flags=await page.evaluate(()=>{const v=window._view._view,w=v._iframeWindow;return [...w.document.querySelectorAll('.motero-bookmark-indicator')].map(e=>{const r=e.getBoundingClientRect(),style=w.getComputedStyle(e);const page=v._pageFitting.viewer.getPageView(Number(e.dataset.pageIndex)); const bounds=page.div.getBoundingClientRect(); const box=v._pageFitting.layout?.boxes[Number(e.dataset.pageIndex)]; return{index:e.dataset.pageIndex,x:r.x,y:r.y,expectedY:Math.max(v._pageFitting.viewer.container.getBoundingClientRect().top,bounds.top+(box?.top||0)*bounds.height/page.viewport.height),pointer:style.pointerEvents,color:style.color};}).sort((a,b)=>a.index-b.index);});
-    assert.equal(flags.length,2);for(const f of flags){assert.ok(Math.abs(f.y-f.expectedY)<.5,JSON.stringify(f));assert.equal(f.pointer,'none');}
+    const flags=await page.evaluate(()=>{const v=window._view._view,w=v._iframeWindow;return [...w.document.querySelectorAll('.motero-bookmark-indicator')].map(e=>{const r=e.getBoundingClientRect(),style=w.getComputedStyle(e);const page=v._pageFitting.viewer.getPageView(Number(e.dataset.pageIndex)); const bounds=page.div.getBoundingClientRect(); const box=v._pageFitting.layout?.boxes[Number(e.dataset.pageIndex)]; return{index:e.dataset.pageIndex,x:r.x,y:r.y,width:r.width,height:r.height,expectedY:Math.max(v._pageFitting.viewer.container.getBoundingClientRect().top+(v._options.indicatorInsets?.top || 0),bounds.top+(box?.top||0)*bounds.height/page.viewport.height),pointer:style.pointerEvents,color:style.color};}).sort((a,b)=>a.index-b.index);});
+    assert.equal(flags.length,2);for(const f of flags){assert.ok(Math.abs(f.y-f.expectedY)<.5,JSON.stringify(f));assert.equal(f.pointer,'none');assert.equal(f.width,44);assert.equal(f.height,34);}
     assert.deepEqual(flags.map(f=>f.color),['rgb(0, 0, 0)','rgb(46, 168, 229)']);
     if(expected)for(let i=0;i<2;i++){assert.equal(flags[i].index,expected[i].index);assert.ok(Math.abs(flags[i].x-expected[i].x)<1,'a spread bookmark cannot teleport when scrolling');}else expected=flags;
+   }
+   const scale = await page.evaluate(() => window._view._view._pageFitting.viewer.currentScale);
+   await touch('touchStart',[{x:350,y:260},{x:550,y:260}]);
+   await page.evaluate(scale=>window._view._view._pageFitting.viewer.currentScale=scale*.55,scale);
+   await touch('touchEnd');
+   await page.evaluate(index=>{
+    const v=window._view._view._pageFitting.viewer,b=v.getPageView(index).div.getBoundingClientRect();
+    v.container.scrollTop+=b.top-90;
+    v.update();
+   },first);
+   await page.waitForFunction(before => {
+    const v=window._view._view,f=v._pageFitting;
+    return f.viewer.currentScale < before && !f.zooming && v._iframeWindow.document.querySelector('.motero-bookmark-indicator');
+   },scale);
+   const zoomFlags = await page.evaluate(()=>{
+    const v=window._view._view;
+    return [...v._iframeWindow.document.querySelectorAll('.motero-bookmark-indicator')].map(e=>{
+     const r=e.getBoundingClientRect();
+     return {index:Number(e.dataset.pageIndex),width:r.width,height:r.height,
+      left:r.left,top:r.top,anchor:v._booxReader.indicators.anchor(Number(e.dataset.pageIndex))};
+    });
+   });
+   for(const flag of zoomFlags){
+    assert.ok([first,first+1].includes(flag.index));
+    assert.equal(flag.width,44);assert.equal(flag.height,34);
+    assert.ok(Math.abs(flag.left-flag.anchor.left)<.5&&Math.abs(flag.top-flag.anchor.top)<.5);
    }
    console.log('PASS stable per-leaf bookmark flags in spread '+spreadMode);
   }

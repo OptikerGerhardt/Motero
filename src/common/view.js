@@ -163,6 +163,7 @@ class View {
             viewportInsets: this._options.viewportInsets,
             indicatorInsets: this._options.indicatorInsets,
             bookmarkColor: this._options.bookmarkColor,
+            readerHighlightColor: this._options.readerHighlightColor,
 			onAddAnnotation,
 			onUpdateAnnotations,
 			onDeleteAnnotationsFromPalette: ids => this._annotationManager.deleteAnnotations(ids),
@@ -193,6 +194,7 @@ class View {
 			onCropEditorChanged: this._options.onCropEditorChanged,
             onCropEditorState: this._options.onCropEditorState,
             onBookmarkColorsOpen: this._options.onBookmarkColorsOpen,
+            onBookmarkColorChosen: this._options.onBookmarkColorChosen,
 		};
 		return common;
 	}

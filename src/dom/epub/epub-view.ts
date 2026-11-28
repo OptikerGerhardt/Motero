@@ -1,6 +1,6 @@
 import { BookmarkColorPicker } from '../../pdf/bookmark-color-picker.js';
 import { pageLineBalance } from './page-frame.mjs';
-import { BOOKMARK_TAG, DEFAULT_BOOKMARK_COLOR, bookmarkColor, bookmarkFrameAnchor, bookmarkToggleOff, isReaderBookmark, readerBookmarkCorner } from '../../common/reader-bookmark.mjs';
+import { BOOKMARK_TAG, DEFAULT_BOOKMARK_COLOR, bookmarkColor, bookmarkFlagContains, epubBookmarkAnchor, bookmarkToggleOff, isReaderBookmark, readerBookmarkCorner } from '../../common/reader-bookmark.mjs';
 import injectCSS from './stylesheets/inject.scss';
 import Path from "epubjs/src/utils/path";
 import {
@@ -113,8 +113,13 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
     bookmarkColors?: BookmarkColorPicker;
     private _bookmarkPointer: { x: number, y: number, time: number } | null = null;
 
+    private _bookmarkFlagAt(x: number, y: number): string | undefined {
+        const flags = this._annotationShadowRoot?.querySelectorAll<SVGSVGElement>('svg[data-bookmark-flag][data-annotation-id]');
+        return [...flags ?? []].find(flag => bookmarkFlagContains(flag.getBoundingClientRect(), x, y))?.dataset.annotationId;
+    }
+
     isBookmarkCorner(x: number, y: number): boolean {
-        return readerBookmarkCorner({top:0,left:0,width:this._iframeWindow.innerWidth,height:this._iframeWindow.innerHeight},this._options.indicatorInsets,x,y);
+        return !!this._bookmarkFlagAt(x, y) || readerBookmarkCorner({top:0,left:0,width:this._iframeWindow.innerWidth,height:this._iframeWindow.innerHeight},this._options.indicatorInsets,x,y);
     }
 
     // The shortcut belongs to the viewport corner, independent of text margins.
@@ -127,7 +132,7 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
                 || Date.now() - start.time > 400 || Math.hypot(x - start.x, y - start.y) > 8
                 || !this.isBookmarkCorner(x, y) || !this.isBookmarkCorner(start.x, start.y)
                 || !this._iframeWindow.getSelection()?.isCollapsed) return false;
-        return this.addAndroidBookmark();
+        return !!this.addAndroidBookmark();
     }
 
     isMobileAnnotationGestureActive(): boolean { return !!this._directHighlight?.gesture.active || !!this._resizingAnnotationID; }
@@ -171,7 +176,7 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
         return this.getAnnotationFromRange(range, 'note', color);
     }
 
-    addAndroidBookmark(selection?: { id?: string, color: string }): boolean {
+    addAndroidBookmark(selection?: { id?: string, color: string }, targetID?: string): boolean | string {
         if (this._options.readOnly) return false;
         if (selection?.id) {
             const target = this._annotations.find(a => a.id === selection.id && isReaderBookmark(a));
@@ -179,11 +184,11 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
             if (target.color?.toLowerCase() !== selection.color) {
                 this._options.onUpdateAnnotations([{ id: target.id, color: selection.color }]);
             }
-            return true;
+            return target.id;
         }
         const annotation = this._bookmarkDraft();
-        if (!annotation) return false;
-        const existing = this._annotations.find(a => isReaderBookmark(a) && a.sortIndex === annotation.sortIndex);
+        const existing = targetID ? this._annotationsByID.get(targetID) : annotation &&
+            this._annotations.find(a => isReaderBookmark(a) && a.sortIndex === annotation.sortIndex);
         if (existing) {
             if (!selection && !existing.readOnly && !existing.isExternal) {
                 const result = bookmarkToggleOff(existing, this._iframeWindow.navigator.language);
@@ -192,17 +197,22 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
             }
             return true;
         }
+        if (!annotation || targetID) return false;
         let label = this._iframeWindow.navigator.language.startsWith('de') ? 'Lesezeichen' : 'Bookmark';
         if (selection) annotation.color = selection.color;
         annotation.tags = [{ name: BOOKMARK_TAG }];
         annotation.comment = label + ' · ' + new Intl.DateTimeFormat(
             this._iframeWindow.navigator.language, { dateStyle: 'short', timeStyle: 'short' }
         ).format(new Date());
-        return !!this._options.onAddAnnotation(annotation);
+        return this._options.onAddAnnotation(annotation)?.id || false;
     }
 
     protected override _handlePointerDown(event: PointerEvent) {
-        this._bookmarkPointer = !this.bookmarkColors?.contains(event) && event.isPrimary && event.button === 0
+        if (this.bookmarkColors?.owns(event) || this.bookmarkColors?.contains(event)) {
+            this._bookmarkPointer = null;
+            return;
+        }
+        this._bookmarkPointer = event.isPrimary && event.button === 0
             ? { x: event.clientX, y: event.clientY, time: Date.now() } : null;
         super._handlePointerDown(event);
     }
@@ -215,7 +225,7 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
             this._preventNextClickEvent();
         }
         this._bookmarkPointer = null;
-        super._handlePointerUp(event);
+        if (!event.defaultPrevented) super._handlePointerUp(event);
     }
 
 
@@ -266,22 +276,31 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
                 canUseBookmarkCorner: (event: PointerEvent) => this.initialized && !this._options.readOnly
                     && this._tool.type === 'pointer' && !this._selectedAnnotationIDs.some(Boolean)
                     && win.getSelection()?.isCollapsed && this.isBookmarkCorner(event.clientX, event.clientY),
-                bookmarkPageIndex: () => this.flow?.startRange && this.pageMapping.getPageIndex(this.flow.startRange),
-                findBookmark: () => {
+                bookmarkPageIndex: (event?: PointerEvent) => {
+                    const flag = event && this._bookmarkFlagAt(event.clientX, event.clientY);
+                    return flag ?? (this.flow?.startRange && this.pageMapping.getPageIndex(this.flow.startRange));
+                },
+                findBookmark: (target: number | string) => {
+                    if (typeof target === 'string') return this._annotationsByID.get(target);
                     const draft = this._bookmarkDraft();
                     return draft && this._annotations.find(a => isReaderBookmark(a) && a.sortIndex === draft.sortIndex);
                 },
-                addBookmark: async (_index: number, selection?: { id?: string, color: string }) => {
-                    this.addAndroidBookmark(selection);
+                addBookmark: async (target: number | string, selection?: { id?: string, color: string }) => {
+                    const result = this.addAndroidBookmark(selection, typeof target === "string" ? target : undefined);
+                    return typeof result === "string" ? result : undefined;
                 },
                 closePalette: () => this._directHighlight?.closePalette(),
                 indicators: {
-                    anchor: () => {
+                    anchor: (target: number | string) => {
+                        if (typeof target === 'string') {
+                            const flag = this._annotationShadowRoot?.querySelector(`svg[data-bookmark-flag][data-annotation-id="${CSS.escape(target)}"]`);
+                            return flag?.getBoundingClientRect();
+                        }
                         const viewport = doc.documentElement.getBoundingClientRect();
                         const start = this.flow?.startRange?.startContainer;
                         const frame = start?.parentElement?.closest('.section-container')?.getBoundingClientRect();
                         const bounds = { top: 0, left: 0, right: win.innerWidth, bottom: win.innerHeight };
-                        return bookmarkFrameAnchor(bounds, frame ?? viewport, this._options.indicatorInsets);
+                        return epubBookmarkAnchor(bounds, frame ?? viewport, this._options.indicatorInsets);
                     },
                     setPalettePage: () => {},
                 },
@@ -944,8 +963,9 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 			return;
 		}
         if (this._options.platform === 'android') {
-            this.bookmarkColors?.destroy();
-        this._resizeIframeTrailing.cancel();
+            // Focusing the picker also reaches this handler. Its blur and
+            // visibility handlers cancel an actual departure from the reader.
+            this._resizeIframeTrailing.cancel();
             this._iframe.style.transform = '';
             this._iframe.classList.remove('mask-resizing');
             if (this._iframe.offsetWidth !== this._container.clientWidth || this._iframe.offsetHeight !== this._container.clientHeight) this._resizeIframeImmediate();
@@ -1058,8 +1078,8 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 		return [pathname, hash ?? null];
 	}
 
-	protected _getHrefTarget(href: string): HTMLElement | null {
-		if (this._hrefTargetCache.has(href)) {
+	protected _getHrefTarget(href: string, exact = false): HTMLElement | null {
+		if (!exact && this._hrefTargetCache.has(href)) {
 			return this._hrefTargetCache.get(href)!;
 		}
 
@@ -1069,7 +1089,7 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 			console.error('Unable to find section for pathname', pathname);
 			return null;
 		}
-		let target = this._sectionRenderers[section.index].container;
+		let target = this._sectionRenderers[section.index]?.container;
 		if (!target) {
 			console.error('Unable to find view for section', section.index);
 			return null;
@@ -1080,6 +1100,7 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 				target = hashTarget as HTMLElement;
 			}
 			else {
+				if (exact) return null;
 				console.warn('Unable to resolve hash', hashTarget);
 			}
 		}
@@ -1198,43 +1219,82 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 
     private _progressOutline?: OutlineItem[];
     private _progressAnnotations?: typeof this._annotations;
+    private _progressMapping?: PageMapping;
     private _progressMarkers: NonNullable<ViewStats['epubProgressMarkers']> = [];
+
+    private _bookmarkProgressRange(annotation: WADMAnnotation, mount = false) {
+        const selector = annotation.position;
+        if (!isReaderBookmark(annotation) || selector?.type !== 'FragmentSelector'
+                || selector.conformsTo !== FragmentSelectorConformsTo.EPUB3 || selector.refinedBy
+                || typeof selector.value !== 'string' || !/^epubcfi\(.+\)$/.test(selector.value)) return null;
+        try {
+            return this.getRange(selector.value, mount);
+        } catch {
+            return null;
+        }
+    }
 
     private _getProgressMarkers(): ViewStats['epubProgressMarkers'] {
         if (this._options.platform !== 'android') return;
-        if (this._progressOutline === this._outline && this._progressAnnotations === this._annotations) {
-            return this._progressMarkers;
-        }
+        if (this._progressOutline === this._outline && this._progressAnnotations === this._annotations
+                && this._progressMapping === this.pageMapping) return this._progressMarkers;
         this._progressOutline = this._outline;
         this._progressAnnotations = this._annotations;
+        this._progressMapping = this.pageMapping;
         const markers: NonNullable<ViewStats['epubProgressMarkers']> = [];
         const lastPage = Math.max(1, this.pageMapping.length - 1);
-        const addOutline = (items: OutlineItem[]) => {
-            for (const item of items) {
+        const fraction = (range: AbstractRange) => {
+            const index = this.pageMapping.getPageIndex(range);
+            // Valid front matter can precede the first mapped page. Only a
+            // resolved anchor may use the beginning of the track.
+            return index == null || index < 0 ? 0 : index / lastPage;
+        };
+        const addOutline = (items: OutlineItem[], parentId?: string, root?: string, depth = 0) => {
+            for (const [index, item] of items.entries()) {
+                const id = parentId ? `${parentId}.${index}` : `toc:${index}`;
+                const rootId = root ?? id;
                 const href = item.location.href;
-                const target = href && this._getHrefTarget(href);
+                const target = href && this._getHrefTarget(href, true);
                 if (href && target) {
                     const range = this._iframeDocument.createRange();
                     range.selectNodeContents(target);
                     range.collapse(true);
-                    const page = this.pageMapping.getPageIndex(range) ?? 0;
-                    markers.push({ kind: 'chapter', locator: href, title: item.title, fraction: page / lastPage });
+                    markers.push({ kind: 'chapter', id, parentId, rootId, depth, locator: href,
+                        title: item.title, fraction: fraction(range) });
                 }
-                if (item.items) addOutline(item.items);
+                if (item.items) addOutline(item.items, id, rootId, depth + 1);
             }
         };
         addOutline(this._outline ?? []);
         for (const annotation of this._annotations) {
-            if (!isReaderBookmark(annotation) || annotation.position?.type !== 'FragmentSelector') continue;
-            const locator = annotation.position.value;
-            const range = this.getRange(locator);
+            const range = this._bookmarkProgressRange(annotation);
             if (!range) continue;
-            const page = this.pageMapping.getPageIndex(range) ?? 0;
-            markers.push({ kind: 'bookmark', locator, title: annotation.comment ?? '',
-                fraction: page / lastPage, color: bookmarkColor(annotation) });
+            markers.push({ kind: 'bookmark', id: annotation.id,
+                locator: (annotation.position as FragmentSelector).value, title: annotation.comment ?? '',
+                fraction: fraction(range), color: bookmarkColor(annotation) });
         }
         this._progressMarkers = markers;
         return markers;
+    }
+
+    navigateProgressMarker(kind: string, id: string, locator: string): boolean {
+        if (this._disposed || !this.initialized) return false;
+        const marker = this._getProgressMarkers()?.find(m => m.kind === kind && m.id === id && m.locator === locator);
+        if (!marker) return false;
+        if (marker.kind === 'chapter') {
+            const target = this._getHrefTarget(marker.locator, true);
+            if (!target) return false;
+            this._onManualNavigation();
+            this.navigate({ href: marker.locator }, { behavior: 'auto' });
+            return true;
+        }
+        const annotation = this._annotationsByID.get(marker.id);
+        const range = annotation && this._bookmarkProgressRange(annotation, true);
+        if (!range || !annotation) return false;
+        this._onManualNavigation();
+        this.flow.scrollIntoView(range, { block: 'start', behavior: 'auto' });
+        this.setSpotlight(SpotlightKey.Navigation, annotation.position);
+        return true;
     }
 
 	// View stats provide information about the view
@@ -1277,6 +1337,7 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 			return;
 		}
 		super._handleViewUpdate();
+        this.bookmarkColors?.checkAnchor();
 		this.flow.invalidate();
 	}
 

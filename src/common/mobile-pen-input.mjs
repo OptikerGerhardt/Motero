@@ -65,7 +65,8 @@ export class MobilePenInput {
             else this.toggle = false;
             this.button = button; this.physical = physical;
             this.setEraser(physical || !!this.toggle || (this.profile.eraserButtonMode !== 'toggle' && button), physical);
-            if (down && (!this.isReadingPen() || this.isPenHighlighting())) {
+            if (down && !this.isReadingPen() || this.isReadingPen() && this.isPenHighlighting()
+                    && (down || e.type === 'pointermove' && (e.buttons & 1 || e.pressure > 0))) {
                 this.owner = e.pointerId;
                 for (const id of this.contacts) this.blocked.add(id);
             }
@@ -82,7 +83,8 @@ export class MobilePenInput {
     touch(e) {
         // Suppress a palm through its release; new fingers work normally afterwards.
         const ids = [...(e.touches || []), ...(e.changedTouches || [])].map(x => x.identifier);
-        if (this.busy || this.blocked.size || ids.some(id => this.blocked.has(id))) this.stop(e);
+        const stylusTouch = [...(e.changedTouches || [])].some(touch => touch.touchType === 'stylus');
+        if (this.busy || this.blocked.size || stylusTouch && this.isReadingPen()) this.stop(e);
     }
     finishRelease(event) {
         const release = this.pendingRelease;
@@ -134,24 +136,37 @@ export class MobilePenInput {
 /** Route stylus contact in toolbar pointer mode before the reader's tap handlers. */
 export function routeReadingPen(view, event) {
     const options = view._options;
-    const highlight = view._directHighlight;
+    const gesture = view._directHighlight?.gesture;
     if (event.type === 'pointerdown') {
         view._readingPen = null;
         if (!options.isReadingPen?.()) return false;
-        view._readingPen = { id: event.pointerId, highlight: !!options.isPenHighlighting?.() };
-        if (view._readingPen.highlight && highlight) {
-            highlight.gesture.reset();
-            highlight.gesture.down(event, true);
-        }
-        return true;
+        view._readingPen = { id: event.pointerId, last: null };
     }
     const contact = view._readingPen;
     if (!contact || contact.id !== event.pointerId) return false;
-    if (event.type === 'pointermove' && contact.highlight) highlight?.gesture.move(event);
-    if (event.type === 'pointerup' || event.type === 'pointercancel') {
+    if (event.type === 'pointercancel' || !options.isReadingPen?.()) {
+        gesture?.interrupted(event);
         view._readingPen = null;
-        if (contact.highlight && event.type === 'pointerup') highlight?.gesture.up(event);
-        else if (contact.highlight) highlight?.gesture.interrupted(event);
+        return true;
+    }
+    const armed = options.isPenHighlighting?.();
+    if (event.type === 'pointerup') {
+        if (contact.last) gesture?.up(armed ? event : contact.last);
+        view._readingPen = null;
+    } else if (event.type === 'pointermove' || event.type === 'pointerdown') {
+        if (armed) {
+            if (!contact.last) {
+                gesture?.reset();
+                // Use the coordinate at the press edge. Earlier neutral
+                // movement must not become part of the annotation.
+                gesture?.down(event, true);
+            }
+            else gesture?.move(event);
+            contact.last = event;
+        } else if (contact.last) {
+            gesture?.up(contact.last);
+            contact.last = null;
+        }
     }
     return true;
 }

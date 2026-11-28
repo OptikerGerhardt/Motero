@@ -55,7 +55,7 @@ export function bookmarkToggleOff(annotation, locale) {
 
 export const DEFAULT_BOOKMARK_COLOR = '#ffd400';
 export const BOOKMARK_FLAG_WIDTH = 44;
-export const BOOKMARK_FLAG_HEIGHT = 29;
+export const BOOKMARK_FLAG_HEIGHT = 34;
 export const BOOKMARK_FLAG_PATH = 'M0 0h24v16l-12-4.4L0 16z';
 
 // Follow the visible frame while it covers the viewport, then its exposed edge.
@@ -63,8 +63,17 @@ export function bookmarkFrameAnchor(viewport, frame, insets = {}) {
     const right = Math.min(viewport.right - Math.max(16, (Number(insets.right) || 0) + 8), frame.right - 8);
     return {
         left: Math.max(viewport.left, frame.left, right - BOOKMARK_FLAG_WIDTH),
-        top: Math.max(viewport.top, frame.top),
+        top: Math.max(viewport.top + Math.max(0, Number(insets.top) || 0), frame.top),
     };
+}
+
+export function epubBookmarkAnchor(viewport, frame, insets) {
+    return bookmarkFrameAnchor(viewport, { left: frame.left, right: frame.right, top: viewport.top }, insets);
+}
+
+export function bookmarkFlagContains(anchor, x, y) {
+    return !!anchor && x >= anchor.left - 6 && x <= anchor.left + BOOKMARK_FLAG_WIDTH + 6
+        && y >= anchor.top - 6 && y <= anchor.top + BOOKMARK_FLAG_HEIGHT + 6;
 }
 
 // Stable PDF-page corner in viewport coordinates, independent of saved note rects.

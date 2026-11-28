@@ -476,7 +476,20 @@ class PDFView {
                 this._handlePenSignal(event);
             },
             onEraser: (active, physical, held) => this._options.onPenEraser?.(active, physical, held),
-            onRoute: event => routeReadingPen(this, event),
+            onRoute: event => {
+                if (routeReadingPen(this, event)) return true;
+                const action = this.action;
+                const drawing = this._tool.type === 'eraser' ? 'erase' : this._tool.type;
+                if (event.type === 'pointermove' && this._pointerDownTap?.pointerId === event.pointerId
+                        && ['ink', 'erase'].includes(action?.type) && ['ink', 'erase'].includes(drawing)
+                        && drawing !== action.type) {
+                    if (action.type === 'ink') this._commitInkAction(action);
+                    else if (action.triggered) this._commitEraseAction(action);
+                    this._clearPointerAction();
+                    this._handlePointerDown(event);
+                }
+                return false;
+            },
             isReadingPen: () => this._options.isReadingPen?.(),
             isPenHighlighting: () => this._options.isPenHighlighting?.(),
         });
@@ -4734,17 +4747,9 @@ class PDFView {
                         this._appendInkEvent(action, event);
                         this._commitInkAction(action);
                     }
-					else if (action.type === 'erase' && action.triggered) {
-						let annotations = [...action.annotations.values()];
-						let updated = annotations.filter( x => x.position.paths.length);
-						let deleted = annotations.filter( x => !x.position.paths.length);
-						if (updated.length) {
-							this._onUpdateAnnotations(updated);
-						}
-						if (deleted.length) {
-							this._onDeleteAnnotations(deleted.map(x => x.id));
-						}
-					}
+                    else if (action.type === 'erase' && action.triggered) {
+                        this._commitEraseAction(action);
+                    }
 				}
 				else if (position && !this.action.alreadySelectedAnnotations && this._tool.type !== 'eraser') {
 					let selectableAnnotations = this.getSelectableAnnotations(position) || [];
@@ -4885,6 +4890,14 @@ class PDFView {
 		let addedAnnotation = this._onAddAnnotation(action.annotation);
 		this._lastAddedInkAnnotationID = addedAnnotation?.id;
 	}
+    }
+
+    _commitEraseAction(action) {
+        const annotations = [...action.annotations.values()];
+        const updated = annotations.filter(annotation => annotation.position.paths.length);
+        const deleted = annotations.filter(annotation => !annotation.position.paths.length);
+        if (updated.length) this._onUpdateAnnotations(updated);
+        if (deleted.length) this._onDeleteAnnotations(deleted.map(annotation => annotation.id));
     }
 
 	_handlePointerCancel(event) {

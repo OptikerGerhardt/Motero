@@ -36,7 +36,7 @@ export class DOMDirectHighlight {
 			prepare: (event, immediate) => {
                 if (!immediate) return this.annotationAt(event) || this.wordAt(event);
                 const range = this.wordAt(event);
-                return range && { readingPenRange: range, color: view._options.bookmarkColor || DEFAULT_BOOKMARK_COLOR };
+                return range && { readingPenRange: range, color: view._options.readerHighlightColor || DEFAULT_BOOKMARK_COLOR };
             },
 			start: (prepared, event) => this.start(prepared, event),
 			update: event => this.queueUpdate(event), finish: () => this.finish(), cancel: () => this.clear(),
@@ -63,7 +63,11 @@ export class DOMDirectHighlight {
                 return;
             }
             if (view.bookmarkColors?.contains(event)) return;
-            if (view.bookmarkColors?.start(event)) return;
+            if (view.bookmarkColors?.start(event)) {
+                this.gesture.reset();
+                if (event.cancelable) event.preventDefault();
+                return;
+            }
             const annotation = this.annotationAt(event);
             this.gesture.delay = annotation?.id === this.editableNoteID ? 0 : HIGHLIGHT_HOLD_DELAY;
             if (annotation?.id !== this.editableNoteID) this.editableNoteID = null;
@@ -205,7 +209,7 @@ export class DOMDirectHighlight {
 		const view = this.view;
 		const type = this.readingPenColor ? 'highlight'
             : ['highlight', 'underline'].includes(view._tool.type) ? view._tool.type : this.host.view._directHighlightType || 'highlight';
-		const color = this.readingPenColor || view._tool.color || ANNOTATION_COLORS[0][1];
+		const color = this.readingPenColor || view._tool.color || view._options.readerHighlightColor || ANNOTATION_COLORS[0][1];
 		view._previewAnnotation = view.getAnnotationFromRange(this.range, type, color);
 		view._renderAnnotations(true);
 	}

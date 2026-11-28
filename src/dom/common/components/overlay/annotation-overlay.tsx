@@ -1,5 +1,5 @@
 import { wordRange } from '../../mobile-word-range.mjs';
-import { isReaderBookmark, bookmarkFrameAnchor, BOOKMARK_FLAG_WIDTH, BOOKMARK_FLAG_HEIGHT, BOOKMARK_FLAG_PATH } from '../../../../common/reader-bookmark.mjs';
+import { isReaderBookmark, epubBookmarkAnchor, BOOKMARK_FLAG_WIDTH, BOOKMARK_FLAG_HEIGHT, BOOKMARK_FLAG_PATH } from '../../../../common/reader-bookmark.mjs';
 import React, {
 	memo,
 	useCallback,
@@ -514,7 +514,7 @@ const Note: React.FC<NoteProps> = (props) => {
         const section = (node.parentElement ?? doc.body).closest('.section-container');
         const frame = section?.getBoundingClientRect() ?? viewport;
         if (rect.bottom > 0 && rect.top < viewport.bottom && rect.right > 0 && rect.left < viewport.right) {
-            const anchor = bookmarkFrameAnchor(viewport, frame, props.indicatorInsets);
+            const anchor = epubBookmarkAnchor(viewport, frame, props.indicatorInsets);
             x = win.scrollX + anchor.left + BOOKMARK_FLAG_WIDTH / 2 - staggerOffset;
             y = win.scrollY + anchor.top + BOOKMARK_FLAG_HEIGHT / 2;
         }
@@ -959,6 +959,7 @@ let CommentIcon = React.forwardRef<SVGSVGElement, CommentIconProps>((props, ref)
 			viewBox={bookmark ? '0 0 24 16' : '0 0 24 24'}
             preserveAspectRatio={bookmark ? "none" : "xMaxYMin meet"}
 			data-annotation-id={props.annotation?.id}
+            data-bookmark-flag={bookmark ? true : undefined}
 			ref={ref}
 		>
             {bookmark ? <path d={BOOKMARK_FLAG_PATH} fill="currentColor"/> : <IconNoteLarge/>}

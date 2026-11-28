@@ -141,8 +141,10 @@ export class PDFBooxReader {
 		return true;
 	}
 
-	bookmarkPageIndex() {
-		return this.view._pageFitting?.centeredPageIndex() ?? this.viewer.currentPageNumber - 1;
+	bookmarkPageIndex(event) {
+        const hit = event && this.indicators.pageAtFlag(event.clientX, event.clientY);
+        if (hit != null) return hit;
+        return this.view._pageFitting?.centeredPageIndex() ?? this.viewer.currentPageNumber - 1;
 	}
 
 	findBookmark(pageIndex) {
@@ -156,9 +158,9 @@ export class PDFBooxReader {
 		return !this.entering && !view._destroyed && !view._readOnly && view._tool.type === 'pointer'
 			&& !view.action?.triggered && !view._pageFitting?.editor && !view._pageFitting?.zooming
 			&& container.contains(event.target)
-			&& readerBookmarkCorner(container.getBoundingClientRect(),
-				view._options.indicatorInsets, event.clientX, event.clientY)
-			&& !this.isOverview();
+			&& (this.indicators.pageAtFlag(event.clientX, event.clientY) != null
+                || !this.isOverview() && readerBookmarkCorner(container.getBoundingClientRect(),
+                    view._options.indicatorInsets, event.clientX, event.clientY));
 	}
 
 	addBookmark(pageIndex, selection) {
@@ -181,7 +183,7 @@ export class PDFBooxReader {
                 if (existing.color.toLowerCase() !== selection.color) {
                     view._onUpdateAnnotations([{ id: existing.id, color: selection.color }]);
                 }
-                return;
+                return existing.id;
             }
             const action = bookmarkToggleOff(existing, this.de ? 'de-DE' : navigator.language);
             if (action.delete) view._onDeleteAnnotationsFromPalette([existing.id]);
@@ -210,14 +212,14 @@ export class PDFBooxReader {
 			Math.max(p0[0], p1[0]), Math.max(p0[1], p1[1])]] };
         const requestedColor = selection?.color ?? view._options.bookmarkColor;
         const color = /^#[0-9a-f]{6}$/i.test(requestedColor || '') ? requestedColor : DEFAULT_BOOKMARK_COLOR;
-        view._onAddAnnotation({ type: 'note', color, position,
+        return view._onAddAnnotation({ type: 'note', color, position,
             pageLabel: view._getPageLabel(pageIndex, true), sortIndex: getSortIndex(view._pdfPages, position),
             tags: [{ name: BOOKMARK_TAG }],
             // The default marker is recognizable, but tag membership
             // (rather than this comment) determines bookmark identity.
             comment: 'Bookmark · ' + new Intl.DateTimeFormat(this.de ? 'de-DE' : undefined,
                 { dateStyle: 'short', timeStyle: 'short' }).format(new Date()),
-        });
+        })?.id;
 	}
 
 	async enterPage(pageIndex) {

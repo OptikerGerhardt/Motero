@@ -1,5 +1,4 @@
-import { isLegacyReaderBookmark, bookmarkColor, bookmarkFrameAnchor, BOOKMARK_FLAG_HEIGHT, BOOKMARK_FLAG_WIDTH, BOOKMARK_FLAG_PATH } from '../common/reader-bookmark.mjs';
-import { readingUnit } from './reading-unit.mjs';
+import { isReaderBookmark, bookmarkColor, bookmarkFlagContains, bookmarkFrameAnchor, BOOKMARK_FLAG_HEIGHT, BOOKMARK_FLAG_WIDTH, BOOKMARK_FLAG_PATH } from '../common/reader-bookmark.mjs';
 
 /** Follow the visible PDF frame, with one flag per spread leaf. */
 export class PDFViewportIndicators {
@@ -7,7 +6,10 @@ export class PDFViewportIndicators {
         this.view=view; this.win=view._iframeWindow; this.doc=this.win.document;
         this.viewer=this.win.PDFViewerApplication.pdfViewer;
         this.bus=this.win.PDFViewerApplication.eventBus;
-        this.hiddenPageFlags=new Set(); this.flags=new Map();
+        this.flags=new Map();
+        this.hidePageFlags=this.doc.createElement('style');
+        this.hidePageFlags.textContent='[data-reader-bookmark] { visibility: hidden }';
+        this.doc.head.append(this.hidePageFlags);
         this.schedule=()=>{if (!this.frame) this.frame=this.win.requestAnimationFrame(()=>{this.frame=null;this.update();});};
         this.viewer.container.addEventListener('scroll',this.schedule,{passive:true});
         this.events=['pagechanging','scalechanging','rotationchanging','pagerendered','spreadmodechanged'];
@@ -22,8 +24,25 @@ export class PDFViewportIndicators {
         this.doc.documentElement.append(e);this.flags.set(index,e);return e;
     }
     anchor(index) {
-        const flag = this.flags.get(index);
-        return flag && { left: parseFloat(flag.style.left), top: parseFloat(flag.style.top) };
+        const view = this.view, v = this.viewer;
+        const bounds = v.container.getBoundingClientRect();
+        const page = v.getPageView(index);
+        if (!page?.viewport?.width || !page.viewport.height) return;
+        const rect = page.div.getBoundingClientRect();
+        const crop = view._pageFitting?.layout?.boxes?.[index];
+        const sx = rect.width / page.viewport.width, sy = rect.height / page.viewport.height;
+        const frame = {
+            left: rect.left + (crop?.left || 0) * sx, right: rect.right - (crop?.right || 0) * sx,
+            top: rect.top + (crop?.top || 0) * sy, bottom: rect.bottom - (crop?.bottom || 0) * sy,
+        };
+        if (frame.right <= bounds.left || frame.left >= bounds.right
+                || frame.top >= bounds.bottom || frame.bottom <= bounds.top) return;
+        return bookmarkFrameAnchor(bounds, frame, view._options.indicatorInsets);
+    }
+    pageAtFlag(x,y) {
+        for (const index of this.flags.keys()) {
+            if (bookmarkFlagContains(this.anchor(index), x, y)) return index;
+        }
     }
     setPalettePage(pageIndex) {
         if (this.palettePage != null) this.flags.get(this.palettePage)?.style.removeProperty('visibility');
@@ -31,35 +50,24 @@ export class PDFViewportIndicators {
         if (pageIndex != null) this.flags.get(pageIndex)?.style.setProperty('visibility', 'hidden');
     }
     update() {
-        for (const flag of this.hiddenPageFlags) flag.style.visibility='';
-        this.hiddenPageFlags.clear();
-        const view=this.view,v=this.viewer,c=v.container,b=c.getBoundingClientRect();
+        const view=this.view,v=this.viewer;
         if (this.annotations!==view._annotations) {
             this.annotations=view._annotations;
             this.bookmarked=new Map();
             for (const annotation of view._annotations || []) {
                 const index=annotation.position?.pageIndex;
-                if (isLegacyReaderBookmark(annotation) && Number.isInteger(index) && !this.bookmarked.has(index)) {
+                if (isReaderBookmark(annotation) && Number.isInteger(index) && !this.bookmarked.has(index)) {
                     this.bookmarked.set(index,annotation);
                 }
             }
         }
-        const reading=this.bookmarked.size > 0 && !view._pageFitting?.editor;
-        const indices=reading ? readingUnit(view._pageFitting?.centeredPageIndex() ?? v.currentPageNumber-1,v.pagesCount,v.spreadMode) : [];
+        const visible = this.bookmarked.size && !view._pageFitting?.editor
+            ? v._getVisiblePages().views.map(page => page.id - 1) : [];
         const shown=new Set();
-        for (const i of indices) {
+        for (const i of visible) {
             if (!this.bookmarked.has(i)) continue;
-            const page=v.getPageView(i),r=page?.div.getBoundingClientRect();
-            if (!r) continue;
-            const frame=view._pageFitting?.layout?.boxes?.[i];
-            const sx=r.width/page.viewport.width;
-            const left=frame ? r.left+frame.left*sx : r.left;
-            const right=frame ? r.right-frame.right*sx : r.right;
-            const sy=r.height/page.viewport.height;
-            const top=frame ? r.top+frame.top*sy : r.top;
-            const bottom=frame ? r.bottom-frame.bottom*sy : r.bottom;
-            if (right<=b.left || left>=b.right || top>=b.bottom || bottom<=b.top) continue;
-            const anchor=bookmarkFrameAnchor(b,{ left, right, top },view._options.indicatorInsets);
+            const anchor = this.anchor(i);
+            if (!anchor) continue;
             const flag=this.flags.get(i)||this.create(i);
             flag.style.left=anchor.left+'px';
             flag.style.top=anchor.top+'px';flag.style.display='block';
@@ -67,15 +75,13 @@ export class PDFViewportIndicators {
             const color=bookmarkColor(this.bookmarked.get(i));
             flag.style.color=color === '#000000' && view._themeColorScheme === 'dark' ? '#ddd' : color;
             shown.add(i);
-            for (const physical of page.div.querySelectorAll('[data-reader-bookmark]')) {
-                physical.style.visibility='hidden';this.hiddenPageFlags.add(physical);
-            }
+
         }
         for (const [i,flag] of this.flags) if (!shown.has(i)) {flag.remove();this.flags.delete(i);}
+        view._booxReader?.bookmarkColors?.checkAnchor();
     }
     destroy() {
-        for (const flag of this.hiddenPageFlags) flag.style.visibility='';
-        this.hiddenPageFlags.clear();
+        this.hidePageFlags.remove();
         if(this.frame)this.win.cancelAnimationFrame(this.frame);
         this.viewer.container.removeEventListener('scroll',this.schedule);
         for (const event of this.events)this.bus.off(event,this.schedule);

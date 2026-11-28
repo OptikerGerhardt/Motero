@@ -146,6 +146,7 @@ window.createView = (encodedOptions) => {
 		onCropEditorChanged: (open) => postMessage('onCropEditorChanged', { open }),
         onCropEditorState: params => postMessage('onCropEditorState', params),
         onBookmarkColorsOpen: open => postMessage('onBookmarkColorsOpen', { open }),
+        onBookmarkColorChosen: (id, color) => postMessage('onBookmarkColorChosen', { id, color }),
 	});
     if (options.type === 'epub') {
         const created = window._view;
@@ -180,6 +181,10 @@ window.dismissBookmarkColors = () => {
     const view = window._view?._activeView;
     (view?._booxReader?.bookmarkColors ?? view?.bookmarkColors)?.dismiss(true);
 };
+window.navigateEpubProgressMarker = marker => {
+    const view = window._view?._activeView;
+    return !!view?.navigateProgressMarker?.(marker.kind, marker.id, marker.locator);
+};
 window.focusReaderAnnotation = async id => {
     const reader = window._view, view = reader?._activeView;
     const annotation = view?._annotations?.find(a => a.id === id);
@@ -200,6 +205,12 @@ window.setReaderBookmarkColor = color => {
     if (!/^#[0-9a-f]{6}$/i.test(color || '')) return;
     if (window._view) window._view._options.bookmarkColor = color;
     if (window._view?._view) window._view._view._options.bookmarkColor = color;
+};
+window.setReaderHighlightColor = color => {
+    if (!/^#[0-9a-f]{6}$/i.test(color || '')) return;
+    if (window._view) window._view._options.readerHighlightColor = color;
+    const view = window._view?._activeView;
+    if (view) view._options.readerHighlightColor = color;
 };
 window.setReaderIndicatorInsets = value => {
     if (!window._view) return;

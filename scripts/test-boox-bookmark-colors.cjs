@@ -178,6 +178,25 @@ const palette = ['#ffd400', '#ff6666', '#5fb236', '#2ea8e5', '#a28ae5', '#e56eee
         assert.deepEqual((await annotations()).map(a => [a.type,a.color]), [['note','#a28ae5']]);
         console.log('PASS immediately choosing with touch after opening the flag with the pen');
 
+        await page.waitForFunction(() => window.messages.some(event => event.message?.event === 'onBookmarkColorChosen'
+            && event.message.params.color === '#a28ae5'));
+        const byColor = (color) => page.evaluate(color => window.messages.filter(event =>
+            event.message?.event === 'onBookmarkColorChosen' && event.message.params.color === color).length, color);
+        await longPress();
+        const explicit = await byColor('#a28ae5');
+        await pick('#a28ae5');
+        assert.equal(await byColor('#a28ae5'), explicit + 1, 'an explicitly chosen same color is sent for durable preference validation');
+        // Simulate the Android acknowledgement after the Realm write.
+        await page.evaluate(() => {
+            window.setReaderBookmarkColor('#a28ae5');
+            window.setReaderHighlightColor('#ffd400');
+        });
+        await page.touchscreen.tap((await corner()).x, (await corner()).y);
+        await page.waitForFunction(() => window._view._view._annotations.length === 0);
+        await page.touchscreen.tap((await corner()).x, (await corner()).y);
+        await page.waitForFunction(() => window._view._view._annotations[0]?.color === '#a28ae5');
+        assert.equal(await page.evaluate(() => window._view._view._options.readerHighlightColor), '#ffd400');
+
         await open({readOnly:true});
         await touch('touchStart',[await corner()]);
         await page.waitForTimeout(530);

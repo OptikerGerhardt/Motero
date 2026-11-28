@@ -59,7 +59,7 @@ const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
    const page=v._pageFitting.viewer.getPageView(Number(e.dataset.pageIndex));
    const crop=v._pageFitting.layout?.boxes[Number(e.dataset.pageIndex)];
    const rect=page.div.getBoundingClientRect();
-   return {actual:e.getBoundingClientRect().top, expected:Math.max(viewport.top, rect.top+(crop?.top||0)*rect.height/page.viewport.height)};
+   return {actual:e.getBoundingClientRect().top, expected:Math.max(viewport.top+32, rect.top+(crop?.top||0)*rect.height/page.viewport.height)};
   });
   assert.ok(Math.abs(flagSafe.actual-flagSafe.expected)<.5,JSON.stringify(flagSafe));
 

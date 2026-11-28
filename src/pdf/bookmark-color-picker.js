@@ -1,6 +1,6 @@
 import ribbonStyles from '!!raw-loader!./bookmark-color-ribbon.css';
 import { ANNOTATION_COLORS, EXTRA_INK_AND_TEXT_COLORS } from '../common/defines';
-import { bookmarkColor, bookmarkFrameAnchor, BOOKMARK_FLAG_WIDTH, BOOKMARK_FLAG_HEIGHT } from '../common/reader-bookmark.mjs';
+import { bookmarkColor, bookmarkFrameAnchor, DEFAULT_BOOKMARK_COLOR, BOOKMARK_FLAG_WIDTH, BOOKMARK_FLAG_HEIGHT } from '../common/reader-bookmark.mjs';
 
 const HOLD_MS = 450;
 const SLOP = 8;
@@ -37,7 +37,7 @@ export class BookmarkColorPicker {
         }
         if (!['touch', 'pen'].includes(event.pointerType) || !event.isPrimary || event.button !== 0
                 || !this.reader.canUseBookmarkCorner(event)) return false;
-        const index = this.reader.bookmarkPageIndex();
+        const index = this.reader.bookmarkPageIndex(event);
         const existing = this.reader.findBookmark(index);
         const press = { id: event.pointerId, x: event.clientX, y: event.clientY,
             time: Date.now(), index, annotationID: existing?.id };
@@ -47,7 +47,7 @@ export class BookmarkColorPicker {
     }
 
     move(event) {
-        if (!this.owns(event)) return;
+        if (!this.owns(event) || this.press.recognized) return;
         if (Math.hypot(event.clientX - this.press.x, event.clientY - this.press.y) > SLOP) {
             this.dismiss();
         }
@@ -61,7 +61,7 @@ export class BookmarkColorPicker {
         if (event.type !== 'pointerup') this.dismiss();
         if (!press.cancelled && !press.recognized) {
             if (Date.now() - press.time >= HOLD_MS) this.open(press);
-            else if (this.reader.bookmarkPageIndex() === press.index && this.reader.canUseBookmarkCorner(event)) {
+            else if (this.reader.bookmarkPageIndex(event) === press.index && this.reader.canUseBookmarkCorner(event)) {
                 this.reader.addBookmark(press.index).catch(console.error);
             }
         }
@@ -76,9 +76,9 @@ export class BookmarkColorPicker {
         press.recognized = true;
         const annotation = reader.findBookmark(press.index);
         if (annotation?.id !== press.annotationID || annotation?.readOnly || annotation?.isExternal
-                || reader.bookmarkPageIndex() !== press.index || !reader.canUseBookmarkCorner({
+                || !reader.canUseBookmarkCorner({
                     clientX: press.x, clientY: press.y, target: reader.viewer.container,
-                })) return;
+                }) || reader.bookmarkPageIndex({clientX: press.x, clientY: press.y}) !== press.index) return;
 
         this.removeLayer();
         reader.closePalette();
@@ -90,7 +90,7 @@ export class BookmarkColorPicker {
         if (height < 66) return;
         const instant = !!view._options.deviceProfile?.eReader
             || win.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        const current = bookmarkColor(annotation || { color: view._options.bookmarkColor }).toLowerCase();
+        const current = bookmarkColor(annotation || { color: view._options.bookmarkColor ?? DEFAULT_BOOKMARK_COLOR }).toLowerCase();
 
         const layer = doc.createElement('div');
         layer.className = 'motero-bookmark-picker';
@@ -130,7 +130,10 @@ export class BookmarkColorPicker {
         flag.append(swatches);
         layer.append(style, flag);
         this.layer = layer;
+        this.openAnchor = { left, top, index: press.index };
         this.isOpen = true;
+        let freshPress = false;
+        layer.addEventListener('pointerdown', () => { freshPress = true; });
         flag.tabIndex = -1;
         layer.addEventListener('keydown', event => {
             if (event.key === 'Escape') {
@@ -151,11 +154,12 @@ export class BookmarkColorPicker {
         });
         layer.addEventListener('click', event => {
             const choice = event.target.closest('button[data-color]');
-            if (!this.isOpen) return;
+            if (!this.isOpen || !freshPress && event.detail !== 0) return;
             if (choice) {
                 const { color } = choice.dataset;
-                flag.style.setProperty('--flag-color', color);
-                reader.addBookmark(press.index, { color, id: press.annotationID }).catch(console.error);
+                reader.addBookmark(press.index, { color, id: press.annotationID }).then(id => {
+                    if (id) view._options.onBookmarkColorChosen?.(id, color);
+                }).catch(console.error);
                 this.dismiss(true);
             }
             else if (event.target === layer) this.dismiss(true);
@@ -167,6 +171,13 @@ export class BookmarkColorPicker {
         flag.setAttribute('data-expanded', '');
         flag.focus({ preventScroll: true });
         view._options.onBookmarkColorsOpen?.(true);
+    }
+
+    checkAnchor() {
+        if (!this.isOpen || !this.openAnchor) return;
+        const current = this.reader.indicators.anchor(this.openAnchor.index);
+        if (!current || Math.abs(current.top - this.openAnchor.top) > 2
+                || Math.abs(current.left - this.openAnchor.left) > 2) this.dismiss();
     }
 
     dismiss(animate = false) {
@@ -191,6 +202,7 @@ export class BookmarkColorPicker {
         if (!this.layer) return;
         this.layer.remove();
         this.layer = null;
+        this.openAnchor = null;
         this.reader.indicators.setPalettePage(null);
     }
 

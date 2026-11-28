@@ -66,7 +66,7 @@ export class PDFDirectHighlight {
 		if (!position) {
 			return null;
 		}
-		const readingPenColor = immediate ? view._options.bookmarkColor || DEFAULT_BOOKMARK_COLOR : null;
+		const readingPenColor = immediate ? view._options.readerHighlightColor || DEFAULT_BOOKMARK_COLOR : null;
 		let annotation = immediate ? null : this.quickAnnotation(event);
 		if (annotation) return { position, annotations: [annotation] };
 		await view._ensureBasicPageData(position.pageIndex);
@@ -140,7 +140,7 @@ export class PDFDirectHighlight {
 		let type = this.readingPenColor ? 'highlight'
 			: ['highlight', 'underline'].includes(view._tool.type) ? view._tool.type : view._directHighlightType || 'highlight';
 		let color = this.readingPenColor || (/^#[\da-f]{6}$/i.test(view._tool.color) ? view._tool.color
-			: view._directHighlightColor || view._tools?.highlight?.color || ANNOTATION_COLORS[0][1]);
+			: (view._tool.type === 'pointer' && view._options.readerHighlightColor) || view._directHighlightColor || view._tools?.highlight?.color || ANNOTATION_COLORS[0][1]);
 		let created = [];
 		// The annotation format supports two adjacent pages per highlight.
 		while (ranges.length) {
