@@ -1,0 +1,14 @@
+{
+  "verified": true,
+  "package": "org.zotero.android.beta",
+  "version_code": 339,
+  "certificate_sha256": "001e44a833c45fdb8dbb371a7ce315ccbd41beeed327b4e33ce73c00e2cbc2e3",
+  "signing_policy": "beta",
+  "legacy_rotation_verified": false,
+  "apk_sha256": "23dba78b3b8d736e48e4f058150d0d7d2690e5adde6f9a0d1100a1d376acaad6",
+  "runtime_files": 45,
+  "pdfjs_files": 207,
+  "reader_sources": 121,
+  "receiver_permission": "org.zotero.android.beta.MOTERO_DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION",
+  "receiver_permission_verified": true
+}
