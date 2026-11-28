@@ -4,6 +4,7 @@ package org.zotero.android.ereader
 class PenButtonState {
     var active = false; private set
     private var owner: Pair<String, Int>? = null
+    val held get() = owner != null
     fun event(device: String, code: Int, down: Boolean, repeat: Int, toggle: Boolean): Boolean {
         val key = device to code
         if (down) {

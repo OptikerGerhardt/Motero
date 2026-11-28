@@ -32,20 +32,25 @@ fun ReaderWebView(viewModel: ReaderViewModel, modifier: Modifier = Modifier) {
     }
     val state by recovery.observeAsState(0 to false)
     val toolbarMode = remember(viewModel) {
-        viewModel.viewStates.map { it.showCreationToolbar to it.isReaderLoading }.distinctUntilChanged()
+        viewModel.viewStates.map { Triple(it.showCreationToolbar, it.isReaderLoading, it.activeTool) }.distinctUntilChanged()
     }
-    val (toolbarOpen, readerLoading) = toolbarMode.observeAsState(false to true).value
+    val (toolbarOpen, readerLoading, activeTool) = toolbarMode.observeAsState(Triple(false, true, null)).value
     androidx.compose.runtime.LaunchedEffect(toolbarOpen, readerLoading, state.first) {
         if (!readerLoading) viewModel.syncAnnotationToolbarMode(toolbarOpen)
     }
     org.zotero.android.ereader.DeviceProfileStore.initialize(androidx.compose.ui.platform.LocalContext.current)
     val deviceProfile by org.zotero.android.ereader.DeviceProfileStore.state.collectAsState()
     androidx.compose.runtime.DisposableEffect(viewModel) {
-        val handler: (Boolean) -> Unit = { active -> viewModel.setHardwareEraser(active) }
+        val handler: (Boolean, Boolean) -> Unit = { active, held -> viewModel.setHardwareEraser(active, held) }
+        val motionHandler: (Boolean, Boolean) -> Unit = { active, held ->
+            viewModel.setHardwareEraser(active, held, fromMotion = true)
+        }
         org.zotero.android.ereader.DeviceInput.onEraser = handler
+        org.zotero.android.ereader.DeviceInput.onMotionEraser = motionHandler
         onDispose {
             org.zotero.android.ereader.DeviceInput.reset()
             if (org.zotero.android.ereader.DeviceInput.onEraser === handler) org.zotero.android.ereader.DeviceInput.onEraser = null
+            if (org.zotero.android.ereader.DeviceInput.onMotionEraser === motionHandler) org.zotero.android.ereader.DeviceInput.onMotionEraser = null
         }
     }
     androidx.compose.runtime.LaunchedEffect(deviceProfile) { viewModel.applyDeviceProfile(deviceProfile) }
@@ -87,7 +92,10 @@ fun ReaderWebView(viewModel: ReaderViewModel, modifier: Modifier = Modifier) {
             webView
         },
         onRelease = { it.stopLoading(); it.destroy() },
-        update = { it.setReaderBackground(background) }
+        update = {
+            it.setReaderBackground(background)
+            it.neutralStylus = toolbarOpen && !readerLoading && activeTool == null
+        }
     )
     }
 }

@@ -1,0 +1,5 @@
+<resources>
+    <string name="reader_epub_previous_chapter">Earlier chapters</string>
+    <string name="reader_epub_next_chapter">Later chapters</string>
+    <string name="reader_neutral_highlight_color">Default highlight color</string>
+</resources>

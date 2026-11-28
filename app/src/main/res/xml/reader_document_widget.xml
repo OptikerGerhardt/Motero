@@ -1,0 +1,13 @@
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="110dp"
+    android:minHeight="48dp"
+    android:targetCellWidth="2"
+    android:targetCellHeight="1"
+    android:initialLayout="@layout/reader_document_widget"
+    android:previewLayout="@layout/reader_document_widget"
+    android:previewImage="@drawable/ic_reader_bookmark"
+    android:resizeMode="horizontal"
+    android:widgetCategory="home_screen"
+    android:widgetFeatures="reconfigurable"
+    android:updatePeriodMillis="0"
+    android:configure="@string/reader_widget_config_class" />

@@ -12,22 +12,38 @@ object DeviceInput {
     private val mutableDiagnostics = MutableStateFlow("No stylus event received. Backend: standard Android/WebView.")
     val diagnostics = mutableDiagnostics.asStateFlow()
     var learnKey = false
-    var onEraser: ((Boolean) -> Unit)? = null
+    var onEraser: ((Boolean, Boolean) -> Unit)? = null
+    var onMotionEraser: ((Boolean, Boolean) -> Unit)? = null
+    private var motionEraser = false
+    private var motionButtonHeld = false
+    val isEraserButtonHeld get() = penButton.held || motionButtonHeld
     private val contacts = PenContactState()
     private var deviceId: Int? = null
     private var lastDiagnosticAt = 0L
     val palmBlocked get() = contacts.blocked(SystemClock.uptimeMillis())
     fun motion(event: MotionEvent) {
+        if (event.pointerCount == 0) return
         val index = event.actionIndex.coerceIn(0, event.pointerCount - 1)
         val tool = event.getToolType(index)
         val pen = tool == MotionEvent.TOOL_TYPE_STYLUS || tool == MotionEvent.TOOL_TYPE_ERASER
         if (pen) {
             if (deviceId != null && deviceId != event.deviceId) reset()
             deviceId = event.deviceId
+            val profile = DeviceProfileStore.state.value
+            val button = if (profile.buttonMask == 4) MotionEvent.BUTTON_STYLUS_SECONDARY else MotionEvent.BUTTON_STYLUS_PRIMARY
+            val ended = event.actionMasked == MotionEvent.ACTION_CANCEL || event.actionMasked == MotionEvent.ACTION_HOVER_EXIT
+            // Some Android WebViews omit the stylus barrel bit in PointerEvent.buttons.
+            val held = when {
+                ended -> false
+                event.actionMasked == MotionEvent.ACTION_BUTTON_PRESS && event.actionButton == button -> true
+                event.actionMasked == MotionEvent.ACTION_BUTTON_RELEASE && event.actionButton == button -> false
+                else -> event.buttonState and button != 0
+            }
+            updateMotionEraser(profile.eraserButtonMode == "hold" && held, held)
             val hover = event.actionMasked == MotionEvent.ACTION_HOVER_MOVE || event.actionMasked == MotionEvent.ACTION_HOVER_ENTER
             if (event.eventTime - lastDiagnosticAt >= 100 || event.actionMasked != MotionEvent.ACTION_MOVE) {
-            lastDiagnosticAt = event.eventTime
-            mutableDiagnostics.value = "Tool: ${if (tool == MotionEvent.TOOL_TYPE_ERASER) "eraser" else "stylus"}; buttons: ${event.buttonState}; pressure: ${event.getPressure(index)}; hover: $hover. Backend: standard Android/WebView. BOOX SDK/refresh: unavailable (not validated)."
+                lastDiagnosticAt = event.eventTime
+                mutableDiagnostics.value = "Tool: ${if (tool == MotionEvent.TOOL_TYPE_ERASER) "eraser" else "stylus"}; buttons: ${event.buttonState}; pressure: ${event.getPressure(index)}; action: ${MotionEvent.actionToString(event.action)}; actionButton: ${event.actionButton}; held: $held; hover: $hover. Backend: standard Android/WebView. BOOX SDK/refresh: unavailable (not validated)."
             }
         }
         // Observe only. Native controls filter their own palm contacts; WebView
@@ -55,15 +71,35 @@ object DeviceInput {
             DeviceProfileStore.assignKey(descriptor, event.keyCode); learnKey = false
             mutableDiagnostics.value = "Assigned ${KeyEvent.keyCodeToString(event.keyCode)} for this input device."
         }
-        val assigned = DeviceProfileStore.assignedKey(descriptor) ?: 308
-        if (event.keyCode != assigned || event.action !in setOf(KeyEvent.ACTION_DOWN, KeyEvent.ACTION_UP)) return false
+        val defaultKey = if (DeviceProfileStore.state.value.buttonMask == 4) 309 else 308
+        val assigned = DeviceProfileStore.assignedKey(descriptor) ?: defaultKey
+        if (event.keyCode != assigned) {
+            if (stylusKey && event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
+                mutableDiagnostics.value = "Stylus key ${KeyEvent.keyCodeToString(event.keyCode)} observed; ${KeyEvent.keyCodeToString(assigned)} is assigned."
+            }
+            return false
+        }
+        if (event.action !in setOf(KeyEvent.ACTION_DOWN, KeyEvent.ACTION_UP)) return false
         val active = penButton.event(descriptor, event.keyCode, event.action == KeyEvent.ACTION_DOWN,
             event.repeatCount, DeviceProfileStore.state.value.eraserButtonMode == "toggle")
         if (event.repeatCount == 0) {
             mutableDiagnostics.value = "Stylus key: ${KeyEvent.keyCodeToString(event.keyCode)} ${if (event.action == KeyEvent.ACTION_DOWN) "down" else "up"}; eraser: $active."
         }
-        onEraser?.invoke(active)
+        onEraser?.invoke(active, penButton.held)
         return true
     }
-    fun reset() { contacts.reset(); deviceId = null; penButton.reset(); onEraser?.invoke(false) }
+    private fun updateMotionEraser(active: Boolean, held: Boolean) {
+        if (motionEraser == active && motionButtonHeld == held) return
+        motionEraser = active
+        motionButtonHeld = held
+        onMotionEraser?.invoke(active, held)
+    }
+
+    fun reset() {
+        contacts.reset()
+        deviceId = null
+        penButton.reset()
+        onEraser?.invoke(false, false)
+        updateMotionEraser(false, false)
+    }
 }

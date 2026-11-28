@@ -38,7 +38,7 @@ internal fun ReaderAnnotationsSidebarHeaderSection(
 ) {
     val title = stringResource(Strings.page) + " " + annotation.pageLabel
     val icon = when (annotation.type) {
-        AnnotationType.note -> if (annotation.isReaderBookmark() && annotation.color.removePrefix("#").equals("000000", ignoreCase = true)) org.zotero.android.R.drawable.ic_reader_bookmark else Drawables.annotate_note
+        AnnotationType.note -> if (annotation.isReaderBookmark()) org.zotero.android.R.drawable.ic_reader_bookmark else Drawables.annotate_note
         AnnotationType.highlight -> Drawables.annotate_highlight
         AnnotationType.image -> Drawables.annotate_area
         AnnotationType.ink -> Drawables.annotate_ink

@@ -21,6 +21,7 @@ data class CreateReaderViewOptions(
     var viewportInsets: Map<String, Float> = emptyMap(),
     var indicatorInsets: Map<String, Float> = emptyMap(),
     var pageBackground: String = "default",
+    var readerHighlightColor: String = "#ffd400",
     var bookmarkColor: String = "#000000",
     var readingProgress: Map<String, Any>? = null,
 )

@@ -37,7 +37,7 @@ internal fun ReaderPdfBottomDock(viewModel: ReaderViewModel, state: ReaderViewSt
         val toolWidth = toolLayout.width.dp
         val (width, slide) = readerDockTransition(if (tools) toolWidth else previewWidth, tools)
         val contentWidth = minOf(width, toolWidth)
-        val optionTool = state.activeTool ?: state.pdfOptionsTool
+        val optionTool = state.activeTool
         val optionSize = if (optionTool == org.zotero.android.screens.reader.data.ReaderAnnotationTool.ink ||
             optionTool == org.zotero.android.screens.reader.data.ReaderAnnotationTool.text) 96.dp else 48.dp
         val optionsHeight by animateDpAsState(

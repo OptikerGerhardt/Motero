@@ -222,6 +222,13 @@ internal class DashboardActivity : BaseActivity() {
         org.zotero.android.ereader.DeviceInput.motion(event)
         return super.dispatchTouchEvent(event)
     }
+    override fun dispatchGenericMotionEvent(event: android.view.MotionEvent): Boolean {
+        if (event.actionMasked == android.view.MotionEvent.ACTION_BUTTON_PRESS ||
+            event.actionMasked == android.view.MotionEvent.ACTION_BUTTON_RELEASE
+        ) org.zotero.android.ereader.DeviceInput.motion(event)
+        return super.dispatchGenericMotionEvent(event)
+    }
+
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (!hasFocus) org.zotero.android.ereader.DeviceInput.reset()

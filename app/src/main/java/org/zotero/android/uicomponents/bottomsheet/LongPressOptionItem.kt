@@ -43,6 +43,7 @@ sealed class LongPressOptionItem(
 
     data class PinReaderShortcut(val attachment: Attachment): LongPressOptionItem(
         titleId = org.zotero.android.R.string.reader_pin_shortcut,
+        resIcon = org.zotero.android.R.drawable.ic_reader_bookmark,
     )
 
     data class DeleteAttachmentFile(val attachment: Attachment): LongPressOptionItem(

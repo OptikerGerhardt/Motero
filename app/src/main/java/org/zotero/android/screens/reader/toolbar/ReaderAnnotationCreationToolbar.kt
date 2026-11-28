@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
@@ -30,6 +31,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -261,9 +264,16 @@ internal fun BoxScope.ReaderAnnotationCreationToolbar(
             }
             val activeAnnotationTool = viewState.activeTool
             if (activeAnnotationTool != null) {
-                val color = viewState.toolColors[activeAnnotationTool]
-                if (color != null) {
+                viewState.toolColors[activeAnnotationTool]?.let { color ->
                     ReaderFilterCircle(hex = color, onClick = viewModel::showToolOptions)
+                }
+            } else if (viewState.isPdfOrHtml() && viewState.readingModeEnabled) {
+                var showBookmarkColors by remember { mutableStateOf(false) }
+                Box {
+                    ReaderFilterCircle(hex = viewState.neutralHighlightColor, onClick = { showBookmarkColors = true })
+                    DropdownMenu(expanded = showBookmarkColors, onDismissRequest = { showBookmarkColors = false }) {
+                        ReaderPdfToolOptions(viewModel, viewState, Modifier.width(240.dp))
+                    }
                 }
             }
 
