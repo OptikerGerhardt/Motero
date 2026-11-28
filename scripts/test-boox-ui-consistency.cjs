@@ -61,8 +61,8 @@ const root = path.resolve(__dirname, '../build/android');
   console.log('PASS explicit Reader Light overrides OS Dark; thumbnails follow theme; stale renders and redundant resets are avoided');
 
   const bookmark=await page.evaluate(()=>window._view._annotationManager.addAnnotation({type:'note',color:'#000000',comment:'Bookmark · test',pageLabel:'1',sortIndex:'00000|000200|00000',position:{pageIndex:0,rects:[[200,300,222,322]]}}).id);
-  await page.waitForFunction(()=>window._view._view._pages[0]._originalPage.div.querySelector('path[d="M5 2h14v20l-7-4.5-7 4.5z"]'));
-  assert.equal(await page.evaluate(()=>window._view._view._pages[0]._originalPage.div.querySelector('path[d="M5 2h14v20l-7-4.5-7 4.5z"]').parentNode.getAttribute('opacity')),'0.7');
+  await page.waitForFunction(()=>window._view._view._pages[0]._originalPage.div.querySelector('path[d="M0 0h24v16l-12-4.4L0 16z"]'));
+  assert.equal(await page.evaluate(()=>window._view._view._pages[0]._originalPage.div.querySelector('path[d="M0 0h24v16l-12-4.4L0 16z"]').parentNode.getAttribute('opacity')),'0.7');
   await page.waitForFunction(()=>window.messages.some(x=>x.message?.event==='onHistoryChanged' && x.message.params.canUndo));
   await page.evaluate(()=>window.undoReaderAnnotation());
   assert.ok(await page.evaluate(id=>!window._view._view._annotations.some(a=>a.id===id),bookmark));
@@ -71,7 +71,7 @@ const root = path.resolve(__dirname, '../build/android');
   assert.ok(await page.evaluate(()=>window._view._view._annotations.some(a=>a.comment==='Bookmark · test')));
   await page.evaluate(()=>window.undoReaderAnnotation());
   await page.evaluate(()=>window._view._annotationManager.addAnnotation({type:'note',color:'#000000',comment:'ordinary note',pageLabel:'1',sortIndex:'00000|000200|00000',position:{pageIndex:0,rects:[[200,300,222,322]]}}));
-  assert.equal(await page.evaluate(()=>window._view._view._pages[0]._originalPage.div.querySelectorAll('path[d="M5 2h14v20l-7-4.5-7 4.5z"]').length),0);
+  assert.equal(await page.evaluate(()=>window._view._view._pages[0]._originalPage.div.querySelectorAll('path[d="M0 0h24v16l-12-4.4L0 16z"]').length),0);
   console.log('PASS semantic black bookmark flag at 70%; ordinary notes retain shape; Undo travels through annotation history');
 
   await page.evaluate(()=>{

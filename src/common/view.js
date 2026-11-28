@@ -64,7 +64,9 @@ class View {
 			if (['light', 'dark'].includes(this._colorScheme)) document.documentElement.dataset.colorScheme = this._colorScheme;
 			else delete document.documentElement.dataset.colorScheme;
 		}
-		this._tool = options.tool || { type: 'pointer' };
+		this._baseTool = this._tool = options.tool || { type: 'pointer' };
+        this._penEraserSources = new Set();
+        this._penButtonHeldSources = new Set();
 
 		// Reading Mode overlay, shown on top of the (hidden) base view
 		this._sdtView = null;
@@ -150,13 +152,18 @@ class View {
 			penActive: this._options.penActive ?? false,
 			penExclusive: this._options.deviceProfile?.penOnly ?? this._options.penExclusive ?? false,
             deviceProfile: this._options.deviceProfile,
-            onPenEraser: active => this.setPenEraser(active),
+            onPenEraser: (active, physical, held) => this.setPenEraser(active, 'pointer', physical, held),
+            onPenDetected: () => this._useDetectedPen(),
+            isReadingPen: () => this._isReadingPen(),
+            isPenHighlighting: () => this._isReadingPen() && !this._options.readOnly && this._penButtonHeldSources.size > 0,
 			fontFamily: this._options.fontFamily,
             directHighlight: this._options.directHighlight,
             mobileAnnotations: this._type === 'epub',
             viewportInset: this._options.viewportInset,
             viewportInsets: this._options.viewportInsets,
             indicatorInsets: this._options.indicatorInsets,
+            bookmarkColor: this._options.bookmarkColor,
+            readerHighlightColor: this._options.readerHighlightColor,
 			onAddAnnotation,
 			onUpdateAnnotations,
 			onDeleteAnnotationsFromPalette: ids => this._annotationManager.deleteAnnotations(ids),
@@ -186,6 +193,8 @@ class View {
 			onManualCropChanged: this._options.onManualCropChanged,
 			onCropEditorChanged: this._options.onCropEditorChanged,
             onCropEditorState: this._options.onCropEditorState,
+            onBookmarkColorsOpen: this._options.onBookmarkColorsOpen,
+            onBookmarkColorChosen: this._options.onBookmarkColorChosen,
 		};
 		return common;
 	}
@@ -458,17 +467,73 @@ class View {
 		if (!tool) {
 			tool = { type: 'pointer' };
 		}
+        this._explicitAnnotationTool = true;
         this._baseTool = tool;
-        this._applyTool(this._penEraser ? this._eraserTool() : tool);
+        if (tool.type === 'ink') this._lastInkTool = tool;
+        this._syncPenTool();
     }
-    _eraserTool() { return { ...this._baseTool, type: 'eraser', size: this._deviceProfile?.eraserSize || 12, eraserMode: this._deviceProfile?.eraserMode || 'stroke' }; }
-    setPenEraser(active, source = 'pointer') {
-        (this._penEraserSources ??= new Set());
-        if (active) this._penEraserSources.add(source); else this._penEraserSources.delete(source);
-        active = this._penEraserSources.size > 0;
-        if (this._penEraser === active) return;
-        this._penEraser = active;
-        this._applyTool(active ? this._eraserTool() : this._baseTool || {type:'pointer'});
+
+    setAnnotationToolbarOpen(open) {
+        this._annotationToolbarOpen = open;
+        this._syncPenTool();
+    }
+
+    _penButtonActive() {
+        return this._penEraserSources.has('key') || this._penEraserSources.has('native')
+            || this._penEraserSources.has('pointer');
+    }
+
+    _isReadingPen() {
+        return this._annotationToolbarOpen && this._baseTool.type === 'pointer'
+            && (this._type !== 'pdf' || !this._penEraserSources.has('physical'));
+    }
+
+    _inkTool() {
+        return this._lastInkTool || {
+            type: 'ink',
+            color: this._deviceProfile?.inkColor || '#ffd400',
+            size: this._deviceProfile?.inkSize || 2,
+        };
+    }
+
+    _useDetectedPen() {
+        if (this._type === 'pdf' && this._deviceProfile?.penOnly && !this._options.readOnly
+            && !this._annotationToolbarOpen && !this._explicitAnnotationTool && this._baseTool.type === 'pointer') {
+            this._baseTool = this._inkTool();
+            this._syncPenTool();
+        }
+    }
+
+    _syncPenTool() {
+        const base = this._baseTool;
+        let tool = base;
+        const physical = this._penEraserSources.has('physical');
+        const button = this._penButtonActive();
+        if (this._type === 'pdf' && !this._options.readOnly) {
+            if (physical || (button && (base.type === 'ink' || (base.type === 'pointer' && !this._annotationToolbarOpen)))) {
+                tool = {
+                    type: 'eraser',
+                    size: this._deviceProfile?.eraserSize || 12,
+                    eraserMode: this._deviceProfile?.eraserMode || 'stroke',
+                };
+            }
+            else if (button && base.type === 'eraser') tool = this._inkTool();
+        }
+        if (tool === this._tool || (tool.type === 'eraser' && this._tool.type === 'eraser'
+            && tool.size === this._tool.size && tool.eraserMode === this._tool.eraserMode)) return;
+        this._applyTool(tool);
+    }
+
+    setPenEraser(active, source = 'pointer', physical = false, held = active && !physical) {
+        if (held) this._penButtonHeldSources.add(source);
+        else this._penButtonHeldSources.delete(source);
+        if (active && !physical) this._penEraserSources.add(source);
+        else this._penEraserSources.delete(source);
+        if (source === 'pointer') {
+            if (physical) this._penEraserSources.add('physical');
+            else this._penEraserSources.delete('physical');
+        }
+        this._syncPenTool();
     }
     setPageBackground(id) {
         this._options.pageBackground = id;
@@ -495,12 +560,14 @@ class View {
         for (const v of [this._view,this._sdtView]) {
             if (!v) continue;
             v._options.deviceProfile = profile;
+            if (changed) (v._booxReader?.bookmarkColors ?? v.bookmarkColors)?.dismiss();
             if (profile.readingAssist === false) v._booxReader?.readingCue?.clear();
             v._directHighlight?.reset();
             v._penInput?.applyProfile(profile);
             if (profile.penOnly === false) v.setPenActive?.(false);
             v.setPenExclusive?.(!!profile.penOnly);
         }
+        this._syncPenTool();
     }
     _applyTool(tool) {
 		this._tool = tool;

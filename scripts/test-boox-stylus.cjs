@@ -73,6 +73,82 @@ const root=path.resolve(__dirname,'../build/android'),fixture=path.resolve(__dir
   assert.equal(await page.evaluate(()=>window._view._view._readerChromeVisible),true);
   console.log('PASS stylus drag highlighting remains available with open chrome and no selected drawing tool');
 
+  await page.evaluate(()=>{
+    window.setTool({type:'eraser',size:12,eraserMode:'area'});
+    window.setPenEraser(true);
+  });
+  assert.equal(await page.evaluate(()=>window._view._tool.type),'ink');
+  await page.evaluate(()=>window.setPenEraser(false));
+  assert.equal(await page.evaluate(()=>window._view._tool.type),'eraser');
+  await page.evaluate(()=>{window.clearTool();window.setAnnotationToolbarOpen(true);window.setReaderHighlightColor('#5fb236');window.setDirectHighlight(false);});
+  const neutral = await page.evaluate(()=>({
+    count:window._view._annotationManager._annotations.length,
+    taps:window.messages.filter(m=>m.message?.event==='onBackdropTap').length
+  }));
+  await pen('mousePressed',word[0].x,word[0].y);
+  await pen('mouseMoved',word[1].x,word[1].y);
+  await pen('mouseReleased',word[1].x,word[1].y,0);
+  assert.deepEqual(await page.evaluate(()=>({
+    count:window._view._annotationManager._annotations.length,
+    taps:window.messages.filter(m=>m.message?.event==='onBackdropTap').length
+  })),neutral);
+  // An eraser latched in Toggle mode must not arm the neutral highlighter.
+  await page.evaluate(()=>window.setPenEraser(true, 'key', false));
+  await pen('mousePressed',word[0].x,word[0].y);
+  await pen('mouseMoved',word[1].x,word[1].y);
+  await pen('mouseReleased',word[1].x,word[1].y,0);
+  assert.equal(await page.evaluate(()=>window._view._annotationManager._annotations.length),neutral.count);
+  await page.evaluate(()=>window.setPenEraser(true, 'native', true));
+  assert.equal(await page.evaluate(()=>window._view._tool.type),'pointer');
+  await pen('mousePressed',word[0].x,word[0].y);
+  await page.waitForFunction(()=>window._view._view._directHighlight.gesture.active);
+  await pen('mouseMoved',word[1].x,word[1].y);
+  await pen('mouseReleased',word[1].x,word[1].y,0);
+  await page.evaluate(()=>{window.setPenEraser(false);window.setPenEraser(false, 'native');});
+  await page.waitForFunction(n=>window._view._annotationManager._annotations.length===n+1,neutral.count);
+  assert.equal(await page.evaluate(()=>window._view._annotationManager._annotations.some(a=>a.type==='highlight' && a.color==='#5fb236')),true);
+  await page.evaluate(() => {
+    window._view._view._booxReader.closePalette();
+    window.setReaderHighlightColor('#e56eee');
+  });
+  await page.waitForTimeout(330);
+  await pen('mousePressed',word[0].x-12,word[0].y);
+  await page.evaluate(()=>window.setPenEraser(true, 'native', true));
+  await pen('mouseMoved',word[0].x,word[0].y);
+  await page.waitForFunction(()=>window._view._view._directHighlight.gesture.active);
+  await pen('mouseMoved',word[1].x,word[1].y);
+  await page.evaluate(()=>window.setPenEraser(false, 'native', false));
+  await pen('mouseMoved',word[1].x,word[1].y+60);
+  await pen('mouseReleased',word[1].x,word[1].y+60,0);
+  const clipped = await page.evaluate(()=>window._view._annotationManager._annotations.filter(a=>a.type==='highlight' && a.color==='#e56eee'));
+  assert.equal(clipped.length,1);
+  assert.ok(clipped[0].text.length > 2 && clipped[0].text.length < 90, 'released drag is bounded to the selected words');
+  console.log('PASS a mid-contact native button press starts at the current pen position and release ends it once');
+  console.log('PASS eraser inversion and neutral pen behavior, including selected-color highlights with touch highlighting disabled');
+  await page.evaluate(() => {
+    const r = window._view;
+    r._view._booxReader.closePalette();
+    r.setAnnotationToolbarOpen(false);
+    r.setTool();
+    r._explicitAnnotationTool = false; // Fresh reader: no explicit writing tool selected.
+    window.setPenEraser(true, 'native', true);
+  });
+  await page.waitForTimeout(330);
+  await pen('mousePressed',245,285);
+  assert.equal(await page.evaluate(()=>window._view._view.action?.type),'erase');
+  await pen('mouseReleased',245,285,0);
+  await page.evaluate(()=>window.setPenEraser(false, 'native', false));
+  assert.equal(await page.evaluate(()=>window._view._tool.type),'ink');
+  await pen('mousePressed',310,370);
+  await pen('mouseMoved',320,381);
+  await page.evaluate(()=>window.setPenEraser(true, 'native', true));
+  await pen('mouseMoved',330,395);
+  assert.equal(await page.evaluate(()=>window._view._view.action?.type),'erase');
+  await page.evaluate(()=>window.setPenEraser(false, 'native', false));
+  await pen('mouseMoved',345,408);
+  assert.equal(await page.evaluate(()=>window._view._view.action?.type),'ink');
+  await pen('mouseReleased',350,415,0);
+  console.log('PASS the barrel button switches the automatically initialized PDF pen before and during contact');
   assert.deepEqual(errors,[]);
   console.log('PASS hardware eraser restores the base tool; native edits use undo/redo; disabling the profile removes its presentation');
  } finally {if(browser)await browser.close();await new Promise(r=>server.close(r));}

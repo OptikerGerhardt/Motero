@@ -117,7 +117,20 @@ export type OutlineItem = {
 	expanded?: boolean;
 };
 
+export type EPUBProgressMarker = {
+    kind: 'chapter' | 'bookmark';
+    id: string;
+    parentId?: string;
+    rootId?: string;
+    depth?: number;
+    locator: string;
+    title: string;
+    fraction: number;
+    color?: string;
+};
+
 export type ViewStats = {
+    epubProgressMarkers?: EPUBProgressMarker[];
 	pageIndex?: number;
 	pageLabel?: string;
 	pagesCount?: number;

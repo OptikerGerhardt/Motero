@@ -140,3 +140,25 @@ test('a rejected extraction is discarded and the next gesture still works', asyn
 	gesture.up(down);
 	assert.deepEqual(calls.map(([name]) => name), ['start', 'move', 'save']);
 });
+
+test('button drag starts without a timer and releases a selection even if page data is still loading', async () => {
+	let resolve;
+	const { gesture, calls, timers } = fixture({ prepare: () => new Promise(r => { resolve = r; }) });
+	const pen = { ...down, pointerType: 'pen', buttons: 3 };
+	assert.equal(gesture.down(pen, true), true);
+	assert.equal(timers.size, 0);
+	gesture.move({ ...pen, clientX: 127 });
+	gesture.up({ ...pen, clientX: 132 });
+	resolve({ word: 'reading' });
+	await Promise.resolve();
+	assert.deepEqual(calls.map(([name]) => name), ['start', 'move', 'move', 'save']);
+});
+
+test('a stationary button tap neither creates an annotation nor replays navigation', async () => {
+	const { gesture, calls } = fixture();
+	const pen = { ...down, pointerType: 'pen' };
+	gesture.down(pen, true);
+	gesture.up(pen);
+	await Promise.resolve();
+	assert.deepEqual(calls, []);
+});

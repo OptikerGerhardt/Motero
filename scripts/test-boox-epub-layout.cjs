@@ -82,7 +82,29 @@ const root=path.resolve(__dirname,'../build/android');
   await page.waitForFunction(()=>window._view._annotationManager._annotations.some(a=>a.comment?.startsWith('Bookmark')));
   const flag=await page.evaluate(()=>{const v=window._view._view,a=v._annotations.find(a=>a.comment?.startsWith('Bookmark'));
    const el=v._annotationShadowRoot.querySelector(`svg[data-annotation-id="${a.id}"]`),r=el.getBoundingClientRect();return{top:r.top,left:r.left,right:r.right,width:r.width,height:v._iframeWindow.innerHeight};});
-  assert.ok(flag.width>=18&&flag.top>=0&&flag.top<64&&flag.right<=393-32+1,JSON.stringify(flag));
+  assert.ok(flag.width>=44&&flag.top>=0&&flag.right<=393-16+1,JSON.stringify(flag));
+  const fixedFlag = () => page.evaluate(()=>{
+   const v=window._view._view, node=v._annotationShadowRoot.querySelector('svg[data-bookmark-flag]');
+   const rect=node?.getBoundingClientRect();
+   return rect && {top:rect.top,width:rect.width,height:rect.height};
+  });
+  const fixed = await fixedFlag();
+  for (const verticalMargins of [0,4,12]) {
+   await page.evaluate(verticalMargins=>window._view.setAppearance({verticalMargins}),verticalMargins);
+   await page.waitForTimeout(160);
+   assert.deepEqual(await fixedFlag(),fixed,'text margins do not move the flag vertically');
+  }
+  const popupCount = () => page.evaluate(() => window.messages.filter(m =>
+   ['onSetAnnotationPopup','onSetSelectionPopup'].includes(m.message?.event) && m.message.params != null).length);
+  const popupBefore = await popupCount();
+  await hold({x:385,y:22});
+  const ribbon=page.frameLocator('#view iframe').locator('.motero-bookmark-ribbon');
+  assert.equal(await ribbon.locator('button[aria-pressed="true"]').getAttribute('data-color'),'#ffd400');
+  assert.equal(await popupCount(),popupBefore,'the opening hold does not open another popup');
+  assert.equal(await page.evaluate(()=>window._view._annotationManager._annotations.length),1);
+  await ribbon.locator('button[data-color="#5fb236"]').tap();
+  await ribbon.waitFor({state:'detached'});
+  await page.waitForFunction(()=>window._view._annotationManager._annotations[0]?.color==='#5fb236', undefined, {timeout:3000});
   await tap({x:385,y:22});
   assert.equal(await page.evaluate(()=>window._view._annotationManager._annotations.filter(a=>a.comment?.startsWith('Bookmark')).length),0);
   console.log('PASS viewport corner toggles a larger unclipped EPUB bookmark independently of content margins');
@@ -128,6 +150,64 @@ const root=path.resolve(__dirname,'../build/android');
   await page.evaluate(()=>window.setAppearance({lineHeight:1.25,margins:8,verticalMargins:3,fontFamily:'serif',textAlignment:'justify',fontBoldness:0}));
   assert.equal(await page.evaluate(()=>{const v=window._view._view;return v._iframeWindow.getComputedStyle(v._iframeDocument.querySelector('replaced-body p')).textAlign;}),'justify');
   console.log('PASS EPUB alignment and stroke weight apply without replacing the font; page frame is centered');
+  await open('paginated');
+  const markerStat = () => page.evaluate(() => window.messages
+    .filter(m => m.message?.event === 'onChangeViewStats' && m.message.params.stats.epubProgressMarkers)
+    .at(-1)?.message.params.stats.epubProgressMarkers ?? []);
+  await page.waitForFunction(()=>window.messages.some(m=>m.message?.params?.stats?.epubProgressMarkers?.some(marker=>marker.kind==='chapter')));
+  const chapterMarkers = (await markerStat()).filter(marker => marker.kind === 'chapter');
+  assert.ok(chapterMarkers.length > 1);
+  assert.ok(chapterMarkers.every(marker => marker.fraction >= 0 && marker.fraction <= 1));
+  await page.evaluate(()=>window._view._view.addAndroidBookmark());
+  await page.waitForFunction(()=>window.messages.some(m=>m.message?.params?.stats?.epubProgressMarkers?.some(marker=>marker.kind==='bookmark')));
+  const beforeResize = await markerStat();
+  const measure = () => page.evaluate(() => {
+    const v = window._view._view;
+    const rect = v._iframeDocument.querySelector('.sections').getBoundingClientRect();
+    return { width: v._iframeWindow.innerWidth, left: rect.left + v.flow._offsetLeft, size: rect.width };
+  });
+  await page.setViewportSize({width: 900, height: 393});
+  await page.waitForFunction(()=>window._view._view._iframeWindow.innerWidth >= 890);
+  let frame = await measure();
+  assert.ok(Math.abs(frame.left - (frame.width - frame.left - frame.size)) < 2, 'landscape EPUB margins are symmetric');
+  assert.deepEqual(await markerStat(), beforeResize, 'EPUB navigation anchors remain stable across rotation');
+  await page.setViewportSize({width: 393, height: 900});
+  await page.waitForFunction(()=>window._view._view._iframeWindow.innerWidth <= 400);
+  frame = await measure();
+  assert.ok(Math.abs(frame.left - (frame.width - frame.left - frame.size)) < 2, 'portrait EPUB margins remain symmetric');
+  const exact = await page.evaluate(() => {
+   const v = window._view._view, paragraphs = v.renderers[0].container.querySelectorAll('p');
+   paragraphs[1].id = 'synthetic-first';
+   paragraphs[2].id = 'synthetic-second';
+   v._outline = [{title:'Same heading',location:{href:'one.xhtml#synthetic-first'},items:[
+    {title:'Same heading',location:{href:'one.xhtml#synthetic-second'}},
+    {title:'Invalid heading',location:{href:'one.xhtml#missing-reference'}},
+   ]}];
+   const marker = v._getProgressMarkers();
+   const chapters = marker.filter(m => m.kind === 'chapter');
+   const choose = m => window.navigateEpubProgressMarker(m);
+   const positions = [];
+   for (const chapter of [chapters[1], chapters[0]]) {
+    if (!choose(chapter)) throw Error('Chapter could not be navigated');
+    const selector = [...v._spotlights.values()].at(-1);
+    const range = v.toDisplayedRange(selector);
+    positions.push(range.cloneContents().querySelector('[id]')?.id || range.startContainer.parentElement.id);
+   }
+   const bookmark = marker.find(m => m.kind === 'bookmark');
+   const invalid = choose({ ...chapters[1], locator:'one.xhtml#missing-reference' });
+   const bookmarkOK = choose(bookmark);
+   return { positions, count:chapters.length, depth:chapters[1].depth, parent:chapters[1].parentId,
+    root:chapters[0].id, invalid, bookmarkOK, bookmarkLocator:bookmark.locator,
+    destination:[...v._spotlights.values()].at(-1)?.value };
+  });
+  assert.deepEqual(exact.positions,['synthetic-second','synthetic-first']);
+  assert.equal(exact.count,2);
+  assert.equal(exact.depth,1);
+  assert.equal(exact.parent,exact.root);
+  assert.equal(exact.invalid,false);
+  assert.equal(exact.bookmarkOK,true);
+  assert.equal(exact.destination,exact.bookmarkLocator);
+  console.log('PASS EPUB chapter/bookmark locators remain stable across rotation');
   assert.deepEqual(errors,[]);
  }finally{await browser?.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);process.exitCode=1;});

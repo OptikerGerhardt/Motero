@@ -24,3 +24,11 @@ test('the inset bookmark remains tappable on a short landscape viewport without 
  assert.equal(readerBookmarkCorner(viewport,insets,890,250),false);
  assert.equal(readerBookmarkCorner(viewport,insets,20,30),false);
 });
+
+test('the flag follows the exposed frame continuously through the viewport boundary', async () => {
+ const {bookmarkFrameAnchor}=await import('../../src/common/reader-bookmark.mjs');
+ const viewport={left:0,top:0,right:400,bottom:800};
+ assert.deepEqual(bookmarkFrameAnchor(viewport,{left:-30,right:450,top:-20}),{left:340,top:0});
+ assert.deepEqual(bookmarkFrameAnchor(viewport,{left:20,right:360,top:14}),{left:308,top:14});
+ assert.deepEqual(bookmarkFrameAnchor(viewport,{left:0,right:400,top:1}),{left:340,top:1});
+});

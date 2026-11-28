@@ -1,9 +1,80 @@
-// Shared semantic recognition; ordinary black notes are not bookmarks.
-export const isReaderBookmark = annotation => annotation?.type === 'note'
+// The Bookmark tag is the canonical marker. Older notes using a localized
+// comment prefix remain discoverable without rewriting their user data.
+export const BOOKMARK_TAG = 'Bookmark';
+export const isLegacyReaderBookmark = annotation => annotation?.type === 'note'
     && /^(?:Lesezeichen|Bookmark)\s*·\s*/i.test(annotation.comment || '');
-export const isBlackReaderBookmark = annotation => isReaderBookmark(annotation)
-    && /^#000000$/i.test(annotation.color || '');
-export const BOOKMARK_FLAG_PATH = 'M5 2h14v20l-7-4.5-7 4.5z';
+export const hasBookmarkTag = annotation => annotation?.type === 'note'
+    && Array.isArray(annotation.tags)
+    && annotation.tags.some(tag => String(tag?.name ?? tag ?? '').trim().toLowerCase() === 'bookmark');
+export const isReaderBookmark = annotation => annotation?.type === 'note'
+    && (hasBookmarkTag(annotation) || isLegacyReaderBookmark(annotation));
+export const removeLegacyBookmarkPrefix = comment =>
+    String(comment || '').replace(/^(?:Lesezeichen|Bookmark)\s*·\s*/i, '');
+export const bookmarkColor = annotation =>
+    /^#[0-9a-f]{6}$/i.test(annotation?.color || '') ? annotation.color : '#000000';
+// A generated marker may be deleted on a second corner tap. Match the
+// timestamp against the annotation creation date, not a loose date regex:
+// comments containing user text must always be preserved.
+export function isGeneratedBookmarkComment(annotation, locale) {
+    if (!isReaderBookmark(annotation)) return false;
+    const comment = String(annotation.comment || '').trim().replace(/\s+/g, ' ');
+    if (!/^(?:Lesezeichen|Bookmark)\s*·\s*/i.test(comment)) return false;
+    const date = new Date(annotation.dateCreated);
+    if (!Number.isFinite(date.getTime())) return false;
+    const languages = [...new Set([locale, 'de-DE', 'en-US', 'en-GB'].filter(Boolean))];
+    // Creation and comment formatting can straddle a minute boundary.
+    for (const language of languages) {
+        for (const delta of [-60000, 0, 60000]) {
+            const formatted = new Intl.DateTimeFormat(language,
+                { dateStyle: 'short', timeStyle: 'short' }).format(new Date(date.getTime() + delta));
+            if (comment === (String(annotation.comment || '').match(/^\s*(Lesezeichen|Bookmark)/i)?.[1] + ' · ' + formatted)
+                    .replace(/\s+/g, ' ')) return true;
+        }
+    }
+    return false;
+}
+
+// Decide whether the corner shortcut may delete its marker. Untouched
+// bookmark-only notes are disposable; edited notes and other tags are not.
+export function bookmarkToggleOff(annotation, locale) {
+    const tags = (annotation?.tags || []).filter(
+        tag => String(tag?.name ?? tag).trim().toLowerCase() !== 'bookmark');
+    if (tags.length === 0 && isGeneratedBookmarkComment(annotation, locale)) {
+        return { delete: true };
+    }
+    return {
+        delete: false,
+        changes: {
+            tags,
+            comment: isLegacyReaderBookmark(annotation)
+                ? removeLegacyBookmarkPrefix(annotation.comment)
+                : annotation.comment
+        }
+    };
+}
+
+export const DEFAULT_BOOKMARK_COLOR = '#ffd400';
+export const BOOKMARK_FLAG_WIDTH = 44;
+export const BOOKMARK_FLAG_HEIGHT = 34;
+export const BOOKMARK_FLAG_PATH = 'M0 0h24v16l-12-4.4L0 16z';
+
+// Follow the visible frame while it covers the viewport, then its exposed edge.
+export function bookmarkFrameAnchor(viewport, frame, insets = {}) {
+    const right = Math.min(viewport.right - Math.max(16, (Number(insets.right) || 0) + 8), frame.right - 8);
+    return {
+        left: Math.max(viewport.left, frame.left, right - BOOKMARK_FLAG_WIDTH),
+        top: Math.max(viewport.top + Math.max(0, Number(insets.top) || 0), frame.top),
+    };
+}
+
+export function epubBookmarkAnchor(viewport, frame, insets) {
+    return bookmarkFrameAnchor(viewport, { left: frame.left, right: frame.right, top: viewport.top }, insets);
+}
+
+export function bookmarkFlagContains(anchor, x, y) {
+    return !!anchor && x >= anchor.left - 6 && x <= anchor.left + BOOKMARK_FLAG_WIDTH + 6
+        && y >= anchor.top - 6 && y <= anchor.top + BOOKMARK_FLAG_HEIGHT + 6;
+}
 
 // Stable PDF-page corner in viewport coordinates, independent of saved note rects.
 export function bookmarkFlagRect(viewport) {

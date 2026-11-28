@@ -1,0 +1,81 @@
+.motero-bookmark-picker {
+    position: fixed;
+    inset: 0;
+    z-index: 9002;
+    isolation: isolate;
+}
+
+.motero-bookmark-ribbon {
+    position: absolute;
+    top: var(--flag-top);
+    left: var(--flag-left);
+    width: var(--flag-width);
+    height: var(--flag-collapsed-height);
+    box-sizing: border-box;
+    overflow: hidden;
+    background: var(--flag-color);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - var(--flag-notch, 7.65px)), 0 100%);
+    transition: height 180ms ease;
+}
+
+.motero-bookmark-ribbon[data-expanded] {
+    height: var(--flag-height);
+}
+
+.motero-bookmark-ribbon[data-instant] {
+    transition: none;
+}
+
+.motero-bookmark-ribbon:focus {
+    outline: none;
+}
+
+.motero-bookmark-ribbon-colors {
+    position: absolute;
+    inset: 0 3px 4px;
+    padding-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    background: var(--color-background, Canvas);
+    box-shadow: inset 0 0 0 1px var(--color-border, #8886);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 8px), 0 100%);
+}
+
+.motero-bookmark-ribbon:not([data-expanded]) .motero-bookmark-ribbon-colors {
+    visibility: hidden;
+}
+
+.motero-bookmark-ribbon-colors button {
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    width: 100%;
+    flex: 0 0 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.motero-bookmark-ribbon-colors button:focus-visible {
+    outline: 2px solid var(--accent-blue, Highlight);
+    outline-offset: -3px;
+}
+
+.motero-bookmark-ribbon-colors button span {
+    width: 24px;
+    height: 24px;
+    box-sizing: border-box;
+    border-radius: 50%;
+    background: var(--swatch-color);
+    box-shadow: inset 0 0 0 1px #0002;
+}
+
+.motero-bookmark-ribbon-colors button[aria-pressed="true"] span {
+    box-shadow: inset 0 0 0 2px var(--swatch-color), inset 0 0 0 4px white;
+}

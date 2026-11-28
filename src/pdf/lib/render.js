@@ -1,4 +1,4 @@
-import { isBlackReaderBookmark, BOOKMARK_FLAG_PATH } from '../../common/reader-bookmark.mjs';
+import { isReaderBookmark, bookmarkColor, BOOKMARK_FLAG_PATH } from '../../common/reader-bookmark.mjs';
 import { p2v } from './coordinates';
 import {
 	applyInverseTransform,
@@ -119,9 +119,9 @@ export function drawAnnotationsOnCanvas(canvas, viewport, annotations, pageIndex
 			let s = 1 / devicePixelRatio;
 			ctx.transform(s, 0, 0, s, x, y);
 
-			if (canvas.readerBookmarkFlags && isBlackReaderBookmark(annotation)) {
+			if (canvas.readerBookmarkFlags && isReaderBookmark(annotation)) {
                 ctx.globalAlpha = 0.7;
-                ctx.fillStyle = '#000000';
+                ctx.fillStyle = bookmarkColor(annotation);
                 ctx.fill(new Path2D(BOOKMARK_FLAG_PATH));
                 ctx.restore();
                 continue;

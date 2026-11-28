@@ -16,7 +16,7 @@ export class HoldToHighlight {
 		return !!this.state?.active;
 	}
 
-	down(event) {
+	down(event, immediate = false) {
 		if (!['touch', 'pen'].includes(event.pointerType)) {
 			return false;
 		}
@@ -26,27 +26,31 @@ export class HoldToHighlight {
 			this.multitouch = true;
 			return true;
 		}
-		if (this.multitouch || event.button !== 0 || !this.canStart(event)) {
+		if (this.multitouch || (event.button !== 0 && !(immediate && (event.buttons & 1 || event.pressure > 0)))
+				|| !this.canStart(event, immediate)) {
 			return this.multitouch;
 		}
-		let state = this.state = { event, active: false, moved: false };
-		state.timer = this.schedule(async () => {
+		let state = this.state = { event, active: false, moved: false, immediate };
+		const activate = async () => {
 			state.timer = null;
 			try {
-				let prepared = await this.prepare(event);
-				// Text extraction can finish after a swipe, a lift, or another document.
-				if (this.state !== state || state.moved || this.multitouch || !prepared) {
+				let prepared = await this.prepare(event, immediate);
+				if (this.state !== state || (!immediate && state.moved) || this.multitouch) return;
+				if (!prepared) {
+					if (immediate) this.abort();
 					return;
 				}
 				state.active = true;
 				this.start(prepared, event);
+				if (state.latestMove) this.update(state.latestMove);
+				if (state.released) this.up(state.released);
 			}
-			catch (error) {
-				if (this.state === state) {
-					this.abort();
-				}
+			catch {
+				if (this.state === state) this.abort();
 			}
-		}, this.delay);
+		};
+		if (immediate) activate();
+		else state.timer = this.schedule(activate, this.delay);
 		return true;
 	}
 
@@ -55,10 +59,15 @@ export class HoldToHighlight {
 		if (!state || event.pointerId !== state.event.pointerId) {
 			return this.multitouch;
 		}
+		if (state.immediate) {
+			state.latestMove = event;
+			state.moved ||= Math.hypot(event.clientX - state.event.clientX,
+				event.clientY - state.event.clientY) > 1;
+		}
 		if (state.active) {
 			this.update(event);
 		}
-		else if (Math.hypot(event.clientX - state.event.clientX,
+		else if (!state.immediate && Math.hypot(event.clientX - state.event.clientX,
 			event.clientY - state.event.clientY) > this.slop) {
 			state.moved = true;
 			this.unschedule(state.timer);
@@ -77,13 +86,23 @@ export class HoldToHighlight {
 		if (!state || event.pointerId !== state.event.pointerId) {
 			return false;
 		}
+		if (state.immediate) {
+			if (!state.moved) {
+				this.abort();
+				return true;
+			}
+			if (!state.active) {
+				state.released = event;
+				return true;
+			}
+		}
 		this.unschedule(state.timer);
 		this.state = null;
 		if (state.active) {
 			this.update(event);
 			this.finish(event);
 		}
-		else if (!state.moved) {
+		else if (!state.immediate && !state.moved) {
 			this.tap(state.event, event);
 		}
 		return true;

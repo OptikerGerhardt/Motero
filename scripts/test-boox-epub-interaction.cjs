@@ -95,9 +95,9 @@ const root=path.resolve(__dirname,'../build/android');
    const frame=await page.evaluate(()=>{const v=window._view._view,r=v._iframe.getBoundingClientRect();return{x:r.left+r.width-20,y:r.top+20,width:r.width};});
    await tap({x:frame.x,y:frame.y});await page.waitForFunction(()=>window._view._annotationManager._annotations.some(a=>a.type==='note'));
    const bookmark=await page.evaluate(()=>{const v=window._view._view,a=window._view._annotationManager._annotations[0],s=v._annotationShadowRoot.querySelector(`svg[data-annotation-id="${a.id}"]`);const r=s.getBoundingClientRect();return{color:a.color,opacity:s.getAttribute('opacity'),flag:s.querySelector('path')?.getAttribute('d'),x:r.left,width:v._iframeWindow.innerWidth};});
-   assert.equal(bookmark.color,'#000000');assert.equal(bookmark.opacity,'70%');assert.equal(bookmark.flag,'M5 2h14v20l-7-4.5-7 4.5z');assert.ok(bookmark.x>bookmark.width*.8,JSON.stringify(bookmark));
+   assert.equal(bookmark.color,'#ffd400');assert.equal(bookmark.opacity,'70%');assert.equal(bookmark.flag,'M0 0h24v16l-12-4.4L0 16z');assert.ok(bookmark.x>=bookmark.width*.75,JSON.stringify(bookmark));
    await tap({x:frame.x,y:frame.y});await page.waitForFunction(()=>!window._view._annotationManager._annotations.length);
-   console.log('PASS '+flow+': upper-right black 70% bookmark flag and repeated tap removal');
+   console.log('PASS '+flow+': upper-right yellow 70% bookmark flag and repeated tap removal');
    for(const margins of [0,8,20]){
     await page.evaluate(m=>window._view.setAppearance({lineHeight:1.2,wordSpacing:0,letterSpacing:0,pageWidth:0,margins:m,fontFamily:'serif'}),margins);await page.waitForTimeout(150);
     const actual=await page.evaluate(()=>{const v=window._view._view,d=v._iframeDocument,p=d.querySelector('p'),r=p.getBoundingClientRect();return{width:r.width,margin:parseFloat(d.documentElement.style.getPropertyValue('--reader-side-margin')),position:v.flow.startCFI.toString()};});

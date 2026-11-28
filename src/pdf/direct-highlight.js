@@ -2,6 +2,7 @@ import { PDFSelectionMagnifier } from './selection-magnifier';
 import { HoldToHighlight } from './hold-to-highlight.mjs';
 import { getWordSelectionRanges } from './selection';
 import { ANNOTATION_COLORS } from '../common/defines';
+import { DEFAULT_BOOKMARK_COLOR } from '../common/reader-bookmark.mjs';
 
 // Uses the reader's extracted PDF characters, never Android's selection handles.
 export class PDFDirectHighlight {
@@ -10,8 +11,8 @@ export class PDFDirectHighlight {
 		this.magnifier = new PDFSelectionMagnifier(view);
 		this.handledUps = new WeakSet();
 		this.gesture = new HoldToHighlight({
-			canStart: event => this.canStart(event),
-			prepare: event => this.prepare(event),
+			canStart: (event, immediate) => this.canStart(event, immediate),
+			prepare: (event, immediate) => this.prepare(event, immediate),
 			start: (prepared, event) => this.start(prepared, event),
 			update: event => this.update(event),
 			finish: () => this.finish(),
@@ -48,8 +49,8 @@ export class PDFDirectHighlight {
 		return (view.getSelectableAnnotations(position) || []).find(a => !a.readOnly && !a.isExternal) || null;
 	}
 
-	canStart(event) {
-		if ((!this.enabled && !this.quickAnnotation(event)) || !event.target.closest?.('.page')
+	canStart(event, immediate = false) {
+		if (this.view._readOnly || (!immediate && !this.enabled && !this.quickAnnotation(event)) || !event.target.closest?.('.page')
 				|| event.target.closest?.('textarea, input, [contenteditable="true"], .textAnnotation')) return false;
         let position = this.view.pointerEventToPosition(event);
         const selected = this.view.getSelectedAnnotations();
@@ -59,16 +60,17 @@ export class PDFDirectHighlight {
 			&& (!this.view.getSelectableAnnotations(position)?.length || !!this.quickAnnotation(event));
 	}
 
-	async prepare(event) {
+	async prepare(event, immediate = false) {
 		let view = this.view;
 		let position = view.pointerEventToPosition(event);
 		if (!position) {
 			return null;
 		}
-		let annotation = this.quickAnnotation(event);
+		const readingPenColor = immediate ? view._options.readerHighlightColor || DEFAULT_BOOKMARK_COLOR : null;
+		let annotation = immediate ? null : this.quickAnnotation(event);
 		if (annotation) return { position, annotations: [annotation] };
 		await view._ensureBasicPageData(position.pageIndex);
-		if (view._destroyed || !this.enabled) {
+		if (view._destroyed || (!immediate && !this.enabled)) {
 			return null;
 		}
 		let chars = view._pdfPages[position.pageIndex]?.chars;
@@ -81,10 +83,10 @@ export class PDFDirectHighlight {
 			return null;
 		}
 		let ranges = getWordSelectionRanges(view._pdfPages, position, position, { includeTrailingPunctuation: true });
-		return ranges.length && !ranges[0].collapsed ? { position, ranges } : null;
+		return ranges.length && !ranges[0].collapsed ? { position, ranges, readingPenColor } : null;
 	}
 
-	start({ position, ranges, annotations }, event) {
+	start({ position, ranges, annotations, readingPenColor }, event) {
 		let view = this.view;
 		view._clearPointerAction();
 		view._clearPendingBackdropTap();
@@ -100,6 +102,7 @@ export class PDFDirectHighlight {
 			view._booxReader?.showPalette(annotations);
 			return;
 		}
+		this.readingPenColor = readingPenColor;
 		this.anchor = position;
 		view._selectionRanges = ranges;
 		view._render();
@@ -128,15 +131,16 @@ export class PDFDirectHighlight {
 	finish() {
 		if (this.quickHold) { this.quickHold = false; this.clear(); this.suppressUntil = Date.now() + 800; return; }
 		let view = this.view;
-		if (!this.enabled || view._destroyed) {
+		if ((!this.enabled && !this.readingPenColor) || view._destroyed || view._readOnly) {
 			this.clear();
 			return;
 		}
 		let ranges = view._selectionRanges.filter(range => !range.collapsed)
 			.sort((a, b) => a.pageIndex - b.pageIndex);
-		let type = ['highlight', 'underline'].includes(view._tool.type) ? view._tool.type : view._directHighlightType || 'highlight';
-		let color = /^#[\da-f]{6}$/i.test(view._tool.color) ? view._tool.color
-			: view._directHighlightColor || view._tools?.highlight?.color || ANNOTATION_COLORS[0][1];
+		let type = this.readingPenColor ? 'highlight'
+			: ['highlight', 'underline'].includes(view._tool.type) ? view._tool.type : view._directHighlightType || 'highlight';
+		let color = this.readingPenColor || (/^#[\da-f]{6}$/i.test(view._tool.color) ? view._tool.color
+			: (view._tool.type === 'pointer' && view._options.readerHighlightColor) || view._directHighlightColor || view._tools?.highlight?.color || ANNOTATION_COLORS[0][1]);
 		let created = [];
 		// The annotation format supports two adjacent pages per highlight.
 		while (ranges.length) {
@@ -157,7 +161,7 @@ export class PDFDirectHighlight {
 
 	clear() {
 		this.magnifier.hide(); this.pressAnnotation = null; this.quickHold = false;
-		this.anchor = null;
+		this.anchor = null; this.readingPenColor = null;
 		this.view._selectionRanges = [];
 		this.view._onSetSelectionPopup(null);
 		this.view._clearPointerAction();
