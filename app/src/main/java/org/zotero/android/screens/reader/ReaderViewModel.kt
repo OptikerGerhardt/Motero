@@ -429,7 +429,7 @@ class ReaderViewModel @Inject constructor(
         updateState {
             copy(isDark = pdfReaderCurrentThemeEventStream.currentValue()!!.isDark,
                 progressMode = defaults.getReaderSettings().effectiveProgressMode(),
-                bookmarkColor = defaults.getReaderSettings().effectiveBookmarkColor())
+                neutralHighlightColor = defaults.getReaderSettings().neutralHighlightColor ?: defaults.getHighlightColorHex())
         }
         progressHandler.muteProgressToolbarForScreen()
 
@@ -438,7 +438,8 @@ class ReaderViewModel @Inject constructor(
     private var automaticRecoveryUsed = false
     fun onReaderRendererGone() {
         postScrubTrimJob?.cancel()
-        updateState { copy(manualCropOpen = false, bookmarkColorsOpen = false, isReaderLoading = true, selectedAnnotationKey = null,
+        pendingBookmarkChoices.clear()
+        updateState { copy(manualCropOpen = false, bookmarkColorsOpen = false, epubProgressMarkers = emptyList(), isReaderLoading = true, selectedAnnotationKey = null,
             readerAnnotationArgs = null, readerAnnotationMoreArgs = null, showCreationToolbar = false, selectedText = null, rendererFailed = automaticRecoveryUsed,
             canUndoAnnotation = false, canRedoAnnotation = false, rendererGeneration = if (automaticRecoveryUsed) rendererGeneration else rendererGeneration + 1) }
         automaticRecoveryUsed = true
@@ -809,12 +810,14 @@ class ReaderViewModel @Inject constructor(
                 dbWrapper = dbWrapperMain,
                 request = request
             ).ifFailure {
+                annotations.forEach { pendingBookmarkChoices.remove(it.key) }
                 Timber.e(it, "ReaderViewModel: could not store annotations")
                 updateState {
                     copy(error = Error.cantAddAnnotations)
                 }
                 return@launch
             }
+            annotations.forEach { applySavedBookmarkColor(it.key) }
         }
     }
 
@@ -859,6 +862,41 @@ class ReaderViewModel @Inject constructor(
         }
     }
 
+    private data class BookmarkColorChoice(val color: String, val order: Long)
+    private val pendingBookmarkChoices = mutableMapOf<String, BookmarkColorChoice>()
+    private var bookmarkChoiceOrder = 0L
+    private var lastSavedBookmarkChoice = 0L
+
+    private fun acceptBookmarkColorChoice(params: JsonObject) {
+        val key = params.get("id")?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isString }?.asString?.takeIf { it.matches(Regex("[A-Z0-9]{8}")) } ?: return
+        val color = params.get("color")?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isString }?.asString?.takeIf { it in AnnotationsConfig.allColors } ?: return
+        pendingBookmarkChoices[key] = BookmarkColorChoice(color, ++bookmarkChoiceOrder)
+        applySavedBookmarkColor(key)
+    }
+
+    private fun applySavedBookmarkColor(key: String) {
+        val choice = pendingBookmarkChoices[key] ?: return
+        val matches = runCatching {
+            var saved = false
+            dbWrapperMain.realmDbStorage.perform { coordinator ->
+                try {
+                    val item = coordinator.perform(ReadItemDbRequest(library.identifier, key))
+                    val annotation = if (item.parent?.key == this.key) generateAnnotationJsonForReader(item)?.first else null
+                    saved = annotation?.isReaderBookmark() == true && annotation.color.equals(choice.color, true)
+                } finally {
+                    coordinator.invalidate()
+                }
+            }
+            saved
+        }.getOrDefault(false)
+        if (!matches) return
+        pendingBookmarkChoices.remove(key)
+        if (choice.order <= lastSavedBookmarkChoice) return
+        lastSavedBookmarkChoice = choice.order
+        defaults.setReaderSettings(defaults.getReaderSettings().copy(bookmarkColor = choice.color))
+        readerWebCallChainExecutor.setReaderBookmarkColor(choice.color)
+    }
+
     private fun saveAnnotations(params: JsonObject) {
         val rawAnnotations = params["annotations"]?.asJsonArray
         if (rawAnnotations == null) {
@@ -897,6 +935,7 @@ class ReaderViewModel @Inject constructor(
             }
             if (viewState.fileType == ReaderFileType.PDF) {
                 createPdfDatabaseAnnotations(annotations = newAnnotations as List<PDFDocumentAnnotation>)
+                newAnnotations.forEach { applySavedBookmarkColor(it.key) }
             } else {
                 createHtmlEpubDatabaseAnnotations(annotations = newAnnotations as List<NewReaderAnnotation>)
             }
@@ -914,8 +953,10 @@ class ReaderViewModel @Inject constructor(
                     updateHtmlEpubDatabaseAnnotation(editedAnnotation as NewReaderAnnotation)
                 }
                 this.annotations[editedAnnotation.key] = editedAnnotation
+                applySavedBookmarkColor(editedAnnotation.key)
                 if (isHistoryChange) showCommentChangedByHistory(editedAnnotation)
             } catch (error: Exception) {
+                pendingBookmarkChoices.remove(editedAnnotation.key)
                 ignoreDbCallbackOnReaderModificationItemKeys.remove(editedAnnotation.key)
                 Timber.e(error, "Could not save annotation changes")
                 updateState { copy(error = Error.cantUpdateAnnotation) }
@@ -1805,6 +1846,7 @@ class ReaderViewModel @Inject constructor(
             is ReaderWebData.setCropEditorOpen -> {
                 updateState { copy(manualCropOpen = successValue.open) }
             }
+            is ReaderWebData.bookmarkColorChosen -> acceptBookmarkColorChoice(successValue.params)
             is ReaderWebData.setBookmarkColorsOpen -> updateState { copy(bookmarkColorsOpen = successValue.open) }
             is ReaderWebData.setManualCrop -> {
                 if (viewState.fileType == ReaderFileType.PDF) {
@@ -2006,10 +2048,12 @@ class ReaderViewModel @Inject constructor(
         val epubMarkers = stats?.get("epubProgressMarkers")?.takeIf { it.isJsonArray }?.asJsonArray?.mapNotNull { entry ->
             val marker = entry.takeIf { it.isJsonObject }?.asJsonObject ?: return@mapNotNull null
             val kind = marker.stringOrNull("kind")?.takeIf { it == "chapter" || it == "bookmark" } ?: return@mapNotNull null
-            val locator = marker.stringOrNull("locator") ?: return@mapNotNull null
+            val locator = marker.stringOrNull("locator")?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+            val id = marker.stringOrNull("id")?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
             val fraction = marker.get("fraction")?.takeIf { it.isJsonPrimitive }?.asFloat
                 ?.takeIf { it.isFinite() }?.coerceIn(0f, 1f) ?: return@mapNotNull null
-            org.zotero.android.screens.reader.data.EpubProgressMarker(kind, locator, marker.stringOrNull("title").orEmpty(), fraction, marker.stringOrNull("color"))
+            org.zotero.android.screens.reader.data.EpubProgressMarker(kind, locator, marker.stringOrNull("title").orEmpty(), fraction, marker.stringOrNull("color"),
+                id, marker.stringOrNull("parentId"), marker.stringOrNull("rootId"), marker.get("depth")?.asInt?.coerceAtLeast(0) ?: 0)
         }
         val epubPageChanged = viewState.fileType == ReaderFileType.EPUB &&
             (pageIndex != viewState.epubPageIndex || pagesCount != viewState.epubPageCount)
@@ -2571,9 +2615,9 @@ class ReaderViewModel @Inject constructor(
         if (tool == null) {
             if (hex !in AnnotationsConfig.allColors) return
             val settings = defaults.getReaderSettings()
-            defaults.setReaderSettings(settings.copy(bookmarkColor = hex))
-            updateState { copy(bookmarkColor = hex) }
-            readerWebCallChainExecutor.setReaderBookmarkColor(hex)
+            defaults.setReaderSettings(settings.copy(neutralHighlightColor = hex))
+            updateState { copy(neutralHighlightColor = hex) }
+            readerWebCallChainExecutor.setReaderHighlightColor(hex)
         } else {
             viewModelScope.launch { setToolOptions(hex, null, tool) }
         }
@@ -3050,15 +3094,17 @@ class ReaderViewModel @Inject constructor(
 
     fun navigateEpubProgress(fraction: Float, marker: org.zotero.android.screens.reader.data.EpubProgressMarker? = null) {
         if (viewState.fileType != ReaderFileType.EPUB || viewState.isReaderLoading) return
-        val location: Map<String, Any> = when (marker?.kind) {
-            "chapter" -> mapOf("href" to marker.locator)
-            "bookmark" -> mapOf("pageNumber" to marker.locator)
-            else -> {
-                val count = viewState.epubPageCount?.takeIf { it > 0 } ?: return
-                mapOf("pageIndex" to (fraction.coerceIn(0f, 1f) * (count - 1)).roundToInt())
-            }
+        if (marker != null) {
+            val current = viewState.epubProgressMarkers.firstOrNull {
+                it.id == marker.id && it.kind == marker.kind && it.locator == marker.locator
+            } ?: return
+            readerWebCallChainExecutor.navigateEpubMarker(current)
+            return
         }
-        viewModelScope.launch { readerWebCallChainExecutor.show(location) }
+        val count = viewState.epubPageCount?.takeIf { it > 0 } ?: return
+        viewModelScope.launch {
+            readerWebCallChainExecutor.show(mapOf("pageIndex" to (fraction.coerceIn(0f, 1f) * (count - 1)).roundToInt()))
+        }
     }
 
     fun setReaderProgress(bottomInset: Float) {
@@ -3090,7 +3136,9 @@ class ReaderViewModel @Inject constructor(
             val readerSettings = defaults.getReaderSettings()
             if (isSettingsUpdate) {
                 readerWebCallChainExecutor.updateInterface(pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
-                updateState { copy(bookmarkColor = readerSettings.effectiveBookmarkColor()) }
+                val highlight = readerSettings.neutralHighlightColor ?: defaults.getHighlightColorHex()
+                updateState { copy(neutralHighlightColor = highlight) }
+                readerWebCallChainExecutor.setReaderHighlightColor(highlight)
                 readerWebCallChainExecutor.setReaderBookmarkColor(readerSettings.effectiveBookmarkColor())
                 if (viewState.fileType == ReaderFileType.PDF || viewState.fileType == ReaderFileType.EPUB) {
                     readerWebCallChainExecutor.setSpreadMode(readerSettings.spreadsMode)
@@ -3247,7 +3295,7 @@ data class ReaderViewState(
     val isDark: Boolean = false,
     val error: ReaderViewModel.Error? = null,
     val activeTool: ReaderAnnotationTool? = null,
-    val bookmarkColor: String = AnnotationsConfig.defaultActiveColor,
+    val neutralHighlightColor: String = AnnotationsConfig.defaultActiveColor,
     val selectedAnnotationKey: String? = null,
     val selectedAnnotationCommentActive: Boolean = false,
     val focusSidebarKey: String? = null,

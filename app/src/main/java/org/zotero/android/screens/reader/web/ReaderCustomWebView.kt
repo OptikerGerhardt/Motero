@@ -25,6 +25,7 @@ class ReaderCustomWebView(context: Context, attrs: AttributeSet? = null) : WebVi
     var onUserGestureDetected: (() -> Unit)? = null
     var neutralStylus = false
     private var ignoreNeutralStylusContact = false
+    private var restartedStylusDownTime: Long? = null
     private var gestureDownX = 0f
     private var gestureDownY = 0f
     private var gestureAlreadyReportedThisTouch = false
@@ -37,6 +38,7 @@ class ReaderCustomWebView(context: Context, attrs: AttributeSet? = null) : WebVi
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         when (ev.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
+                restartedStylusDownTime = null
                 val profile = org.zotero.android.ereader.DeviceProfileStore.state.value
                 val barrelButton = if (profile.buttonMask == 4) MotionEvent.BUTTON_TERTIARY else MotionEvent.BUTTON_SECONDARY
                 ignoreNeutralStylusContact = neutralStylus
@@ -66,13 +68,41 @@ class ReaderCustomWebView(context: Context, attrs: AttributeSet? = null) : WebVi
                 }
             }
         }
+        if (ignoreNeutralStylusContact && ev.actionMasked == MotionEvent.ACTION_MOVE &&
+            ev.pointerCount == 1 && org.zotero.android.ereader.DeviceInput.isEraserButtonHeld
+        ) {
+            // Give WebView a valid gesture start at the first armed sample.
+            // Returning a MOVE with no preceding DOWN can start native selection.
+            val down = neutralPenEvent(ev, ev.eventTime, MotionEvent.ACTION_DOWN)
+            restartedStylusDownTime = ev.eventTime
+            ignoreNeutralStylusContact = false
+            try { super.dispatchTouchEvent(down) } finally { down.recycle() }
+            return true
+        }
         if (ignoreNeutralStylusContact) {
             if (ev.actionMasked == MotionEvent.ACTION_UP || ev.actionMasked == MotionEvent.ACTION_CANCEL) {
                 ignoreNeutralStylusContact = false
             }
             return true
         }
-        return super.dispatchTouchEvent(ev)
+        val downTime = restartedStylusDownTime ?: return super.dispatchTouchEvent(ev)
+        val contact = neutralPenEvent(ev, downTime, ev.action)
+        if (ev.actionMasked == MotionEvent.ACTION_UP || ev.actionMasked == MotionEvent.ACTION_CANCEL) {
+            restartedStylusDownTime = null
+        }
+        return try { super.dispatchTouchEvent(contact) } finally { contact.recycle() }
+    }
+
+    private fun neutralPenEvent(event: MotionEvent, downTime: Long, action: Int): MotionEvent {
+        val pointers = Array(event.pointerCount) { index ->
+            MotionEvent.PointerProperties().also { event.getPointerProperties(index, it) }
+        }
+        val positions = Array(event.pointerCount) { index ->
+            MotionEvent.PointerCoords().also { event.getPointerCoords(index, it) }
+        }
+        return MotionEvent.obtain(downTime, event.eventTime, action, event.pointerCount, pointers, positions,
+            event.metaState, event.buttonState, event.xPrecision, event.yPrecision,
+            event.deviceId, event.edgeFlags, event.source, event.flags)
     }
 
     fun invalidateSelectionActionMode() {

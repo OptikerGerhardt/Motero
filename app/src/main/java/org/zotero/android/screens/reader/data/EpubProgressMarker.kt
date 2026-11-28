@@ -6,4 +6,8 @@ data class EpubProgressMarker(
     val title: String,
     val fraction: Float,
     val color: String?,
+    val id: String = locator,
+    val parentId: String? = null,
+    val rootId: String? = null,
+    val depth: Int = 0,
 )

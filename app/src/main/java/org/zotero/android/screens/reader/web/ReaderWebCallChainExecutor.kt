@@ -263,6 +263,10 @@ class ReaderWebCallChainExecutor @Inject constructor(
                         "onCropEditorChanged" -> {
                             observable.emitAsync(Result.Success(ReaderWebData.setCropEditorOpen(data["params"].asJsonObject["open"].asBoolean)))
                         }
+                        "onBookmarkColorChosen" -> {
+                            val params = data["params"].asJsonObject
+                            observable.emitAsync(Result.Success(ReaderWebData.bookmarkColorChosen(params)))
+                        }
                         "onBookmarkColorsOpen" -> {
                             observable.emitAsync(Result.Success(ReaderWebData.setBookmarkColorsOpen(data["params"].asJsonObject["open"].asBoolean)))
                         }
@@ -536,6 +540,11 @@ class ReaderWebCallChainExecutor @Inject constructor(
         readerWebViewHandler.evaluateJavascript("window.dismissReaderSelection?.();") {}
     }
 
+    fun setReaderHighlightColor(color: String) {
+        if (!color.matches(Regex("^#[0-9a-fA-F]{6}$"))) return
+        readerWebViewHandler.evaluateJavascript("window.setReaderHighlightColor('$color');") {}
+    }
+
     fun setReaderBookmarkColor(color: String) {
         if (!color.matches(Regex("^#[0-9a-fA-F]{6}$"))) return
         readerWebViewHandler.evaluateJavascript("window.setReaderBookmarkColor('$color');") {}
@@ -573,6 +582,7 @@ class ReaderWebCallChainExecutor @Inject constructor(
             readingProgress = readingProgress,
             pageBackground = defaults.getReaderSettings().effectivePageBackground(isDark),
             bookmarkColor = defaults.getReaderSettings().effectiveBookmarkColor(),
+            readerHighlightColor = defaults.getReaderSettings().neutralHighlightColor ?: defaults.getHighlightColorHex(),
             pageNavigation = defaults.getReaderSettings().effectivePageNavigation(),
             deviceProfile = org.zotero.android.ereader.DeviceProfileStore.state.value.copy(
                 eraserSize = defaults.getActiveEraserSize(), eraserMode = defaults.getActiveEraserMode(),
@@ -760,6 +770,11 @@ class ReaderWebCallChainExecutor @Inject constructor(
         val json = gson.toJson(mapOf("action" to action, "scope" to scope, "top" to top, "bottom" to bottom, "left" to left, "right" to right))
         readerWebViewHandler.evaluateJavascript("window.cropEditorAction?.($json);") {}
     }
+    fun navigateEpubMarker(marker: org.zotero.android.screens.reader.data.EpubProgressMarker) {
+        val target = gson.toJson(mapOf("kind" to marker.kind, "id" to marker.id, "locator" to marker.locator))
+        readerWebViewHandler.evaluateJavascript("window.navigateEpubProgressMarker?.($target);") {}
+    }
+
     suspend fun focusAnnotation(key: String) = suspendCancellableCoroutine { cont ->
         readerWebViewHandler.evaluateJavascript("window.focusReaderAnnotation?.(${gson.toJson(key)});") { cont.resume(Unit) }
     }

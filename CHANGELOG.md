@@ -1,5 +1,12 @@
 # Änderungen
 
+## Nächste Beta
+
+- PDF-Lesezeichen bleiben beim Zoomen an der sichtbaren Seitenkante und behalten ihre Größe. Im EPUB bleibt das Fähnchen unabhängig vom Textabstand am oberen Leserahmen. Der Langdruck öffnet die Farbpalette im Fähnchen.
+- Die zuletzt gespeicherte Fähnchenfarbe gilt für neue Lesezeichen. Die Farbauswahl der Annotationsleiste steuert im neutralen Modus die Textmarkierungen.
+- EPUB-Kapitelmenüs erhalten die Gliederung. Kapitel und Lesezeichen springen zu ihrem eigenen Anker, auch wenn sie sich einen Punkt auf der Leiste teilen.
+- Die Stifttaste kann eine Markierung während eines neutralen Kontakts beginnen und beenden. Der automatisch gewählte PDF-Stift wechselt beim Drücken vorübergehend zum Radierer. BOOX-Geräteprüfung steht aus.
+
 ## 1.1.11-beta.339 — Motero Beta
 
 - Schrift und Seite bleiben beim Stiftkontakt ohne aktives Werkzeug an Ort und Stelle. Beim Ziehen mit gedrückter Stifttaste markiert Motero in der gewählten Standardfarbe. Androids natives Signal ergänzt die Erkennung der Radierertaste (#10, #47, #52).

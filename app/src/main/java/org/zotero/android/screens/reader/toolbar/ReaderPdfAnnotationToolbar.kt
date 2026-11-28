@@ -78,8 +78,8 @@ internal fun ReaderPdfAnnotationToolbar(viewModel: ReaderViewModel, state: Reade
             }
         }
         // Keep the options slot present when the active tool changes.
-        val hex = if (state.activeTool == null) state.bookmarkColor else state.toolColors[state.activeTool]
-        val optionsLabel = stringResource(if (state.activeTool == null) R.string.reader_bookmark_default_color else R.string.reader_tool_options)
+        val hex = if (state.activeTool == null) state.neutralHighlightColor else state.toolColors[state.activeTool]
+        val optionsLabel = stringResource(if (state.activeTool == null) R.string.reader_neutral_highlight_color else R.string.reader_tool_options)
         IconButton(onClick = viewModel::togglePdfToolOptions, enabled = enabled,
             modifier = Modifier.size(48.dp).semantics { contentDescription = optionsLabel }) {
             Surface(Modifier.size(24.dp), shape = RoundedCornerShape(12.dp),
@@ -109,7 +109,7 @@ internal fun ReaderPdfToolOptions(viewModel: ReaderViewModel, state: ReaderViewS
         else -> AnnotationType.note
     }
     val colors = if (tool == null) AnnotationsConfig.allColors else AnnotationsConfig.colors(type)
-    val currentColor = if (tool == null) state.bookmarkColor else state.toolColors[tool]
+    val currentColor = if (tool == null) state.neutralHighlightColor else state.toolColors[tool]
     BoxWithConstraints(modifier.padding(horizontal = 4.dp)) {
         val slot = maxOf(40.dp, maxWidth / colors.size.coerceAtLeast(1))
         val paletteInset = if (eraser) 0.dp else (slot - 26.dp) / 2

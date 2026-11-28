@@ -67,6 +67,7 @@ data class ReaderSettings(
     var lastDarkAppearance: String? = null,
     // Explicit choices from earlier builds are retained.
     var bookmarkColor: String? = null,
+    var neutralHighlightColor: String? = null,
 ) {
     // Older versions saved the paper and interface separately. Migrate an
     // explicit paper first; subsequent choices have one source of truth.

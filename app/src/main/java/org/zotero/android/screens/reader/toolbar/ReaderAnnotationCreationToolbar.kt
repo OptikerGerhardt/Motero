@@ -270,7 +270,7 @@ internal fun BoxScope.ReaderAnnotationCreationToolbar(
             } else if (viewState.isPdfOrHtml() && viewState.readingModeEnabled) {
                 var showBookmarkColors by remember { mutableStateOf(false) }
                 Box {
-                    ReaderFilterCircle(hex = viewState.bookmarkColor, onClick = { showBookmarkColors = true })
+                    ReaderFilterCircle(hex = viewState.neutralHighlightColor, onClick = { showBookmarkColors = true })
                     DropdownMenu(expanded = showBookmarkColors, onDismissRequest = { showBookmarkColors = false }) {
                         ReaderPdfToolOptions(viewModel, viewState, Modifier.width(240.dp))
                     }

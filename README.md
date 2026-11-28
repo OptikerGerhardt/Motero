@@ -37,10 +37,10 @@ This fork is maintained independently and is not affiliated with or endorsed by 
 - Automatic or manual content cropping, shared by the page-fitting modes. Manual frames for all, odd, or even pages are saved per attachment.
 - SmartScroll, hardware-button navigation, and edge taps in vertical, horizontal, and wrapped PDF layouts.
 - Continuous scrolling or single-page swipe navigation: short pages are centered and tall pages enter at the reading edge, with two-finger access to the page overview.
-- Tap the top-right corner of a PDF or EPUB to toggle a bookmark. Hold the corner to pick its color. The color control with no active annotation tool sets the default for new bookmarks and stylus-button highlights.
+- Tap the top-right corner of a PDF or EPUB to toggle a bookmark. Hold the corner to pick its color. The ribbon remembers the last saved color choice for new bookmarks. The color control with no active tool sets the default for finger-drag and stylus-button highlights.
 - Add a Motero document widget from the Android launcher for a downloaded PDF or EPUB. Each widget has its own symbol and author, year or short-title label. The attachment menu also pins a document shortcut.
 - Tag suggestions ranked by use in the current document and library, with explicit creation of new tags.
-- EPUB navigation, local reading-position restoration, and progress displays cycled by tapping the footer, including hidden.
+- EPUB chapter menus with nested headings, direct jumps to bookmarks, local reading-position restoration, and progress displays cycled by tapping the footer, including hidden.
 - Global reader controls for direct/Android text selection and optional protection against Android system Back keys/gestures, plus ordinary volume-key list scrolling. [Reader changes](docs/READER_NEXT_UPDATE.md).
 
 View cropping does not modify the PDF file or annotation coordinates. Manual crop settings are stored locally and are not synchronized with Zotero.
