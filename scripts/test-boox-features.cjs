@@ -209,7 +209,7 @@ const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/ja
   await tap({ x: 310, y: 65 });
   await page.waitForFunction(() => window._view._view._annotations.length === 1);
   let notes = await page.evaluate(() => window._view._view._annotations);
-  assert.equal(notes.length, 1); assert.equal(notes[0].type, 'note'); assert.equal(notes[0].color, '#000000');
+  assert.equal(notes.length, 1); assert.equal(notes[0].type, 'note'); assert.equal(notes[0].color, '#ffd400');
   assert.match(notes[0].comment, /^(Bookmark|Lesezeichen) · /);
   const fixedPosition = notes[0].position;
   const removedBookmarkID = notes[0].id;
